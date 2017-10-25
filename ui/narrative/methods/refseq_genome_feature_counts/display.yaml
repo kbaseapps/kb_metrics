@@ -1,0 +1,37 @@
+#
+# define display information
+#
+name: RefSeq Genome Feature Counts
+tooltip: |
+    Provide the total feature counts for each feature type appearing in the refseq genome genbank file 
+screenshots: []
+
+icon: null
+
+#
+# define a set of similar methods that might be useful to the user
+#
+suggestions:
+    apps:
+        related:
+            []
+        next:
+            []
+    methods:
+        related:
+            []
+        next:
+            []
+
+#
+# Configure the display and description of parameters
+#
+parameters :
+    genbank_file_location :
+        ui-name : |
+            Genbank File Location
+        short-hint : |
+            The file location where the genbank file can be downloaded from
+
+description : |
+    <p>This method combs through a genbank file to get the feature counts for each type of feature.</p>
