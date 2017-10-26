@@ -66,4 +66,8 @@ module kb_Metrics {
     */
     funcdef count_genbank_genome_features(FeatureCountParams params)
         returns (FeatureCountResults output) authentication required;
+
+
+    funcdef genome_features_stats(FeatureCountParams params)
+        returns (FeatureCountResults output) authentication required;
 };
