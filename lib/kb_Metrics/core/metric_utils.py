@@ -9,14 +9,12 @@ import shutil
 import sys
 import zipfile
 from pprint import pprint, pformat
-import urllib.request
-import urllib.parse
-from urllib.request import Request, urlopen
-from urllib.error import URLError, HTTPError
+from urllib2 import Request, urlopen
+from urllib2 import URLError, HTTPError
 
 
 from Workspace.WorkspaceClient import Workspace as Workspace
-
+from KBaseReport.KBaseReportClient import KBaseReport
 
 def log(message, prefix_newline=False):
     """Logging function, provides a hook to suppress or redirect log messages."""
@@ -38,12 +36,17 @@ def _mkdir_p(path):
             raise
 
 
-class metrics_utils:
+class metric_utils:
 
-    def __init__(self, config):
+    def __init__(self, config, provenance):
         self.workspace_url = config['workspace-url']
-        self.callback_url = config['SDK_CALLBACK_URL']
-        self.token = config['KB_AUTH_TOKEN']
+        self.callback_url = os.environ['SDK_CALLBACK_URL']
+        self.token = os.environ['KB_AUTH_TOKEN']
+        self.provenance = provenance
+
+        self.scratch = os.path.join(config['scratch'], str(uuid.uuid4()))
+        _mkdir_p(self.scratch)
+
         if 'shock-url' in config:
             self.shock_url = config['shock-url']
         if 'handle-service-url' in config:
@@ -74,12 +77,12 @@ class metrics_utils:
         }
         """
         ncbi_genomes = []
-        ncbi_ftp_url = "ftp://ftp.ncbi.nlm.nih.gov/genomes/{}/{}/{}".format(genome_source, division."assembly_summary.txt")
+        ncbi_ftp_url = "ftp://ftp.ncbi.nlm.nih.gov/genomes/{}/{}/{}".format(genome_source, division, "assembly_summary.txt")
         asm_summary = []
-        req = urllib.request.Request(ncbi_ftp_url)
+        req = Request(ncbi_ftp_url)
         try:
-            with urllib.request.urlopen(req) as response:
-                asm_summary = response.readlines()
+            response = urlopen(req)
+            asm_summary = response.readlines()
         except HTTPError as e:
             print('The server couldn\'t fulfill the request.')
             print('Error code: ', e.code)
@@ -88,30 +91,40 @@ class metrics_utils:
             print('Reason: ', e.reason)
         else:# everything is fine
             for asm_line in asm_summary:
-                if re.search('/^#.*/$', asm_line):
+                if re.match('#', asm_line):
                     continue
 
                 columns = asm_line.split('\t')
                 if refseq_category in columns[4]:
                     ncbi_genomes.append({
-                        "domain": division;
-                        "genome_source": genome_source;
-                        "refseq_category": columns[4];
-                        "accession": columns[0];
-                        "version_status": columns[10];# latest/replaced/suppressed
-                        "organism_name": columns[7];
-                        "asm_name": columns[15];
-                        "ftp_file_path": column[19]; #--FTP path: the path to the directory on the NCBI genomes FTP site from which data for this genome assembly can be downloaded.
-                        "genome_id": columns[0].split('.')[0];
-                        "genome_version": columns[0].split('.')[1];
-                        "tax_id": columns[5];
-                        "assembly_level": columns[11]; #Complete/Chromosome/Scaffold/Contig
-                        "release_level": columns[12];  #Majoy/Minor/Patch
-                        "genome_rep": columns[13]; #Full/Partial
-                        "seq_rel_date": columns[14]; #date the sequence was released
-                        "gbrs_paired_asm": columns[17];
+                        "domain": division,
+                        "genome_source": genome_source,
+                        "refseq_category": columns[4],
+                        "accession": columns[0],
+                        "version_status": columns[10],# latest/replaced/suppressed
+                        "organism_name": columns[7],
+                        "asm_name": columns[15],
+                        "ftp_file_path": columns[19], #path to the directory for download
+                        "genome_id": columns[0].split('.')[0],
+                        "genome_version": columns[0].split('.')[1],
+                        "tax_id": columns[5],
+                        "assembly_level": columns[11], #Complete/Chromosome/Scaffold/Contig
+                        "release_level": columns[12],  #Majoy/Minor/Patch
+                        "genome_rep": columns[13], #Full/Partial
+                        "seq_rel_date": columns[14], #date the sequence was released
+                        "gbrs_paired_asm": columns[17]
                     })
-
+        log("Found {} genomes in NCBI {}/{}".format(str(len(ncbi_genomes)), genome_source, division))
         return ncbi_genomes
 
-    def _count_genome_features(self, ftp_file_path):
+    def count_genome_features(self, params):
+        self._list_ncbi_genomes()
+
+        returnVal = {
+            "report_ref": None,
+            "report_name": None
+        }
+
+        wsname = params['workspace_name']
+
+        return returnVal

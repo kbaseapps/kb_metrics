@@ -6,6 +6,8 @@ from Bio import SeqIO
 from pprint import pprint, pformat
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from KBaseReport.KBaseReportClient import KBaseReport
+
+from kb_Metrics.core.metric_utils import metric_utils
 #END_HEADER
 
 
@@ -37,12 +39,12 @@ This KBase SDK module implements methods for generating various KBase metrics.
     # be found
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
-        
+
         # Any configuration parameters that are important should be parsed and
         # saved in the constructor.
         self.callback_url = os.environ['SDK_CALLBACK_URL']
         self.shared_folder = config['scratch']
-
+        self.config = config
         #END_CONSTRUCTOR
         pass
 
@@ -77,6 +79,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # ctx is the context object
         # return variables are: output
         #BEGIN count_genbank_genome_features
+        m_util = metric_utils(self.config, ctx.provenance)
+
+        output = m_util.count_genome_features(params)
         #END count_genbank_genome_features
 
         # At some point might do deeper type checking...
