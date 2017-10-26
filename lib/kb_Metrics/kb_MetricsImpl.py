@@ -29,7 +29,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "83ac8b4469a7f519fd851d59b87ed9ecaf36c69c"
+    GIT_COMMIT_HASH = "adeb0986901c2d7cf47334204928f803dc032a50"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -65,9 +65,10 @@ This KBase SDK module implements methods for generating various KBase metrics.
            templates to indicate the type contained in the list or map.  For
            example: list <string> list_of_strings; mapping <string, int>
            map_of_ints;) -> structure: parameter "genbank_file_location" of
-           String, parameter "workspace_name" of String, parameter
-           "create_report" of type "bool" (A boolean - 0 for false, 1 for
-           true. @range (0, 1))
+           String, parameter "genome_source" of String, parameter
+           "genome_domain" of String, parameter "refseq_category" of String,
+           parameter "workspace_name" of String, parameter "create_report" of
+           type "bool" (A boolean - 0 for false, 1 for true. @range (0, 1))
         :returns: instance of type "FeatureCountResults" (Here is the
            definition of the output of the function.  The output can be used
            by other SDK modules which call your code, or the output

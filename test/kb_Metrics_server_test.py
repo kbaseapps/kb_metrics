@@ -95,7 +95,10 @@ class kb_MetricsTest(unittest.TestCase):
         # First load a test FASTA file as an KBase Assembly
         m_params =     {
             'workspace_name': self.getWsName(),
-            'genbank_file_location': 'ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/',
+            'genbank_file_location': 'ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/009/605/GCF_000009605.1_ASM960v1/GCF_000009605.1_ASM960v1_genomic.gbff.gz',
+            'genome_source': 'refseq',
+            'genome_domain': 'bacteria',
+            'refseq_category': 'reference',
             'create_report': 0 
         }
         # Second, call your implementation

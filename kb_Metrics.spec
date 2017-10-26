@@ -38,6 +38,9 @@ module kb_Metrics {
     */
     typedef structure {
         string genbank_file_location;
+        string genome_source;
+        string genome_domain;
+        string refseq_category;
         string workspace_name;
         bool create_report;
     } FeatureCountParams;
