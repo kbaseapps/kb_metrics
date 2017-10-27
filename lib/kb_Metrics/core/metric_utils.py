@@ -122,40 +122,62 @@ class metric_utils:
         return ncbi_genomes
 
 
-    def count_ncbi_genome_features(self, params):
+    def count_ncbi_genome_features(self, input_params):
+        params = self.validate_parameters(input_params)
+
         ncbi_gns = self._list_ncbi_genomes(params['genome_source'],
                                 params['genome_domain'], params['refseq_category'])
 
-        ncbi_count_results = []
         gnf_format = 'genbank'
-
+        ncbi_count_results = []
+        feature_printouts = []
         for gn in ncbi_gns:
-            gn_file = gn['genome_url']
-            ncbi_count_results.append({
-                'genome': gn,
-                'count_results': self._get_feature_counts(gn_file, gnf_format)
-            })
+            gn_feature_counts = self._get_feature_counts(gn['genome_url'], gnf_format, gn['organism_name'])
+            ncbi_count_results.append(gn_feature_counts)
+
+            gn_feat_printout = self._printout_feature_counts(gn_feature_counts)
+            log(gn_feat_printout)
+            feature_printouts.append(gn_feat_printout)
 
         wsname = params['workspace_name']
+
         returnVal = {
             "report_ref": None,
             "report_name": None
         }
 
+        if params['create_report'] == 1:
+            report_info = self.generate_report(feature_printouts, params)
+            returnVal = {
+                'report_name': report_info['name'],
+                'report_ref': report_info['ref']
+            }
+
         return returnVal
 
-
-    def count_genome_features(self, input_params):
-        params = self.validate_parameters(input_params)
+    def count_genome_features(self, params):
+        if params.get(self.PARAM_IN_GENBANK_FILES, None) is None:
+            raise ValueError(self.PARAM_IN_GENBANK_FILES +
+                        ' parameter is mandatory and has at least one string value')
+        if type(params[self.PARAM_IN_GENBANK_FILES]) != list:
+            raise ValueError(self.PARAM_IN_GENBANK_FILES + ' must be a list')
 
         gn_files = params[self.PARAM_IN_GENBANK_FILES]
-        gnf_format = params['file_format']
+        if params.get('file_format', None) is None:
+            params['file_format'] = 'genbank'
+
+        if params.get('create_report', None) is None:
+            params['create_report'] = 0
 
         count_results = []
+        feature_printouts = []
         for gn_f in gn_files:
-            count_results.append({
-                gn_f: self._get_feature_counts(gn_f, gnf_format)
-            })
+            gn_feature_counts = self._get_feature_counts(gn_f, params['file_format'])
+            count_results.append(gn_feature_counts)
+
+            gn_feat_printout = self._printout_feature_counts(gn_feature_counts)
+            log(gn_feat_printout)
+            feature_printouts.append(gn_feat_printout)
 
         wsname = params['workspace_name']
         returnVal = {
@@ -163,15 +185,87 @@ class metric_utils:
             "report_name": None
         }
 
+        if params['create_report'] == 1:
+            report_info = self.generate_report(feature_printouts, params)
+            returnVal = {
+                'report_name': report_info['name'],
+                'report_ref': report_info['ref']
+            }
+
         return returnVal
 
+    def generate_report(self, count_info, params):
+        # create report
+        report_text = 'Summary of genome feature stats:\n\n'
+        report_text += ''.join(count_info)
 
-    def _get_feature_counts(self, gn_file, file_format):
+        report_info = self.kbr.create_extended_report({'message': report_text,
+                                                  'report_object_name': 'kb_Metrics_report_' + str(uuid.uuid4()),
+                                                  'direct_html_link_index': 0,
+                                                  'workspace_name': params['workspace_name']
+                                                  })
+        return report_info
+
+    def _get_feature_counts(self, gn_file, file_format, organism_name=None):
         """
         _get_feature_counts: Given a genome file, count the totals of contigs and features
         and calculates of the mean/median/max length of each feature type
         return the results in the following json structure:
         {
+            'organism_name': organism_name,
+            'total_contig_count': total_contig_count,
+            'total_feature_count': total_feat_count,
+            'feature_counts': feature_count_dict,
+            'feature_lengths': feature_len_dict
+        }
+        """
+        #log("\nInput file location: {}".format(gn_file))
+        if organism_name is None:
+            organism_name = os.path.basename(gn_file)
+
+        #download the file from ftp site
+        file_resp = self._download_file_by_url( gn_file )
+
+        if os.path.isfile(file_resp):
+            #processing the file to get counts
+            total_contig_count = 0
+            total_feat_count = 0
+            feature_count_dict = dict()
+            feature_lens_dict = dict() # for mean, median and max of feature lengths
+
+            gn_f = gzip.open( file_resp, "r" )
+            for rec in SeqIO.parse( gn_f, file_format):
+                total_contig_count += 1
+                for feature in rec.features:
+                    flen = feature.__len__()
+                    if feature.type in feature_count_dict:
+                        feature_count_dict[feature.type] += 1
+                        feature_lens_dict[feature.type].append( flen )
+                    else:
+                        feature_count_dict[feature.type] = 1
+                        feature_lens_dict[feature.type] = []
+                    total_feat_count += 1
+            gn_f.close()
+
+        feature_data = {
+                'organism_name': organism_name,
+                'total_contig_count': total_contig_count,
+                'total_feature_count': total_feat_count,
+                'feature_counts': feature_count_dict,
+                'feature_lengths': feature_lens_dict
+                }
+
+        return feature_data
+
+    def _printout_feature_counts(self, feature_data):
+        """
+        _printout_feature_counts: Given the feature_data containing dict structure of feature counts
+        and feature lengths, calculates the mean/median/max length of each feature type
+        and build the printout the results in an informative way (tentative for now)
+
+        input feature_data is expected to have the following json structure:
+        feature_data={
+            'organism_name': organism_name,
             'total_contig_count': total_contig_count,
             'total_feature_count': total_feat_count,
             'feature_counts': feature_count_dict,
@@ -199,53 +293,27 @@ class metric_utils:
             feature: variation count: 8 mean: 1.0 median: 1.0 max: 1
             TOTAL FEATURE COUNT : 1246
         """
-        #log("\nInput file location: {}".format(gn_file))
+        feature_printout = '******Organism/file name: {}******\nTOTAL CONTIG COUNT={}'.format(
+                feature_data['organism_name'], str(feature_data['total_contig_count']))
 
-        #download the file from ftp site
-        file_resp = self._download_file_by_url( gn_file )
+        feature_count_dict = feature_data['feature_counts']
+        feature_printout += '\nFeature count results:\n' + pformat(feature_count_dict)
 
-        if os.path.isfile(file_resp):
-            #processing the file to get counts
-            total_contig_count = 0
-            total_feat_count = 0
-            feature_count_dict = dict()
-            feature_lens_dict = dict() # for mean, median and max of feature lengths
-
-            gn_f = gzip.open( file_resp, "r" )
-            for rec in SeqIO.parse( gn_f, file_format):
-                total_contig_count += 1
-                for feature in rec.features:
-                    flen = feature.__len__()
-                    if feature.type in feature_count_dict:
-                        feature_count_dict[feature.type] += 1
-                        feature_lens_dict[feature.type].append( flen )
-                    else:
-                        feature_count_dict[feature.type] = 1
-                        feature_lens_dict[feature.type] = []
-                    total_feat_count += 1
-            gn_f.close()
-
-        log('TOTAL CONTIG COUNT : '  + str(total_contig_count))
-        log('\nFeature count results----:\n' + pformat(feature_count_dict))
-
+        feature_lens_dict = feature_data['feature_lengths']
         for feat_type in sorted( feature_lens_dict ):
             feat_count = feature_count_dict[feat_type]
             if  len( feature_lens_dict[feat_type] ) > 0:
                 feat_len_mean = mean( feature_lens_dict[feat_type] )
                 feat_len_median = median( feature_lens_dict[feat_type] )
                 feat_len_max = max( feature_lens_dict[feat_type] )
-                log("feature: {} count: {} mean: {} median: {} max: {}".format(
-                       feat_type, feat_count, feat_len_mean, feat_len_median, feat_len_max ))
+                feature_printout += "\nfeature: {} count: {} mean: {} median: {} max: {}".format(
+                       feat_type, feat_count, feat_len_mean, feat_len_median, feat_len_max )
             else:
-                log("feature: {} count: {} has no lengths".format(
-                       feat_type, feat_count ))
+                feature_printout += "\nfeature: {} count: {} has no lengths".format(
+                       feat_type, feat_count )
 
-        log("TOTAL FEATURE COUNT : " + str(total_feat_count))
-
-        return {'total_contig_count': total_contig_count,
-                'total_feature_count': total_feat_count,
-                'feature_counts': feature_count_dict,
-                'feature_lengths': feature_lens_dict}
+        feature_printout += "\n******TOTAL FEATURE COUNT=" + str(feature_data['total_feature_count'])
+        return feature_printout
 
 
     def _download_file_by_url(self, file_url):
@@ -287,11 +355,6 @@ class metric_utils:
     def validate_parameters(self, params):
         if params.get(self.PARAM_IN_WS, None) is None:
             raise ValueError(self.PARAM_IN_WS + ' parameter is mandatory')
-        if params.get(self.PARAM_IN_GENBANK_FILES, None) is None:
-            raise ValueError(self.PARAM_IN_GENBANK_FILES +
-                        ' parameter is mandatory and has at least one string value')
-        if type(params[self.PARAM_IN_GENBANK_FILES]) != list:
-            raise ValueError(self.PARAM_IN_GENBANK_FILES + ' must be a list')
         #set default parameters
         if params.get('genome_source', None) is None:
             params['genome_source'] = 'refseq'
