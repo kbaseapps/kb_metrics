@@ -142,6 +142,10 @@
                     "target_property": "workspace_name"
                 },
                 {
+                    "constant_value": 1,
+                    "target_property": "create_report"
+                },
+                {
                     "input_parameter": "genome_source",
                     "target_property": "genome_source"
                 },
