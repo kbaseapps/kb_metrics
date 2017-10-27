@@ -11,14 +11,123 @@
     },
     "parameters": [ 
         {
-            "id": "genbank_file_location",
+            "id": "genome_source",
             "optional": false,
             "advanced": false,
             "allow_multiple": false,
-            "default_values": [ "" ],
-            "field_type": "text",
-            "text_options": {
-                "validate_as": "text"
+            "default_values": [ "bacteria" ],
+            "field_type": "dropdown",
+            "dropdown_options":{
+                "options": [
+                {
+                  "display": "B (Bacteria)",
+                  "value": "bacteria",
+                  "id": "B",
+                  "ui_name": "B (Bacteria)"
+                },
+                {
+                  "display": "A (archaea)",
+                  "value": "archaea",
+                  "id": "A",
+                  "ui_name": "A (archaea)"
+                },
+                {
+                  "value": "fungi",
+                  "display": "F (Fungi)",
+                  "id": "F",
+                  "ui_name": "F (Fungi)"
+                },
+                {
+                  "value": "plant",
+                  "display": "P (Plant)",
+                  "id": "P",
+                  "ui_name": "P (Plant)"
+                }
+              ]
+            }
+        },
+        {
+            "id": "genome_domain",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": [ "refseq" ],
+            "field_type": "dropdown",
+            "dropdown_options":{
+                "options": [
+                {
+                  "display": "RefSeq",
+                  "value": "refseq",
+                  "id": "refseq",
+                  "ui_name": "RefSeq"
+                },
+                {
+                  "display": "Genbank",
+                  "value": "genbank",
+                  "id": "genbank",
+                  "ui_name": "Genbank"
+                }
+              ]
+            }
+        },
+        {
+            "id": "refseq_category",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": [ "reference" ],
+            "field_type": "dropdown",
+            "dropdown_options":{
+                "options": [
+                {
+                  "display": "Reference",
+                  "value": "reference",
+                  "id": "reference",
+                  "ui_name": "Reference"
+                },
+                {
+                  "display": "Representative",
+                  "value": "representative",
+                  "id": "representative",
+                  "ui_name": "Representative"
+                },
+                {
+                  "display": "N/A",
+                  "value": "na",
+                  "id": "na",
+                  "ui_name": "N/A"
+                }
+              ]
+            }
+        },
+        {
+            "id": "file_format",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": [ "genbank" ],
+            "field_type": "dropdown",
+            "dropdown_options":{
+                "options": [
+                {
+                  "display": "Genbank",
+                  "value": "genbank",
+                  "id": "genbank",
+                  "ui_name": "Genbank"
+                },
+                {
+                  "display": "FASTA",
+                  "value": "fasta",
+                  "id": "fasta",
+                  "ui_name": "FASTA"
+                },
+                {
+                  "display": "FASTQ",
+                  "value": "fasta",
+                  "id": "fasta",
+                  "ui_name": "FASTQ"
+                }
+              ]
             }
         }
     ],
@@ -26,15 +135,27 @@
         "service-mapping": {
             "url": "",
             "name":"kb_Metrics",
-            "method": "count_genbank_genome_features",
+            "method": "count_ncbi_genome_features",
             "input_mapping": [
                 {
                     "narrative_system_variable": "workspace",
                     "target_property": "workspace_name"
                 },
                 {
-                    "input_parameter": "genbank_file_location",
-                    "target_property": "genbank_file_location"
+                    "input_parameter": "genome_source",
+                    "target_property": "genome_source"
+                },
+                {
+                    "input_parameter": "genome_domain",
+                    "target_property": "genome_domain"
+                },
+                {
+                    "input_parameter": "refseq_category",
+                    "target_property": "refseq_category"
+                },
+                {
+                    "input_parameter": "file_format",
+                    "target_property": "file_format"
                 }
             ],
             "output_mapping": [

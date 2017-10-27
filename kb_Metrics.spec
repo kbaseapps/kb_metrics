@@ -65,7 +65,7 @@ module kb_Metrics {
         Apps that run in the Narrative, your function should have the 
         'authentication required' modifier.
     */
-    funcdef count_genbank_genome_features(FeatureCountParams params)
+    funcdef count_ncbi_genome_features(FeatureCountParams params)
         returns (FeatureCountResults output) authentication required;
 
     funcdef count_genome_features(FeatureCountParams params)

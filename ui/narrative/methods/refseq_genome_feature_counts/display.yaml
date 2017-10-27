@@ -1,9 +1,9 @@
 #
 # define display information
 #
-name: RefSeq Genome Feature Counts
+name: RefSeq Genome Feature Counts and Stats
 tooltip: |
-    Provide the total feature counts for each feature type appearing in the refseq genome genbank file 
+    Provide the total feature counts, mean/median/max lengths for each feature type appearing in the refseq genome genbank file 
 screenshots: []
 
 icon: null
@@ -27,11 +27,26 @@ suggestions:
 # Configure the display and description of parameters
 #
 parameters :
-    genbank_file_location :
+    genome_source :
         ui-name : |
-            Genbank File Location
+            Genome source
         short-hint : |
-            The file location where the genbank file can be downloaded from
+            The NCBI genome file directory where the genome file can be downloaded from (only refseq for now)
+    genome_domain :
+        ui-name : |
+            Genome domain
+        short-hint : |
+            The NCBI genome file directory under refseq that groups the genomes by their domains
+    refseq_category :
+        ui-name : |
+            Refseq Category
+        short-hint : |
+            The NCBI way of classifying the refseq project is reference/representative/na
+    file_format :
+        ui-name : |
+            Genome file format for parsing
+        short-hint : |
+            The file format that Biopython SeqIO uses to parse,fasta/fastq/genbank
 
 description : |
     <p>This method combs through a genbank file to get the feature counts for each type of feature.</p>

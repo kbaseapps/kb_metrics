@@ -29,7 +29,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "9bb9a2897975180af8ad0cb527ca4f5304ea6720"
+    GIT_COMMIT_HASH = "ade9b5938d4433c03ad5f3b0e2f7d31d5ee6f377"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -49,7 +49,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
         pass
 
 
-    def count_genbank_genome_features(self, ctx, params):
+    def count_ncbi_genome_features(self, ctx, params):
         """
         The actual function is declared using 'funcdef' to specify the name
         and input/return arguments to the function.  For all typical KBase
@@ -80,15 +80,15 @@ This KBase SDK module implements methods for generating various KBase metrics.
         """
         # ctx is the context object
         # return variables are: output
-        #BEGIN count_genbank_genome_features
+        #BEGIN count_ncbi_genome_features
         m_util = metric_utils(self.config, ctx.provenance)
 
         output = m_util.count_ncbi_genome_features(params)
-        #END count_genbank_genome_features
+        #END count_ncbi_genome_features
 
         # At some point might do deeper type checking...
         if not isinstance(output, dict):
-            raise ValueError('Method count_genbank_genome_features return value ' +
+            raise ValueError('Method count_ncbi_genome_features return value ' +
                              'output is not type dict as required.')
         # return the results
         return [output]
