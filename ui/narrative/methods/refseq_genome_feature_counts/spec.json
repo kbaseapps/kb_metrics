@@ -11,7 +11,7 @@
     },
     "parameters": [ 
         {
-            "id": "genome_source",
+            "id": "genome_domain",
             "optional": false,
             "advanced": false,
             "allow_multiple": false,
@@ -47,7 +47,7 @@
             }
         },
         {
-            "id": "genome_domain",
+            "id": "genome_source",
             "optional": false,
             "advanced": false,
             "allow_multiple": false,
