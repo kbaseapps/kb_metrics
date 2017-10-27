@@ -42,7 +42,7 @@ def _mkdir_p(path):
 
 class metric_utils:
     PARAM_IN_WS = 'workspace_name'
-    PARAM_IN_GENBANK_FILE_LOCATION = 'genbank_file_location'
+    PARAM_IN_GENBANK_FILES = 'genbank_files'
 
     def __init__(self, config, provenance):
         self.workspace_url = config['workspace-url']
@@ -116,12 +116,25 @@ class metric_utils:
                         "seq_rel_date": columns[14], #date the sequence was released
                         "gbrs_paired_asm": columns[17]
                     })
-        log("Found {} {} genomes in NCBI {}/{}".format(str(len(ncbi_genomes)), refseq_category, genome_source, division))
+        log("Found {} {} genomes in NCBI {}/{}".format(
+                                str(len(ncbi_genomes)), refseq_category, genome_source, division))
+
         return ncbi_genomes
 
 
-    def count_genome_features(self, params):
-        self._get_feature_counts(params[self.PARAM_IN_GENBANK_FILE_LOCATION])
+    def count_ncbi_genome_features(self, params):
+        ncbi_gns = self._list_ncbi_genomes(params['genome_source'],
+                                params['genome_domain'], params['refseq_category'])
+
+        ncbi_count_results = []
+        gnf_format = 'genbank'
+
+        for gn in ncbi_gns:
+            gn_file = gn['genome_url']
+            ncbi_count_results.append({
+                'genome': gn,
+                'count_results': self._get_feature_counts(gn_f, gnf_format)
+            })
 
         wsname = params['workspace_name']
         returnVal = {
@@ -132,7 +145,60 @@ class metric_utils:
         return returnVal
 
 
-    def _get_feature_counts(self, gn_file):
+    def count_genome_features(self, input_params):
+        params = self.validate_parameters(input_params)
+
+        gn_files = params[self.PARAM_IN_GENBANK_FILES]
+        gnf_format = params['file_format']
+
+        count_results = []
+        for gn_f in gn_files:
+            count_results.append({
+                gn_f: self._get_feature_counts(gn_f, gnf_format)
+            })
+
+        wsname = params['workspace_name']
+        returnVal = {
+            "report_ref": None,
+            "report_name": None
+        }
+
+        return returnVal
+
+
+    def _get_feature_counts(self, gn_file, file_format):
+        """
+        _get_feature_counts: Given a genome file, count the totals of contigs and features
+        and calculates of the mean/median/max length of each feature type
+        return the results in the following json structure:
+        {
+            'total_contig_count': total_contig_count,
+            'total_feature_count': total_feat_count,
+            'feature_counts': feature_count_dict,
+            'feature_lengths': feature_len_dict
+        }
+        Example of feature_count_dict:
+        {'CDS': 574,
+         'gene': 617,
+         'misc_RNA': 1,
+         'misc_feature': 8,
+         'rRNA': 3,
+         'source': 3,
+         'tRNA': 32,
+         'variation': 8}
+         TOTAL CONTIG COUNT : 3
+
+        Example of stats of feature_len_dict:
+            feature: CDS count: 574 mean: 985.596858639 median: 849.0 max: 4224
+            feature: gene count: 617 mean: 939.925324675 median: 810.0 max: 4224
+            feature: misc_RNA count: 1 has no lengths
+            feature: misc_feature count: 8 mean: 922.285714286 median: 959.0 max: 1568
+            feature: rRNA count: 3 mean: 1514.0 median: 1514.0 max: 2913
+            feature: source count: 3 mean: 7522.0 median: 7522.0 max: 7786
+            feature: tRNA count: 32 mean: 76.9032258065 median: 74.0 max: 92
+            feature: variation count: 8 mean: 1.0 median: 1.0 max: 1
+            TOTAL FEATURE COUNT : 1246
+        """
         #log("\nInput file location: {}".format(gn_file))
 
         #download the file from ftp site
@@ -140,14 +206,14 @@ class metric_utils:
 
         if os.path.isfile(file_resp):
             #processing the file to get counts
-            contig_count = 0
-            feat_count = 0
+            total_contig_count = 0
+            total_feat_count = 0
             feature_count_dict = dict()
-            feature_lens_dict = dict() # for mean, median, max
+            feature_lens_dict = dict() # for mean, median and max of feature lengths
 
             gn_f = gzip.open( file_resp, "r" )
-            for rec in SeqIO.parse( gn_f, "genbank"):
-                contig_count += 1
+            for rec in SeqIO.parse( gn_f, file_format):
+                total_contig_count += 1
                 for feature in rec.features:
                     flen = feature.__len__()
                     if feature.type in feature_count_dict:
@@ -156,24 +222,30 @@ class metric_utils:
                     else:
                         feature_count_dict[feature.type] = 1
                         feature_lens_dict[feature.type] = []
-                    feat_count += 1
+                    total_feat_count += 1
             gn_f.close()
 
-        log('TOTAL CONTIG COUNT : '  + str(contig_count))
+        log('TOTAL CONTIG COUNT : '  + str(total_contig_count))
         log('\nFeature count results----:\n' + pformat(feature_count_dict))
 
-        for feat in sorted( feature_lens_dict ):
-            if  len( feature_lens_dict[feat] ) > 0:
+        for feat_type in sorted( feature_lens_dict ):
+            feat_count = feature_count_dict[feat_type]
+            if  len( feature_lens_dict[feat_type] ) > 0:
+                feat_len_mean = mean( feature_lens_dict[feat_type] )
+                feat_len_median = median( feature_lens_dict[feat_type] )
+                feat_len_max = max( feature_lens_dict[feat_type] )
                 log("feature: {} count: {} mean: {} median: {} max: {}".format(
-                       feat, feature_count_dict[feat],
-                          mean( feature_lens_dict[feat] ),
-                                median( feature_lens_dict[feat] ),
-                                max( feature_lens_dict[feat] )))
+                       feat_type, feat_count, feat_len_mean, feat_len_median, feat_len_max ))
             else:
                 log("feature: {} count: {} has no lengths".format(
-                       feat, feature_count_dict[feat] ))
+                       feat_type, feat_count ))
 
-        log("TOTAL FEATURE COUNT : " + str(feat_count))
+        log("TOTAL FEATURE COUNT : " + str(total_feat_count))
+
+        return {'total_contig_count': total_contig_count,
+                'total_feature_count': total_feat_count,
+                'feature_counts': feature_count_dict,
+                'feature_lengths': feature_lens_dict}
 
 
     def _download_file_by_url(self, file_url):
@@ -215,16 +287,24 @@ class metric_utils:
     def validate_parameters(self, params):
         if params.get(self.PARAM_IN_WS, None) is None:
             raise ValueError(self.PARAM_IN_WS + ' parameter is mandatory')
-
-        file_loc = params.get(self.PARAM_IN_GENBANK_FILE_LOCATION, None)
-        if file_loc is None:
-            raise ValueError(self.PARAM_IN_GENBANK_FILE_LOCATION + ' parameter is mandatory')
-
-        params[self.PARAM_IN_GENBANK_FILE_LOCATION] = file_loc
+        if params.get(self.PARAM_IN_GENBANK_FILES, None) is None:
+            raise ValueError(self.PARAM_IN_GENBANK_FILES +
+                        ' parameter is mandatory and has at least one string value')
+        if type(params[self.PARAM_IN_GENBANK_FILES]) != list:
+            raise ValueError(self.PARAM_IN_GENBANK_FILES + ' must be a list')
+        #set default parameters
         if params.get('genome_source', None) is None:
             params['genome_source'] = 'refseq'
         if params.get('genome_domain', None) is None:
             params['genome_domain'] = 'bacteria'
         if params.get('refseq_category', None) is None:
             params['refseq_category'] = 'reference'
+
+        if params.get('file_format', None) is None:
+            params['file_format'] = 'genbank'
+
+        if params.get('create_report', None) is None:
+            params['create_report'] = 0
+
+        return params
 

@@ -37,7 +37,8 @@ module kb_Metrics {
             mapping <string, int> map_of_ints;
     */
     typedef structure {
-        string genbank_file_location;
+        list <string> genbank_files;
+        string file_format;
         string genome_source;
         string genome_domain;
         string refseq_category;
@@ -67,7 +68,6 @@ module kb_Metrics {
     funcdef count_genbank_genome_features(FeatureCountParams params)
         returns (FeatureCountResults output) authentication required;
 
-
-    funcdef genome_features_stats(FeatureCountParams params)
+    funcdef count_genome_features(FeatureCountParams params)
         returns (FeatureCountResults output) authentication required;
 };

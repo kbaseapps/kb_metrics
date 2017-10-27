@@ -29,7 +29,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "bd54d5b3ac8dac7f3e72ab0fc35288c57422f911"
+    GIT_COMMIT_HASH = "9bb9a2897975180af8ad0cb527ca4f5304ea6720"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -64,11 +64,12 @@ This KBase SDK module implements methods for generating various KBase metrics.
            filtering. To define lists and maps, use a syntax similar to C++
            templates to indicate the type contained in the list or map.  For
            example: list <string> list_of_strings; mapping <string, int>
-           map_of_ints;) -> structure: parameter "genbank_file_location" of
-           String, parameter "genome_source" of String, parameter
-           "genome_domain" of String, parameter "refseq_category" of String,
-           parameter "workspace_name" of String, parameter "create_report" of
-           type "bool" (A boolean - 0 for false, 1 for true. @range (0, 1))
+           map_of_ints;) -> structure: parameter "genbank_files" of list of
+           String, parameter "file_format" of String, parameter
+           "genome_source" of String, parameter "genome_domain" of String,
+           parameter "refseq_category" of String, parameter "workspace_name"
+           of String, parameter "create_report" of type "bool" (A boolean - 0
+           for false, 1 for true. @range (0, 1))
         :returns: instance of type "FeatureCountResults" (Here is the
            definition of the output of the function.  The output can be used
            by other SDK modules which call your code, or the output
@@ -82,7 +83,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
         #BEGIN count_genbank_genome_features
         m_util = metric_utils(self.config, ctx.provenance)
 
-        output = m_util.count_genome_features(params)
+        output = m_util.count_ncbi_genome_features(params)
         #END count_genbank_genome_features
 
         # At some point might do deeper type checking...
@@ -92,7 +93,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # return the results
         return [output]
 
-    def genome_features_stats(self, ctx, params):
+    def count_genome_features(self, ctx, params):
         """
         :param params: instance of type "FeatureCountParams" (A 'typedef' can
            also be used to define compound or container objects, like lists,
@@ -103,11 +104,12 @@ This KBase SDK module implements methods for generating various KBase metrics.
            filtering. To define lists and maps, use a syntax similar to C++
            templates to indicate the type contained in the list or map.  For
            example: list <string> list_of_strings; mapping <string, int>
-           map_of_ints;) -> structure: parameter "genbank_file_location" of
-           String, parameter "genome_source" of String, parameter
-           "genome_domain" of String, parameter "refseq_category" of String,
-           parameter "workspace_name" of String, parameter "create_report" of
-           type "bool" (A boolean - 0 for false, 1 for true. @range (0, 1))
+           map_of_ints;) -> structure: parameter "genbank_files" of list of
+           String, parameter "file_format" of String, parameter
+           "genome_source" of String, parameter "genome_domain" of String,
+           parameter "refseq_category" of String, parameter "workspace_name"
+           of String, parameter "create_report" of type "bool" (A boolean - 0
+           for false, 1 for true. @range (0, 1))
         :returns: instance of type "FeatureCountResults" (Here is the
            definition of the output of the function.  The output can be used
            by other SDK modules which call your code, or the output
@@ -118,13 +120,15 @@ This KBase SDK module implements methods for generating various KBase metrics.
         """
         # ctx is the context object
         # return variables are: output
-        #BEGIN genome_features_stats
+        #BEGIN count_genome_features
+        m_util = metric_utils(self.config, ctx.provenance)
 
-        #END genome_features_stats
+        output = m_util.count_genome_features(params)
+        #END count_genome_features
 
         # At some point might do deeper type checking...
         if not isinstance(output, dict):
-            raise ValueError('Method genome_features_stats return value ' +
+            raise ValueError('Method count_genome_features return value ' +
                              'output is not type dict as required.')
         # return the results
         return [output]
