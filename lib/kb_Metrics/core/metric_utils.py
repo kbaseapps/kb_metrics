@@ -116,8 +116,29 @@ class metric_utils:
                         "seq_rel_date": columns[14], #date the sequence was released
                         "gbrs_paired_asm": columns[17]
                     })
-        log("Found {} {} genomes in NCBI {}/{}".format(
-                                str(len(ncbi_genomes)), refseq_category, genome_source, division))
+                elif (refseq_category == 'na' and not columns[4]):
+                    ncbi_genomes.append({
+                        "domain": division,
+                        "genome_source": genome_source,
+                        "refseq_category": 'na',
+                        "accession": columns[0],
+                        "version_status": columns[10],# latest/replaced/suppressed
+                        "organism_name": columns[7],
+                        "asm_name": columns[15],
+                        "ftp_file_dir": columns[19], #path to the directory for download
+                        "genome_file_name": "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz"),
+                        "genome_url": os.path.join(columns[19], "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz    ")),
+                        "genome_id": columns[0].split('.')[0],
+                        "genome_version": columns[0].split('.')[1],
+                        "tax_id": columns[5],
+                        "assembly_level": columns[11], #Complete/Chromosome/Scaffold/Contig
+                        "release_level": columns[12],  #Majoy/Minor/Patch
+                        "genome_rep": columns[13], #Full/Partial
+                        "seq_rel_date": columns[14], #date the sequence was released
+                        "gbrs_paired_asm": columns[17]
+                    })
+        log("\nFound {} {} genomes in NCBI {}/{}".format(
+                   str(len(ncbi_genomes)), refseq_category, genome_source, division))
 
         return ncbi_genomes
 
