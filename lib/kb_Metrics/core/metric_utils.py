@@ -222,9 +222,9 @@ class metric_utils:
 
         report_info = self.kbr.create_extended_report({'message': report_text,
                                                   'report_object_name': 'kb_Metrics_report_' + str(uuid.uuid4()),
-                                                  'direct_html_link_index': 0,
-                                                  'workspace_name': params['workspace_name']
+                                                  'workspace_name': params[self.PARAM_IN_WS]
                                                   })
+
         return report_info
 
     def _get_feature_counts(self, gn_file, file_format, organism_name=None):
