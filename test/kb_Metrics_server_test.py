@@ -90,12 +90,34 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_kb_metrics")
-    def test_run_kb_metrics(self):
+    @unittest.skip("skipped test_run_count_genome_features")
+    def test_run_count_genome_features(self):
         # First load a test FASTA file as an KBase Assembly
         m_params =     {
             'workspace_name': self.getWsName(),
-            'genbank_file_location': 'ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/009/605/GCF_000009605.1_ASM960v1/GCF_000009605.1_ASM960v1_genomic.gbff.gz',
+            'genbank_files': ['ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/009/605/GCF_000009605.1_ASM960v1/GCF_000009605.1_ASM960v1_genomic.gbff.gz'],
+            'genome_source': 'refseq',
+            'genome_domain': 'bacteria',
+            'refseq_category': 'reference',
+            'create_report': 0
+        }
+        # Second, call your implementation
+        ret = self.getImpl().count_genome_features(self.getContext(), m_params)
+
+        # Validate the returned data
+        #self.assertEqual(ret[0]['n_initial_contigs'], 3)
+        #self.assertEqual(ret[0]['n_contigs_removed'], 1)
+        #self.assertEqual(ret[0]['n_contigs_remaining'], 2)
+
+
+    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_count_genbank_genome_features")
+    def test_run_count_genbank_genome_features(self):
+        # First load a test FASTA file as an KBase Assembly
+        m_params =     {
+            'workspace_name': self.getWsName(),
+            'genbank_files': [],
             'genome_source': 'refseq',
             'genome_domain': 'bacteria',
             'refseq_category': 'reference',

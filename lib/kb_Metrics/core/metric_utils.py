@@ -133,7 +133,7 @@ class metric_utils:
             gn_file = gn['genome_url']
             ncbi_count_results.append({
                 'genome': gn,
-                'count_results': self._get_feature_counts(gn_f, gnf_format)
+                'count_results': self._get_feature_counts(gn_file, gnf_format)
             })
 
         wsname = params['workspace_name']
