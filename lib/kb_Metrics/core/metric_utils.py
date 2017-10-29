@@ -149,6 +149,14 @@ class metric_utils:
         ncbi_gns = self._list_ncbi_genomes(params['genome_source'],
                                 params['genome_domain'], params['refseq_category'])
 
+        returnVal = {
+            "report_ref": None,
+            "report_name": None
+        }
+
+        if len(ncbi_gns) == 0:
+            return returnVal
+
         gnf_format = 'genbank'
         feature_printouts = []
         genome_feature_info = []
@@ -168,11 +176,6 @@ class metric_utils:
                 #gn_feat_printout = self._printout_feature_counts(gn_feature_counts)
                 #log(gn_feat_printout)
                 #feature_printouts.append(gn_feat_printout)
-
-        returnVal = {
-            "report_ref": None,
-            "report_name": None
-        }
 
         if params['create_report'] == 1:
             report_info = self.generate_report(count_dir, params)
