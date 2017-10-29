@@ -13,6 +13,7 @@ from pprint import pprint, pformat
 from urllib2 import Request, urlopen
 from urllib2 import URLError, HTTPError
 import urllib
+import errno
 
 from Bio import Entrez, SeqIO
 from numpy import median, mean, max
