@@ -639,11 +639,11 @@ class metric_utils:
         try:
             resp = urlopen(req)
         except HTTPError as e:
-            print('The server couldn\'t fulfill the request.')
-            print('Error code: ', e.code)
+            log('The server couldn\'t fulfill the request to download {}.'.format(file_url))
+            log('Error code: ', e.code)
         except URLError as e:
-            print('We failed to reach a server.')
-            print('Reason: ', e.reason)
+            log('We failed to reach a server to download {}.'.format(file_url))
+            log('Reason: ', e.reason)
         else:# everything is fine
             pass
 
