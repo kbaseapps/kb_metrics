@@ -611,8 +611,8 @@ class metric_utils:
             log('Reason: ', e.reason)
         except IOError as e:
             log('Caught IOError when downloading {}.'.format(file_url))
-            log('Error code: ', e.code)
             log('Error number: ', e.errno)
+            log('Error code: ', e.strerror)
             if e.errno == errno.ENOSPC:
                 log('No space left on device.')
             elif e.errno == 110:#[Errno ftp error] [Errno 110] Connection timed out
@@ -620,7 +620,7 @@ class metric_utils:
                 try:
                     fh = urllib2.urlopen(file_url)
                     data = fh.read()
-                    with open(download_file, "wb") as dfh:
+                    with open(download_file, "w") as dfh:
                         dfh.write(data)
                 except:
                     log('Connection timed out, urlopen try also failed!')
