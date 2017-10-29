@@ -233,7 +233,7 @@ class metric_utils:
 
 
     def generate_report(self, count_dir, params):
-        output_files = self._generate_output_file_list(count_dir)
+        output_files = self._generate_output_file_list(count_dir, params)
         # create report
         report_text = 'Summary of genome feature stats:\n\n'
         #report_text += ''.join(count_info)
@@ -248,7 +248,7 @@ class metric_utils:
         return report_info
 
 
-    def _generate_output_file_list(self, out_dir):
+    def _generate_output_file_list(self, out_dir, params):
         """
         _generate_output_file_list: zip result files and generate file_links for report
         """
@@ -258,7 +258,8 @@ class metric_utils:
 
         output_directory = os.path.join(self.scratch, str(uuid.uuid4()))
         _mkdir_p(output_directory)
-        feature_counts = os.path.join(output_directory, 'Feature_counts.zip')
+        feature_counts = os.path.join(output_directory, '{}_{}_{}_Feature_counts.zip'.format(
+                        params['genome_source'], params['genome_domain'], params['refseq_category']))
         self.zip_folder(out_dir, feature_counts)
 
         output_files.append({'path': feature_counts,
@@ -306,14 +307,13 @@ class metric_utils:
             'feature_lengths': feature_len_dict
         }
         """
-        #log("\nInput file location: {}".format(gn_file))
         if organism_name is None:
             organism_name = os.path.basename(gn_file)
 
         #download the file from ftp site
         file_resp = self._download_file_by_url( gn_file )
 
-        if os.path.isfile(file_resp):
+        if os.path.isfile(file_resp) and os.stat(file_resp).st_size > 0:
             #processing the file to get counts
             total_contig_count = 0
             total_feat_count = 0
@@ -601,11 +601,28 @@ class metric_utils:
         try:
             urllib.urlretrieve(file_url, download_file)
         except HTTPError as e:
-            print('The server couldn\'t fulfill the request.')
-            print('Error code: ', e.code)
+            log('The server couldn\'t download {}.'.format(file_url))
+            log('Error code: ', e.code)
         except URLError as e:
-            print('We failed to reach a server.')
-            print('Reason: ', e.reason)
+            log('We failed to reach the server to download {}.'.format(file_url))
+            log('Reason: ', e.reason)
+        except IOError as e:
+            log('Caught IOError when downloading {}.'.format(file_url))
+            log('Error code: ', e.code)
+            log('Error number: ', e.errno)
+            if e.errno == errno.ENOSPC:
+                log('No space left on device.')
+            elif e.errno == 110:#[Errno ftp error] [Errno 110] Connection timed out
+                log('Connection timed out, trying to urlopen!')
+                try:
+                    fh = urllib2.urlopen(file_url)
+                    data = fh.read()
+                    with open(download_file, "wb") as dfh:
+                        dfh.write(data)
+                except:
+                    log('Connection timed out, urlopen try also failed!')
+                else:
+                    pass
         else:# everything is fine
             pass
 
