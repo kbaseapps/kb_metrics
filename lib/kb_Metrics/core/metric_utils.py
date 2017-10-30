@@ -743,14 +743,14 @@ class metric_utils:
             "dashboard.draw(data);\n" \
         "}\n"
 
-        footContent = "</script></head>\n" \
-          "<body>\n" \
-          "  <div id='dashboard'>\n" \
+        footContent = "</script></head>\n<body>\n"
+        footContent += "  <h4>Feature counts stats for {}:</h4>\n".format(feat_dt['organism_name'])
+        footContent += "  <div id='dashboard'>\n" \
           "      <div id='string_filter_div'></div>\n" \
           "      <div id='table_div'></div>\n" \
           "  </div>\n" \
           "</body>\n" \
-        "</html>"
+          "</html>"
 
         html_str = headContent + drawTable + dash_tab_filter + footContent
         #html_str_cut = headContent + drawTable_cut + dash_tab_filter + footContent
