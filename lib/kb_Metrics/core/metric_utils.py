@@ -62,6 +62,9 @@ class metric_utils:
         self.ws_client = Workspace(self.workspace_url, token=self.token)
         self.kbr = KBaseReport(self.callback_url)
 
+        self.count_dir = os.path.join(self.scratch, str(uuid.uuid4()))
+        _mkdir_p(self.count_dir)
+
 
     def _list_ncbi_genomes(self, genome_source='refseq', division='bacteria', refseq_category='reference'):
         """
@@ -160,18 +163,16 @@ class metric_utils:
 
         gnf_format = 'genbank'
         feature_printouts = []
-        genome_feature_info = []
-        count_dir = os.path.join(self.scratch, str(uuid.uuid4()))
-        _mkdir_p(count_dir)
+        genome_feature_counts = []
 
-        count_file_full_path = os.path.join(count_dir, 'Feature_Counts.json')
+        count_file_full_path = os.path.join(self.count_dir, 'Feature_Counts.json')
         with open(count_file_full_path, 'a') as count_file:
             for gn in ncbi_gns:
                 gn_feature_counts = self._get_feature_counts(gn['genome_url'], gnf_format, gn['organism_name'])
                 gn_feature_info = self._create_feature_count_json(gn_feature_counts)
-                log("Json structure:\n" + pformat(gn_feature_info))
+                #log("Json structure:\n" + pformat(gn_feature_info))
                 count_file.write(pformat(gn_feature_info))
-                genome_feature_info.append(gn_feature_info)
+                genome_feature_counts.append(gn_feature_info)
 
                 #log("\nprintouts:\n")
                 #gn_feat_printout = self._printout_feature_counts(gn_feature_counts)
@@ -179,7 +180,7 @@ class metric_utils:
                 #feature_printouts.append(gn_feat_printout)
 
         if params['create_report'] == 1:
-            report_info = self.generate_report(count_dir, params)
+            report_info = self.generate_report(self.count_dir, genome_feature_counts, params)
             returnVal = {
                 'report_name': report_info['name'],
                 'report_ref': report_info['ref']
@@ -202,19 +203,17 @@ class metric_utils:
         if params.get('create_report', None) is None:
             params['create_report'] = 0
 
-        genome_feature_info = []
+        genome_feature_counts = []
         feature_printouts = []
-        count_dir = os.path.join(self.scratch, str(uuid.uuid4()))
-        _mkdir_p(count_dir)
 
-        count_file_full_path = os.path.join(count_dir, 'Feature_Counts.json')
+        count_file_full_path = os.path.join(self.count_dir, 'Feature_Counts.json')
         with open(count_file_full_path, 'a') as count_file:
             for gn_f in gn_files:
                 gn_feature_counts = self._get_feature_counts(gn_f, params['file_format'])
                 gn_feature_info = self._create_feature_count_json(gn_feature_counts)
-                log("Json structure:\n" + pformat(gn_feature_info))
+                #log("Json structure:\n" + pformat(gn_feature_info))
                 count_file.write(pformat(gn_feature_info))
-                genome_feature_info.append(gn_feature_info)
+                genome_feature_counts.append(gn_feature_info)
 
                 #count_file.write('******Organism/file name: {}******\nTOTAL CONTIG COUNT={}'.format(
                 #gn_feat_printout = self._printout_feature_counts(gn_feature_counts)
@@ -227,7 +226,7 @@ class metric_utils:
         }
 
         if params['create_report'] == 1:
-            report_info = self.generate_report(count_dir, params)
+            report_info = self.generate_report(self.count_dir, genome_feature_counts, params)
             returnVal = {
                 'report_name': report_info['name'],
                 'report_ref': report_info['ref']
@@ -236,8 +235,9 @@ class metric_utils:
         return returnVal
 
 
-    def generate_report(self, count_dir, params):
-        output_files = self._generate_output_file_list(count_dir, params)
+    def generate_report(self, count_dir, feat_counts_info, params):
+        output_html_files = self._generate_html_report(count_dir, feat_counts_info, params)
+        output_json_files = self._generate_output_file_list(count_dir, params)
         # create report
         report_text = 'Summary of genome feature stats:\n\n'
         #report_text += ''.join(count_info)
@@ -245,56 +245,14 @@ class metric_utils:
         report_info = self.kbr.create_extended_report({
                         'message': report_text,
                         'report_object_name': 'kb_Metrics_report_' + str(uuid.uuid4()),
-                        'file_links': output_files,
+                        'file_links': output_json_files,
+                        'direct_html_link_index': 0,
+                        'html_links': output_html_files,
+                        'html_window_height': 366,
                         'workspace_name': params[self.PARAM_IN_WS]
                       })
 
         return report_info
-
-
-    def _generate_output_file_list(self, out_dir, params):
-        """
-        _generate_output_file_list: zip result files and generate file_links for report
-        """
-        log('start packing result files')
-
-        output_files = list()
-
-        output_directory = os.path.join(self.scratch, str(uuid.uuid4()))
-        _mkdir_p(output_directory)
-        feature_counts = os.path.join(output_directory, '{}_{}_{}_Feature_counts.zip'.format(
-                        params['genome_source'], params['genome_domain'], params['refseq_category']))
-        self.zip_folder(out_dir, feature_counts)
-
-        output_files.append({'path': feature_counts,
-                             'name': os.path.basename(feature_counts),
-                             'label': os.path.basename(feature_counts),
-                             'description': 'Genome feature counts generated by kb_Metrics'})
-
-        return output_files
-
-
-    def zip_folder(self, folder_path, output_path):
-        """Zip the contents of an entire folder (with that folder included in the archive). 
-        Empty subfolders could be included in the archive as well if the commented portion is used.
-        """
-        with zipfile.ZipFile(output_path, 'w',
-                             zipfile.ZIP_DEFLATED,
-                             allowZip64=True) as ziph:
-            for root, folders, files in os.walk(folder_path):
-                # Include all subfolders, including empty ones.
-                #for folder_name in folders:
-                #    absolute_path = os.path.join(root, folder_name)
-                #    relative_path = os.path.join(os.path.basename(root), folder_name)
-                #    print "Adding {} to archive.".format(absolute_path)
-                #    ziph.write(absolute_path, relative_path)
-                for f in files:
-                    absolute_path = os.path.join(root, f)
-                    relative_path = os.path.join(os.path.basename(root), f)
-                    #print "Adding {} to archive.".format(absolute_path)
-                    ziph.write(absolute_path, relative_path)
-
-        print "{} created successfully.".format(output_path)
 
 
     def _get_feature_counts(self, gn_file, file_format, organism_name=None):
@@ -594,6 +552,8 @@ class metric_utils:
 
         genome_feature_info['feature_counts_stats'] = feat_counts_stats
 
+        self._write_html( self.count_dir, genome_feature_info )
+
         return genome_feature_info
 
 
@@ -668,4 +628,161 @@ class metric_utils:
             params['create_report'] = 0
 
         return params
+
+
+    def _generate_output_file_list(self, out_dir, params):
+        """
+        _generate_output_file_list: zip result files and generate file_links for report
+        """
+        log('start packing result files')
+
+        output_files = list()
+
+        output_directory = os.path.join(self.scratch, str(uuid.uuid4()))
+        _mkdir_p(output_directory)
+        feature_counts = os.path.join(output_directory, '{}_{}_{}_Feature_counts.zip'.format(
+                        params['genome_source'], params['genome_domain'], params['refseq_category']))
+        self.zip_folder(out_dir, feature_counts)
+
+        output_files.append({'path': feature_counts,
+                             'name': os.path.basename(feature_counts),
+                             'label': os.path.basename(feature_counts),
+                             'description': 'Genome feature counts generated by kb_Metrics'})
+
+        return output_files
+
+
+    def zip_folder(self, folder_path, output_path):
+        """Zip the contents of an entire folder (with that folder included in the archive).
+        Empty subfolders could be included in the archive as well if the commented portion is used.
+        """
+        with zipfile.ZipFile(output_path, 'w',
+                             zipfile.ZIP_DEFLATED,
+                             allowZip64=True) as ziph:
+            for root, folders, files in os.walk(folder_path):
+                # Include all subfolders, including empty ones.
+                #for folder_name in folders:
+                #    absolute_path = os.path.join(root, folder_name)
+                #    relative_path = os.path.join(os.path.basename(root), folder_name)
+                #    print "Adding {} to archive.".format(absolute_path)
+                #    ziph.write(absolute_path, relative_path)
+                for f in files:
+                    absolute_path = os.path.join(root, f)
+                    relative_path = os.path.join(os.path.basename(root), f)
+                    #print "Adding {} to archive.".format(absolute_path)
+                    ziph.write(absolute_path, relative_path)
+
+        print "{} created successfully.".format(output_path)
+
+
+    def _write_html(self, out_dir, feat_dt, cutoff=2):
+        log('\nInput json:\n' + pformat(feat_dt))
+
+        headContent = ("<html><head>\n"
+            "<script type='text/javascript' src='https://www.google.com/jsapi'></script>\n"
+            "<script type='text/javascript'>\n"
+            "  google.load('visualization', '1', {packages:['controls'], callback: drawTable});\n"
+            "  google.setOnLoadCallback(drawTable);\n")
+
+        #the table caption
+        drawTable = ("\nfunction drawTable() {\n"
+            "var data = new google.visualization.DataTable();\n"
+            "data.addColumn('string', 'feature_type');\n"
+            "data.addColumn('number', 'count');\n"
+            "data.addColumn('number', 'feature_mean_len');\n"
+            "data.addColumn('number', 'feature_median_len');\n"
+            "data.addColumn('number', 'feature_max_len');")
+
+        #the data rows
+        row_cnt = 0
+        fd_rows = ""
+        fd_rows_cut = ""
+        for fd in feat_dt['feature_counts_stats']:
+            if fd_rows != "":
+                fd_rows += ",\n"
+            d_rows = []
+            d_rows.append("'" + fd['feature_type'] + "'")
+            d_rows.append(str(fd['count']))
+            d_rows.append(str(fd['len_stat']['mean']))
+            d_rows.append(str(fd['len_stat']['median']))
+            d_rows.append(str(fd['len_stat']['max']))
+
+            fd_rows += '[' + ','.join(d_rows) + ']'
+
+            row_cnt += 1
+            if row_cnt <= cutoff:
+                fd_rows_cut = fd_rows
+
+        drawTable += "\ndata.addRows([\n"
+
+        drawTable_cut = drawTable
+        drawTable_cut += fd_rows_cut
+        drawTable_cut += "\n]);"
+
+        drawTable += fd_rows
+        drawTable += "\n]);"
+
+        #the dashboard, table and search filter
+        dash_tab_filter = "\n" \
+            "var dashboard = new google.visualization.Dashboard(document.querySelector('#dashboard'));\n" \
+            "var stringFilter = new google.visualization.ControlWrapper({\n" \
+            "    controlType: 'StringFilter',\n" \
+            "    containerId: 'string_filter_div',\n" \
+            "    options: {\n" \
+            "        filterColumnIndex: 0\n" \
+            "    }\n" \
+            "});\n" \
+            "var table = new google.visualization.ChartWrapper({\n" \
+            "    chartType: 'Table',\n" \
+            "    containerId: 'table_div',\n" \
+            "    options: {\n" \
+            "        showRowNumber: true\n" \
+            "    }\n" \
+            "});\n" \
+            "dashboard.bind([stringFilter], [table]);\n" \
+            "dashboard.draw(data);\n" \
+        "}\n"
+
+        footContent = "</script></head>\n" \
+          "<body>\n" \
+          "  <div id='dashboard'>\n" \
+          "      <div id='string_filter_div'></div>\n" \
+          "      <div id='table_div'></div>\n" \
+          "  </div>\n" \
+          "</body>\n" \
+        "</html>"
+
+        html_str = headContent + drawTable + dash_tab_filter + footContent
+        #html_str_cut = headContent + drawTable_cut + dash_tab_filter + footContent
+        #return {'html_full': html_str, 'html_partial': html_str_cut}
+        log(html_str)
+
+        html_file_path = os.path.join(out_dir, '{}_Feature_counts.html'.format(feat_dt['organism_name']))
+
+        with open(html_file_path, 'w') as html_file:
+                html_file.write('html_str')
+
+        return {'html_file': html_str, 'html_path': html_file_path}
+
+
+    def _generate_html_report(self, out_dir, feat_counts, params):
+        """
+        _generate_html_report: generate html report given the json data in feat_counts
+
+        """
+        log('start generating html report')
+        html_report = list()
+
+        html_file_path = self._write_html(out_dir, feat_counts[0])
+        org_name = feat_counts[0]['organism_name']
+
+        log(html_file_path['html_file'])
+        html_report.append({'path': html_file_path['html_path'],
+                            'name': org_name,
+                            'label': org_name,
+                            'description': 'The feature_counts for one of the orgnisms of {}_{}_{}.'.format(
+                                        params["genome_source"], params["genome_domain"], params["refseq_category"])
+                        })
+
+        return html_report
 
