@@ -696,9 +696,9 @@ class metric_utils:
                 d_rows.append(str(fd['len_stat']['median']))
                 d_rows.append(str(fd['len_stat']['max']))
             else:
-                d_rows.append('NA')
-                d_rows.append('NA')
-                d_rows.append('NA')
+                d_rows.append(str(0))
+                d_rows.append(str(0))
+                d_rows.append(str(0))
 
             fd_rows += '[' + ','.join(d_rows) + ']'
 
