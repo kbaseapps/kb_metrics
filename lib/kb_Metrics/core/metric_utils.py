@@ -763,6 +763,7 @@ class metric_utils:
         #log(html_str)
 
         name_str = feat_dt['organism_name'].replace(' ', '_')
+        name_str = name_str.replace('/', '_')
         html_file_path = os.path.join(out_dir, '{}_Feature_counts.html'.format(name_str))
 
         with open(html_file_path, 'w') as html_file:
