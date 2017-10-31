@@ -742,8 +742,8 @@ class metric_utils:
           "      <div id='string_filter_div'></div>\n" \
           "      <div id='table_div'></div>\n" \
           "  </div>\n"
-        footContent += "  <p><strong>Total Contig Count={}</strong></p>\n".format(feat_dt['total_contig_count'])
-        footContent += "  <p><strong>Total Feature Count={}</strong></p>\n".format(feat_dt['total_feature_count'])
+        footContent += "  <p><strong>Total Contig Count = {}</strong></p>\n".format(feat_dt['total_contig_count'])
+        footContent += "  <p><strong>Total Feature Count = {}</strong></p>\n".format(feat_dt['total_feature_count'])
         footContent += "</body>\n</html>"
 
         html_str = headContent + drawTable + dash_tab_filter + footContent
