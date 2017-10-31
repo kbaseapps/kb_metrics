@@ -676,7 +676,7 @@ class metric_utils:
 
 
     def _write_html(self, out_dir, feat_dt, cutoff=2):
-        #log('\nInput json:\n' + pformat(feat_dt))
+        log('\nInput json:\n' + pformat(feat_dt))
 
         headContent = ("<html><head>\n"
             "<script type='text/javascript' src='https://www.google.com/jsapi'></script>\n"
