@@ -162,9 +162,7 @@ class metric_utils:
             return returnVal
 
         gnf_format = 'genbank'
-        feature_printouts = []
         genome_feature_counts = []
-
         count_file_full_path = os.path.join(self.count_dir, 'Feature_Counts.json')
         with open(count_file_full_path, 'a') as count_file:
             for gn in ncbi_gns:
@@ -173,11 +171,6 @@ class metric_utils:
                 #log("Json structure:\n" + pformat(gn_feature_info))
                 count_file.write(pformat(gn_feature_info))
                 genome_feature_counts.append(gn_feature_info)
-
-                #log("\nprintouts:\n")
-                #gn_feat_printout = self._printout_feature_counts(gn_feature_counts)
-                #log(gn_feat_printout)
-                #feature_printouts.append(gn_feat_printout)
 
         if params['create_report'] == 1:
             report_info = self.generate_report(self.count_dir, genome_feature_counts, params)
@@ -204,21 +197,15 @@ class metric_utils:
             params['create_report'] = 0
 
         genome_feature_counts = []
-        feature_printouts = []
 
         count_file_full_path = os.path.join(self.count_dir, 'Feature_Counts.json')
         with open(count_file_full_path, 'a') as count_file:
             for gn_f in gn_files:
-                gn_feature_counts = self._get_feature_counts(gn_f, params['file_format'],'Chlamydia trachomatis D/UW-3/CX')
+                gn_feature_counts = self._get_feature_counts(gn_f, params['file_format'])
                 gn_feature_info = self._create_feature_count_json(gn_feature_counts)
                 #log("Json structure:\n" + pformat(gn_feature_info))
                 count_file.write(pformat(gn_feature_info))
                 genome_feature_counts.append(gn_feature_info)
-
-                #count_file.write('******Organism/file name: {}******\nTOTAL CONTIG COUNT={}'.format(
-                #gn_feat_printout = self._printout_feature_counts(gn_feature_counts)
-                #log(gn_feat_printout)
-                #feature_printouts.append(gn_feat_printout)
 
         returnVal = {
             "report_ref": None,
@@ -270,7 +257,8 @@ class metric_utils:
         }
         """
         if organism_name is None:
-            organism_name = os.path.basename(gn_file)
+            organism_name = os.path.basename(gn_file)#'GCF_000009605.1_ASM960v1_genomic.gbff.gz'
+            organism_name = re.sub('_genomic.gbff.gz', '', organism_name)
 
         #download the file from ftp site
         file_resp = self._download_file_by_url( gn_file )
@@ -753,9 +741,10 @@ class metric_utils:
         footContent += "  <div id='dashboard'>\n" \
           "      <div id='string_filter_div'></div>\n" \
           "      <div id='table_div'></div>\n" \
-          "  </div>\n" \
-          "</body>\n" \
-          "</html>"
+          "  </div>\n"
+        footContent += "  <p><strong>Total Contig Count={}</strong></p>\n".format(feat_dt['total_contig_count'])
+        footContent += "  <p><strong>Total Feature Count={}</strong></p>\n".format(feat_dt['total_feature_count'])
+        footContent += "</body>\n</html>"
 
         html_str = headContent + drawTable + dash_tab_filter + footContent
         #html_str_cut = headContent + drawTable_cut + dash_tab_filter + footContent
