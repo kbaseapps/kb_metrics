@@ -209,7 +209,7 @@ class metric_utils:
         count_file_full_path = os.path.join(self.count_dir, 'Feature_Counts.json')
         with open(count_file_full_path, 'a') as count_file:
             for gn_f in gn_files:
-                gn_feature_counts = self._get_feature_counts(gn_f, params['file_format'])
+                gn_feature_counts = self._get_feature_counts(gn_f, params['file_format'],'Chlamydia trachomatis D/UW-3/CX')
                 gn_feature_info = self._create_feature_count_json(gn_feature_counts)
                 #log("Json structure:\n" + pformat(gn_feature_info))
                 count_file.write(pformat(gn_feature_info))
@@ -762,8 +762,8 @@ class metric_utils:
         #return {'html_full': html_str, 'html_partial': html_str_cut}
         #log(html_str)
 
-        name_str = feat_dt['organism_name'].replace(' ', '_')
-        name_str = name_str.replace('/', '_')
+        #replace all metacharacters with '_' for file naming purpose
+        name_str = re.sub('[ \/\.\^\$\*\+\?\{\}\[\]\|\\\(\)]', '_', feat_dt['organism_name'])
         html_file_path = os.path.join(out_dir, '{}_Feature_counts.html'.format(name_str))
 
         with open(html_file_path, 'w') as html_file:
