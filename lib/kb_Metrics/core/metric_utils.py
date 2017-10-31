@@ -676,7 +676,7 @@ class metric_utils:
 
 
     def _write_html(self, out_dir, feat_dt, cutoff=2):
-        log('\nInput json:\n' + pformat(feat_dt))
+        #log('\nInput json:\n' + pformat(feat_dt))
 
         headContent = ("<html><head>\n"
             "<script type='text/javascript' src='https://www.google.com/jsapi'></script>\n"
@@ -755,7 +755,7 @@ class metric_utils:
         html_str = headContent + drawTable + dash_tab_filter + footContent
         #html_str_cut = headContent + drawTable_cut + dash_tab_filter + footContent
         #return {'html_full': html_str, 'html_partial': html_str_cut}
-        log(html_str)
+        #log(html_str)
 
         name_str = feat_dt['organism_name'].replace(' ', '_')
         html_file_path = os.path.join(out_dir, '{}_Feature_counts.html'.format(name_str))
