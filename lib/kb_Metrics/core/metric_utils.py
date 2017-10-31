@@ -238,9 +238,9 @@ class metric_utils:
     def generate_report(self, count_dir, feat_counts_info, params):
         output_html_files = self._generate_html_report(count_dir, feat_counts_info, params)
         output_json_files = self._generate_output_file_list(count_dir, params)
+
         # create report
         report_text = 'Summary of genome feature stats:\n\n'
-        #report_text += ''.join(count_info)
 
         report_info = self.kbr.create_extended_report({
                         'message': report_text,
@@ -757,7 +757,8 @@ class metric_utils:
         #return {'html_full': html_str, 'html_partial': html_str_cut}
         log(html_str)
 
-        html_file_path = os.path.join(out_dir, '{}_Feature_counts.html'.format(feat_dt['organism_name']))
+        name_str = feat_dt['organism_name'].replace(' ', '_')
+        html_file_path = os.path.join(out_dir, '{}_Feature_counts.html'.format(name_str))
 
         with open(html_file_path, 'w') as html_file:
                 html_file.write('html_str')
@@ -770,13 +771,13 @@ class metric_utils:
         _generate_html_report: generate html report given the json data in feat_counts
 
         """
-        log('start generating html report')
+        #log('start generating html report')
         html_report = list()
 
         html_file_path = self._write_html(out_dir, feat_counts[0])
         org_name = feat_counts[0]['organism_name']
 
-        log(html_file_path['html_file'])
+        #log(html_file_path['html_file'])
         html_report.append({'path': html_file_path['html_path'],
                             'name': org_name,
                             'label': org_name,
