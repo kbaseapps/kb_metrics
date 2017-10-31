@@ -703,9 +703,14 @@ class metric_utils:
             d_rows = []
             d_rows.append("'" + fd['feature_type'] + "'")
             d_rows.append(str(fd['count']))
-            d_rows.append(str(fd['len_stat']['mean']))
-            d_rows.append(str(fd['len_stat']['median']))
-            d_rows.append(str(fd['len_stat']['max']))
+            if fd['len_stat']:
+                d_rows.append(str(fd['len_stat']['mean']))
+                d_rows.append(str(fd['len_stat']['median']))
+                d_rows.append(str(fd['len_stat']['max']))
+            else:
+                d_rows.append('NA')
+                d_rows.append('NA')
+                d_rows.append('NA')
 
             fd_rows += '[' + ','.join(d_rows) + ']'
 
@@ -781,7 +786,7 @@ class metric_utils:
         html_report.append({'path': html_file_path['html_path'],
                             'name': org_name,
                             'label': org_name,
-                            'description': 'The feature_counts for one of the orgnisms of {}_{}_{}.'.format(
+                            'description': 'The feature_counts for one of the orgnism(s) of {}_{}_{}.'.format(
                                         params["genome_source"], params["genome_domain"], params["refseq_category"])
                         })
 
