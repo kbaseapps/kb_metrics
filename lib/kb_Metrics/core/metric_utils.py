@@ -506,7 +506,7 @@ class metric_utils:
             else:
                 feat_count_stat_across_genomes['len_stat'] = {}
 
-            log(json.dumps(feat_count_stat_across_genomes))
+            #log(json.dumps(feat_count_stat_across_genomes))
 
             feat_counts_stats_across_genomes.append(feat_count_stat_across_genomes)
 
@@ -792,7 +792,7 @@ class metric_utils:
           "</html>"
 
         html_str = headContent + drawTable + dash_tab_filter + footContent
-        log(html_str)
+        #log(html_str)
 
         #replace all metacharacters with '_' for file naming purpose
         #name_str = re.sub('[ \/\.\^\$\*\+\?\{\}\[\]\|\\\(\)]', '_', feat_dt['organism_name'])
