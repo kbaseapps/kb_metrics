@@ -168,7 +168,7 @@ class metric_utils:
 
         genome_raw_counts, genome_stats = self._get_counts_from_files(gn_files, params['file_format'])
 
-        if not gnome_stats:
+        if not genome_stats:
             return returnVal
 
         #write stats per genome
@@ -256,7 +256,7 @@ class metric_utils:
 
         genome_raw_counts, genome_stats = self._get_counts_from_ncbi(ncbi_gns, gnf_format)
 
-        if not gnome_stats:
+        if not genome_stats:
             return returnVal
 
         #write stats per genome
