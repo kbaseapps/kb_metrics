@@ -163,12 +163,18 @@ class metric_utils:
 
         genome_raw_counts, genome_stats = self._get_counts_from_files(gn_files, params['file_format'])
 
+        #write stats per genome
         count_file_full_path = os.path.join(self.count_dir, '{}_{}_{}_Feature_Counts.json'.format(
                         params['genome_source'], params['genome_domain'], params['refseq_category']))
-        with open(count_file_full_path, 'a') as count_file:
+        with open(count_file_full_path, 'w') as count_file:
             json.dump(genome_stats, count_file)
 
+        #write overall stats across genomes
         stats_across_genomes = self._feature_counts_across_genomes(genome_raw_counts)
+        all_count_full_path = os.path.join(self.count_dir, '{}_{}_{}_Overall_Feature_Counts.json'.format(
+                        params['genome_source'], params['genome_domain'], params['refseq_category']))
+        with open(all_count_full_path, 'w') as all_count_file:
+            all_count_file.write(',\n'.join(stats_across_genomes['across_genomes_feature_counts']))
 
         returnVal = {
             "report_ref": None,
@@ -242,12 +248,18 @@ class metric_utils:
 
         genome_raw_counts, genome_stats = self._get_counts_from_ncbi(ncbi_gns, gnf_format)
 
+        #write stats per genome
         count_file_full_path = os.path.join(self.count_dir, '{}_{}_{}_Feature_Counts.json'.format(
                         params['genome_source'], params['genome_domain'], params['refseq_category']))
-        with open(count_file_full_path, 'a') as count_file:
+        with open(count_file_full_path, 'w') as count_file:
             json.dump(genome_stats, count_file)
 
+        #write overall stats across genomes
         stats_across_genomes = self._feature_counts_across_genomes(genome_raw_counts)
+        all_count_full_path = os.path.join(self.count_dir, '{}_{}_{}_Overall_Feature_Counts.json'.format(
+                        params['genome_source'], params['genome_domain'], params['refseq_category']))
+        with open(all_count_full_path, 'w') as all_count_file:
+            all_count_file.write(',\n'.join(stats_across_genomes['across_genomes_feature_counts']))
 
         if params['create_report'] == 1:
             report_info = self.generate_report(self.count_dir, stats_across_genomes['across_genomes_feature_counts'], params)
@@ -454,7 +466,7 @@ class metric_utils:
                         combined_feature_lens_dict[ft] = []
                         combined_feature_lens_dict[ft].extend( feat_lens_dict[ft] )
 
-        log(json.dumps(genome_count_dict))
+        #log(json.dumps(genome_count_dict))
 
         feat_counts_stats_across_genomes = []
         feat_count_stat_across_genomes = {}
