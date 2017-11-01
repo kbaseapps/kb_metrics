@@ -819,7 +819,7 @@ class metric_utils:
         html_report.append({'path': html_file_path['html_path'],
                             'name': cap_name,
                             'label': cap_name,
-                            'description': 'The feature_counts for one of the orgnism(s) of {}_{}_{}.'.format(
+                            'description': 'The feature_counts for all of the orgnism(s) of {}_{}_{}.'.format(
                                         params["genome_source"], params["genome_domain"], params["refseq_category"])
                         })
 
