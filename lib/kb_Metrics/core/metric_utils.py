@@ -147,6 +147,82 @@ class metric_utils:
         return ncbi_genomes
 
 
+    def count_genome_features(self, params):
+        if params.get(self.PARAM_IN_GENBANK_FILES, None) is None:
+            raise ValueError(self.PARAM_IN_GENBANK_FILES +
+                        ' parameter is mandatory and has at least one string value')
+        if type(params[self.PARAM_IN_GENBANK_FILES]) != list:
+            raise ValueError(self.PARAM_IN_GENBANK_FILES + ' must be a list')
+
+        gn_files = params[self.PARAM_IN_GENBANK_FILES]
+        if params.get('file_format', None) is None:
+            params['file_format'] = 'genbank'
+
+        if params.get('create_report', None) is None:
+            params['create_report'] = 0
+
+        genome_raw_counts, genome_stats = self._get_counts_from_files(gn_files, params['file_format'])
+
+        count_file_full_path = os.path.join(self.count_dir, '{}_{}_{}_Feature_Counts.json'.format(
+                        params['genome_source'], params['genome_domain'], params['refseq_category']))
+        with open(count_file_full_path, 'a') as count_file:
+            json.dump(genome_stats, count_file)
+
+        self._genomes_feature_count(genome_raw_counts)
+
+        returnVal = {
+            "report_ref": None,
+            "report_name": None
+        }
+
+        if params['create_report'] == 1:
+            report_info = self.generate_report(self.count_dir, genome_stats['genome_feature_counts'], params)
+            returnVal = {
+                'report_name': report_info['name'],
+                'report_ref': report_info['ref']
+            }
+
+        return returnVal
+
+
+    def _get_counts_from_files(self, gn_files, file_format):
+        genome_raw_counts = []
+        genome_stats = {}
+        genome_stats['genome_feature_counts'] = []
+        for gn_f in gn_files:
+            gn_feature_counts = self._get_feature_counts(gn_f, file_format)
+            if gn_feature_counts:
+                #log("gn_feature_counts:\n" + pformat(gn_feature_counts['feature_counts']))
+                genome_raw_counts.append(gn_feature_counts)
+                gn_feature_info = self._perGenome_feature_count_json(gn_feature_counts)
+                genome_stats['genome_feature_counts'].append(gn_feature_info)
+            else:
+                log("Feature_counting for file:\n{}\nfailed to return data!\n".format(gn_f))
+
+        #log(json.dumps(genome_stats))
+
+        return (genome_raw_counts, genome_stats)
+
+
+    def _get_counts_from_ncbi(self, ncbi_gns, gnf_format):
+        genome_raw_counts = []
+        genome_stats = {}
+        genome_stats['genome_feature_counts'] = []
+        for gn in ncbi_gns:
+            gn_feature_counts = self._get_feature_counts(gn['genome_url'], gnf_format, gn['organism_name'])
+            if gn_feature_counts:
+                #log("gn_feature_counts:\n" + pformat(gn_feature_counts['feature_counts']))
+                genome_raw_counts.append(gn_feature_counts)
+                gn_feature_info = self._perGenome_feature_count_json(gn_feature_counts)
+                genome_stats['genome_feature_counts'].append(gn_feature_info)
+            else:
+                log("Feature_counting for organism:\n{}\nfailed to return data!\n".format(gn['organism_name']))
+
+        #log(json.dumps(genome_stats))
+
+        return (genome_raw_counts, genome_stats)
+
+
     def count_ncbi_genome_features(self, input_params):
         params = self.validate_parameters(input_params)
 
@@ -162,18 +238,18 @@ class metric_utils:
             return returnVal
 
         gnf_format = 'genbank'
-        genome_feature_counts = []
-        count_file_full_path = os.path.join(self.count_dir, 'Feature_Counts.json')
+
+        genome_raw_counts, genome_stats = self._get_counts_from_ncbi(ncbi_gns, gnf_format)
+
+        count_file_full_path = os.path.join(self.count_dir, '{}_{}_{}_Feature_Counts.json'.format(
+                        params['genome_source'], params['genome_domain'], params['refseq_category']))
         with open(count_file_full_path, 'a') as count_file:
-            for gn in ncbi_gns:
-                gn_feature_counts = self._get_feature_counts(gn['genome_url'], gnf_format, gn['organism_name'])
-                gn_feature_info = self._create_feature_count_json(gn_feature_counts)
-                #log("Json structure:\n" + pformat(gn_feature_info))
-                count_file.write(pformat(gn_feature_info))
-                genome_feature_counts.append(gn_feature_info)
+            json.dump(genome_stats, count_file)
+
+        self._genomes_feature_count(genome_raw_counts)
 
         if params['create_report'] == 1:
-            report_info = self.generate_report(self.count_dir, genome_feature_counts, params)
+            report_info = self.generate_report(self.count_dir, genome_stats['genome_feature_counts'], params)
             returnVal = {
                 'report_name': report_info['name'],
                 'report_ref': report_info['ref']
@@ -182,44 +258,30 @@ class metric_utils:
         return returnVal
 
 
-    def count_genome_features(self, params):
-        if params.get(self.PARAM_IN_GENBANK_FILES, None) is None:
-            raise ValueError(self.PARAM_IN_GENBANK_FILES +
-                        ' parameter is mandatory and has at least one string value')
-        if type(params[self.PARAM_IN_GENBANK_FILES]) != list:
-            raise ValueError(self.PARAM_IN_GENBANK_FILES + ' must be a list')
-
-        gn_files = params[self.PARAM_IN_GENBANK_FILES]
-        if params.get('file_format', None) is None:
-            params['file_format'] = 'genbank'
-
-        if params.get('create_report', None) is None:
-            params['create_report'] = 0
-
-        genome_feature_counts = []
-
-        count_file_full_path = os.path.join(self.count_dir, 'Feature_Counts.json')
-        with open(count_file_full_path, 'a') as count_file:
-            for gn_f in gn_files:
-                gn_feature_counts = self._get_feature_counts(gn_f, params['file_format'])
-                gn_feature_info = self._create_feature_count_json(gn_feature_counts)
-                #log("Json structure:\n" + pformat(gn_feature_info))
-                count_file.write(pformat(gn_feature_info))
-                genome_feature_counts.append(gn_feature_info)
-
-        returnVal = {
-            "report_ref": None,
-            "report_name": None
+    def _count_features_across_genomes(self, input_genome_stats):
+        """
+        _count_features_across_genomes: Given the genome statistic list, count the totals of contigs and
+        features across genomes
+        return the results in the following json structure:
+        {
+            'feature_type': name_of_feature,
+            'genome_num': genome_count,
+            'total_contig_count': total_contig_count,
+            'total_feature_count': total_feat_count,
+            'feature_counts': feature_count_dict,
+            'feature_lengths': feature_len_dict
         }
-
-        if params['create_report'] == 1:
-            report_info = self.generate_report(self.count_dir, genome_feature_counts, params)
-            returnVal = {
-                'report_name': report_info['name'],
-                'report_ref': report_info['ref']
-            }
-
-        return returnVal
+        Example of feature_count_dict:
+        {'CDS': 574,
+         'gene': 617,
+         'misc_RNA': 1,
+         'misc_feature': 8,
+         'rRNA': 3,
+         'source': 3,
+         'tRNA': 32,
+         'variation': 8}
+        """
+        pass
 
 
     def generate_report(self, count_dir, feat_counts_info, params):
@@ -241,7 +303,6 @@ class metric_utils:
 
         return report_info
 
-
     def _get_feature_counts(self, gn_file, file_format, organism_name=None):
         """
         _get_feature_counts: Given a genome file, count the totals of contigs and features
@@ -255,6 +316,15 @@ class metric_utils:
             'feature_counts': feature_count_dict,
             'feature_lengths': feature_len_dict
         }
+        Example of feature_count_dict:
+        {'CDS': 574,
+         'gene': 617,
+         'misc_RNA': 1,
+         'misc_feature': 8,
+         'rRNA': 3,
+         'source': 3,
+         'tRNA': 32,
+         'variation': 8}
         """
         if organism_name is None:
             organism_name = os.path.basename(gn_file)#'GCF_000009605.1_ASM960v1_genomic.gbff.gz'
@@ -263,13 +333,14 @@ class metric_utils:
         #download the file from ftp site
         file_resp = self._download_file_by_url( gn_file )
 
+        feature_data = {}
         if os.path.isfile(file_resp) and os.stat(file_resp).st_size > 0:
-            #processing the file to get counts
             total_contig_count = 0
             total_feat_count = 0
             feature_count_dict = dict()
             feature_lens_dict = dict() # for mean, median and max of feature lengths
 
+            #processing the file to get counts
             gn_f = gzip.open( file_resp, "r" )
             for rec in SeqIO.parse( gn_f, file_format):
                 total_contig_count += 1
@@ -284,14 +355,14 @@ class metric_utils:
                     total_feat_count += 1
             gn_f.close()
 
-        feature_data = {
-                'organism_name': organism_name,
-                'ftp_url': gn_file,
-                'total_contig_count': total_contig_count,
-                'total_feature_count': total_feat_count,
-                'feature_counts': feature_count_dict,
-                'feature_lengths': feature_lens_dict
-        }
+            feature_data = {
+                    'organism_name': organism_name,
+                    'ftp_url': gn_file,
+                    'total_contig_count': total_contig_count,
+                    'total_feature_count': total_feat_count,
+                    'feature_counts': feature_count_dict,
+                    'feature_lengths': feature_lens_dict
+            }
 
         return feature_data
 
@@ -357,9 +428,95 @@ class metric_utils:
         return feature_printout
 
 
-    def _create_feature_count_json(self, feature_data):
+    def _genomes_feature_count(self, feature_data_list):
         """
-        _create_feature_count_json: Given the feature_data containing dict structure of feature counts
+        _genomes_feature_count: Given a list of feature_data containing dict structure of feature counts
+        and feature lengths, combine the counts into feature base across all genomes
+
+        input feature_data_list is expected to be a list o the following json structure:
+        feature_data_list=[{
+            'organism_name': organism_name,
+            'ftp_url': gn_file,
+            'total_contig_count': total_contig_count,
+            'total_feature_count': total_feat_count,
+            'feature_counts': feature_count_dict,
+            'feature_lengths': feature_len_dict
+        },
+        ...
+        ]
+
+        Example of output:
+        counts_across_genomes = {
+                'total_feature_counts': total_feature_count_dict,
+                'genome_counts': genome_count_dict,
+                'combined_feature_lengths': combined_feature_lens_dict,
+                'across_genomes_feature_counts': feat_counts_stats_across_genomes
+        }
+        """
+        across_genomes_feature_counts = []
+        total_feature_count_dict = dict()
+        genome_count_dict = dict()
+        combined_feature_lens_dict = dict()
+
+        for gnf in feature_data_list:
+            feat_counts_dict = gnf['feature_counts']
+            feat_lens_dict = gnf['feature_lengths']
+            for ft in sorted(feat_lens_dict):
+                ft_count = feat_counts_dict[ft]
+                if ft in total_feature_count_dict:
+                    total_feature_count_dict[ft] += ft_count
+                else:
+                    total_feature_count_dict[ft] = ft_count
+                if ft in genome_count_dict:
+                    genome_count_dict[ft] += 1
+                else:
+                    genome_count_dict[ft] = 1
+
+                if len( feat_lens_dict[ft] ) > 0:
+                    if ft in combined_feature_lens_dict:
+                        combined_feature_lens_dict[ft].extend( feat_lens_dict[ft] )
+                    else:
+                        combined_feature_lens_dict[ft] = []
+                        combined_feature_lens_dict[ft].extend( feat_lens_dict[ft] )
+
+        log(json.dumps(genome_count_dict))
+
+        feat_counts_stats_across_genomes = []
+        feat_count_stat_across_genomes = {}
+        for feat_type in sorted( combined_feature_lens_dict ):
+            feat_count = total_feature_count_dict[feat_type]
+            genome_count = genome_count_dict[feat_type]
+            feat_count_stat_across_genomes = {
+                'feature_type': feat_type,
+                'total_feature_count': feat_count,
+                'total_genome_count': genome_count
+            }
+            if len( combined_feature_lens_dict[feat_type] ) > 0:
+                feat_count_stat_across_genomes['len_stat'] = {
+                     'mean': mean( combined_feature_lens_dict[feat_type] ),
+                     'median': median( combined_feature_lens_dict[feat_type] ),
+                     'max': max( combined_feature_lens_dict[feat_type] )
+                }
+            else:
+                feat_count_stat_across_genomes['len_stat'] = {}
+
+            log(json.dumps(feat_count_stat_across_genomes))
+
+            feat_counts_stats_across_genomes.append(feat_count_stat_across_genomes)
+
+        counts_across_genomes = {
+                'total_feature_counts': total_feature_count_dict,
+                'genome_counts': genome_count_dict,
+                'combined_feature_lengths': combined_feature_lens_dict,
+                'across_genomes_feature_counts': feat_counts_stats_across_genomes
+        }
+
+        return counts_across_genomes
+
+
+    def _perGenome_feature_count_json(self, feature_data):
+        """
+        _perGenome_feature_count_json: Given the feature_data containing dict structure of feature counts
         and feature lengths, calculates the mean/median/max length of each feature type
         and save the results into a json structure
 
@@ -397,114 +554,7 @@ class metric_utils:
                      'max': 120
                 }
              },
-             {
-                'feature_type': 'gene',
-                'count': 6445,
-                'len_stat': {
-                     'mean': 1401.65549348,
-                     'median': 1131.0,
-                     'max': 14733
-                }
-             },
-             {
-                'feature_type': 'mRNA',
-                'count': 5995,
-                'len_stat': {
-                     'mean': 1467.81214548,
-                     'median': 1197.0,
-                     'max': 14733
-                }
-             },
-             {
-                'feature_type': 'misc_RNA',
-                'count': 10,
-                'len_stat': {
-                     'mean': 1096.22222222,
-                     'median': 361.0,
-                     'max': 6858
-                }
-             },
-             {
-                'feature_type': 'misc_feature',
-                'count': 14,
-                'len_stat': {
-                     'mean': 955.384615385,
-                     'median': 23.0,
-                     'max': 3704
-                }
-             },
-             {
-                'feature_type': 'mobile_element',
-                'count': 50,
-                'len_stat': {
-                     'mean': 5835.2244898,
-                     'median': 5922.0,
-                     'max': 6224
-                }
-             },
-             {
-                'feature_type': 'ncRNA',
-                'count': 102,
-                'len_stat': {
-                     'mean': 326.594059406,
-                     'median': 179.0,
-                     'max': 3199
-                }
-             },
-             {
-                'feature_type': 'rRNA',
-                'count': 14,
-                'len_stat': {
-                     'mean': 963.461538462,
-                     'median': 158.0,
-                     'max': 3396
-                 }
-             },
-             {
-                'feature_type': 'rep_origin',
-                'count': 360,
-                'len_stat': {
-                     'mean': 300.579387187,
-                     'median': 242.0,
-                     'max': 2701
-                 }
-             },
-             {
-                'feature_type': 'repeat_origin',
-                'count': 383,
-                'len_stat': {
-                     'mean': 293.185863874,
-                     'median': 331.5,
-                     'max': 715
-                 }
-             },
-             {
-                'feature_type': 'source',
-                'count': 17,
-                'len_stat': {
-                     'mean': 745430.4375,
-                     'median': 765042.0,
-                     'max': 1531933
-                }
-             },
-             {
-                'feature_type': 'tRNA',
-                'count': 299,
-                'len_stat': {
-                     'mean': 74.3489932886,
-                     'median': 73.0,
-                     'max': 100
-                }
-             },
-             {
-                'feature_type': 'telomere',
-                'count': 32,
-                'len_stat': {
-                     'mean': 4513.22580645,
-                     'median': 5530.0,
-                     'max': 13897
-                }
-             }
+             ...
          ]
         }
         """
@@ -664,7 +714,7 @@ class metric_utils:
 
 
     def _write_html(self, out_dir, feat_dt, cutoff=2):
-        log('\nInput json:\n' + pformat(feat_dt))
+        #log('\nInput json:\n' + pformat(feat_dt))
 
         headContent = ("<html><head>\n"
             "<script type='text/javascript' src='https://www.google.com/jsapi'></script>\n"
