@@ -91,15 +91,13 @@ class genome_feature_stats:
             return returnVal
 
         #write stats per genome
-        count_file_full_path = os.path.join(self.count_dir, '{}_{}_{}_Feature_Counts.json'.format(
-                        params['genome_source'], params['genome_domain'], params['refseq_category']))
+        count_file_full_path = os.path.join(self.count_dir, 'Feature_Counts.json')
         with open(count_file_full_path, 'w') as count_file:
             json.dump(genome_stats, count_file)
 
         #write overall stats across genomes
         stats_across_genomes = self._feature_counts_across_genomes(genome_raw_counts)
-        all_count_full_path = os.path.join(self.count_dir, '{}_{}_{}_Overall_Feature_Counts.json'.format(
-                        params['genome_source'], params['genome_domain'], params['refseq_category']))
+        all_count_full_path = os.path.join(self.count_dir, 'Overall_Feature_Counts.json')
         with open(all_count_full_path, 'w') as all_count_file:
             i = 0
             for ftc in stats_across_genomes['across_genomes_feature_counts']:
@@ -602,8 +600,15 @@ class genome_feature_stats:
 
         output_directory = os.path.join(self.scratch, str(uuid.uuid4()))
         _mkdir_p(output_directory)
-        feature_counts = os.path.join(output_directory, '{}_{}_{}_Feature_counts.zip'.format(
+
+        if (params.get('genome_source', None) is not None and
+                params.get('genome_domain', None) is not None and
+                params.get('refseq_category', None) is not None):
+            feature_counts = os.path.join(output_directory, '{}_{}_{}_Feature_counts.zip'.format(
                         params['genome_source'], params['genome_domain'], params['refseq_category']))
+        else:
+            feature_counts = os.path.join(output_directory, 'Feature_counts.zip')
+
         self.zip_folder(out_dir, feature_counts)
 
         output_files.append({'path': feature_counts,
@@ -702,7 +707,13 @@ class genome_feature_stats:
         "}\n"
 
         footContent = "</script></head>\n<body>\n"
-        footContent += "  <h4>Feature counts stats across all {}_{}_{} genomes:</h4>\n".format(params['genome_source'], params['genome_domain'], params['refseq_category'])
+        if (params.get('genome_source', None) is not None and
+                params.get('genome_domain', None) is not None and
+                params.get('refseq_category', None) is not None):
+            footContent += "<h4>Feature counts stats across all {}_{}_{} genomes:</h4>\n".format(
+                    params['genome_source'], params['genome_domain'], params['refseq_category'])
+        else:
+            footContent += "<h4>Feature counts stats across all input genomes:</h4>\n"
         footContent += "  <div id='dashboard'>\n" \
           "      <div id='string_filter_div'></div>\n" \
           "      <div id='table_div'></div>\n" \
@@ -715,7 +726,7 @@ class genome_feature_stats:
 
         #replace all metacharacters with '_' for file naming purpose
         #name_str = re.sub('[ \/\.\^\$\*\+\?\{\}\[\]\|\\\(\)]', '_', feat_dt['organism_name'])
-        html_file_path = os.path.join(out_dir, 'stats_Feature_counts.html')
+        html_file_path = os.path.join(out_dir, 'Overall_Stats_Feature_counts.html')
 
         with open(html_file_path, 'w') as html_file:
                 html_file.write(html_str)
@@ -733,13 +744,19 @@ class genome_feature_stats:
 
         html_file_path = self._write_html(out_dir, feat_counts, params)
         cap_name = 'feature stats across genomes'
+        desc_txt = 'Feature_counts for all input '
+        if (params.get('genome_source', None) is not None and
+                params.get('genome_domain', None) is not None and
+                params.get('refseq_category', None) is not None):
+            desc_txt += '{}_{}_{} '.format(
+                     params["genome_source"], params["genome_domain"], params["refseq_category"])
+        desc_txt += 'genomes'
 
         #log(html_file_path['html_file'])
         html_report.append({'path': html_file_path['html_path'],
                             'name': cap_name,
                             'label': cap_name,
-                            'description': 'The feature_counts for all of the orgnism(s) of {}_{}_{}.'.format(
-                                        params["genome_source"], params["genome_domain"], params["refseq_category"])
+                            'description': desc_txt
                         })
 
         return html_report
