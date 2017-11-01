@@ -752,7 +752,7 @@ class metric_utils:
         "}\n"
 
         footContent = "</script></head>\n<body>\n"
-        footContent += "  <h4>Feature counts stats across genomes for{}_{}_{}:</h4>\n".format(params['genome_source'], params['genome_domain'], params['refseq_category'])
+        footContent += "  <h4>Feature counts stats across all {}_{}_{} genomes:</h4>\n".format(params['genome_source'], params['genome_domain'], params['refseq_category'])
         footContent += "  <div id='dashboard'>\n" \
           "      <div id='string_filter_div'></div>\n" \
           "      <div id='table_div'></div>\n" \
