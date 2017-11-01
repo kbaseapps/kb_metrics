@@ -7,7 +7,7 @@ from pprint import pprint, pformat
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from KBaseReport.KBaseReportClient import KBaseReport
 
-from kb_Metrics.core.metric_utils import metric_utils
+from kb_Metrics.core.genome_feature_stats import genome_feature_stats
 #END_HEADER
 
 
@@ -81,9 +81,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # ctx is the context object
         # return variables are: output
         #BEGIN count_ncbi_genome_features
-        m_util = metric_utils(self.config, ctx.provenance)
+        gfs = genome_feature_stats(self.config, ctx.provenance)
 
-        output = m_util.count_ncbi_genome_features(params)
+        output = gfs.count_ncbi_genome_features(params)
         #END count_ncbi_genome_features
 
         # At some point might do deeper type checking...
@@ -121,9 +121,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # ctx is the context object
         # return variables are: output
         #BEGIN count_genome_features
-        m_util = metric_utils(self.config, ctx.provenance)
+        gfs = genome_feature_stats(self.config, ctx.provenance)
 
-        output = m_util.count_genome_features(params)
+        output = gfs.count_genome_features(params)
         #END count_genome_features
 
         # At some point might do deeper type checking...
