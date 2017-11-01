@@ -66,87 +66,6 @@ class genome_feature_stats:
         _mkdir_p(self.count_dir)
 
 
-    def _list_ncbi_genomes(self, genome_source='refseq', division='bacteria', refseq_category='reference'):
-        """
-        list the ncbi genomes of given source/division/category
-        return a list of data with structure as below:
-        ncbi_genome = {
-            "accession": assembly_accession,#column[0]
-            "version_status": genome_version_status,#column[10], latest/replaced/suppressed
-            "organism_name": organism_name,#column[7]
-            "asm_name": assembly_name,#column[15]
-            "refseq_category": refseq_category,#column[4]
-            "ftp_file_path": ftp_file_path,#column[19]--FTP path: the path to the directory on the NCBI genomes FTP site from which data for this genome assembly can be downloaded.
-            "genome_file_name": genome_file_name,#column[19]--File name: the name of the genome assembly file
-            [genome_id, genome_version] = accession.split('.');
-            "tax_id": tax_id; #column[5]
-            "assembly_level": assembly_level; #column[11], Complete/Chromosome/Scaffold/Contig
-            "release_level": release_type; #column[12], Majoy/Minor/Patch
-            "genome_rep": genome_rep; #column[13], Full/Partial
-            "seq_rel_date": seq_rel_date; #column[14], date the sequence was released
-            "gbrs_paired_asm": gbrs_paired_asm#column[17]
-        }
-        """
-        ncbi_genomes = []
-        ncbi_summ_ftp_url = "ftp://ftp.ncbi.nlm.nih.gov/genomes/{}/{}/{}".format(genome_source, division, "assembly_summary.txt")
-        asm_summary = []
-        ncbi_response = self._get_file_content_by_url( ncbi_summ_ftp_url )
-        if ncbi_response != '':
-            asm_summary = ncbi_response.readlines()
-
-            for asm_line in asm_summary:
-                if re.match('#', asm_line):
-                    continue
-
-                columns = asm_line.split('\t')
-                if refseq_category in columns[4]:
-                    ncbi_genomes.append({
-                        "domain": division,
-                        "genome_source": genome_source,
-                        "refseq_category": columns[4],
-                        "accession": columns[0],
-                        "version_status": columns[10],# latest/replaced/suppressed
-                        "organism_name": columns[7],
-                        "asm_name": columns[15],
-                        "ftp_file_dir": columns[19], #path to the directory for download
-                        "genome_file_name": "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz"),
-                        "genome_url": os.path.join(columns[19], "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz")),
-                        "genome_id": columns[0].split('.')[0],
-                        "genome_version": columns[0].split('.')[1],
-                        "tax_id": columns[5],
-                        "assembly_level": columns[11], #Complete/Chromosome/Scaffold/Contig
-                        "release_level": columns[12],  #Majoy/Minor/Patch
-                        "genome_rep": columns[13], #Full/Partial
-                        "seq_rel_date": columns[14], #date the sequence was released
-                        "gbrs_paired_asm": columns[17]
-                    })
-                elif (refseq_category == 'na' and not columns[4]):
-                    ncbi_genomes.append({
-                        "domain": division,
-                        "genome_source": genome_source,
-                        "refseq_category": 'na',
-                        "accession": columns[0],
-                        "version_status": columns[10],# latest/replaced/suppressed
-                        "organism_name": columns[7],
-                        "asm_name": columns[15],
-                        "ftp_file_dir": columns[19], #path to the directory for download
-                        "genome_file_name": "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz"),
-                        "genome_url": os.path.join(columns[19], "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz    ")),
-                        "genome_id": columns[0].split('.')[0],
-                        "genome_version": columns[0].split('.')[1],
-                        "tax_id": columns[5],
-                        "assembly_level": columns[11], #Complete/Chromosome/Scaffold/Contig
-                        "release_level": columns[12],  #Majoy/Minor/Patch
-                        "genome_rep": columns[13], #Full/Partial
-                        "seq_rel_date": columns[14], #date the sequence was released
-                        "gbrs_paired_asm": columns[17]
-                    })
-        log("\nFound {} {} genomes in NCBI {}/{}".format(
-                   str(len(ncbi_genomes)), refseq_category, genome_source, division))
-
-        return ncbi_genomes
-
-
     def count_genome_features(self, params):
         if params.get(self.PARAM_IN_GENBANK_FILES, None) is None:
             raise ValueError(self.PARAM_IN_GENBANK_FILES +
@@ -824,4 +743,85 @@ class genome_feature_stats:
                         })
 
         return html_report
+
+
+    def _list_ncbi_genomes(self, genome_source='refseq', division='bacteria', refseq_category='reference'):
+        """
+        list the ncbi genomes of given source/division/category
+        return a list of data with structure as below:
+        ncbi_genome = {
+            "accession": assembly_accession,#column[0]
+            "version_status": genome_version_status,#column[10], latest/replaced/suppressed
+            "organism_name": organism_name,#column[7]
+            "asm_name": assembly_name,#column[15]
+            "refseq_category": refseq_category,#column[4]
+            "ftp_file_path": ftp_file_path,#column[19]--FTP path: the path to the directory on the NCBI genomes FTP site from which data for this genome assembly can be downloaded.
+            "genome_file_name": genome_file_name,#column[19]--File name: the name of the genome assembly file
+            [genome_id, genome_version] = accession.split('.');
+            "tax_id": tax_id; #column[5]
+            "assembly_level": assembly_level; #column[11], Complete/Chromosome/Scaffold/Contig
+            "release_level": release_type; #column[12], Majoy/Minor/Patch
+            "genome_rep": genome_rep; #column[13], Full/Partial
+            "seq_rel_date": seq_rel_date; #column[14], date the sequence was released
+            "gbrs_paired_asm": gbrs_paired_asm#column[17]
+        }
+        """
+        ncbi_genomes = []
+        ncbi_summ_ftp_url = "ftp://ftp.ncbi.nlm.nih.gov/genomes/{}/{}/{}".format(genome_source, division, "assembly_summary.txt")
+        asm_summary = []
+        ncbi_response = self._get_file_content_by_url( ncbi_summ_ftp_url )
+        if ncbi_response != '':
+            asm_summary = ncbi_response.readlines()
+
+            for asm_line in asm_summary:
+                if re.match('#', asm_line):
+                    continue
+
+                columns = asm_line.split('\t')
+                if refseq_category in columns[4]:
+                    ncbi_genomes.append({
+                        "domain": division,
+                        "genome_source": genome_source,
+                        "refseq_category": columns[4],
+                        "accession": columns[0],
+                        "version_status": columns[10],# latest/replaced/suppressed
+                        "organism_name": columns[7],
+                        "asm_name": columns[15],
+                        "ftp_file_dir": columns[19], #path to the directory for download
+                        "genome_file_name": "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz"),
+                        "genome_url": os.path.join(columns[19], "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz")),
+                        "genome_id": columns[0].split('.')[0],
+                        "genome_version": columns[0].split('.')[1],
+                        "tax_id": columns[5],
+                        "assembly_level": columns[11], #Complete/Chromosome/Scaffold/Contig
+                        "release_level": columns[12],  #Majoy/Minor/Patch
+                        "genome_rep": columns[13], #Full/Partial
+                        "seq_rel_date": columns[14], #date the sequence was released
+                        "gbrs_paired_asm": columns[17]
+                    })
+                elif (refseq_category == 'na' and not columns[4]):
+                    ncbi_genomes.append({
+                        "domain": division,
+                        "genome_source": genome_source,
+                        "refseq_category": 'na',
+                        "accession": columns[0],
+                        "version_status": columns[10],# latest/replaced/suppressed
+                        "organism_name": columns[7],
+                        "asm_name": columns[15],
+                        "ftp_file_dir": columns[19], #path to the directory for download
+                        "genome_file_name": "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz"),
+                        "genome_url": os.path.join(columns[19], "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz    ")),
+                        "genome_id": columns[0].split('.')[0],
+                        "genome_version": columns[0].split('.')[1],
+                        "tax_id": columns[5],
+                        "assembly_level": columns[11], #Complete/Chromosome/Scaffold/Contig
+                        "release_level": columns[12],  #Majoy/Minor/Patch
+                        "genome_rep": columns[13], #Full/Partial
+                        "seq_rel_date": columns[14], #date the sequence was released
+                        "gbrs_paired_asm": columns[17]
+                    })
+        log("\nFound {} {} genomes in NCBI {}/{}".format(
+                   str(len(ncbi_genomes)), refseq_category, genome_source, division))
+
+        return ncbi_genomes
 

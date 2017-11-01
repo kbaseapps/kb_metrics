@@ -1,0 +1,37 @@
+#
+# define display information
+#
+name: Genome Feature Counts and Stats
+tooltip: |
+    Provide the total feature counts, mean/median/max lengths for each feature type appearing in each of the given genome files and calculate stats across all genomes
+screenshots: []
+
+icon: null
+
+#
+# define a set of similar methods that might be useful to the user
+#
+suggestions:
+    apps:
+        related:
+            []
+        next:
+            []
+    methods:
+        related:
+            []
+        next:
+            []
+
+#
+# Configure the display and description of parameters
+#
+parameters :
+    genbank_file_urls :
+        ui-name : |
+            Genbank Files with full paths
+        short-hint : |
+            The file locations where the genome file can be downloaded from
+
+description : |
+    <p>This method combs through a genbank file to get the feature counts for each type of feature.</p>
