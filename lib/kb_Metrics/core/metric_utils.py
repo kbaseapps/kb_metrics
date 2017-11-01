@@ -174,7 +174,11 @@ class metric_utils:
         all_count_full_path = os.path.join(self.count_dir, '{}_{}_{}_Overall_Feature_Counts.json'.format(
                         params['genome_source'], params['genome_domain'], params['refseq_category']))
         with open(all_count_full_path, 'w') as all_count_file:
-            all_count_file.write(',\n'.join(stats_across_genomes['across_genomes_feature_counts']))
+            i = 0
+            for ftc in stats_across_genomes['across_genomes_feature_counts']:
+                if i > 0:
+                    all_count_file.write(',\n')
+                json.dump(ftc, all_count_file)
 
         returnVal = {
             "report_ref": None,
