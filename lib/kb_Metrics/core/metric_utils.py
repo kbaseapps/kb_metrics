@@ -168,7 +168,7 @@ class metric_utils:
         with open(count_file_full_path, 'a') as count_file:
             json.dump(genome_stats, count_file)
 
-        self._genomes_feature_count(genome_raw_counts)
+        stats_across_genomes = self._feature_counts_across_genomes(genome_raw_counts)
 
         returnVal = {
             "report_ref": None,
@@ -176,7 +176,8 @@ class metric_utils:
         }
 
         if params['create_report'] == 1:
-            report_info = self.generate_report(self.count_dir, genome_stats['genome_feature_counts'], params)
+            report_info = self.generate_report(self.count_dir, stats_across_genomes['across_genomes_feature_counts'], params)
+
             returnVal = {
                 'report_name': report_info['name'],
                 'report_ref': report_info['ref']
@@ -246,42 +247,16 @@ class metric_utils:
         with open(count_file_full_path, 'a') as count_file:
             json.dump(genome_stats, count_file)
 
-        self._genomes_feature_count(genome_raw_counts)
+        stats_across_genomes = self._feature_counts_across_genomes(genome_raw_counts)
 
         if params['create_report'] == 1:
-            report_info = self.generate_report(self.count_dir, genome_stats['genome_feature_counts'], params)
+            report_info = self.generate_report(self.count_dir, stats_across_genomes['across_genomes_feature_counts'], params)
             returnVal = {
                 'report_name': report_info['name'],
                 'report_ref': report_info['ref']
             }
 
         return returnVal
-
-
-    def _count_features_across_genomes(self, input_genome_stats):
-        """
-        _count_features_across_genomes: Given the genome statistic list, count the totals of contigs and
-        features across genomes
-        return the results in the following json structure:
-        {
-            'feature_type': name_of_feature,
-            'genome_num': genome_count,
-            'total_contig_count': total_contig_count,
-            'total_feature_count': total_feat_count,
-            'feature_counts': feature_count_dict,
-            'feature_lengths': feature_len_dict
-        }
-        Example of feature_count_dict:
-        {'CDS': 574,
-         'gene': 617,
-         'misc_RNA': 1,
-         'misc_feature': 8,
-         'rRNA': 3,
-         'source': 3,
-         'tRNA': 32,
-         'variation': 8}
-        """
-        pass
 
 
     def generate_report(self, count_dir, feat_counts_info, params):
@@ -428,9 +403,9 @@ class metric_utils:
         return feature_printout
 
 
-    def _genomes_feature_count(self, feature_data_list):
+    def _feature_counts_across_genomes(self, feature_data_list):
         """
-        _genomes_feature_count: Given a list of feature_data containing dict structure of feature counts
+        _feature_counts_across_genomes: Given a list of feature_data containing dict structure of feature counts
         and feature lengths, combine the counts into feature base across all genomes
 
         input feature_data_list is expected to be a list o the following json structure:
@@ -585,12 +560,11 @@ class metric_utils:
                 }
             else:
                 feat_count_stat['len_stat'] = {}
+            #log(json.dumps(feat_count_stat))
 
             feat_counts_stats.append(feat_count_stat)
 
         genome_feature_info['feature_counts_stats'] = feat_counts_stats
-
-        self._write_html( self.count_dir, genome_feature_info )
 
         return genome_feature_info
 
@@ -713,7 +687,7 @@ class metric_utils:
         print "{} created successfully.".format(output_path)
 
 
-    def _write_html(self, out_dir, feat_dt, cutoff=2):
+    def _write_html(self, out_dir, feat_dt, params):
         #log('\nInput json:\n' + pformat(feat_dt))
 
         headContent = ("<html><head>\n"
@@ -722,25 +696,25 @@ class metric_utils:
             "  google.load('visualization', '1', {packages:['controls'], callback: drawTable});\n"
             "  google.setOnLoadCallback(drawTable);\n")
 
-        #the table caption
+        #table column captions
         drawTable = ("\nfunction drawTable() {\n"
             "var data = new google.visualization.DataTable();\n"
             "data.addColumn('string', 'feature_type');\n"
-            "data.addColumn('number', 'count');\n"
+            "data.addColumn('number', 'total_feature_count');\n"
+            "data.addColumn('number', 'total_genome_count');\n"
             "data.addColumn('number', 'feature_mean_len');\n"
             "data.addColumn('number', 'feature_median_len');\n"
             "data.addColumn('number', 'feature_max_len');")
 
         #the data rows
-        row_cnt = 0
         fd_rows = ""
-        fd_rows_cut = ""
-        for fd in feat_dt['feature_counts_stats']:
+        for fd in feat_dt:
             if fd_rows != "":
                 fd_rows += ",\n"
             d_rows = []
             d_rows.append("'" + fd['feature_type'] + "'")
-            d_rows.append(str(fd['count']))
+            d_rows.append(str(fd['total_feature_count']))
+            d_rows.append(str(fd['total_genome_count']))
             if fd['len_stat']:
                 d_rows.append(str(fd['len_stat']['mean']))
                 d_rows.append(str(fd['len_stat']['median']))
@@ -752,16 +726,7 @@ class metric_utils:
 
             fd_rows += '[' + ','.join(d_rows) + ']'
 
-            row_cnt += 1
-            if row_cnt <= cutoff:
-                fd_rows_cut = fd_rows
-
         drawTable += "\ndata.addRows([\n"
-
-        drawTable_cut = drawTable
-        drawTable_cut += fd_rows_cut
-        drawTable_cut += "\n]);"
-
         drawTable += fd_rows
         drawTable += "\n]);"
 
@@ -787,23 +752,20 @@ class metric_utils:
         "}\n"
 
         footContent = "</script></head>\n<body>\n"
-        footContent += "  <h4>Feature counts stats for {}:</h4>\n".format(feat_dt['organism_name'])
+        footContent += "  <h4>Feature counts stats across genomes for{}_{}_{}:</h4>\n".format(params['genome_source'], params['genome_domain'], params['refseq_category'])
         footContent += "  <div id='dashboard'>\n" \
           "      <div id='string_filter_div'></div>\n" \
           "      <div id='table_div'></div>\n" \
-          "  </div>\n"
-        footContent += "  <p><strong>Total Contig Count = {}</strong></p>\n".format(feat_dt['total_contig_count'])
-        footContent += "  <p><strong>Total Feature Count = {}</strong></p>\n".format(feat_dt['total_feature_count'])
-        footContent += "</body>\n</html>"
+          "  </div>\n" \
+          "</body>\n" \
+          "</html>"
 
         html_str = headContent + drawTable + dash_tab_filter + footContent
-        #html_str_cut = headContent + drawTable_cut + dash_tab_filter + footContent
-        #return {'html_full': html_str, 'html_partial': html_str_cut}
-        #log(html_str)
+        log(html_str)
 
         #replace all metacharacters with '_' for file naming purpose
-        name_str = re.sub('[ \/\.\^\$\*\+\?\{\}\[\]\|\\\(\)]', '_', feat_dt['organism_name'])
-        html_file_path = os.path.join(out_dir, '{}_Feature_counts.html'.format(name_str))
+        #name_str = re.sub('[ \/\.\^\$\*\+\?\{\}\[\]\|\\\(\)]', '_', feat_dt['organism_name'])
+        html_file_path = os.path.join(out_dir, 'stats_Feature_counts.html')
 
         with open(html_file_path, 'w') as html_file:
                 html_file.write(html_str)
@@ -819,13 +781,13 @@ class metric_utils:
         #log('start generating html report')
         html_report = list()
 
-        html_file_path = self._write_html(out_dir, feat_counts[0])
-        org_name = feat_counts[0]['organism_name']
+        html_file_path = self._write_html(out_dir, feat_counts, params)
+        cap_name = 'feature stats across genomes'
 
         #log(html_file_path['html_file'])
         html_report.append({'path': html_file_path['html_path'],
-                            'name': org_name,
-                            'label': org_name,
+                            'name': cap_name,
+                            'label': cap_name,
                             'description': 'The feature_counts for one of the orgnism(s) of {}_{}_{}.'.format(
                                         params["genome_source"], params["genome_domain"], params["refseq_category"])
                         })
