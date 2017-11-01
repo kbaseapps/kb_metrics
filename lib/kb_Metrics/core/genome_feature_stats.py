@@ -667,7 +667,7 @@ class genome_feature_stats:
             if fd_rows != "":
                 fd_rows += ",\n"
             d_rows = []
-            d_rows.append("'" + fd['feature_type'] + "'")
+            d_rows.append('"' + fd["feature_type"] + '"')
             d_rows.append(str(fd['total_feature_count']))
             d_rows.append(str(fd['total_genome_count']))
             if fd['len_stat']:
