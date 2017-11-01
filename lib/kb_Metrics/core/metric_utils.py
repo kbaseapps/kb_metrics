@@ -161,7 +161,15 @@ class metric_utils:
         if params.get('create_report', None) is None:
             params['create_report'] = 0
 
+        returnVal = {
+            "report_ref": None,
+            "report_name": None
+        }
+
         genome_raw_counts, genome_stats = self._get_counts_from_files(gn_files, params['file_format'])
+
+        if not gnome_stats:
+            return returnVal
 
         #write stats per genome
         count_file_full_path = os.path.join(self.count_dir, '{}_{}_{}_Feature_Counts.json'.format(
@@ -180,11 +188,6 @@ class metric_utils:
                     all_count_file.write(',\n')
                 json.dump(ftc, all_count_file)
                 i += 1
-
-        returnVal = {
-            "report_ref": None,
-            "report_name": None
-        }
 
         if params['create_report'] == 1:
             report_info = self.generate_report(self.count_dir, stats_across_genomes['across_genomes_feature_counts'], params)
@@ -252,6 +255,9 @@ class metric_utils:
         gnf_format = 'genbank'
 
         genome_raw_counts, genome_stats = self._get_counts_from_ncbi(ncbi_gns, gnf_format)
+
+        if not gnome_stats:
+            return returnVal
 
         #write stats per genome
         count_file_full_path = os.path.join(self.count_dir, '{}_{}_{}_Feature_Counts.json'.format(
@@ -450,6 +456,9 @@ class metric_utils:
                 'across_genomes_feature_counts': feat_counts_stats_across_genomes
         }
         """
+        if not feature_data_list:
+            return {}
+
         across_genomes_feature_counts = []
         total_feature_count_dict = dict()
         genome_count_dict = dict()
