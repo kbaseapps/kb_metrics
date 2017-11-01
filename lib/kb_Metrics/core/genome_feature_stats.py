@@ -87,7 +87,7 @@ class genome_feature_stats:
 
         genome_raw_counts, genome_stats = self._get_counts_from_files(gn_files, params['file_format'])
 
-        if not genome_stats:
+        if (not genome_stats or len(genome_raw_counts) == 0):
             return returnVal
 
         #write stats per genome
@@ -373,7 +373,7 @@ class genome_feature_stats:
                 'across_genomes_feature_counts': feat_counts_stats_across_genomes
         }
         """
-        if not feature_data_list:
+        if len(feature_data_list) == 0:
             return {}
 
         across_genomes_feature_counts = []
