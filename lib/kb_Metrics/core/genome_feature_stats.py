@@ -43,7 +43,7 @@ def _mkdir_p(path):
 
 class genome_feature_stats:
     PARAM_IN_WS = 'workspace_name'
-    PARAM_IN_GENBANK_FILES = 'genbank_files'
+    PARAM_IN_GENBANK_FILES = 'genbank_file_urls'
 
     def __init__(self, config, provenance):
         self.workspace_url = config['workspace-url']
