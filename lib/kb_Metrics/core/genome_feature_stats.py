@@ -781,9 +781,9 @@ class genome_feature_stats:
             "data.addColumn('string', 'asm_name');\n"
             "data.addColumn('string', 'tax_id');\n"
             "data.addColumn('string', 'assembly_level');\n"
-            "data.addColumn('string', 'release_type');\n"
-            "data.addColumn('string', 'genome_rep');\n"
+            "data.addColumn('string', 'release_level');\n"
             "data.addColumn('string', 'seq_rel_date');\n"
+            "data.addColumn('string', 'genome_rep');\n"
             "data.addColumn('string', 'gbrs_paired_asm');\n"
             "data.addColumn('string', 'paired_asm_comp');\n"
             "data.addColumn('string', 'genome_url');")
@@ -801,7 +801,7 @@ class genome_feature_stats:
             d_rows.append(gd['asm_name'])
             d_rows.append(gd['tax_id'])
             d_rows.append(gd['assembly_level'])
-            d_rows.append(gd['release_type'])
+            d_rows.append(gd['release_level'])
             d_rows.append(gd['seq_rel_date'])
             d_rows.append(gd['genome_rep'])
             d_rows.append(gd['gbrs_paired_asm'])
