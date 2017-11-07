@@ -107,7 +107,7 @@ class genome_feature_stats:
                 i += 1
 
         if params['create_report'] == 1:
-            report_info = self.generate_report(self.count_dir, stats_across_genomes['across_genomes_feature_counts'], params)
+            report_info = self.generate_feature_report(self.count_dir, stats_across_genomes['across_genomes_feature_counts'], params)
 
             returnVal = {
                 'report_name': report_info['name'],
@@ -195,7 +195,7 @@ class genome_feature_stats:
                 i += 1
 
         if params['create_report'] == 1:
-            report_info = self.generate_report(self.count_dir, stats_across_genomes['across_genomes_feature_counts'], params)
+            report_info = self.generate_feature_report(self.count_dir, stats_across_genomes['across_genomes_feature_counts'], params)
             returnVal = {
                 'report_name': report_info['name'],
                 'report_ref': report_info['ref']
@@ -204,8 +204,8 @@ class genome_feature_stats:
         return returnVal
 
 
-    def generate_report(self, count_dir, feat_counts_info, params):
-        output_html_files = self._generate_html_report(count_dir, feat_counts_info, params)
+    def generate_feature_report(self, count_dir, feat_counts_info, params):
+        output_html_files = self._generate_feature_html_report(count_dir, feat_counts_info, params)
         output_json_files = self._generate_output_file_list(count_dir, params)
 
         # create report
@@ -642,7 +642,7 @@ class genome_feature_stats:
         print "{} created successfully.".format(output_path)
 
 
-    def _write_html(self, out_dir, feat_dt, params):
+    def _write_feature_html(self, out_dir, feat_dt, params):
         #log('\nInput json:\n' + pformat(feat_dt))
 
         headContent = ("<html><head>\n"
@@ -734,15 +734,15 @@ class genome_feature_stats:
         return {'html_file': html_str, 'html_path': html_file_path}
 
 
-    def _generate_html_report(self, out_dir, feat_counts, params):
+    def _generate_feature_html_report(self, out_dir, feat_counts, params):
         """
-        _generate_html_report: generate html report given the json data in feat_counts
+        _generate_feature_html_report: generate html report given the json data in feat_counts
 
         """
         #log('start generating html report')
         html_report = list()
 
-        html_file_path = self._write_html(out_dir, feat_counts, params)
+        html_file_path = self._write_feature_html(out_dir, feat_counts, params)
         cap_name = 'feature stats across genomes'
         desc_txt = 'Feature_counts for all input '
         if (params.get('genome_source', None) is not None and
@@ -762,11 +762,160 @@ class genome_feature_stats:
         return html_report
 
 
+    def _write_genome_html(self, out_dir, genome_dt, params):
+        #log('\nInput json:\n' + pformat(feat_dt))
+
+        headContent = ("<html><head>\n"
+            "<script type='text/javascript' src='https://www.google.com/jsapi'></script>\n"
+            "<script type='text/javascript'>\n"
+            "  google.load('visualization', '1', {packages:['controls'], callback: drawTable});\n"
+            "  google.setOnLoadCallback(drawTable);\n")
+
+        #table column captions
+        drawTable = ("\nfunction drawTable() {\n"
+            "var data = new google.visualization.DataTable();\n"
+            "data.addColumn('string', 'assembly_accession');\n"
+            "data.addColumn('string', 'organism');\n"
+            "data.addColumn('string', 'refseq_category');\n"
+            "data.addColumn('string', 'version_status');\n"
+            "data.addColumn('string', 'asm_name');\n"
+            "data.addColumn('string', 'tax_id');\n"
+            "data.addColumn('string', 'assembly_level');\n"
+            "data.addColumn('string', 'release_type');\n"
+            "data.addColumn('string', 'genome_rep');\n"
+            "data.addColumn('string', 'seq_rel_date');\n"
+            "data.addColumn('string', 'gbrs_paired_asm');\n"
+            "data.addColumn('string', 'paired_asm_comp');\n"
+            "data.addColumn('string', 'genome_url');")
+
+        #the data rows
+        gd_rows = ""
+        for gd in genome_dt:
+            if gd_rows != "":
+                gd_rows += ",\n"
+            d_rows = []
+            d_rows.append(gd['accession'])
+            d_rows.append(gd['organism_name'])
+            d_rows.append(gd['refseq_category'])
+            d_rows.append(gd['version_status'])
+            d_rows.append(gd['asm_name'])
+            d_rows.append(gd['tax_id'])
+            d_rows.append(gd['assembly_level'])
+            d_rows.append(gd['release_type'])
+            d_rows.append(gd['seq_rel_date'])
+            d_rows.append(gd['genome_rep'])
+            d_rows.append(gd['gbrs_paired_asm'])
+            d_rows.append(gd['paired_asm_comp'])
+            d_rows.append(gd['genome_url'])
+
+            gd_rows += '[' + ','.join(d_rows) + ']'
+
+        drawTable += "\ndata.addRows([\n"
+        drawTable += gd_rows
+        drawTable += "\n]);"
+
+        #the dashboard, table and search filter
+        dash_tab_filter = "\n" \
+            "var dashboard = new google.visualization.Dashboard(document.querySelector('#dashboard'));\n" \
+            "var stringFilter = new google.visualization.ControlWrapper({\n" \
+            "    controlType: 'StringFilter',\n" \
+            "    containerId: 'string_filter_div',\n" \
+            "    options: {\n" \
+            "        filterColumnIndex: 2\n" \
+            "    }\n" \
+            "});\n" \
+            "var table = new google.visualization.ChartWrapper({\n" \
+            "    chartType: 'Table',\n" \
+            "    containerId: 'table_div',\n" \
+            "    options: {\n" \
+            "        showRowNumber: true\n" \
+            "    }\n" \
+            "});\n" \
+            "dashboard.bind([stringFilter], [table]);\n" \
+            "dashboard.draw(data);\n" \
+        "}\n"
+
+        footContent = "</script></head>\n<body>\n"
+        if (params.get('genome_source', None) is not None and
+                params.get('genome_domain', None) is not None and
+                params.get('refseq_category', None) is not None):
+            footContent += "<h4>Feature counts stats across all {}_{}_{} genomes:</h4>\n".format(
+                    params['genome_source'], params['genome_domain'], params['refseq_category'])
+        else:
+            footContent += "<h4>RefSeq Genome counts:</h4>\n"
+        footContent += "  <div id='dashboard'>\n" \
+          "      <div id='string_filter_div'></div>\n" \
+          "      <div id='table_div'></div>\n" \
+          "  </div>\n" \
+          "</body>\n" \
+          "</html>"
+
+        html_str = headContent + drawTable + dash_tab_filter + footContent
+        #log(html_str)
+
+        html_file_path = os.path.join(out_dir, 'Overall_RefSeq_Genome_counts.html')
+
+        with open(html_file_path, 'w') as html_file:
+                html_file.write(html_str)
+
+        return {'html_file': html_str, 'html_path': html_file_path}
+
+
+    def generate_genome_report(self, count_dir, genome_info, params):
+        output_html_files = self._generate_genome_html_report(count_dir, genome_info, params)
+        output_json_files = self._generate_output_file_list(count_dir, params)
+
+        # create report
+        report_text = 'Summary of genome counts:\n\n'
+
+        report_info = self.kbr.create_extended_report({
+                        'message': report_text,
+                        'report_object_name': 'kb_Metrics_report_' + str(uuid.uuid4()),
+                        'file_links': output_json_files,
+                        'direct_html_link_index': 0,
+                        'html_links': output_html_files,
+                        'html_window_height': 366,
+                        'workspace_name': params[self.PARAM_IN_WS]
+                      })
+
+        return report_info
+
+
+    def _generate_genome_html_report(self, out_dir, genome_data, params):
+        """
+        _generate_genome_html_report: generate html report given the json data in feat_counts
+
+        """
+        #log('start generating html report')
+        html_report = list()
+
+        html_file_path = self._write_genome_html(out_dir, genome_data, params)
+        cap_name = 'refseq genomes'
+        desc_txt = 'Counts for all '
+        if (params.get('genome_source', None) is not None and
+                params.get('genome_domain', None) is not None and
+                params.get('refseq_category', None) is not None):
+            desc_txt += '{}_{}_{} '.format(
+                     params["genome_source"], params["genome_domain"], params["refseq_category"])
+        desc_txt += 'refseq genomes'
+
+        #log(html_file_path['html_file'])
+        html_report.append({'path': html_file_path['html_path'],
+                            'name': cap_name,
+                            'label': cap_name,
+                            'description': desc_txt
+                        })
+
+        return html_report
+
     def _list_ncbi_genomes(self, genome_source='refseq', division='bacteria', refseq_category='reference'):
         """
         list the ncbi genomes of given source/division/category
         return a list of data with structure as below:
         ncbi_genome = {
+            "domain": division,
+            "genome_source": genome_source,
+            "refseq_category": columns[4],
             "accession": assembly_accession,#column[0]
             "version_status": genome_version_status,#column[10], latest/replaced/suppressed
             "organism_name": organism_name,#column[7]
@@ -774,13 +923,15 @@ class genome_feature_stats:
             "refseq_category": refseq_category,#column[4]
             "ftp_file_path": ftp_file_path,#column[19]--FTP path: the path to the directory on the NCBI genomes FTP site from which data for this genome assembly can be downloaded.
             "genome_file_name": genome_file_name,#column[19]--File name: the name of the genome assembly file
+            "genome_url": os.path.join(columns[19], "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz")),
             [genome_id, genome_version] = accession.split('.');
             "tax_id": tax_id; #column[5]
             "assembly_level": assembly_level; #column[11], Complete/Chromosome/Scaffold/Contig
             "release_level": release_type; #column[12], Majoy/Minor/Patch
             "genome_rep": genome_rep; #column[13], Full/Partial
             "seq_rel_date": seq_rel_date; #column[14], date the sequence was released
-            "gbrs_paired_asm": gbrs_paired_asm#column[17]
+            "gbrs_paired_asm": gbrs_paired_asm;#column[17]
+            "paired_asm_comp": paired_asm_comp#columns[18]
         }
         """
         ncbi_genomes = []
@@ -814,9 +965,10 @@ class genome_feature_stats:
                         "release_level": columns[12],  #Majoy/Minor/Patch
                         "genome_rep": columns[13], #Full/Partial
                         "seq_rel_date": columns[14], #date the sequence was released
-                        "gbrs_paired_asm": columns[17]
+                        "gbrs_paired_asm": columns[17],
+                        "paired_asm_comp": columns[18] #'identical', 'different' or 'na'
                     })
-                elif (refseq_category == 'na' and not columns[4]):
+                elif (refseq_category == 'na' or not columns[4]):
                     ncbi_genomes.append({
                         "domain": division,
                         "genome_source": genome_source,
@@ -827,7 +979,7 @@ class genome_feature_stats:
                         "asm_name": columns[15],
                         "ftp_file_dir": columns[19], #path to the directory for download
                         "genome_file_name": "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz"),
-                        "genome_url": os.path.join(columns[19], "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz    ")),
+                        "genome_url": os.path.join(columns[19], "{}_{}".format(os.path.basename(columns[19]),"genomic.gbff.gz")),
                         "genome_id": columns[0].split('.')[0],
                         "genome_version": columns[0].split('.')[1],
                         "tax_id": columns[5],
@@ -835,10 +987,36 @@ class genome_feature_stats:
                         "release_level": columns[12],  #Majoy/Minor/Patch
                         "genome_rep": columns[13], #Full/Partial
                         "seq_rel_date": columns[14], #date the sequence was released
-                        "gbrs_paired_asm": columns[17]
+                        "gbrs_paired_asm": columns[17],
+                        "paired_asm_comp": columns[18] #'identical', 'different' or 'na'
                     })
         log("\nFound {} {} genomes in NCBI {}/{}".format(
                    str(len(ncbi_genomes)), refseq_category, genome_source, division))
 
         return ncbi_genomes
+
+
+    def count_refseq_genomes(self, input_params):
+        params = self.validate_parameters(input_params)
+
+        ncbi_gns = self._list_ncbi_genomes(params['genome_source'],
+                                params['genome_domain'], params['refseq_category'])
+
+        returnVal = {
+            "report_ref": None,
+            "report_name": None
+        }
+
+        if len(ncbi_gns) == 0:
+            return returnVal
+
+        if params['create_report'] == 1:
+            report_info = self.generate_genome_report(self.count_dir, ncbi_gns, params)
+
+            returnVal = {
+                'report_name': report_info['name'],
+                'report_ref': report_info['ref']
+            }
+
+        return returnVal
 

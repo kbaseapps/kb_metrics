@@ -33,6 +33,10 @@
                     "target_property": "workspace_name"
                 },
                 {
+                    "constant_value": 1,
+                    "target_property": "create_report"
+                },
+                {
                     "input_parameter": "genbank_file_urls",
                     "target_property": "genbank_file_urls"
                 }

@@ -37,7 +37,7 @@ module kb_Metrics {
             mapping <string, int> map_of_ints;
     */
     typedef structure {
-        list <string> genbank_files;
+        list <string> genbank_file_urls;
         string file_format;
         string genome_source;
         string genome_domain;
@@ -57,7 +57,7 @@ module kb_Metrics {
     typedef structure {
         string report_name;
         string report_ref;
-    } FeatureCountResults;
+    } StatResults;
     
     /*
         The actual function is declared using 'funcdef' to specify the name
@@ -66,8 +66,22 @@ module kb_Metrics {
         'authentication required' modifier.
     */
     funcdef count_ncbi_genome_features(FeatureCountParams params)
-        returns (FeatureCountResults output) authentication required;
+        returns (StatResults output) authentication required;
 
     funcdef count_genome_features(FeatureCountParams params)
-        returns (FeatureCountResults output) authentication required;
+        returns (StatResults output) authentication required;
+
+
+    typedef structure {
+        string genome_source;
+        string genome_domain;
+        string refseq_category;
+        string workspace_name;
+        bool create_report;
+    } GenomeCountParams;
+
+
+    funcdef refseq_genome_counts(GenomeCountParams params)
+        returns (StatResults output) authentication required;
+
 };

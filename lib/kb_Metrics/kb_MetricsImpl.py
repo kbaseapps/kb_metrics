@@ -29,7 +29,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "ade9b5938d4433c03ad5f3b0e2f7d31d5ee6f377"
+    GIT_COMMIT_HASH = "2ecaafb06cb3dd19a2028044b6257bcf12d375b4"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -64,19 +64,19 @@ This KBase SDK module implements methods for generating various KBase metrics.
            filtering. To define lists and maps, use a syntax similar to C++
            templates to indicate the type contained in the list or map.  For
            example: list <string> list_of_strings; mapping <string, int>
-           map_of_ints;) -> structure: parameter "genbank_files" of list of
-           String, parameter "file_format" of String, parameter
+           map_of_ints;) -> structure: parameter "genbank_file_urls" of list
+           of String, parameter "file_format" of String, parameter
            "genome_source" of String, parameter "genome_domain" of String,
            parameter "refseq_category" of String, parameter "workspace_name"
            of String, parameter "create_report" of type "bool" (A boolean - 0
            for false, 1 for true. @range (0, 1))
-        :returns: instance of type "FeatureCountResults" (Here is the
-           definition of the output of the function.  The output can be used
-           by other SDK modules which call your code, or the output
-           visualizations in the Narrative.  'report_name' and 'report_ref'
-           are special output fields- if defined, the Narrative can
-           automatically render your Report.) -> structure: parameter
-           "report_name" of String, parameter "report_ref" of String
+        :returns: instance of type "StatResults" (Here is the definition of
+           the output of the function.  The output can be used by other SDK
+           modules which call your code, or the output visualizations in the
+           Narrative.  'report_name' and 'report_ref' are special output
+           fields- if defined, the Narrative can automatically render your
+           Report.) -> structure: parameter "report_name" of String,
+           parameter "report_ref" of String
         """
         # ctx is the context object
         # return variables are: output
@@ -104,19 +104,19 @@ This KBase SDK module implements methods for generating various KBase metrics.
            filtering. To define lists and maps, use a syntax similar to C++
            templates to indicate the type contained in the list or map.  For
            example: list <string> list_of_strings; mapping <string, int>
-           map_of_ints;) -> structure: parameter "genbank_files" of list of
-           String, parameter "file_format" of String, parameter
+           map_of_ints;) -> structure: parameter "genbank_file_urls" of list
+           of String, parameter "file_format" of String, parameter
            "genome_source" of String, parameter "genome_domain" of String,
            parameter "refseq_category" of String, parameter "workspace_name"
            of String, parameter "create_report" of type "bool" (A boolean - 0
            for false, 1 for true. @range (0, 1))
-        :returns: instance of type "FeatureCountResults" (Here is the
-           definition of the output of the function.  The output can be used
-           by other SDK modules which call your code, or the output
-           visualizations in the Narrative.  'report_name' and 'report_ref'
-           are special output fields- if defined, the Narrative can
-           automatically render your Report.) -> structure: parameter
-           "report_name" of String, parameter "report_ref" of String
+        :returns: instance of type "StatResults" (Here is the definition of
+           the output of the function.  The output can be used by other SDK
+           modules which call your code, or the output visualizations in the
+           Narrative.  'report_name' and 'report_ref' are special output
+           fields- if defined, the Narrative can automatically render your
+           Report.) -> structure: parameter "report_name" of String,
+           parameter "report_ref" of String
         """
         # ctx is the context object
         # return variables are: output
@@ -129,6 +129,36 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # At some point might do deeper type checking...
         if not isinstance(output, dict):
             raise ValueError('Method count_genome_features return value ' +
+                             'output is not type dict as required.')
+        # return the results
+        return [output]
+
+    def refseq_genome_counts(self, ctx, params):
+        """
+        :param params: instance of type "GenomeCountParams" -> structure:
+           parameter "genome_source" of String, parameter "genome_domain" of
+           String, parameter "refseq_category" of String, parameter
+           "workspace_name" of String, parameter "create_report" of type
+           "bool" (A boolean - 0 for false, 1 for true. @range (0, 1))
+        :returns: instance of type "StatResults" (Here is the definition of
+           the output of the function.  The output can be used by other SDK
+           modules which call your code, or the output visualizations in the
+           Narrative.  'report_name' and 'report_ref' are special output
+           fields- if defined, the Narrative can automatically render your
+           Report.) -> structure: parameter "report_name" of String,
+           parameter "report_ref" of String
+        """
+        # ctx is the context object
+        # return variables are: output
+        #BEGIN refseq_genome_counts
+        gfs = genome_feature_stats(self.config, ctx.provenance)
+
+        output = gfs.count_refseq_genomes(params)
+        #END refseq_genome_counts
+
+        # At some point might do deeper type checking...
+        if not isinstance(output, dict):
+            raise ValueError('Method refseq_genome_counts return value ' +
                              'output is not type dict as required.')
         # return the results
         return [output]

@@ -1,0 +1,47 @@
+#
+# define display information
+#
+name: Refseq Genome Counts
+tooltip: |
+    Provide the total count of all NCBI refseq genomes of given domain and criteria
+screenshots: []
+
+icon: null
+
+#
+# define a set of similar methods that might be useful to the user
+#
+suggestions:
+    apps:
+        related:
+            []
+        next:
+            []
+    methods:
+        related:
+            []
+        next:
+            []
+
+#
+# Configure the display and description of parameters
+#
+parameters :
+    genome_source :
+        ui-name : |
+            Genome source
+        short-hint : |
+            The NCBI genome file directory where the genome file can be downloaded from (only refseq for now)
+    genome_domain :
+        ui-name : |
+            Genome domain
+        short-hint : |
+            The NCBI genome file directory under refseq that groups the genomes by their domains
+    refseq_category :
+        ui-name : |
+            Refseq Category
+        short-hint : |
+            The NCBI way of classifying the refseq project is reference/representative/na
+
+description : |
+    <p>This method provids the total count of all NCBI refseq genomes of given domain and criteria.</p>
