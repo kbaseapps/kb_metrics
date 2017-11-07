@@ -604,7 +604,7 @@ class genome_feature_stats:
         if (params.get('genome_source', None) is not None and
                 params.get('genome_domain', None) is not None and
                 params.get('refseq_category', None) is not None):
-            feature_counts = os.path.join(output_directory, '{}_{}_{}_Feature_counts.zip'.format(
+            feature_counts = os.path.join(output_directory, '{}_{}_{}_genome_feature_counts.zip'.format(
                         params['genome_source'], params['genome_domain'], params['refseq_category']))
         else:
             feature_counts = os.path.join(output_directory, 'Feature_counts.zip')
@@ -794,19 +794,19 @@ class genome_feature_stats:
             if gd_rows != "":
                 gd_rows += ",\n"
             d_rows = []
-            d_rows.append(gd['accession'])
-            d_rows.append(gd['organism_name'])
-            d_rows.append(gd['refseq_category'])
-            d_rows.append(gd['version_status'])
-            d_rows.append(gd['asm_name'])
-            d_rows.append(gd['tax_id'])
-            d_rows.append(gd['assembly_level'])
-            d_rows.append(gd['release_level'])
-            d_rows.append(gd['seq_rel_date'])
-            d_rows.append(gd['genome_rep'])
-            d_rows.append(gd['gbrs_paired_asm'])
-            d_rows.append(gd['paired_asm_comp'])
-            d_rows.append(gd['genome_url'])
+            d_rows.append('"' + gd['accession'] + '"')
+            d_rows.append('"' + gd['organism_name'] + '"')
+            d_rows.append('"' + gd['refseq_category'] + '"')
+            d_rows.append('"' + gd['version_status'] + '"')
+            d_rows.append('"' + gd['asm_name'] + '"')
+            d_rows.append('"' + gd['tax_id'] + '"')
+            d_rows.append('"' + gd['assembly_level'] + '"')
+            d_rows.append('"' + gd['release_level'] + '"')
+            d_rows.append('"' + gd['seq_rel_date'] + '"')
+            d_rows.append('"' + gd['genome_rep'] + '"')
+            d_rows.append('"' + gd['gbrs_paired_asm'] + '"')
+            d_rows.append('"' + gd['paired_asm_comp'] + '"')
+            d_rows.append('"' + gd['genome_url'] + '"')
 
             gd_rows += '[' + ','.join(d_rows) + ']'
 
