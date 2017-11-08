@@ -776,7 +776,6 @@ class genome_feature_stats:
             "var data = new google.visualization.DataTable();\n"
             "data.addColumn('string', 'assembly_accession');\n"
             "data.addColumn('string', 'organism');\n"
-            "data.addColumn('string', 'refseq_category');\n"
             "data.addColumn('string', 'version_status');\n"
             "data.addColumn('string', 'asm_name');\n"
             "data.addColumn('string', 'tax_id');\n"
@@ -796,7 +795,6 @@ class genome_feature_stats:
             d_rows = []
             d_rows.append('"' + gd['accession'] + '"')
             d_rows.append('"' + gd['organism_name'] + '"')
-            d_rows.append('"' + gd['refseq_category'] + '"')
             d_rows.append('"' + gd['version_status'] + '"')
             d_rows.append('"' + gd['asm_name'] + '"')
             d_rows.append('"' + gd['tax_id'] + '"')
@@ -817,19 +815,46 @@ class genome_feature_stats:
         #the dashboard, table and search filter
         dash_tab_filter = "\n" \
             "var dashboard = new google.visualization.Dashboard(document.querySelector('#dashboard'));\n" \
+            "// create a list of columns for the dashboard\n" \
+            "var filterColumns = [{\n" \
+            "// this column aggregates all of the data into one column for use with the string filter\n" \
+            "type: 'string',\n" \
+            "calc: function (dt, row) {\n" \
+            "for (var i = 0, vals = [], cols = dt.getNumberOfColumns(); i < cols; i++) {\n" \
+            "    vals.push(dt.getFormattedValue(row, i));\n" \
+            "}\n" \
+            "return vals.join('\n');\n" \
+            "}\n" \
+            "}];\n" \
+            "for (var i = 0, cols = data.getNumberOfColumns(); i < cols; i++) {\n" \
+            "    filterColumns.push(i);\n" \
+            "}\n" \
             "var stringFilter = new google.visualization.ControlWrapper({\n" \
             "    controlType: 'StringFilter',\n" \
             "    containerId: 'string_filter_div',\n" \
             "    options: {\n" \
-            "        filterColumnIndex: 2\n" \
-            "    }\n" \
+            "        filterColumnIndex: 0,\n" \
+            "        matchType: 'any',\n" \
+            "        caseSensitive: false,\n" \
+            "        ui: {\n" \
+            "            label: 'Search table:'\n" \
+            "           }\n" \
+            "    },\n" \
+            "    view: {\n" \
+            "               columns: filterColumns\n" \
+            "          }\n" \
             "});\n" \
             "var table = new google.visualization.ChartWrapper({\n" \
             "    chartType: 'Table',\n" \
             "    containerId: 'table_div',\n" \
             "    options: {\n" \
-            "        showRowNumber: true\n" \
-            "    }\n" \
+            "        showRowNumber: true,\n" \
+            "        page: 'enable',\n" \
+            "        pageSize: 20\n" \
+            "    },\n" \
+            "    view: {\n" \
+            "               columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]\n" \
+            "          }\n" \
             "});\n" \
             "dashboard.bind([stringFilter], [table]);\n" \
             "dashboard.draw(data);\n" \
