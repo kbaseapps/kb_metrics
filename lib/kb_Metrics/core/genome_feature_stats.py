@@ -823,7 +823,7 @@ class genome_feature_stats:
             "for (var i = 0, vals = [], cols = dt.getNumberOfColumns(); i < cols; i++) {\n" \
             "    vals.push(dt.getFormattedValue(row, i));\n" \
             "}\n" \
-            "return vals.join('\n');\n" \
+            "return vals.join('\\n');\n" \
             "}\n" \
             "}];\n" \
             "for (var i = 0, cols = data.getNumberOfColumns(); i < cols; i++) {\n" \
@@ -864,7 +864,7 @@ class genome_feature_stats:
         if (params.get('genome_source', None) is not None and
                 params.get('genome_domain', None) is not None and
                 params.get('refseq_category', None) is not None):
-            footContent += "<h4>Feature counts stats across all {}_{}_{} genomes:</h4>\n".format(
+            footContent += "<h4>Counts of all {}_{}_{} genomes:</h4>\n".format(
                     params['genome_source'], params['genome_domain'], params['refseq_category'])
         else:
             footContent += "<h4>RefSeq Genome counts:</h4>\n"
