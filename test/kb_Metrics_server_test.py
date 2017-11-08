@@ -90,7 +90,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_count_genome_features")
+    @unittest.skip("skipped test_run_count_genome_features")
     def test_run_count_genome_features(self):
         # First load a test FASTA file as an KBase Assembly
         m_params =     {
@@ -136,3 +136,19 @@ class kb_MetricsTest(unittest.TestCase):
         }
         # Second, call your implementation
         ret = self.getImpl().count_genome_features(self.getContext(), m_params)
+
+
+    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_refseq_genome_counts")
+    def test_run_refseq_genome_counts(self):
+        # First load a test FASTA file as an KBase Assembly
+        m_params =     {
+            'workspace_name': self.getWsName(),
+            'genome_source': 'refseq',
+            'genome_domain': 'bacteria',#'archaea',#'bacteria','plant','fungi'
+            'refseq_category': 'representative', #'reference','representative','na',
+            'create_report': 0
+        }
+        # Second, call your implementation
+        ret = self.getImpl().refseq_genome_counts(self.getContext(), m_params)

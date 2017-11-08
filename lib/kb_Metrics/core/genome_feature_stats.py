@@ -971,7 +971,8 @@ class genome_feature_stats:
                     continue
 
                 columns = asm_line.split('\t')
-                if refseq_category in columns[4]:
+                if ((refseq_category == 'reference' or refseq_category == 'representative') and
+                        refseq_category in columns[4]):
                     ncbi_genomes.append({
                         "domain": division,
                         "genome_source": genome_source,
@@ -993,7 +994,8 @@ class genome_feature_stats:
                         "gbrs_paired_asm": columns[17],
                         "paired_asm_comp": columns[18] #'identical', 'different' or 'na'
                     })
-                elif (refseq_category == 'na' or not columns[4]):
+                elif ((refseq_category == 'na' and refseq_category in columns[4])
+                        or not columns[4]):
                     ncbi_genomes.append({
                         "domain": division,
                         "genome_source": genome_source,
