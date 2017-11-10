@@ -84,4 +84,12 @@ module kb_Metrics {
     funcdef refseq_genome_counts(GenomeCountParams params)
         returns (StatResults output) authentication required;
 
+    typedef structure {
+        string workspace_name;
+        bool create_report;
+    } StatsReportParams;
+
+
+    funcdef dummy_test(StatsReportParams params)
+        returns (StatResults output) authentication required;
 };

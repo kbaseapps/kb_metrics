@@ -8,6 +8,7 @@ from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from KBaseReport.KBaseReportClient import KBaseReport
 
 from kb_Metrics.core.genome_feature_stats import genome_feature_stats
+from kb_Metrics.core.report_utils import report_utils
 #END_HEADER
 
 
@@ -29,7 +30,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "2ecaafb06cb3dd19a2028044b6257bcf12d375b4"
+    GIT_COMMIT_HASH = "ba051ce904c0339d7e1ba2a8449a20200cc57a97"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -159,6 +160,35 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # At some point might do deeper type checking...
         if not isinstance(output, dict):
             raise ValueError('Method refseq_genome_counts return value ' +
+                             'output is not type dict as required.')
+        # return the results
+        return [output]
+
+    def dummy_test(self, ctx, params):
+        """
+        :param params: instance of type "StatsReportParams" -> structure:
+           parameter "workspace_name" of String, parameter "create_report" of
+           type "bool" (A boolean - 0 for false, 1 for true. @range (0, 1))
+        :returns: instance of type "StatResults" (Here is the definition of
+           the output of the function.  The output can be used by other SDK
+           modules which call your code, or the output visualizations in the
+           Narrative.  'report_name' and 'report_ref' are special output
+           fields- if defined, the Narrative can automatically render your
+           Report.) -> structure: parameter "report_name" of String,
+           parameter "report_ref" of String
+        """
+        # ctx is the context object
+        # return variables are: output
+        #BEGIN dummy_test
+        rps = report_utils(self.config, ctx.provenance)
+
+        #output = rps.get_module_stats_from_cat()
+        output = rps.create_stats_report(params)
+        #END dummy_test
+
+        # At some point might do deeper type checking...
+        if not isinstance(output, dict):
+            raise ValueError('Method dummy_test return value ' +
                              'output is not type dict as required.')
         # return the results
         return [output]

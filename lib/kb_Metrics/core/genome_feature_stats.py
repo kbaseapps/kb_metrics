@@ -763,7 +763,7 @@ class genome_feature_stats:
 
 
     def _write_genome_html(self, out_dir, genome_dt, params):
-        #log('\nInput json:\n' + pformat(feat_dt))
+        #log('\nInput json:\n' + pformat(genome_dt))
 
         headContent = ("<html><head>\n"
             "<script type='text/javascript' src='https://www.google.com/jsapi'></script>\n"
@@ -772,20 +772,22 @@ class genome_feature_stats:
             "  google.setOnLoadCallback(drawTable);\n")
 
         #table column captions
+        col_caps = ['accession', 'organism_name', 'version_status', 'tax_id', 'assembly_level',
+            'release_level', 'seq_rel_date', 'genome_rep', 'gbrs_paired_asm', 'paired_asm_comp','genome_url']
         drawTable = ("\nfunction drawTable() {\n"
-            "var data = new google.visualization.DataTable();\n"
-            "data.addColumn('string', 'assembly_accession');\n"
-            "data.addColumn('string', 'organism');\n"
-            "data.addColumn('string', 'version_status');\n"
-            "data.addColumn('string', 'asm_name');\n"
-            "data.addColumn('string', 'tax_id');\n"
-            "data.addColumn('string', 'assembly_level');\n"
-            "data.addColumn('string', 'release_level');\n"
-            "data.addColumn('string', 'seq_rel_date');\n"
-            "data.addColumn('string', 'genome_rep');\n"
-            "data.addColumn('string', 'gbrs_paired_asm');\n"
-            "data.addColumn('string', 'paired_asm_comp');\n"
-            "data.addColumn('string', 'genome_url');")
+            "var data = new google.visualization.DataTable();\n")
+
+        cols = []
+        for i, col in enumerate(col_caps):
+            for k in genome_dt[0].keys():
+                if col == k:
+                    col_type = type(genome_dt[0][k]).__name__
+                    if (col_type == 'str' or col_type == 'unicode'):
+                        col_type = 'string'
+                    else:
+                        col_type = 'number'
+                    drawTable += "data.addColumn('" + col_type + "','" + k + "');\n"
+                    cols.append( col )
 
         #the data rows
         gd_rows = ""
@@ -793,18 +795,12 @@ class genome_feature_stats:
             if gd_rows != "":
                 gd_rows += ",\n"
             d_rows = []
-            d_rows.append('"' + gd['accession'] + '"')
-            d_rows.append('"' + gd['organism_name'] + '"')
-            d_rows.append('"' + gd['version_status'] + '"')
-            d_rows.append('"' + gd['asm_name'] + '"')
-            d_rows.append('"' + gd['tax_id'] + '"')
-            d_rows.append('"' + gd['assembly_level'] + '"')
-            d_rows.append('"' + gd['release_level'] + '"')
-            d_rows.append('"' + gd['seq_rel_date'] + '"')
-            d_rows.append('"' + gd['genome_rep'] + '"')
-            d_rows.append('"' + gd['gbrs_paired_asm'] + '"')
-            d_rows.append('"' + gd['paired_asm_comp'] + '"')
-            d_rows.append('"' + gd['genome_url'] + '"')
+            for j, c in enumerate( cols ):
+                d_type = type(gd[c]).__name__
+                if (d_type == 'str' or d_type == 'unicode'):
+                    d_rows.append('"' + gd[c] + '"')
+                else:
+                    d_rows.append(str(gd[c]))
 
             gd_rows += '[' + ','.join(d_rows) + ']'
 
@@ -826,8 +822,10 @@ class genome_feature_stats:
             "return vals.join('\\n');\n" \
             "}\n" \
             "}];\n" \
+            "var tab_columns = [];\n" \
             "for (var i = 0, cols = data.getNumberOfColumns(); i < cols; i++) {\n" \
             "    filterColumns.push(i);\n" \
+            "    tab_columns.push(i + 1);\n" \
             "}\n" \
             "var stringFilter = new google.visualization.ControlWrapper({\n" \
             "    controlType: 'StringFilter',\n" \
@@ -853,7 +851,7 @@ class genome_feature_stats:
             "        pageSize: 20\n" \
             "    },\n" \
             "    view: {\n" \
-            "               columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]\n" \
+            "               columns: tab_columns\n" \
             "          }\n" \
             "});\n" \
             "dashboard.bind([stringFilter], [table]);\n" \

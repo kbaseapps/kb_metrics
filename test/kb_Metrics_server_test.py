@@ -11,8 +11,9 @@ try:
 except:
     from configparser import ConfigParser  # py3
 
-from pprint import pprint  # noqa: F401
+from pprint import pprint, pformat  # noqa: F401
 
+#from biokbase.catalog.Client import Catalog
 from biokbase.workspace.client import Workspace as workspaceService
 from kb_Metrics.kb_MetricsImpl import kb_Metrics
 from kb_Metrics.kb_MetricsServer import MethodContext
@@ -92,7 +93,7 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_count_genome_features")
     def test_run_count_genome_features(self):
-        # First load a test FASTA file as an KBase Assembly
+        # First set input parameters
         m_params =     {
             'workspace_name': self.getWsName(),
             'genbank_file_urls': ['ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/009/605/GCF_000009605.1_ASM960v1/GCF_000009605.1_ASM960v1_genomic.gbff.gz','ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/725/GCF_000008725.1_ASM872v1/GCF_000008725.1_ASM872v1_genomic.gbff.gz','ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/009/605/GCF_000009605.1_ASM960v1/GCF_000009605.1_ASM960v1_genomic.gbff.gz'],
@@ -111,7 +112,7 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_count_genbank_genome_features")
     def test_run_count_genbank_genome_features(self):
-        # First load a test FASTA file as an KBase Assembly
+        # First set input parameters
         m_params =     {
             'workspace_name': self.getWsName(),
             'genbank_files': [],
@@ -128,7 +129,7 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_count_ensemblgenome_features")
     def test_run_count_ensemblgenome_features(self):
-        # First load a test FASTA file as an KBase Assembly
+        # First set input parameters
         m_params =     {
             'workspace_name': self.getWsName(),
             'genbank_files': ['ftp.ensemblgenomes.org/pub/release-37/plants/genbank/corchorus_capsularis/Corchorus_capsularis.CCACVL1_1.0.37.nonchromosomal.dat.gz'],
@@ -140,15 +141,29 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_refseq_genome_counts")
+    @unittest.skip("skipped test_run_refseq_genome_counts")
     def test_run_refseq_genome_counts(self):
-        # First load a test FASTA file as an KBase Assembly
-        m_params =     {
+        # First set input parameters
+        m_params = {
             'workspace_name': self.getWsName(),
             'genome_source': 'refseq',
-            'genome_domain': 'bacteria',#'archaea',#'bacteria','plant','fungi'
-            'refseq_category': 'representative', #'reference','representative','na',
-            'create_report': 0
+            'genome_domain': 'fungi',#'archaea',#'bacteria','plant','fungi'
+            'refseq_category': 'reference', #'reference','representative','na',
+            'create_report': 1
         }
         # Second, call your implementation
         ret = self.getImpl().refseq_genome_counts(self.getContext(), m_params)
+
+
+    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_dummy_test")
+    def test_run_dummy_test(self):
+        m_params = {
+            'workspace_name': self.getWsName(),
+            'create_report': 1
+        }
+        # Second, call your implementation
+        ret = self.getImpl().dummy_test(self.getContext(), m_params)
+        #raw_stats = cat.get_exec_raw_stats({}, {'begin': 1461169999, 'end': 1461170101})
+        #print(pformat(raw_stats[0]))
