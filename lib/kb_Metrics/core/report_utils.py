@@ -350,23 +350,26 @@ class report_utils:
 
         print "{} created successfully.".format(output_path)
 
-
-    def _write_html(self, out_dir, input_dt, col_caps):
-        #log('\nInput json:\n' + pformat(input_dt))
-
-        headContent = ("<html><head>\n"
+    def _write_headContent(self):
+        """_write_headConten: returns the very first portion of the html file
+        """
+        head_content = ("<html><head>\n"
             "<script type='text/javascript' src='https://www.google.com/jsapi'></script>\n"
             "<script type='text/javascript'>\n"
-            "  google.load('visualization', '1', {packages:['controls'], callback: drawTable});\n"
-            "  google.setOnLoadCallback(drawTable);\n")
+            "// Load the Visualization API and the controls package.\n"
+            "  google.load('visualization', '1', {packages:['controls'], callback: drawDashboard});\n"
+            "  google.setOnLoadCallback(drawDashboard);\n")
 
-        #table column captions
-        drawTable = ("\nfunction drawTable() {\n"
+        return head_content
+
+    def _write_callback_function(self, input_dt, col_caps):
+        """
+        _write_callback_function: write the callback function according to the input_dt and column captions
+        """
+        callback_func = ("\nfunction drawDashboard() {\n"
             "var data = new google.visualization.DataTable();\n")
 
-        col_caps = ['module_name', 'full_app_id', 'number_of_calls', 'number_of_errors',
-                        'type', 'time_range', 'total_exec_time', 'total_queue_time']
-
+        #table column captions
         if not col_caps:
             col_caps = input_dt[0].keys()
 
@@ -379,178 +382,184 @@ class report_utils:
                         col_type = 'string'
                     else:
                         col_type = 'number'
-                    drawTable += "data.addColumn('" + col_type + "','" + k + "');\n"
+                    callback_func += "data.addColumn('" + col_type + "','" + k + "');\n"
                     cols.append( col )
 
-        #the data rows
-        gd_rows = ""
-        for gd in input_dt:
-            if gd_rows != "":
-                gd_rows += ",\n"
+        #data rows
+        dt_rows = ""
+        for dt in input_dt:
+            if dt_rows != "":
+                dt_rows += ",\n"
             d_rows = []
             for j, c in enumerate( cols ):
-                d_type = type(gd[c]).__name__
+                d_type = type(dt[c]).__name__
                 if (d_type == 'str' or d_type == 'unicode'):
-                    d_rows.append('"' + gd[c] + '"')
+                    d_rows.append('"' + dt[c] + '"')
                 else:
-                    d_rows.append(str(gd[c]))
+                    d_rows.append(str(dt[c]))
 
-            gd_rows += '[' + ','.join(d_rows) + ']'
+            dt_rows += '[' + ','.join(d_rows) + ']'
 
-        drawTable += "\ndata.addRows([\n"
-        drawTable += gd_rows
-        drawTable += "\n]);"
+        callback_func += "\ndata.addRows([\n"
+        callback_func += dt_rows
+        callback_func += "\n]);"
 
-        #the dashboard, table and search filter
-        dash_tab_filter = "\n" \
-            "var dashboard = new google.visualization.Dashboard(document.querySelector('#dashboard'));\n" \
-            "// create a list of columns for the dashboard\n" \
-            "var filterColumns = [{\n" \
-            "// this column aggregates all of the data into one column for use with the string filter\n" \
-            "type: 'string',\n" \
-            "calc: function (dt, row) {\n" \
-            "for (var i = 0, vals = [], cols = dt.getNumberOfColumns(); i < cols; i++) {\n" \
-            "    vals.push(dt.getFormattedValue(row, i));\n" \
-            "}\n" \
-            "return vals.join('\\n');\n" \
-            "}\n" \
-            "}];\n" \
-            "var tab_columns = [];\n" \
-            "for (var i = 0, cols = data.getNumberOfColumns(); i < cols; i++) {\n" \
-            "    filterColumns.push(i);\n" \
-            "    tab_columns.push(i + 1);\n" \
-            "}\n" \
-            "var stringFilter = new google.visualization.ControlWrapper({\n" \
-            "    controlType: 'StringFilter',\n" \
-            "    containerId: 'string_filter_div',\n" \
-            "    options: {\n" \
-            "        filterColumnIndex: 0,\n" \
-            "        matchType: 'any',\n" \
-            "        caseSensitive: false,\n" \
-            "        ui: {\n" \
-            "            label: 'Search table:'\n" \
-            "           }\n" \
-            "    },\n" \
-            "    view: {\n" \
-            "               columns: filterColumns\n" \
-            "          }\n" \
-            "});\n" \
-            "var table = new google.visualization.ChartWrapper({\n" \
-            "    chartType: 'Table',\n" \
-            "    containerId: 'table_div',\n" \
-            "    options: {\n" \
-            "        showRowNumber: true,\n" \
-            "        page: 'enable',\n" \
-            "        pageSize: 20\n" \
-            "    },\n" \
-            "    view: {\n" \
-            "               columns: tab_columns\n" \
-            "          }\n" \
-            "});\n" \
-            "dashboard.bind([stringFilter], [table]);\n" \
-            "dashboard.draw(data);\n" \
-        "}\n"
+        return callback_func
+
+
+    def _write_charts(self):
+        num_slider1 = ("\n//Create a range slider, passing some options\n"
+            "var hourRangeSlider = new google.visualization.ControlWrapper({\n"
+                "'controlType': 'NumberRangeFilter',\n"
+                "'containerId': 'number_filter_div2',\n"
+                "'options': {\n"
+                "'filterColumnLabel': 'total_exec_time',\n"
+                "'minValue': 0,\n"
+                "'maxValue': 720\n"
+                "},\n"
+                "'state': {'lowValue': 10, 'highValue': 360}\n"
+                "});\n")
+
+        line_chart = ("var lineChart = new google.visualization.ChartWrapper({\n"
+                "'chartType' : 'Line',\n"
+                "'containerId' : 'line_div',\n"
+                "'options': {\n"
+                "'width': 600,\n"
+                "'height': 300,\n"
+                "'hAxis': {\n"
+                "'title': 'full app id'\n"
+                "},\n"
+                "'vAxis': {\n"
+                "'title': 'total execution time'\n"
+                "},\n"
+                "'chartArea': {'left': 15, 'top': 25, 'right': 0, 'bottom': 15}\n"
+                "},\n"
+                "'view': {'columns': [1, 6]}\n"
+                "});\n")
+
+        num_slider2 = ("\n//Create a range slider, passing some options\n"
+                "var callsRangeSlider = new google.visualization.ControlWrapper({\n"
+                "'controlType': 'NumberRangeFilter',\n"
+                "'containerId': 'number_filter_div1',\n"
+                "'options': {\n"
+                "'filterColumnLabel': 'number_of_calls',\n"
+                "'minValue': 1,\n"
+                "'maxValue': 20000\n"
+                "},\n"
+                "'state': {'lowValue': 1000, 'highValue': 10000}\n"
+                "});\n")
+
+        pie_chart = ("\n//Create a pie chart, passing some options\n"
+                "var pieChart = new google.visualization.ChartWrapper({\n"
+                "'chartType': 'PieChart',\n"
+                "'containerId': 'chart_div',\n"
+                "'options': {\n"
+                "'width': 300,\n"
+                "'height': 300,\n"
+                "'pieSliceText': 'value', //'label',\n"
+                "'legend': 'none',\n"
+                "'chartArea': {'left': 15, 'top': 25, 'right': 0, 'bottom': 15},\n"
+                "'title': 'Set your chart title, e.g., Number of calls per module'\n"
+                "},\n"
+                "// The pie chart will use the columns 'module_name' and 'number_of_calls'\n"
+                "// out of all the available ones.\n"
+                "'view': {'columns': [1, 2]}\n"
+                "});\n")
+
+        tab_chart = ("\n//create a list of columns for the table chart\n"
+            "var filterColumns = [{\n"
+            "// this column aggregates all of the data into one column for use with the string filter\n"
+            "type: 'string',\n"
+            "calc: function (dt, row) {\n"
+            "for (var i = 0, vals = [], cols = dt.getNumberOfColumns(); i < cols; i++) {\n"
+            "    vals.push(dt.getFormattedValue(row, i));\n"
+            "}\n"
+            "return vals.join('\\n');\n"
+            "}\n"
+            "}];\n"
+            "var tab_columns = [];\n"
+            "for (var i = 0, cols = data.getNumberOfColumns(); i < cols; i++) {\n"
+            "    filterColumns.push(i);\n"
+            "    tab_columns.push(i + 1);\n"
+            "}\n"
+            "var stringFilter = new google.visualization.ControlWrapper({\n"
+            "    controlType: 'StringFilter',\n"
+            "    containerId: 'string_filter_div',\n"
+            "    options: {\n"
+            "        filterColumnIndex: 0,\n"
+            "        matchType: 'any',\n"
+            "        caseSensitive: false,\n"
+            "        ui: {\n"
+            "            label: 'Search table:'\n"
+            "           }\n"
+            "    },\n"
+            "    view: {\n"
+            "               columns: filterColumns\n"
+            "          }\n"
+            "});\n"
+            "var table = new google.visualization.ChartWrapper({\n"
+            "    chartType: 'Table',\n"
+            "    containerId: 'table_div',\n"
+            "    options: {\n"
+            "        showRowNumber: true,\n"
+            "        page: 'enable',\n"
+            "        pageSize: 20\n"
+            "    },\n"
+            "    view: {\n"
+            "               columns: tab_columns\n"
+            "          }\n"
+            "});\n")
+
+        return num_slider1 + line_chart + num_slider2 + pie_chart + tab_chart
+
+
+    def _write_dashboard(self):
+        """
+        _write_dashboard: writes the dashboard layout and bind controls with charts
+        """
+        #the dashboard components (table, charts and filters)
+        dash_components = self._write_charts()
+        dashboard = ("\n"
+            "var dashboard = new google.visualization.Dashboard(document.querySelector('#dashboard_div'));\n"
+            "dashboard.bind([callsRangeSlider], [pieChart]);\n"
+            "dashboard.bind([hourRangeSlider], [lineChart]);\n"
+            "dashboard.bind([stringFilter], [table]);\n"
+            "dashboard.draw(data);\n"
+        "}\n")
+
+        return dash_components + dashboard
+
+
+    def _write_html(self, out_dir, input_dt, col_caps):
+        #log('\nInput json:\n' + pformat(input_dt))
+
+        headContent = self._write_headContent()
+
+        callbackFunc = self._write_callback_function(input_dt, col_caps)
+
+        dashboard = self._write_dashboard()
 
         report_title = "Report_title_here"
         footContent = "</script></head>\n<body>\n"
         footContent += "<h4>" + report_title + "</h4>\n"
-        footContent += "  <div id='dashboard'>\n" \
-          "      <div id='string_filter_div'></div>\n" \
-          "      <div id='table_div'></div>\n" \
-          "  </div>\n" \
-          "</body>\n" \
-          "</html>"
+        footContent += "  <div id='dashboard_div'>\n" \
+                "<div style='display: inline-block'>\n" \
+                "<div id='number_filter_div1'></div>\n" \
+                "<div id='chart_div'></div>\n" \
+                "</div>\n" \
+                "<div style='display: inline-block'>\n" \
+                "<div id='number_filter_div2'></div>\n" \
+                "<div id='line_div'></div>\n" \
+                "</div>\n" \
+                "<div id='string_filter_div'></div>\n" \
+                "<div id='table_div'></div>\n" \
+                "</div>\n" \
+                "</body></html>"
 
-        html_str = headContent + drawTable + dash_tab_filter + footContent
+        html_str = headContent + callbackFunc + dashboard + footContent
         log(html_str)
 
         html_file_path = os.path.join(out_dir, 'report_charts.html')
-
-        with open(html_file_path, 'w') as html_file:
-                html_file.write(html_str)
-
-        return {'html_file': html_str, 'html_path': html_file_path}
-
-
-    def _write_feature_html(self, out_dir, feat_dt, params):
-        #log('\nInput json:\n' + pformat(feat_dt))
-
-        headContent = ("<html><head>\n"
-            "<script type='text/javascript' src='https://www.google.com/jsapi'></script>\n"
-            "<script type='text/javascript'>\n"
-            "  google.load('visualization', '1', {packages:['controls'], callback: drawTable});\n"
-            "  google.setOnLoadCallback(drawTable);\n")
-
-        #table column captions
-        drawTable = ("\nfunction drawTable() {\n"
-            "var data = new google.visualization.DataTable();\n"
-            "data.addColumn('string', 'feature_type');\n"
-            "data.addColumn('number', 'total_feature_count');\n"
-            "data.addColumn('number', 'total_genome_count');\n"
-            "data.addColumn('number', 'feature_mean_len');\n"
-            "data.addColumn('number', 'feature_median_len');\n"
-            "data.addColumn('number', 'feature_max_len');")
-
-        #the data rows
-        fd_rows = ""
-        for fd in feat_dt:
-            if fd_rows != "":
-                fd_rows += ",\n"
-            d_rows = []
-            d_rows.append("'" + fd['feature_type'] + "'")
-            d_rows.append(str(fd['total_feature_count']))
-            d_rows.append(str(fd['total_genome_count']))
-            if fd['len_stat']:
-                d_rows.append(str(fd['len_stat']['mean']))
-                d_rows.append(str(fd['len_stat']['median']))
-                d_rows.append(str(fd['len_stat']['max']))
-            else:
-                d_rows.append(str(0))
-                d_rows.append(str(0))
-                d_rows.append(str(0))
-
-            fd_rows += '[' + ','.join(d_rows) + ']'
-
-        drawTable += "\ndata.addRows([\n"
-        drawTable += fd_rows
-        drawTable += "\n]);"
-
-        #the dashboard, table and search filter
-        dash_tab_filter = "\n" \
-            "var dashboard = new google.visualization.Dashboard(document.querySelector('#dashboard'));\n" \
-            "var stringFilter = new google.visualization.ControlWrapper({\n" \
-            "    controlType: 'StringFilter',\n" \
-            "    containerId: 'string_filter_div',\n" \
-            "    options: {\n" \
-            "        filterColumnIndex: 0\n" \
-            "    }\n" \
-            "});\n" \
-            "var table = new google.visualization.ChartWrapper({\n" \
-            "    chartType: 'Table',\n" \
-            "    containerId: 'table_div',\n" \
-            "    options: {\n" \
-            "        showRowNumber: true\n" \
-            "    }\n" \
-            "});\n" \
-            "dashboard.bind([stringFilter], [table]);\n" \
-            "dashboard.draw(data);\n" \
-        "}\n"
-
-        footContent = "</script></head>\n<body>\n"
-        footContent += "  <h4>Feature counts stats across all {}_{}_{} genomes:</h4>\n".format(params['genome_source'], params['genome_domain'], params['refseq_category'])
-        footContent += "  <div id='dashboard'>\n" \
-          "      <div id='string_filter_div'></div>\n" \
-          "      <div id='table_div'></div>\n" \
-          "  </div>\n" \
-          "</body>\n" \
-          "</html>"
-
-        html_str = headContent + drawTable + dash_tab_filter + footContent
-        #log(html_str)
-
-        #replace all metacharacters with '_' for file naming purpose
-        #name_str = re.sub('[ \/\.\^\$\*\+\?\{\}\[\]\|\\\(\)]', '_', feat_dt['organism_name'])
-        html_file_path = os.path.join(out_dir, 'stats_Feature_counts.html')
 
         with open(html_file_path, 'w') as html_file:
                 html_file.write(html_str)
