@@ -21,13 +21,13 @@
                 "options": [
                 {
                   "display": "AS (aggr_stats)",
-                  "value": "aggr_stats",
+                  "value": "exec_aggr_stats",
                   "id": "AS",
                   "ui_name": "AS (aggr_stats)"
                 },
                 {
                   "display": "AT (aggr_table)",
-                  "value": "aggr_table",
+                  "value": "exec_aggr_table",
                   "id": "AT",
                   "ui_name": "AT (aggr_table)"
                 },
