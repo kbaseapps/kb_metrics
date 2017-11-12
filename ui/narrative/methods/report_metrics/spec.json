@@ -1,0 +1,80 @@
+{
+    "ver": "0.0.1",
+    "authors": [
+        "qzhang"
+    ],
+    "contact": "https://kbase.us/contact-us/",
+    "categories": ["active"],
+    "widgets": {
+        "input": null,
+        "output": "no-display"
+    },
+    "parameters": [
+        {
+            "id": "stats_name",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": [ "exec_aggr_stats" ],
+            "field_type": "dropdown",
+            "dropdown_options":{
+                "options": [
+                {
+                  "display": "AS (aggr_stats)",
+                  "value": "aggr_stats",
+                  "id": "AS",
+                  "ui_name": "AS (aggr_stats)"
+                },
+                {
+                  "display": "AT (aggr_table)",
+                  "value": "aggr_table",
+                  "id": "AT",
+                  "ui_name": "AT (aggr_table)"
+                },
+                {
+                  "value": "exec_stats",
+                  "display": "ES (exec_stats)",
+                  "id": "ES",
+                  "ui_name": "ES (exec_stats)"
+                }
+              ]
+            }
+        }
+    ],
+    "behavior": {
+        "service-mapping": {
+            "url": "",
+            "name":"kb_Metrics",
+            "method": "report_metrics",
+            "input_mapping": [
+                {
+                    "input_parameter": "stats_name",
+                    "target_property": "stats_name"
+                },
+                {
+                    "narrative_system_variable": "workspace",
+                    "target_property": "workspace_name"
+                },
+                {
+                    "constant_value": 1,
+                    "target_property": "create_report"
+                }
+            ],
+            "output_mapping": [
+                {
+                    "service_method_output_path": [0,"report_name"],
+                    "target_property": "report_name"
+                },
+                {
+                    "service_method_output_path": [0,"report_ref"],
+                    "target_property": "report_ref"
+                },
+                {
+                    "narrative_system_variable": "workspace",
+                    "target_property": "workspace_name"
+                }
+            ]
+        }
+    },
+    "job_id_output_field": "docker"
+}

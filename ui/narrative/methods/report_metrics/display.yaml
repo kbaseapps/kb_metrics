@@ -1,0 +1,37 @@
+#
+# define display information
+#
+name: Report Metrics
+tooltip: |
+      Generete report metrics
+screenshots: []
+
+icon: null
+
+#
+# define a set of similar methods that might be useful to the user
+#
+suggestions:
+    apps:
+        related:
+            []
+        next:
+            []
+    methods:
+        related:
+            []
+        next:
+            []
+
+#
+# Configure the display and description of parameters
+#
+parameters :
+    stats_name :
+        ui-name : |
+            Metric Name
+        short-hint : |
+            The name of the metrics to generate report for
+
+description : |
+    <p>This method provids the metric report.</p>
