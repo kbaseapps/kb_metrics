@@ -71,26 +71,38 @@ class report_utils:
 
     def create_stats_report(self, params):
         if params.get(self.PARAM_IN_WS, None) is None:
-            raise ValueError(self.PARAM_IN_WS + ' parameter is mandatory')
+           raise ValueError(self.PARAM_IN_WS + ' parameter is mandatory')
 
-        #raw_stats = self.get_exec_stats_from_cat()
-        #aggr_stats = self.get_exec_aggrStats_from_cat()
-        aggr_tab = self.get_exec_aggrTable_from_cat()
+        if params.get('stats_name', None) is None:
+            raise ValueError('Variable stats_name' + ' parameter is mandatory')
+
+        stats_name = params['stats_name']
+
+        cat_calls = {
+            'exec_stats': 'get_exec_stats_from_cat',
+            'exec_aggr_stats': 'get_exec_aggrStats_from_cat',
+            'exec_aggr_table': 'get_exec_aggrTable_from_cat'
+        }
+        ret_stats = []
+        if stats_name == 'exec_stats':
+            ret_stats = self.get_exec_stats_from_cat()
+        elif stats_name == 'exec_aggr_stats':
+            ret_stats = self.get_exec_aggrStats_from_cat()
+        elif stats_name == 'exec_aggr_table':
+            ret_stats = self.get_exec_aggrTable_from_cat()
 
         returnVal = {
             "report_ref": None,
             "report_name": None
         }
 
-        #if len(aggr_stats) == 0:
-        #if len(raw_stats) == 0:
-        if len(aggr_tab) == 0:
+        if len(ret_stats) == 0:
             return returnVal
 
         col_caps = ['module_name', 'full_app_id', 'number_of_calls', 'number_of_errors',
                         'type', 'time_range', 'total_exec_time', 'total_queue_time']
         if params['create_report'] == 1:
-            report_info = self.generate_report(self.count_dir, aggr_tab, params)
+            report_info = self.generate_report(self.count_dir, ret_stats, params)
             #report_info = self.generate_report(self.count_dir, raw_stats, params)
             #report_info = self.generate_report(self.count_dir, aggr_stats, params, col_caps)
 
@@ -121,7 +133,7 @@ class report_utils:
         """
         # Pull the data
         log("Fetching the data from Catalog API...")
-        raw_stats = self.cat.get_exec_raw_stats({}, {})
+        raw_stats = self.cat.get_exec_raw_stats({})
         #raw_stats = self.cat.get_exec_raw_stats({},{'begin': 1461169999, 'end': 1461170101})
 
         log(pformat(raw_stats[0]))

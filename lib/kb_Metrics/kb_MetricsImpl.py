@@ -30,7 +30,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "ba051ce904c0339d7e1ba2a8449a20200cc57a97"
+    GIT_COMMIT_HASH = "b3c73c70df0189b7fe18a4ad01b87e3a860ae856"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -164,11 +164,42 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # return the results
         return [output]
 
+    def report_metrics(self, ctx, params):
+        """
+        :param params: instance of type "StatsReportParams" -> structure:
+           parameter "workspace_name" of String, parameter "create_report" of
+           type "bool" (A boolean - 0 for false, 1 for true. @range (0, 1)),
+           parameter "stats_name" of String
+        :returns: instance of type "StatResults" (Here is the definition of
+           the output of the function.  The output can be used by other SDK
+           modules which call your code, or the output visualizations in the
+           Narrative.  'report_name' and 'report_ref' are special output
+           fields- if defined, the Narrative can automatically render your
+           Report.) -> structure: parameter "report_name" of String,
+           parameter "report_ref" of String
+        """
+        # ctx is the context object
+        # return variables are: output
+        #BEGIN report_metrics
+        rps = report_utils(self.config, ctx.provenance)
+
+        #output = rps.get_module_stats_from_cat()
+        output = rps.create_stats_report(params)
+        #END report_metrics
+
+        # At some point might do deeper type checking...
+        if not isinstance(output, dict):
+            raise ValueError('Method report_metrics return value ' +
+                             'output is not type dict as required.')
+        # return the results
+        return [output]
+
     def dummy_test(self, ctx, params):
         """
         :param params: instance of type "StatsReportParams" -> structure:
            parameter "workspace_name" of String, parameter "create_report" of
-           type "bool" (A boolean - 0 for false, 1 for true. @range (0, 1))
+           type "bool" (A boolean - 0 for false, 1 for true. @range (0, 1)),
+           parameter "stats_name" of String
         :returns: instance of type "StatResults" (Here is the definition of
            the output of the function.  The output can be used by other SDK
            modules which call your code, or the output visualizations in the

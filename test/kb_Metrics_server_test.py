@@ -157,9 +157,10 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_dummy_test")
+    @unittest.skip("skipped test_run_dummy_test")
     def test_run_dummy_test(self):
         m_params = {
+            'stats_name': 'get_exec_stats_from_cat',
             'workspace_name': self.getWsName(),
             'create_report': 1
         }
@@ -167,3 +168,15 @@ class kb_MetricsTest(unittest.TestCase):
         ret = self.getImpl().dummy_test(self.getContext(), m_params)
         #raw_stats = cat.get_exec_raw_stats({}, {'begin': 1461169999, 'end': 1461170101})
         #print(pformat(raw_stats[0]))
+
+    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_report_metrics")
+    def test_run_report_metrics(self):
+        m_params = {
+            'stats_name': 'exec_aggr_stats',#'exec_stats',#'exec_aggr_stats','exec_aggr_table',
+            'workspace_name': self.getWsName(),
+            'create_report': 1
+        }
+        # Second, call your implementation
+        ret = self.getImpl().report_metrics(self.getContext(), m_params)

@@ -87,8 +87,12 @@ module kb_Metrics {
     typedef structure {
         string workspace_name;
         bool create_report;
+        string stats_name;
     } StatsReportParams;
 
+
+    funcdef report_metrics(StatsReportParams params)
+        returns (StatResults output) authentication required;
 
     funcdef dummy_test(StatsReportParams params)
         returns (StatResults output) authentication required;
