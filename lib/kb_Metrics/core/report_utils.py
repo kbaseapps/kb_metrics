@@ -162,7 +162,7 @@ class report_utils:
         return aggr_tab
 
 
-    def get_exec_aggrStats_from_cat(self):#, params):
+    def get_exec_aggrStats_from_cat(self):
         """
         get_exec_aggr_from_cat: Get stats on aggregated execution results of KBase apps
         return an array of the following structure (example with data):
@@ -265,14 +265,15 @@ class report_utils:
 
 
     def generate_report(self, count_dir, data_info, params, col_caps=None):
-        output_json_files = self._generate_output_file_list(count_dir)
         if col_caps is None:
             output_html_files = self._generate_html_report(count_dir, data_info)
         else:
             output_html_files = self._generate_html_report(count_dir, data_info, col_caps)
 
+        output_json_files = self._generate_output_file_list(count_dir)
+
         # create report
-        report_text = 'Summary of genome feature stats:\n\n'
+        report_text = 'Summary of {} stats:\n\n'.format(params['stats_name'])
 
         report_info = self.kbr.create_extended_report({
                         'message': report_text,
