@@ -73,20 +73,26 @@ class report_utils:
         if params.get(self.PARAM_IN_WS, None) is None:
             raise ValueError(self.PARAM_IN_WS + ' parameter is mandatory')
 
-        aggr_stats = self.get_exec_aggr_from_cat()
+        #raw_stats = self.get_exec_stats_from_cat()
+        #aggr_stats = self.get_exec_aggrStats_from_cat()
+        aggr_tab = self.get_exec_aggrTable_from_cat()
 
         returnVal = {
             "report_ref": None,
             "report_name": None
         }
 
-        if len(aggr_stats) == 0:
+        #if len(aggr_stats) == 0:
+        #if len(raw_stats) == 0:
+        if len(aggr_tab) == 0:
             return returnVal
 
         col_caps = ['module_name', 'full_app_id', 'number_of_calls', 'number_of_errors',
                         'type', 'time_range', 'total_exec_time', 'total_queue_time']
         if params['create_report'] == 1:
-            report_info = self.generate_report(self.count_dir, aggr_stats, col_caps, params)
+            report_info = self.generate_report(self.count_dir, aggr_tab, params)
+            #report_info = self.generate_report(self.count_dir, raw_stats, params)
+            #report_info = self.generate_report(self.count_dir, aggr_stats, params, col_caps)
 
             returnVal = {
                 'report_name': report_info['name'],
@@ -99,16 +105,52 @@ class report_utils:
     def get_exec_stats_from_cat(self):
         """
         get_exec_stats_from_cat: Get stats on completed jobs
-        """
-
-        returnVal = {
-            "report_ref": None,
-            "report_name": None
+        return an array of the following structure (example with data):
+        {
+             u'app_id': u'describe_rnaseq_experiment',
+             u'app_module_name': u'KBaseRNASeq',
+             u'creation_time': 1456863947.568,
+             u'exec_start_time': 1456863953.739,
+             u'finish_time': 1456863955.138,
+             u'func_module_name': u'KBaseRNASeq',
+             u'func_name': u'SetupRNASeqAnalysis',
+             u'git_commit_hash': u'5de844e7303a8a30a94d4ca40f2b341439b8bb3c',
+             u'is_error': True,
+             u'user_id': u'srividya22'
         }
-        return returnVal
+        """
+        # Pull the data
+        log("Fetching the data from Catalog API...")
+        raw_stats = self.cat.get_exec_raw_stats({}, {})
+        #raw_stats = self.cat.get_exec_raw_stats({},{'begin': 1461169999, 'end': 1461170101})
+
+        log(pformat(raw_stats[0]))
+
+        return raw_stats
 
 
-    def get_exec_aggr_from_cat(self):#, params):
+    def get_exec_aggrTable_from_cat(self):
+        """
+        get_exec_stats_from_cat: Get stats on completed jobs
+        return an array of the following structure (example with data):
+        {
+             u'app': u'kb_uploadmethods/import_sra_as_reads_from_web',
+             u'func': u'import_sra_from_web',
+             u'func_mod': u'kb_uploadmethods',
+             u'n': 5,
+             u'user': u'umaganapathyswork'
+        }
+        """
+        # Pull the data
+        log("Fetching the data from Catalog API...")
+        aggr_tab = self.cat.get_exec_aggr_table({})
+
+        log(pformat(aggr_tab[0]))
+
+        return aggr_tab
+
+
+    def get_exec_aggrStats_from_cat(self):#, params):
         """
         get_exec_aggr_from_cat: Get stats on aggregated execution results of KBase apps
         return an array of the following structure (example with data):
@@ -207,16 +249,15 @@ class report_utils:
             trapps += rapps[b]
             print '%5s %3d %3d       %3d %3d   %3d %3d' %(labels[b],tmods, tapps,trmods,trapps,tmods-trmods,tapps-trapps)
 
+        return kb_modules
 
-        returnVal = {
-            "report_ref": None,
-            "report_name": None
-        }
-        return returnVal
 
-    def generate_report(self, count_dir, data_info, col_caps, params):
-        output_html_files = self._generate_html_report(count_dir, data_info, col_caps)
+    def generate_report(self, count_dir, data_info, params, col_caps=None):
         output_json_files = self._generate_output_file_list(count_dir)
+        if col_caps is None:
+            output_html_files = self._generate_html_report(count_dir, data_info)
+        else:
+            output_html_files = self._generate_html_report(count_dir, data_info, col_caps)
 
         # create report
         report_text = 'Summary of genome feature stats:\n\n'
@@ -287,26 +328,6 @@ class report_utils:
         return resp
 
 
-    def validate_parameters(self, params):
-        if params.get(self.PARAM_IN_WS, None) is None:
-            raise ValueError(self.PARAM_IN_WS + ' parameter is mandatory')
-        #set default parameters
-        if params.get('genome_source', None) is None:
-            params['genome_source'] = 'refseq'
-        if params.get('genome_domain', None) is None:
-            params['genome_domain'] = 'bacteria'
-        if params.get('refseq_category', None) is None:
-            params['refseq_category'] = 'reference'
-
-        if params.get('file_format', None) is None:
-            params['file_format'] = 'genbank'
-
-        if params.get('create_report', None) is None:
-            params['create_report'] = 0
-
-        return params
-
-
     def _generate_output_file_list(self, out_dir):
         """
         _generate_output_file_list: zip result files and generate file_links for report
@@ -362,7 +383,7 @@ class report_utils:
 
         return head_content
 
-    def _write_callback_function(self, input_dt, col_caps):
+    def _write_callback_function(self, input_dt, col_caps=None):
         """
         _write_callback_function: write the callback function according to the input_dt and column captions
         """
@@ -370,7 +391,7 @@ class report_utils:
             "var data = new google.visualization.DataTable();\n")
 
         #table column captions
-        if not col_caps:
+        if col_caps is None:
             col_caps = input_dt[0].keys()
 
         cols = []
@@ -394,9 +415,15 @@ class report_utils:
             for j, c in enumerate( cols ):
                 d_type = type(dt[c]).__name__
                 if (d_type == 'str' or d_type == 'unicode'):
-                    d_rows.append('"' + dt[c] + '"')
+                    if dt[c] is None:
+                        d_rows.append('"None"')
+                    else:
+                        d_rows.append('"' + dt[c] + '"')
                 else:
-                    d_rows.append(str(dt[c]))
+                    if dt[c] is None:
+                        d_rows.append('"None"')
+                    else:
+                        d_rows.append(str(dt[c]))
 
             dt_rows += '[' + ','.join(d_rows) + ']'
 
@@ -408,6 +435,25 @@ class report_utils:
 
 
     def _write_charts(self):
+        cat_picker = ("var categoryPicker = new google.visualization.ControlWrapper({\n"
+                "controlType: 'CategoryFilter',\n"
+                "containerId: 'cat_picker_div',\n"
+                "options: {\n"
+                "//filterColumnIndex: 0, // filter by this column\n"
+                "filterColumnLabel: 'user_id',\n"
+                "ui: {\n"
+                "    caption: 'Choose a user',\n"
+                "    sortValues: true,\n"
+                "    allowNone: true,\n"
+                "    allowMultiple: true,\n"
+                "    allowTyping: true\n"
+                "  }\n"
+                "},\n"
+                "// Define an initial state, i.e. a set of metrics to be initially selected.\n"
+                "//state: {'selectedValues': ['KBaseRNASeq', 'MEGAHIT', 'fba_tools']}\n"
+                "state: {'selectedValues': ['qzhang', 'srividya22']\n"
+            "});\n")
+
         num_slider1 = ("\n//Create a range slider, passing some options\n"
             "var hourRangeSlider = new google.visualization.ControlWrapper({\n"
                 "'controlType': 'NumberRangeFilter',\n"
@@ -510,7 +556,7 @@ class report_utils:
             "          }\n"
             "});\n")
 
-        return num_slider1 + line_chart + num_slider2 + pie_chart + tab_chart
+        return cat_picker + num_slider1 + line_chart + num_slider2 + pie_chart + tab_chart
 
 
     def _write_dashboard(self):
@@ -521,6 +567,7 @@ class report_utils:
         dash_components = self._write_charts()
         dashboard = ("\n"
             "var dashboard = new google.visualization.Dashboard(document.querySelector('#dashboard_div'));\n"
+            "dashboard.bind([categoryPicker], [pieChart, lineChart],[table]);\n"
             "dashboard.bind([callsRangeSlider], [pieChart]);\n"
             "dashboard.bind([hourRangeSlider], [lineChart]);\n"
             "dashboard.bind([stringFilter], [table]);\n"
@@ -529,20 +576,12 @@ class report_utils:
 
         return dash_components + dashboard
 
-
-    def _write_html(self, out_dir, input_dt, col_caps):
-        #log('\nInput json:\n' + pformat(input_dt))
-
-        headContent = self._write_headContent()
-
-        callbackFunc = self._write_callback_function(input_dt, col_caps)
-
-        dashboard = self._write_dashboard()
-
+    def _write_footcontent(self):
         report_title = "Report_title_here"
         footContent = "</script></head>\n<body>\n"
         footContent += "<h4>" + report_title + "</h4>\n"
         footContent += "  <div id='dashboard_div'>\n" \
+                "<div id='cat_picker_div'></div>\n" \
                 "<div style='display: inline-block'>\n" \
                 "<div id='number_filter_div1'></div>\n" \
                 "<div id='chart_div'></div>\n" \
@@ -556,6 +595,22 @@ class report_utils:
                 "</div>\n" \
                 "</body></html>"
 
+        return footContent
+
+    def _write_html(self, out_dir, input_dt, col_caps=None):
+        #log('\nInput json:\n' + pformat(input_dt))
+
+        headContent = self._write_headContent()
+
+        if col_caps is None:
+            callbackFunc = self._write_callback_function(input_dt)
+        else:
+            callbackFunc = self._write_callback_function(input_dt, col_caps)
+
+        dashboard = self._write_dashboard()
+
+        footContent = self._write_footcontent()
+
         html_str = headContent + callbackFunc + dashboard + footContent
         log(html_str)
 
@@ -567,7 +622,7 @@ class report_utils:
         return {'html_file': html_str, 'html_path': html_file_path}
 
 
-    def _generate_html_report(self, out_dir, dt_info, col_caps):
+    def _generate_html_report(self, out_dir, dt_info, col_caps=None):
         """
         _generate_html_report: generate html report given the json data in feat_counts
 
@@ -575,7 +630,10 @@ class report_utils:
         #log('start generating html report')
         html_report = list()
 
-        html_file_path = self._write_html(out_dir, dt_info, col_caps)
+        if col_caps is None:
+            html_file_path = self._write_html(out_dir, dt_info)
+        else:
+            html_file_path = self._write_html(out_dir, dt_info, col_caps)
 
         file_title = 'Report with charts'
 
