@@ -133,9 +133,9 @@ class report_utils:
         """
         # Pull the data
         log("Fetching the data from Catalog API...")
-        #raw_stats = self.cat.get_exec_raw_stats({})
+        raw_stats = self.cat.get_exec_raw_stats({})
         #raw_stats = self.cat.get_exec_raw_stats({},{'begin': 1510558000, 'end': 1510680000})
-        raw_stats = self.cat.get_exec_raw_stats({},{'begin': 1510558000, 'end': 1510568000})
+        #raw_stats = self.cat.get_exec_raw_stats({},{'begin': 1510558000, 'end': 1510568000})
 
         # Calculate queued_time and run_time (in seconds)
         for elem in raw_stats:
@@ -396,7 +396,7 @@ class report_utils:
     def _write_headContent(self):
         """_write_headConten: returns the very first portion of the html file
         """
-        head_content = ("<html><head>\n"
+        head_content = ("\n<html>\n<head>\n"
             "<script type='text/javascript' src='https://www.google.com/jsapi'></script>\n"
             "<script type='text/javascript'>\n"
             "// Load the Visualization API and the controls package.\n"
@@ -614,27 +614,27 @@ class report_utils:
                 "</div>\n" \
                 "<div id='string_filter_div'></div>\n" \
                 "<div id='table_div'></div>\n" \
-                "</div>\n" \
-                "</body></html>"
+                "</div>\n</body>\n</html>"
 
         return footContent
 
     def _write_html(self, out_dir, input_dt, col_caps=None):
-        #log('\nInput json:\n' + pformat(input_dt))
+        log('\nInput json with {} data items\n'.format(len(input_dt)))
+        dt = input_dt[0:200]#For the sake of testing, limit the rows for datatable
 
         headContent = self._write_headContent()
 
         if col_caps is None:
-            callbackFunc = self._write_callback_function(input_dt)
+            callbackFunc = self._write_callback_function(dt)
         else:
-            callbackFunc = self._write_callback_function(input_dt, col_caps)
+            callbackFunc = self._write_callback_function(dt, col_caps)
 
         dashboard = self._write_dashboard()
 
         footContent = self._write_footcontent()
 
         html_str = headContent + callbackFunc + dashboard + footContent
-        #log(html_str)
+        log(html_str)
 
         html_file_path = os.path.join(out_dir, 'report_charts.html')
 
@@ -657,12 +657,12 @@ class report_utils:
         else:
             html_file_path = self._write_html(out_dir, dt_info, col_caps)
 
-        file_title = 'Report with charts'
+        rpt_title = 'Report with charts'
 
         #log(html_file_path['html_file'])
         html_report.append({'path': html_file_path['html_path'],
-                            'name': file_title,
-                            'label': file_title,
+                            'name': rpt_title,
+                            'label': rpt_title,
                             'description': 'The report with charts'
                         })
 
