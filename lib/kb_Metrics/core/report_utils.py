@@ -142,8 +142,8 @@ class report_utils:
             tc = elem['creation_time']
             ts = elem['exec_start_time']
             tf = elem['finish_time']
-            elem['queued_time'] = (ts - tc) / 3600
-            elem['run_time'] = (tf - ts) / 3600
+            elem['queued_time'] = ts - tc
+            elem['run_time'] = tf - ts
 
         log(pformat(raw_stats[0]))
 
