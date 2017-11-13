@@ -634,7 +634,7 @@ class report_utils:
         footContent = self._write_footcontent()
 
         html_str = headContent + callbackFunc + dashboard + footContent
-        log(html_str)
+        #log(html_str)
 
         html_file_path = os.path.join(out_dir, 'report_charts.html')
 
