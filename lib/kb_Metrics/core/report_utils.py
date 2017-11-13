@@ -137,16 +137,13 @@ class report_utils:
         #raw_stats = self.cat.get_exec_raw_stats({},{'begin': 1510558000, 'end': 1510680000})
         raw_stats = self.cat.get_exec_raw_stats({},{'begin': 1510558000, 'end': 1510568000})
 
-        # Convert time from seconds to hours
+        # Calculate queued_time and run_time (in seconds)
         for elem in raw_stats:
             tc = elem['creation_time']
             ts = elem['exec_start_time']
             tf = elem['finish_time']
-            elem['creation_time'] = tc / 3600
-            elem['exec_start_time'] = ts /3600
-            elem['finish_time'] = tf / 3600
-            elem['queued_time'] = elem['exec_start_time'] - elem['creation_time']
-            elem['run_time'] = elem['finish_time'] - elem['exec_start_time']
+            elem['queued_time'] = (ts - tc) / 3600
+            elem['run_time'] = (tf - ts) / 3600
 
         log(pformat(raw_stats[0]))
 
