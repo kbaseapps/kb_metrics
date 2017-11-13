@@ -133,8 +133,20 @@ class report_utils:
         """
         # Pull the data
         log("Fetching the data from Catalog API...")
-        raw_stats = self.cat.get_exec_raw_stats({})
-        #raw_stats = self.cat.get_exec_raw_stats({},{'begin': 1461169999, 'end': 1461170101})
+        #raw_stats = self.cat.get_exec_raw_stats({})
+        #raw_stats = self.cat.get_exec_raw_stats({},{'begin': 1510558000, 'end': 1510680000})
+        raw_stats = self.cat.get_exec_raw_stats({},{'begin': 1510558000, 'end': 1510568000})
+
+        # Convert time from seconds to hours
+        for elem in raw_stats:
+            tc = elem['creation_time']
+            ts = elem['exec_start_time']
+            tf = elem['finish_time']
+            elem['creation_time'] = tc / 3600
+            elem['exec_start_time'] = ts /3600
+            elem['finish_time'] = tf / 3600
+            elem['queued_time'] = elem['exec_start_time'] - elem['creation_time']
+            elem['run_time'] = elem['finish_time'] - elem['exec_start_time']
 
         log(pformat(raw_stats[0]))
 
@@ -448,14 +460,14 @@ class report_utils:
 
 
     def _write_charts(self):
-        cat_picker = ("var categoryPicker = new google.visualization.ControlWrapper({\n"
+        cat_picker = ("\nvar categoryPicker = new google.visualization.ControlWrapper({\n"
                 "controlType: 'CategoryFilter',\n"
                 "containerId: 'cat_picker_div',\n"
                 "options: {\n"
                 "//filterColumnIndex: 0, // filter by this column\n"
                 "filterColumnLabel: 'user_id',\n"
                 "ui: {\n"
-                "    caption: 'Choose a user',\n"
+                "    caption: 'Choose a value',\n"
                 "    sortValues: true,\n"
                 "    allowNone: true,\n"
                 "    allowMultiple: true,\n"
