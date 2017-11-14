@@ -423,6 +423,8 @@ class report_utils:
                     col_type = type(input_dt[0][k]).__name__
                     if (col_type == 'str' or col_type == 'unicode'):
                         col_type = 'string'
+                    elif col_type == 'bool':
+                        col_type = 'boolean'
                     else:
                         col_type = 'number'
                     callback_func += "data.addColumn('" + col_type + "','" + k + "');\n"
@@ -441,6 +443,11 @@ class report_utils:
                         d_rows.append('"None"')
                     else:
                         d_rows.append('"' + dt[c] + '"')
+                elif d_type == 'bool':
+                    if dt[c]:
+                        d_rows.append('true')
+                    else:
+                        d_rows.append('false')
                 else:
                     if dt[c] is None:
                         d_rows.append('"None"')
@@ -473,19 +480,31 @@ class report_utils:
                 "},\n"
                 "// Define an initial state, i.e. a set of metrics to be initially selected.\n"
                 "//state: {'selectedValues': ['KBaseRNASeq', 'MEGAHIT', 'fba_tools']}\n"
-                "state: {'selectedValues': ['qzhang', 'srividya22']\n"
+                "state: {'selectedValues': ['qzhang', 'srividya22']}\n"
             "});\n")
 
-        num_slider1 = ("\n//Create a range slider, passing some options\n"
-            "var hourRangeSlider = new google.visualization.ControlWrapper({\n"
+        time_slider = ("\n//Create a range slider, passing some options\n"
+            "var timeRangeSlider = new google.visualization.ControlWrapper({\n"
                 "'controlType': 'NumberRangeFilter',\n"
-                "'containerId': 'number_filter_div2',\n"
+                "'containerId': 'number_filter_div',\n"
                 "'options': {\n"
-                "'filterColumnLabel': 'total_exec_time',\n"
+                "'filterColumnLabel': 'run_time',\n"
                 "'minValue': 0,\n"
-                "'maxValue': 720\n"
+                "'maxValue': 3600\n"
                 "},\n"
-                "'state': {'lowValue': 10, 'highValue': 360}\n"
+                "'state': {'lowValue': 5, 'highValue': 600}\n"
+                "});\n")
+
+        num_slider1 = ("\n//Create a range slider, passing some options\n"
+            "var numRangeSlider = new google.visualization.ControlWrapper({\n"
+                "'controlType': 'NumberRangeFilter',\n"
+                "'containerId': 'number_filter_div1',\n"
+                "'options': {\n"
+                "'filterColumnLabel': 'run_time',\n"
+                "'minValue': 0,\n"
+                "'maxValue': 3600\n"
+                "},\n"
+                "'state': {'lowValue': 5, 'highValue': 600}\n"
                 "});\n")
 
         line_chart = ("var lineChart = new google.visualization.ChartWrapper({\n"
@@ -495,22 +514,22 @@ class report_utils:
                 "'width': 600,\n"
                 "'height': 300,\n"
                 "'hAxis': {\n"
-                "'title': 'full app id'\n"
+                "'title': 'app id'\n"
                 "},\n"
                 "'vAxis': {\n"
-                "'title': 'total execution time'\n"
+                "'title': 'Seconds'\n"
                 "},\n"
                 "'chartArea': {'left': 15, 'top': 25, 'right': 0, 'bottom': 15}\n"
                 "},\n"
-                "'view': {'columns': [1, 6]}\n"
+                "'view': {'columns': [6, 10]}\n"
                 "});\n")
 
         num_slider2 = ("\n//Create a range slider, passing some options\n"
                 "var callsRangeSlider = new google.visualization.ControlWrapper({\n"
                 "'controlType': 'NumberRangeFilter',\n"
-                "'containerId': 'number_filter_div1',\n"
+                "'containerId': 'number_filter_div2',\n"
                 "'options': {\n"
-                "'filterColumnLabel': 'number_of_calls',\n"
+                "'filterColumnLabel': 'queued_time',\n"
                 "'minValue': 1,\n"
                 "'maxValue': 20000\n"
                 "},\n"
@@ -531,7 +550,7 @@ class report_utils:
                 "},\n"
                 "// The pie chart will use the columns 'module_name' and 'number_of_calls'\n"
                 "// out of all the available ones.\n"
-                "'view': {'columns': [1, 2]}\n"
+                "'view': {'columns': [6, 9]}\n"
                 "});\n")
 
         tab_chart = ("\n//create a list of columns for the table chart\n"
@@ -548,7 +567,7 @@ class report_utils:
             "var tab_columns = [];\n"
             "for (var i = 0, cols = data.getNumberOfColumns(); i < cols; i++) {\n"
             "    filterColumns.push(i);\n"
-            "    tab_columns.push(i + 1);\n"
+            "    tab_columns.push(i);\n"
             "}\n"
             "var stringFilter = new google.visualization.ControlWrapper({\n"
             "    controlType: 'StringFilter',\n"
@@ -578,7 +597,7 @@ class report_utils:
             "          }\n"
             "});\n")
 
-        return cat_picker + num_slider1 + line_chart + num_slider2 + pie_chart + tab_chart
+        return cat_picker + time_slider + line_chart + num_slider2 + pie_chart + tab_chart
 
 
     def _write_dashboard(self):
@@ -590,8 +609,8 @@ class report_utils:
         dashboard = ("\n"
             "var dashboard = new google.visualization.Dashboard(document.querySelector('#dashboard_div'));\n"
             "dashboard.bind([categoryPicker], [pieChart, lineChart],[table]);\n"
-            "dashboard.bind([callsRangeSlider], [pieChart]);\n"
-            "dashboard.bind([hourRangeSlider], [lineChart]);\n"
+            "//dashboard.bind([callsRangeSlider], [pieChart]);\n"
+            "dashboard.bind([timeRangeSlider], [pieChart, lineChart]);\n"
             "dashboard.bind([stringFilter], [table]);\n"
             "dashboard.draw(data);\n"
         "}\n")
@@ -604,6 +623,7 @@ class report_utils:
         footContent += "<h4>" + report_title + "</h4>\n"
         footContent += "  <div id='dashboard_div'>\n" \
                 "<div id='cat_picker_div'></div>\n" \
+                "<div id='number_filter_div'></div>\n" \
                 "<div style='display: inline-block'>\n" \
                 "<div id='number_filter_div1'></div>\n" \
                 "<div id='chart_div'></div>\n" \
