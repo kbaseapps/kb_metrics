@@ -21,6 +21,9 @@ from numpy import median, mean, max
 from Workspace.WorkspaceClient import Workspace as Workspace
 from KBaseReport.KBaseReportClient import KBaseReport
 from Catalog.CatalogClient import Catalog
+from NarrativeJobService.NarrativeJobServiceClient import NarrativeJobService
+from UserAndJobState.UserAndJobStateClient import UserAndJobState
+#import biokbase.narrative.clients as clients
 #from biokbase.catalog.Client import Catalog
 
 def log(message, prefix_newline=False):
@@ -62,9 +65,10 @@ class report_utils:
 
         self.ws_client = Workspace(self.workspace_url, token=self.token)
         self.kbr = KBaseReport(self.callback_url)
-        #self.cat = Catalog(self.callback_url)
-        self.cat = Catalog('https://kbase.us/services/catalog', auth_svc='https://kbase.us/services/auth/')
-
+        #self.cat_client = Catalog(self.callback_url)
+        self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://kbase.us/services/auth/')
+        self.njs_client = NarrativeJobService('https://kbase.us/services/njs_wrapper', auth_svc='https://kbase.us/services/auth/')
+        self.ujs_client = UserAndJobState('https://kbase.us/services/userandjobstate', auth_svc='https://kbase.us/services/auth/')
         self.count_dir = os.path.join(self.scratch, str(uuid.uuid4()))
         _mkdir_p(self.count_dir)
 
@@ -90,6 +94,8 @@ class report_utils:
             ret_stats = self.get_exec_aggrStats_from_cat()
         elif stats_name == 'exec_aggr_table':
             ret_stats = self.get_exec_aggrTable_from_cat()
+        else:
+            ret_stats = self.get_user_and_job_states([str(25735), str(25244)])
 
         returnVal = {
             "report_ref": None,
@@ -114,6 +120,155 @@ class report_utils:
         return returnVal
 
 
+    def get_user_and_job_states(self, ws_ids):
+        """
+        get_user_and_job_states: user_and_job_states of a given workspace
+        return an array of the 'NarrativeJobService.JobState' of the following structure (example with data):
+        job_info = {
+            u'check_error': {
+                u'59fa5733e4b088e4b0e0de8e': {u'code': -32603,
+                        u'error': u'java.lang.IllegalStateException: FATAL error in AWE job (suspend for id=3fc38f0a-e34e-47d5-8cc7-c5cb32549401)\n\tat us.kbase.narrativejobservice.sdkjobs.SDKMethodRunner.checkJob(SDKMethodRunner.java:679)\n\tat......,
+                        u'message': u'FATAL error in AWE job (suspend for id=3fc38f0a-e34e-47d5-8cc7-c5cb32549401)',
+                        u'name': u'IllegalStateException'},
+                ......
+            },
+            u'job_states': {
+                u'59f36d00e4b0fb0c767100cc': {u'awe_job_id': u'83977c22-abf6-4aec-9e2a-5ab677158359',
+                       u'canceled': 0,
+                       u'cancelled': 0,
+                       u'creation_time': 1509125376287,
+                       u'exec_start_time': 1509125377724,
+                       u'finish_time': 1509125382840,
+                       u'finished': 1,
+                       u'job_id': u'59f36d00e4b0fb0c767100cc',
+                       u'job_state': u'completed',
+                       u'result': [{u'report_name': None,
+                                    u'report_ref': None}],
+                       u'status': [u'2017-10-27T17:29:42+0000',
+                                   u'complete',
+                                   u'done',
+                                   None,
+                                   None,
+                                   1,
+                                   0],
+                       u'ujs_url': u'https://kbase.us/services/userandjobstate/'},
+                 u'59f89199e4b088e4b0e0de16': {u'awe_job_id': u'6b5d4c2e-2d16-4ef9-ae83-4cb48dcf7b80',
+                       u'canceled': 1,
+                       u'cancelled': 1,
+                       u'creation_time': 1509462425408,
+                       u'exec_start_time': 1509462427063,
+                       u'finish_time': 1509513097519,
+                       u'finished': 1,
+                       u'job_id': u'59f89199e4b088e4b0e0de16',
+                       u'job_state': u'cancelled',
+                       u'status': [u'2017-11-01T05:11:37+0000',
+                                   u'canceled',
+                                   u'canceled by user',
+                                   None,
+                                   None,
+                                   1,
+                                   0],
+                       u'ujs_url': u'https://kbase.us/services/userandjobstate/'},
+                 u'5a024075e4b088e4b0e0e306': {u'awe_job_id': u'a1ef06df-c8dd-41da-a78f-cd2f5833c2ab',
+                       u'canceled': 0,
+                       u'cancelled': 0,
+                       u'creation_time': 1510097013858,
+                       u'error': {u'code': -32000,
+                                  u'error': u'Traceback (most recent call last):\n  File "/kb/module/bin/../lib/kb_Metrics/kb_MetricsServer.py", line 95, in _call_method\n    result = method(ctx, *params)\n  File "/kb/module/lib/kb_Metrics/kb_MetricsImpl.py", line 156, in refseq_genome_counts\n    output = gfs.count_refseq_genomes(params)\n  File "/kb/module/lib/kb_Metrics/core/genome_feature_stats.py", line 1014, in count_refseq_genomes\n    report_info = self.generate_genome_report(self.count_dir, ncbi_gns, params)\n  File "/kb/module/lib/kb_Metrics/core/genome_feature_stats.py", line 865, in generate_genome_report\n    output_html_files = self._generate_genome_html_report(count_dir, genome_info, params)\n  File "/kb/module/lib/kb_Metrics/core/genome_feature_stats.py", line 892, in _generate_genome_html_report\n    html_file_path = self._write_genome_html(out_dir, genome_data, params)\n  File "/kb/module/lib/kb_Metrics/core/genome_feature_stats.py", line 804, in _write_genome_html\n    d_rows.append(gd[\'release_type\'])\nKeyError: \'release_type\'\n',
+                                  u'message': u'release_type',
+                                  u'name': u'Server error'},
+                       u'exec_start_time': 1510097015701,
+                       u'finish_time': 1510097077057,
+                       u'finished': 1,
+                       u'job_id': u'5a024075e4b088e4b0e0e306',
+                       u'job_state': u'suspend',
+                       u'status': [u'2017-11-07T23:24:37+0000',
+                                   u'error',
+                                   u'release_type',
+                                   None,
+                                   None,
+                                   1,
+                                   1],
+                       u'ujs_url': u'https://kbase.us/services/userandjobstate/'},
+                 u'5a0a6420e4b088e4b0e0e64f': {u'awe_job_id': u'93ace4d2-8cfb-4f04-829c-6330f712467a',
+                       u'canceled': 0,
+                       u'cancelled': 0,
+                       u'creation_time': 1510630432475,
+                       u'exec_start_time': 1510630435658,
+                       u'finish_time': 1510630493015,
+                       u'finished': 1,
+                       u'job_id': u'5a0a6420e4b088e4b0e0e64f',
+                       u'job_state': u'completed',
+                       u'result': [{u'report_name': u'kb_Metrics_report_29594f7e-8334-4a0f-8a7c-22f0ea81dea6',
+                                    u'report_ref': u'25735/128/1'}],
+                       u'status': [u'2017-11-14T03:34:53+0000',
+                                   u'complete',
+                                   u'done',
+                                   None,
+                                   None,
+                                   1,
+                                   0],
+                       u'ujs_url': u'https://kbase.us/services/userandjobstate/'
+                  }
+                }
+            }
+        }
+        """
+        # Pull the data
+        log("Fetching the data from NarrativeJobService API...")
+        wid_params = []
+        for wid in ws_ids:
+            wid_params.append(str(wid))
+
+        nar_jobs = self.ujs_client.list_jobs2({
+                'authstrat': 'kbaseworkspace',
+                'authparams': wid_params
+            })
+        job_ids = [j[0] for j in nar_jobs]
+        job_owners = [j[2] for j in nar_jobs]
+        
+        job_info = self.njs_client.check_jobs({
+                        'job_ids': job_ids, 'with_job_params': 1
+                })
+        job_states = job_info.get('job_states', {})
+        job_params = job_info.get('job_params', {})
+        job_errors = job_info.get('check_error', {})
+
+        # Retrieve the info from job_states to assemble an array of job info
+        j_states = []
+        for j_id, j_owner in zip(job_ids, job_owners):
+            jbs = job_states.get(j_id, {})
+            """
+            u_j_s = {}
+            u_j_s['job_id'] = j_id
+            u_j_s['job_owner'] = j_owner
+            u_j_s['job_state'] = jbs['job_state']
+            if jbs['job_state'] == 'suspended':
+                u_j_s['error'] = {u'code': jbs['error']['code'],
+                       u'message': jbs['error']['message'],
+                       u'name': jbs['error']['name']
+                    }
+            elif jbs['job_state'] == 'completed':
+                u_j_s['result'] = jbs['result']
+
+            u_j_s['finished'] = jbs['finished']
+            u_j_s['canceled'] = jbs['canceled']
+            u_j_s['creation_time'] = jbs['creation_time']
+            if 'exec_start_time' in jbs:
+                u_j_s['exec_start_time'] = jbs['exec_start_time']
+            if 'finish_time' in jbs:
+                u_j_s['finish_time'] = jbs['finish_time']
+            u_j_s['status'] = jbs['status']
+
+            j_states.append(u_j_s)
+            """
+            j_states.append(jbs)
+        #log(pformat(j_states[0]))
+        log(pformat(j_states))
+
+        return j_states
+
+
     def get_exec_stats_from_cat(self):
         """
         get_exec_stats_from_cat: Get stats on completed jobs
@@ -133,9 +288,9 @@ class report_utils:
         """
         # Pull the data
         log("Fetching the data from Catalog API...")
-        raw_stats = self.cat.get_exec_raw_stats({})
-        #raw_stats = self.cat.get_exec_raw_stats({},{'begin': 1510558000, 'end': 1510680000})
-        #raw_stats = self.cat.get_exec_raw_stats({},{'begin': 1510558000, 'end': 1510568000})
+        raw_stats = self.cat_client.get_exec_raw_stats({})
+        #raw_stats = self.cat_client.get_exec_raw_stats({},{'begin': 1510558000, 'end': 1510680000})
+        #raw_stats = self.cat_client.get_exec_raw_stats({},{'begin': 1510558000, 'end': 1510568000})
 
         # Calculate queued_time and run_time (in seconds)
         for elem in raw_stats:
@@ -164,7 +319,7 @@ class report_utils:
         """
         # Pull the data
         log("Fetching the data from Catalog API...")
-        aggr_tab = self.cat.get_exec_aggr_table({})
+        aggr_tab = self.cat_client.get_exec_aggr_table({})
 
         log(pformat(aggr_tab[0]))
 
@@ -187,7 +342,7 @@ class report_utils:
         }
         """
         # Pull the data
-        aggr_stats = self.cat.get_exec_aggr_stats({})
+        aggr_stats = self.cat_client.get_exec_aggr_stats({})
 
         # Convert time from seconds to hours
         for kb_mod in aggr_stats:
@@ -207,10 +362,10 @@ class report_utils:
         """
         now = time.time()
         kb_modules = dict()
-        for kb_module in self.cat.list_basic_module_info({'include_unreleased':True}):
+        for kb_module in self.cat_client.list_basic_module_info({'include_unreleased':True}):
             name = kb_module['module_name']
-            v = self.cat.get_module_info({'module_name':name})['beta']
-            vers = self.cat.list_released_module_versions({'module_name':name})
+            v = self.cat_client.get_module_info({'module_name':name})['beta']
+            vers = self.cat_client.list_released_module_versions({'module_name':name})
             s = 'b'
             if len(vers)>0:
                 v = vers[0]
