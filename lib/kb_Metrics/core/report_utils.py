@@ -1,4 +1,5 @@
 import time
+import datetime
 import json
 import os
 import re
@@ -51,6 +52,12 @@ def ceildiv(a, b):
     """
     return -(-a // b)
 
+def _datetime_from_utc(date_utc_str):
+    return datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S+0000')
+
+def _timestamp_from_utc(date_utc_str):
+    dt = _datetime_from_utc(date_utc_str)
+    return int(time.mktime(dt.timetuple())*1000) #in microseconds
 
 class report_utils:
     PARAM_IN_WS = 'workspace_name'
@@ -75,26 +82,62 @@ class report_utils:
         self.njs_client = NarrativeJobService('https://kbase.us/services/njs_wrapper', auth_svc='https://kbase.us/services/auth/')
         self.ujs_client = UserAndJobState('https://kbase.us/services/userandjobstate', auth_svc='https://kbase.us/services/auth/')
         self.kbr = KBaseReport(self.callback_url)
-        self.count_dir = os.path.join(self.scratch, str(uuid.uuid4()))
-        _mkdir_p(self.count_dir)
+        self.metrics_dir = os.path.join(self.scratch, str(uuid.uuid4()))
+        _mkdir_p(self.metrics_dir)
+
+
+    def generate_app_metrics(self, params):
+        """
+        """
+        if params.get(self.PARAM_IN_WS, None) is None:
+           raise ValueError(self.PARAM_IN_WS + ' parameter is mandatory')
+
+        if params.get('ws_ids', None) is None:
+            raise ValueError('Variable ws_ids' + ' parameter is mandatory')
+        if not isinstance(params['ws_ids'], list):
+            raise ValueError('Variable ws_ids' + ' must be a list.')
+        if not params['ws_ids']:
+            raise ValueError('At least one workspace id must be provided')
+
+        if not params.get('time_range', None) is None:
+            time_start, time_end = params['time_range']
+
+        ws_ids = [str(wd) for wd in params['ws_ids']] #e.g.ws_ids = [str(25735), str(25244)]
+        ujs_ret = self.get_user_and_job_states(ws_ids)
+        #log("Before time frame: {}".format(len(ujs_ret)))
+
+        ret_val = []
+        for ujs_i in ujs_ret:
+            if isinstance(ujs_i['creation_time'], int):
+                cr_time = datetime.datetime.utcfromtimestamp(ujs_i['creation_time']/1000)
+            else:
+                cr_time = _datetime_from_utc(ujs_i['creation_time'])
+
+            if (cr_time <= _datetime_from_utc(time_end) and
+                        cr_time >= _datetime_from_utc(time_start)):
+                ret_val.append(ujs_i)
+
+        #log("After time frame: {}".format(len(ret_val)))
+        log(pformat(ret_val[100]))
+
+        returnVal = {
+            'report_name': None,
+            'report_ref': None
+        }
+
+        if params['create_report'] == 1:
+            report_info = self.generate_app_report(self.metrics_dir, ret_val, params)
+
+            returnVal = {
+                'report_name': report_info['name'],
+                'report_ref': report_info['ref']
+            }
+
+        return returnVal
 
 
     def create_stats_report(self, params):
         """
-        /*
-        *A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is either the
-        *character Z (representing the UTC timezone) or the difference
-        *in time to UTC in the format +/-HHMM, eg:
-        *2012-12-17T23:24:06-0500 (EST time)
-        *2013-04-03T08:56:32+0000 (UTC time)
-        *2013-04-03T08:56:32Z (UTC time)
-        */
-        typedef string timestamp;
-
-        /*
-        *A Unix epoch (the time since 00:00:00 1/1/1970 UTC) in milliseconds.
-        */
-        typedefintepoch;
         """
         if params.get(self.PARAM_IN_WS, None) is None:
            raise ValueError(self.PARAM_IN_WS + ' parameter is mandatory')
@@ -137,9 +180,9 @@ class report_utils:
         col_caps = ['module_name', 'full_app_id', 'number_of_calls', 'number_of_errors',
                         'type', 'time_range', 'total_exec_time', 'total_queue_time']
         if params['create_report'] == 1:
-            report_info = self.generate_report(self.count_dir, ret_stats, params)
-            #report_info = self.generate_report(self.count_dir, raw_stats, params)
-            #report_info = self.generate_report(self.count_dir, aggr_stats, params, col_caps)
+            report_info = self.generate_report(self.metrics_dir, ret_stats, params)
+            #report_info = self.generate_report(self.metrics_dir, raw_stats, params)
+            #report_info = self.generate_report(self.metrics_dir, aggr_stats, params, col_caps)
 
             returnVal = {
                 'report_name': report_info['name'],
@@ -186,76 +229,6 @@ class report_utils:
 
     def get_user_and_job_states(self, ws_ids):
         """
-        get_user_and_job_states: user_and_job_states of a given workspace
-        return an array of the 'NarrativeJobService.JobState' of the following structure (example with data):
-        job_info = {
-            u'check_error': {
-                u'59fa5733e4b088e4b0e0de8e': {u'code': -32603,
-                        u'error': u'java.lang.IllegalStateException: FATAL error in AWE job (suspend for id=3fc38f0a-e34e-47d5-8cc7-c5cb32549401)\n\tat us.kbase.narrativejobservice.sdkjobs.SDKMethodRunner.checkJob(SDKMethodRunner.java:679)\n\tat......,
-                        u'message': u'FATAL error in AWE job (suspend for id=3fc38f0a-e34e-47d5-8cc7-c5cb32549401)',
-                        u'name': u'IllegalStateException'},
-                ......
-            },
-            u'job_states': {
-                u'59f36d00e4b0fb0c767100cc': {u'awe_job_id': u'83977c22-abf6-4aec-9e2a-5ab677158359',
-                       u'canceled': 0,
-                       u'cancelled': 0,
-                       u'creation_time': 1509125376287,
-                       u'exec_start_time': 1509125377724,
-                       u'finish_time': 1509125382840,
-                       u'finished': 1,
-                       u'job_id': u'59f36d00e4b0fb0c767100cc',
-                       u'job_state': u'completed',
-                       u'result': [{u'report_name': None,
-                                    u'report_ref': None}],
-                       u'status': [u'2017-10-27T17:29:42+0000',
-                                   u'complete',
-                                   u'done',
-                                   None,
-                                   None,
-                                   1,
-                                   0],
-                       u'ujs_url': u'https://kbase.us/services/userandjobstate/'},
-                 u'59f89199e4b088e4b0e0de16': {u'awe_job_id': u'6b5d4c2e-2d16-4ef9-ae83-4cb48dcf7b80',
-                       u'canceled': 1,
-                       u'cancelled': 1,
-                       u'creation_time': 1509462425408,
-                       u'exec_start_time': 1509462427063,
-                       u'finish_time': 1509513097519,
-                       u'finished': 1,
-                       u'job_id': u'59f89199e4b088e4b0e0de16',
-                       u'job_state': u'cancelled',
-                       u'status': [u'2017-11-01T05:11:37+0000',
-                                   u'canceled',
-                                   u'canceled by user',
-                                   None,
-                                   None,
-                                   1,
-                                   0],
-                       u'ujs_url': u'https://kbase.us/services/userandjobstate/'},
-                 u'5a0a6420e4b088e4b0e0e64f': {u'awe_job_id': u'93ace4d2-8cfb-4f04-829c-6330f712467a',
-                       u'canceled': 0,
-                       u'cancelled': 0,
-                       u'creation_time': 1510630432475,
-                       u'exec_start_time': 1510630435658,
-                       u'finish_time': 1510630493015,
-                       u'finished': 1,
-                       u'job_id': u'5a0a6420e4b088e4b0e0e64f',
-                       u'job_state': u'completed',
-                       u'result': [{u'report_name': u'kb_Metrics_report_29594f7e-8334-4a0f-8a7c-22f0ea81dea6',
-                                    u'report_ref': u'25735/128/1'}],
-                       u'status': [u'2017-11-14T03:34:53+0000',
-                                   u'complete',
-                                   u'done',
-                                   None,
-                                   None,
-                                   1,
-                                   0],
-                       u'ujs_url': u'https://kbase.us/services/userandjobstate/'
-                  }
-                }
-            }
-        }
         """
         # Pull the data
         log("Fetching the data from NarrativeJobService API...")
@@ -264,19 +237,29 @@ class report_utils:
         clnt_groups = self.get_client_groups_from_cat()
 
         for idx, wid in enumerate(ws_ids):
-            batch_js = self._retrieve_job_states([wid], clnt_groups)
+            batch_js = self.retrieve_user_job_states([wid], clnt_groups)
             if len(batch_js) > 0:
                 j_states = j_states + batch_js
 
-        log(pformat(j_states[0]))
+        #log(pformat(j_states[0]))
         #log(pformat(j_states))
 
         return j_states
 
 
-    def _retrieve_job_states(self, wid_p, c_groups):
-        log("Fetching the data from UserAndJobState API...")
-        j_s = []
+    def retrieve_user_job_states(self, wid_p, c_groups):
+        """
+        call ujs_client.list_jobs2() that returns an array of job_info2:
+        typedef tuple<job_id job, user_info users, service_name service,
+                job_stage stage, job_status status, time_info times,
+                progress_info progress, boolean complete, boolean error,
+                auth_info auth, usermeta meta, job_description desc, Results res>
+                job_info2;
+
+        retrieve_user_job_states: returns an array of required data items about user_and_job states
+        """
+        log("Fetching the data from UserAndJobState API for workspace(s) {}...".format(pformat(wid_p)))
+        ret_ujs = []
         try:
             nar_jobs = self.ujs_client.list_jobs2({
                 'authstrat': 'kbaseworkspace',
@@ -288,63 +271,134 @@ class report_utils:
             return []
         else:#no exception raised
             if (nar_jobs and len(nar_jobs) > 0):
-                job_ids = [j[0] for j in nar_jobs]
-                job_owners = [j[2] for j in nar_jobs]
+                #******The ujs_client.list_jobs2({...}) returns a 13 member tuple:*****#
+                job_ids = [j[0] for j in nar_jobs]#[u'59f36d00e4b0fb0c767100cc',...]
+                job_user_info = [j[1] for j in nar_jobs]#[[u'qzhang', None],[u'qzhang', u'qzhang'],...]
+                job_owners = [j[2] for j in nar_jobs]#[u'qzhang',u'qzhang',...]
+                job_stages = [j[3] for j in nar_jobs]#One of 'created', 'started', 'completed', 'canceled' or 'error'
+                job_status = [j[4] for j in nar_jobs]##[u'done','running','canceled by user','......',...]
+                job_time_info = [j[5] for j in nar_jobs]#tuple<timestamp started, timestamp last_update,timestamp est_complete>[[u'2017-10-27T17:29:37+0000', u'2017-10-27T17:29:42+0000', None],...]
+                job_progress_info = [j[6] for j in nar_jobs]#tuple<total_progress prog, max_progress max, progress_type ptype>
+                job_complete = [j[7] for j in nar_jobs]#[1,1,...,0,..]
+                job_error = [j[8] for j in nar_jobs]#[1,0,...,0,..]
+                job_auth_info = [j[9] for j in nar_jobs]#[[u'kbaseworkspace', u'25735'],...]
+                job_meta = [j[10] for j in nar_jobs]#[{u'cell_id': u'828d2e3c-5c5d-4c4c-9de8-4aacb875c074',u'run_id': u'a05df5b3-2d3e-4e4a-9a32-173acaa9bd0c',u'tag': u'beta',u'token_id': u'2dea84eb-8f40-4516-b18e-f284cc6bb107'},...]
+                job_desc = [j[11] for j in nar_jobs]#[u'Execution engine job for kb_Metrics.count_ncbi_genome_features',...]
+                job_res = [j[12] for j in nar_jobs]#[{},None,...]
 
-                try:
-                    job_info = self.njs_client.check_jobs({
-                                'job_ids': job_ids, 'with_job_params': 1
-                        })
-                except Exception as e_njs: #RuntimeError as e_njs:
-                    log('NJS check_jobs raised error:\n')
-                    log(pformat(e_njs))
-                    return []
-                else:#no exception raised
-                    job_states = job_info.get('job_states', {})
-                    job_params = job_info.get('job_params', {})
-                    job_errors = job_info.get('check_error', {})
+                njs_ret = self.retrieve_ujs_via_njs(c_groups, job_ids, job_owners,
+                                job_stages, job_status, job_time_info, job_error, job_desc)
+                if njs_ret:
+                    ret_ujs = njs_ret
 
-                    # Retrieve the interested data from job_states to assemble an array of job states
-                    for j_id, j_owner in zip(job_ids, job_owners):
-                        jbs = job_states.get(j_id, {})
-                        jbp = job_params.get(j_id, {})
-                        if jbs:
-                            u_j_s = {}
-                            u_j_s['job_id'] = j_id
-                            u_j_s['user_id'] = j_owner
-                            try:
-                                u_j_s['app_id'] = jbp['app_id']
-                                for clnt in c_groups:
-                                    if u_j_s['app_id'] == clnt['app_id']:
-                                        u_j_s['client_groups'] = clnt['client_groups']
-                                        break
-                                u_j_s['wsid'] = jbp['wsid']
-                                u_j_s['module'], u_j_s['method'] = jbp['method'].split('.')
-                                u_j_s['job_state'] = jbs['job_state']
-                                if jbs['job_state'] == 'suspend':
-                                    u_j_s['error'] = jbs['error']
-                                elif jbs['job_state'] == 'completed':
-                                    u_j_s['result'] = jbs['result']
+        return ret_ujs
 
-                                u_j_s['finished'] = jbs['finished']
-                                u_j_s['canceled'] = jbs['canceled']
-                                u_j_s['creation_time'] = jbs['creation_time']
-                                if 'exec_start_time' in jbs:
-                                    u_j_s['exec_start_time'] = jbs['exec_start_time']
-                                if 'finish_time' in jbs:
-                                    u_j_s['finish_time'] = jbs['finish_time']
-                                u_j_s['status'] = jbs['status']
-                            except KeyError as e_key:
-                                log("KeyError for " + pformat(e_key))
-                                log(pformat(jbs))
-                            else:
-                                j_s.append(u_j_s)
-                                #j_s.append(jbs)
-                        else:
-                            log("No job state info is returned for job with id {}".format(j_id))
+    def retrieve_ujs_via_njs(self, c_groups, job_ids, job_owners, job_stages,
+                        job_status, job_time_info,job_error, job_desc):
+        ujs_ret = []
+        try:
+            #log("Calling njs.check_jobs for {} jobs".format(len(job_ids)))
+            job_info = self.njs_client.check_jobs({
+                        'job_ids': job_ids, 'with_job_params': 1
+                })
+            #log("njs returned {} job_info".format(len(job_info.get('job_states', {}))))
+        except Exception as e_njs: #RuntimeError as e_njs:
+            log('NJS check_jobs raised error:\n')
+            log(pformat(e_njs))
+            return []
+        else:#no exception raised
+            job_states = job_info.get('job_states', {})
+            job_params = job_info.get('job_params', {})
+            job_errors = job_info.get('check_error', {})
 
-        return j_s
+            # Retrieve the interested data from job_states to assemble an array of job states
+            #for j_id, j_owner in zip(job_ids, job_owners):
+            for j_idx, jb_id in enumerate(job_ids):
+                jbs = job_states.get(job_ids[j_idx], {})
+                jbp = job_params.get(job_ids[j_idx], {})
+                u_j_s = {}
+                u_j_s['job_id'] = job_ids[j_idx]
+                u_j_s['user_id'] = job_owners[j_idx]
+                u_j_s['status'] = job_status[j_idx]
+                u_j_s['stage'] = job_stages[j_idx]
+                u_j_s['time_info'] = job_time_info[j_idx]
+                u_j_s['error'] = job_error[j_idx]
+                u_j_s['job_desc'] = job_desc[j_idx]
 
+                if jbs:
+                    try:
+                        u_j_s['app_id'] = jbp['app_id']
+                        for clnt in c_groups:
+                            if u_j_s['app_id'] == clnt['app_id']:
+                                u_j_s['client_groups'] = clnt['client_groups']
+                                break
+                        u_j_s['wsid'] = jbp['wsid']
+                        u_j_s['module'], u_j_s['method'] = jbp['method'].split('.')
+                        u_j_s['job_state'] = jbs['job_state']
+                        if jbs['job_state'] == 'suspend':
+                            u_j_s['error'] = jbs['error']
+                        elif jbs['job_state'] == 'completed':
+                            u_j_s['result'] = jbs['result']
+
+                        u_j_s['finished'] = jbs['finished']
+                        u_j_s['canceled'] = jbs['canceled']
+                        u_j_s['creation_time'] = jbs['creation_time']
+                        if 'exec_start_time' in jbs:
+                            u_j_s['exec_start_time'] = jbs['exec_start_time']
+                        elif u_j_s['stage'] == 'started':
+                            u_j_s['exec_start_time'] = u_j_s['time_info'][1]
+                        if 'finish_time' in jbs:
+                            u_j_s['finish_time'] = jbs['finish_time']
+                        elif u_j_s['stage'] == 'completed':
+                            u_j_s['finish_time'] = u_j_s['time_info'][1]
+                    except KeyError as e_key:
+                        log("KeyError for " + pformat(e_key))
+                    else:
+                        pass
+                else:
+                    #log("No job state info is returned by njs for job with id {}".format(job_ids[j_idx]))
+                    #log("\nBut maybe ujs has returned something for job with id {}".format(job_ids[j_idx]))
+                    #log(pformat(job_stages[j_idx]))
+                    u_j_s['creation_time'] = _timestamp_from_utc(u_j_s['time_info'][0])
+                    if (u_j_s['stage'] == 'started' and u_j_s['status'] == 'running'):
+                        u_j_s['exec_start_time'] = _timestamp_from_utc(u_j_s['time_info'][1])
+                    elif u_j_s['stage'] == 'completed':
+                        u_j_s['finish_time'] = _timestamp_from_utc(u_j_s['time_info'][1])
+                    #get some info from the client groups
+                    for clnt in c_groups:
+                        if clnt['function_name'] in u_j_s['job_desc']:
+                            u_j_s['app_id'] = clnt['app_id']
+                            u_j_s['client_groups'] = clnt['client_groups']
+                            u_j_s['module'] = clnt['module_name']
+                            u_j_s['method'] = clnt['function_name']
+                            break
+                    #log("*******From ujs result directly*******:\n")
+                    #log(pformat(u_j_s))
+
+                if (u_j_s['stage'] == 'started' and u_j_s['status'] == 'running'):
+                    delta = datetime.datetime.utcnow() - datetime.datetime.fromtimestamp(u_j_s['exec_start_time']/1000)
+                    delta = delta - datetime.timedelta(microseconds=delta.microseconds)
+                    u_j_s['running_time'] = str(delta) #delta.total_seconds()
+                elif u_j_s['stage'] == 'complete' or u_j_s['job_state'] == 'completed':
+                    delta = (datetime.datetime.fromtimestamp(u_j_s['finish_time']/1000) -
+                            datetime.datetime.fromtimestamp(u_j_s['exec_start_time']/1000))
+                    delta = delta - datetime.timedelta(microseconds=delta.microseconds)
+                    u_j_s['run_time'] = str(delta) #delta.total_seconds()
+                elif (u_j_s['stage'] == 'created'
+                      and u_j_s['status'] not in ['done','running','canceled by user','error']
+                      and job_error[j_idx] == {}):
+                    delta = (datetime.datetime.utcnow() - datetime.datetime.fromtimestamp(
+                                    u_j_s['creation_time']/1000))
+                    delta = delta - datetime.timedelta(microseconds=delta.microseconds)
+                    u_j_s['queued_time'] = str(delta) #delta.total_seconds()
+                    u_j_s['status'] = 'queued'
+                else:
+                    u_j_s['status'] = 'not started'
+
+                ujs_ret.append(u_j_s)
+
+        #log("Final count={}".format(len(ujs_ret)))
+        return ujs_ret
 
     def get_exec_stats_from_cat(self):
         """
@@ -396,7 +450,7 @@ class report_utils:
         log("Fetching the client_groups data from Catalog API...")
         client_groups = self.cat_client.get_client_groups({})
 
-        log(pformat(client_groups[0]))
+        #log(pformat(client_groups[0]))
 
         return client_groups
 
@@ -524,13 +578,26 @@ class report_utils:
         return kb_modules
 
 
-    def generate_report(self, count_dir, data_info, params, col_caps=None):
-        if col_caps is None:
-            output_html_files = self._generate_html_report(count_dir, data_info)
-        else:
-            output_html_files = self._generate_html_report(count_dir, data_info, col_caps)
+    def generate_app_report(self, metrics_dir, data_info, params):
+        # create report
+        report_text = 'Summary of app metrics for {}:\n\n'.format(params['ws_ids'])
 
-        output_json_files = self._generate_output_file_list(count_dir)
+        report_info = self.kbr.create_extended_report({
+                        'message': report_text,
+                        'report_object_name': 'kb_Metrics_report_' + str(uuid.uuid4()),
+                        'workspace_name': params[self.PARAM_IN_WS]
+                      })
+
+        return report_info
+
+
+    def generate_report(self, metrics_dir, data_info, params, col_caps=None):
+        if col_caps is None:
+            output_html_files = self._generate_html_report(metrics_dir, data_info)
+        else:
+            output_html_files = self._generate_html_report(metrics_dir, data_info, col_caps)
+
+        output_json_files = self._generate_output_file_list(metrics_dir)
 
         # create report
         report_text = 'Summary of {} stats:\n\n'.format(params['stats_name'])

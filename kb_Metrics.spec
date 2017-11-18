@@ -84,16 +84,65 @@ module kb_Metrics {
     funcdef refseq_genome_counts(GenomeCountParams params)
         returns (StatResults output) authentication required;
 
+
     typedef structure {
+        string stats_name;
         string workspace_name;
         bool create_report;
-        string stats_name;
     } StatsReportParams;
 
 
     funcdef report_metrics(StatsReportParams params)
         returns (StatResults output) authentication required;
 
-    funcdef dummy_test(StatsReportParams params)
+    funcdef dummy_test0(StatsReportParams params)
         returns (StatResults output) authentication required;
+
+    /********************************************************************************
+
+        The following part is specifically dedicated to the dynamic json data service 
+        
+     ********************************************************************************/
+    /* 
+        A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference
+        in time to UTC in the format +/-HHMM, eg:
+                2012-12-17T23:24:06-0500 (EST time)
+                2013-04-03T08:56:32+0000 (UTC time)
+    */
+    typedef string timestamp;
+        
+    /*
+        A Unix epoch (the time since 00:00:00 1/1/1970 UTC) in milliseconds.
+    */
+    typedef int epoch;
+
+    /*
+        A time range defined by its lower and upper bound.
+    */
+    typedef tuple<timestamp t_lowerbound, timestamp t_upperbound> time_range;
+
+    
+    /*
+        An integer for the workspace id
+    */
+    typedef int ws_id;
+
+
+    /*job_stage has one of 'created', 'started', 'completed', 'canceled', 'error' or 'all' (default)*/
+    typedef structure {
+        list<ws_id> ws_ids;
+        time_range time_range;
+        string job_stage; 
+        string workspace_name;
+        bool create_report;
+    } AppMetricsParams;
+
+
+    typedef structure {
+        
+    } AppMetricsResults;
+    
+    funcdef get_app_metrics(AppMetricsParams params)
+        returns (AppMetricsResults output) authentication required;
+
 };

@@ -30,7 +30,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "b3c73c70df0189b7fe18a4ad01b87e3a860ae856"
+    GIT_COMMIT_HASH = "c6310c06c2cd2b70767419cca9d889750f39117b"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -167,9 +167,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
     def report_metrics(self, ctx, params):
         """
         :param params: instance of type "StatsReportParams" -> structure:
-           parameter "workspace_name" of String, parameter "create_report" of
-           type "bool" (A boolean - 0 for false, 1 for true. @range (0, 1)),
-           parameter "stats_name" of String
+           parameter "stats_name" of String, parameter "workspace_name" of
+           String, parameter "create_report" of type "bool" (A boolean - 0
+           for false, 1 for true. @range (0, 1))
         :returns: instance of type "StatResults" (Here is the definition of
            the output of the function.  The output can be used by other SDK
            modules which call your code, or the output visualizations in the
@@ -194,12 +194,12 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # return the results
         return [output]
 
-    def dummy_test(self, ctx, params):
+    def dummy_test0(self, ctx, params):
         """
         :param params: instance of type "StatsReportParams" -> structure:
-           parameter "workspace_name" of String, parameter "create_report" of
-           type "bool" (A boolean - 0 for false, 1 for true. @range (0, 1)),
-           parameter "stats_name" of String
+           parameter "stats_name" of String, parameter "workspace_name" of
+           String, parameter "create_report" of type "bool" (A boolean - 0
+           for false, 1 for true. @range (0, 1))
         :returns: instance of type "StatResults" (Here is the definition of
            the output of the function.  The output can be used by other SDK
            modules which call your code, or the output visualizations in the
@@ -210,16 +210,48 @@ This KBase SDK module implements methods for generating various KBase metrics.
         """
         # ctx is the context object
         # return variables are: output
-        #BEGIN dummy_test
+        #BEGIN dummy_test0
         rps = report_utils(self.config, ctx.provenance)
 
         #output = rps.get_module_stats_from_cat()
         output = rps.create_stats_report(params)
-        #END dummy_test
+        #END dummy_test0
 
         # At some point might do deeper type checking...
         if not isinstance(output, dict):
-            raise ValueError('Method dummy_test return value ' +
+            raise ValueError('Method dummy_test0 return value ' +
+                             'output is not type dict as required.')
+        # return the results
+        return [output]
+
+    def get_app_metrics(self, ctx, params):
+        """
+        :param params: instance of type "AppMetricsParams" -> structure:
+           parameter "ws_ids" of list of type "ws_id" (An integer for the
+           workspace id), parameter "time_range" of type "time_range" (A time
+           range defined by its lower and upper bound.) -> tuple of size 2:
+           parameter "t_lowerbound" of type "timestamp" (A time in the format
+           YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in
+           the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time)
+           2013-04-03T08:56:32+0000 (UTC time)), parameter "t_upperbound" of
+           type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where
+           Z is the difference in time to UTC in the format +/-HHMM, eg:
+           2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC
+           time)), parameter "workspace_name" of String, parameter
+           "create_report" of type "bool" (A boolean - 0 for false, 1 for
+           true. @range (0, 1))
+        :returns: instance of type "AppMetricsResults" -> structure:
+        """
+        # ctx is the context object
+        # return variables are: output
+        #BEGIN get_app_metrics
+        rps = report_utils(self.config, ctx.provenance)
+        output = rps.generate_app_metrics(params)
+        #END get_app_metrics
+
+        # At some point might do deeper type checking...
+        if not isinstance(output, dict):
+            raise ValueError('Method get_app_metrics return value ' +
                              'output is not type dict as required.')
         # return the results
         return [output]
