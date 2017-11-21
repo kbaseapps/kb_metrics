@@ -90,11 +90,11 @@ class report_utils:
         """
         """
         if params.get('user_ids', None) is None:
-            raise ValueError('Variable user_ids' + ' parameter is mandatory')
+            user_ids = [] #raise ValueError('Variable user_ids' + ' parameter is mandatory')
         if not isinstance(params['user_ids'], list):
             raise ValueError('Variable user_ids' + ' must be a list.')
-        if not params['user_ids']:
-            raise ValueError('At least one user id must be provided')
+        #if not params['user_ids']:
+            #raise ValueError('At least one user id must be provided')
 
         if not params.get('time_range', None) is None:
             time_start, time_end = params['time_range']
@@ -113,9 +113,9 @@ class report_utils:
         ws_ids = self.get_user_workspaces(user_ids, 0, 0)
 
         ujs_ret = self.get_user_and_job_states(ws_ids)
-        log("Before time frame: {}".format(len(ujs_ret)))
-        if len(ujs_ret) > 0:
-            log(pformat(ujs_ret[0]['job_states'][0]))
+        #log("Before time frame: {}".format(len(ujs_ret)))
+        #if len(ujs_ret) > 0:
+            #log(pformat(ujs_ret[0]['job_states'][0]))
 
         ret_ujs = []
         for ws_ujs in ujs_ret:
@@ -134,9 +134,9 @@ class report_utils:
             if len(filtered_ujs) > 0:
                 ret_ujs.append({'ws_id': w_id, 'job_states': filtered_ujs})
 
-        log("After time frame: {}".format(len(ret_ujs)))
-        if len(ret_ujs) > 0:
-            log(pformat(ret_ujs[0]['job_states'][0]))
+        #log("After time frame: {}".format(len(ret_ujs)))
+        #if len(ret_ujs) > 0:
+            #log(pformat(ret_ujs[0]['job_states'][0]))
         return ret_ujs
 
 
@@ -210,7 +210,6 @@ class report_utils:
               usermeta metadata> workspace_info;
 
         return a list of ws_ids
-        """
         ws_info = self.ws_client.list_workspace_info({'owners':user_ids,
                         'showDeleted': showDeleted,
                         'showOnlyDeleted': showOnlyDeleted,
@@ -219,12 +218,22 @@ class report_utils:
                         'after': '2017-04-03T08:56:32Z',
                         'before': '2017-11-03T08:56:32Z'
                 })
+        """
+        #ws_info = self.ws_client.list_workspace_info({})
+        log("Fetching workspace ids for users {}".format(pformat(user_ids)))
+        ws_info = self.ws_client.list_workspace_info({'owners':user_ids,
+                        'showDeleted': showDeleted,
+                        'showOnlyDeleted': showOnlyDeleted,
+                        'perm':'r',
+                        'excludeGlobal': 1
+                })
+
 
         #log(pformat(ws_info))
         ws_ids = [ws[0] for ws in ws_info]
         ws_names = [ws[1] for ws in ws_info]
 
-        #log(pformat(ws_ids))
+        log(len(ws_ids))
 
         return ws_ids
 
@@ -374,8 +383,8 @@ class report_utils:
                             u_j_s['module'] = clnt['module_name']
                             u_j_s['method'] = clnt['function_name']
                             break
-                    log("*******From ujs result directly*******:\n")
-                    log(pformat(u_j_s))
+                    #log("*******From ujs result directly*******:\n")
+                    #log(pformat(u_j_s))
 
                 if (u_j_s['stage'] == 'started' and u_j_s['status'] == 'running'):
                     delta = datetime.datetime.utcnow() - datetime.datetime.fromtimestamp(u_j_s['exec_start_time']/1000)
