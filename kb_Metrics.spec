@@ -103,6 +103,14 @@ module kb_Metrics {
         The following part is specifically dedicated to the dynamic json data service 
         
      ********************************************************************************/
+    /*
+        An integer for the workspace id
+    */
+    typedef int ws_id;
+    /*
+        A string for the user id
+    */
+    typedef string user_id;
     /* 
         A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference
         in time to UTC in the format +/-HHMM, eg:
@@ -110,39 +118,33 @@ module kb_Metrics {
                 2013-04-03T08:56:32+0000 (UTC time)
     */
     typedef string timestamp;
-        
     /*
         A Unix epoch (the time since 00:00:00 1/1/1970 UTC) in milliseconds.
     */
     typedef int epoch;
-
     /*
         A time range defined by its lower and upper bound.
     */
     typedef tuple<timestamp t_lowerbound, timestamp t_upperbound> time_range;
-
     
-    /*
-        An integer for the workspace id
-    */
-    typedef int ws_id;
-
-
-    /*job_stage has one of 'created', 'started', 'completed', 'canceled', 'error' or 'all' (default)*/
+    /*job_stage has one of 'created', 'started', 'complete', 'canceled', 'error' or 'all' (default)*/
     typedef structure {
-        list<ws_id> ws_ids;
+        list<user_id> user_ids;
         time_range time_range;
         string job_stage; 
-        string workspace_name;
-        bool create_report;
     } AppMetricsParams;
 
+    /*
+        Arbitrary key-value pairs about a job.
+    */
+    typedef mapping<string, string> job_state;
 
     typedef structure {
-        
-    } AppMetricsResults;
+        ws_id wsid;
+        list<job_state> job_states;
+    } AppMetricsResult;
     
     funcdef get_app_metrics(AppMetricsParams params)
-        returns (AppMetricsResults output) authentication required;
+        returns (list<AppMetricsResult> output) authentication required;
 
 };

@@ -89,51 +89,55 @@ class report_utils:
     def generate_app_metrics(self, params):
         """
         """
-        if params.get(self.PARAM_IN_WS, None) is None:
-           raise ValueError(self.PARAM_IN_WS + ' parameter is mandatory')
-
-        if params.get('ws_ids', None) is None:
-            raise ValueError('Variable ws_ids' + ' parameter is mandatory')
-        if not isinstance(params['ws_ids'], list):
-            raise ValueError('Variable ws_ids' + ' must be a list.')
-        if not params['ws_ids']:
-            raise ValueError('At least one workspace id must be provided')
+        if params.get('user_ids', None) is None:
+            raise ValueError('Variable user_ids' + ' parameter is mandatory')
+        if not isinstance(params['user_ids'], list):
+            raise ValueError('Variable user_ids' + ' must be a list.')
+        if not params['user_ids']:
+            raise ValueError('At least one user id must be provided')
 
         if not params.get('time_range', None) is None:
             time_start, time_end = params['time_range']
+        else: #set the most recent 48 hours range
+            time_end = datetime.datetime.utcnow()
+            time_start = utcnow - datetime.timedelta(hours=48)
 
-        ws_ids = [str(wd) for wd in params['ws_ids']] #e.g.ws_ids = [str(25735), str(25244)]
+        if not params.get('job_stage', None) is None:
+            job_stage = params['job_stage']
+        else:
+            job_stage = 'all'
+        if job_stage == 'completed':
+            job_stage = 'complete'
+
+        user_ids = params['user_ids']
+        ws_ids = self.get_user_workspaces(user_ids, 0, 0)
+
         ujs_ret = self.get_user_and_job_states(ws_ids)
-        #log("Before time frame: {}".format(len(ujs_ret)))
+        log("Before time frame: {}".format(len(ujs_ret)))
+        if len(ujs_ret) > 0:
+            log(pformat(ujs_ret[0]['job_states'][0]))
 
-        ret_val = []
-        for ujs_i in ujs_ret:
-            if isinstance(ujs_i['creation_time'], int):
-                cr_time = datetime.datetime.utcfromtimestamp(ujs_i['creation_time']/1000)
-            else:
-                cr_time = _datetime_from_utc(ujs_i['creation_time'])
+        ret_ujs = []
+        for ws_ujs in ujs_ret:
+            w_id = ws_ujs['ws_id']
+            j_states = ws_ujs['job_states']
+            filtered_ujs = []
+            for ujs_i in j_states:
+                if isinstance(ujs_i['creation_time'], int):
+                    cr_time = datetime.datetime.utcfromtimestamp(ujs_i['creation_time']/1000)
+                else:
+                    cr_time = _datetime_from_utc(ujs_i['creation_time'])
+                if (cr_time <= _datetime_from_utc(time_end) and
+                            cr_time >= _datetime_from_utc(time_start)):
+                    if (job_stage == 'all' or job_stage == ujs_i['stage']):
+                        filtered_ujs.append(ujs_i)
+            if len(filtered_ujs) > 0:
+                ret_ujs.append({'ws_id': w_id, 'job_states': filtered_ujs})
 
-            if (cr_time <= _datetime_from_utc(time_end) and
-                        cr_time >= _datetime_from_utc(time_start)):
-                ret_val.append(ujs_i)
-
-        #log("After time frame: {}".format(len(ret_val)))
-        log(pformat(ret_val[100]))
-
-        returnVal = {
-            'report_name': None,
-            'report_ref': None
-        }
-
-        if params['create_report'] == 1:
-            report_info = self.generate_app_report(self.metrics_dir, ret_val, params)
-
-            returnVal = {
-                'report_name': report_info['name'],
-                'report_ref': report_info['ref']
-            }
-
-        return returnVal
+        log("After time frame: {}".format(len(ret_ujs)))
+        if len(ret_ujs) > 0:
+            log(pformat(ret_ujs[0]['job_states'][0]))
+        return ret_ujs
 
 
     def create_stats_report(self, params):
@@ -160,12 +164,12 @@ class report_utils:
         elif stats_name == 'exec_aggr_table':
             ret_stats = self.get_exec_aggrTable_from_cat()
         elif stats_name == 'user_job_states':
-            #ws_ids = self.get_user_workspaces(['qzhang'])
-            #log("\nExclude deleted {} workspaces".format(len(ws_ids)))
+            ws_ids = self.get_user_workspaces(['qzhang'], 0, 0)
+            log("\nExclude deleted {} workspaces".format(len(ws_ids)))
             #ws_ids2 = self.get_user_workspaces(['qzhang'], 1, 1)
             #log("\nOnly deleted {} workspaces".format(len(ws_ids2)))
-            ws_ids = [str(25735), str(25244)]
-            ret_stats = self.get_user_and_job_states(ws_ids)
+            #ws_ids = [str(25735), str(25244)]
+            #ret_stats = self.get_user_and_job_states(ws_ids)
         else:
             pass
 
@@ -215,10 +219,8 @@ class report_utils:
                         'after': '2017-04-03T08:56:32Z',
                         'before': '2017-11-03T08:56:32Z'
                 })
-        #ws_info = self.ws_client.list_workspace_info({'meta': {'is_temporary': u'false'}})
 
         #log(pformat(ws_info))
-
         ws_ids = [ws[0] for ws in ws_info]
         ws_names = [ws[1] for ws in ws_info]
 
@@ -232,19 +234,19 @@ class report_utils:
         """
         # Pull the data
         log("Fetching the data from NarrativeJobService API...")
-        #log(pformat(ws_ids))
+        log(pformat(ws_ids))
+        wsj_states = []
         j_states = []
         clnt_groups = self.get_client_groups_from_cat()
 
-        for idx, wid in enumerate(ws_ids):
-            batch_js = self.retrieve_user_job_states([wid], clnt_groups)
-            if len(batch_js) > 0:
-                j_states = j_states + batch_js
+        for wid in ws_ids:
+            j_states = self.retrieve_user_job_states([wid], clnt_groups)
+            if len(j_states) > 0:
+                wsj_states.append({'ws_id': wid, 'job_states': j_states})
 
-        #log(pformat(j_states[0]))
-        #log(pformat(j_states))
+        #log(pformat(wsj_states[0]['job_states][0]))
 
-        return j_states
+        return wsj_states
 
 
     def retrieve_user_job_states(self, wid_p, c_groups):
@@ -258,7 +260,7 @@ class report_utils:
 
         retrieve_user_job_states: returns an array of required data items about user_and_job states
         """
-        log("Fetching the data from UserAndJobState API for workspace(s) {}...".format(pformat(wid_p)))
+        #log("Fetching the data from UserAndJobState API for workspace(s) {}...".format(pformat(wid_p)))
         ret_ujs = []
         try:
             nar_jobs = self.ujs_client.list_jobs2({
@@ -372,8 +374,8 @@ class report_utils:
                             u_j_s['module'] = clnt['module_name']
                             u_j_s['method'] = clnt['function_name']
                             break
-                    #log("*******From ujs result directly*******:\n")
-                    #log(pformat(u_j_s))
+                    log("*******From ujs result directly*******:\n")
+                    log(pformat(u_j_s))
 
                 if (u_j_s['stage'] == 'started' and u_j_s['status'] == 'running'):
                     delta = datetime.datetime.utcnow() - datetime.datetime.fromtimestamp(u_j_s['exec_start_time']/1000)

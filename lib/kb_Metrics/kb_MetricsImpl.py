@@ -30,7 +30,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "c6310c06c2cd2b70767419cca9d889750f39117b"
+    GIT_COMMIT_HASH = "3134b5b0a0232788a3a0a972889054979650f027"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -226,21 +226,24 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
     def get_app_metrics(self, ctx, params):
         """
-        :param params: instance of type "AppMetricsParams" -> structure:
-           parameter "ws_ids" of list of type "ws_id" (An integer for the
-           workspace id), parameter "time_range" of type "time_range" (A time
-           range defined by its lower and upper bound.) -> tuple of size 2:
-           parameter "t_lowerbound" of type "timestamp" (A time in the format
-           YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in
-           the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time)
-           2013-04-03T08:56:32+0000 (UTC time)), parameter "t_upperbound" of
-           type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where
-           Z is the difference in time to UTC in the format +/-HHMM, eg:
+        :param params: instance of type "AppMetricsParams" (job_stage has one
+           of 'created', 'started', 'complete', 'canceled', 'error' or 'all'
+           (default)) -> structure: parameter "user_ids" of list of type
+           "user_id" (A string for the user id), parameter "time_range" of
+           type "time_range" (A time range defined by its lower and upper
+           bound.) -> tuple of size 2: parameter "t_lowerbound" of type
+           "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is
+           the difference in time to UTC in the format +/-HHMM, eg:
            2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC
-           time)), parameter "workspace_name" of String, parameter
-           "create_report" of type "bool" (A boolean - 0 for false, 1 for
-           true. @range (0, 1))
-        :returns: instance of type "AppMetricsResults" -> structure:
+           time)), parameter "t_upperbound" of type "timestamp" (A time in
+           the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time
+           to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST
+           time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "job_stage"
+           of String
+        :returns: instance of list of type "AppMetricsResult" -> structure:
+           parameter "wsid" of type "ws_id" (An integer for the workspace
+           id), parameter "job_states" of list of type "job_state" (Arbitrary
+           key-value pairs about a job.) -> mapping from String to String
         """
         # ctx is the context object
         # return variables are: output
@@ -250,9 +253,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
         #END get_app_metrics
 
         # At some point might do deeper type checking...
-        if not isinstance(output, dict):
+        if not isinstance(output, list):
             raise ValueError('Method get_app_metrics return value ' +
-                             'output is not type dict as required.')
+                             'output is not type list as required.')
         # return the results
         return [output]
     def status(self, ctx):
