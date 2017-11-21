@@ -166,31 +166,32 @@ class kb_MetricsTest(unittest.TestCase):
         }
         # Second, call your implementation
         ret = self.getImpl().dummy_test0(self.getContext(), m_params)
-        #raw_stats = cat.get_exec_raw_stats({}, {'begin': 1461169999, 'end': 1461170101})
-        #print(pformat(raw_stats[0]))
+        print(pformat(ret[0]))
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_report_metrics")
     def test_run_report_metrics(self):
         m_params = {
-            'stats_name': 'exec_stats',#'exec_aggr_stats','exec_aggr_table',
+            'stats_name': 'exec_stats',#'exec_aggr_stats','exec_aggr_table','user_job_states'
             'workspace_name': self.getWsName(),
             'create_report': 0
         }
         # Second, call your implementation
         ret = self.getImpl().report_metrics(self.getContext(), m_params)
+        print(pformat(ret[0]))
 
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_app_metrics")
+    @unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
         m_params = {
-            'user_ids': ['qzhang'],
-            'time_range':(u'2016-10-27T17:29:37+0000', u'2017-11-27T17:29:42+0000'),#[u'2017-10-27T17:29:37+0000', u'2017-10-27T17:29:42+0000'],
+            'user_ids': [],
+            'time_range':(u'2011-10-27T17:29:37+0000', u'2017-11-27T17:29:42+0000'),#[u'2017-10-27T17:29:37+0000', u'2017-10-27T17:29:42+0000'],
             'job_stage': 'complete'#'created', 'started', 'complete', 'canceled', 'error' or 'all'
         }
         # Second, call your implementation
         ret = self.getImpl().get_app_metrics(self.getContext(), m_params)
+        print(pformat(ret[0]))
 

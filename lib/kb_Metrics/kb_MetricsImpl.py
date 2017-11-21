@@ -9,6 +9,7 @@ from KBaseReport.KBaseReportClient import KBaseReport
 
 from kb_Metrics.core.genome_feature_stats import genome_feature_stats
 from kb_Metrics.core.report_utils import report_utils
+from kb_Metrics.core.UJS_CAT_NJS_DataUtils import UJS_CAT_NJS_DataUtils
 #END_HEADER
 
 
@@ -248,8 +249,8 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # ctx is the context object
         # return variables are: output
         #BEGIN get_app_metrics
-        rps = report_utils(self.config, ctx.provenance)
-        output = rps.generate_app_metrics(params)
+        du = UJS_CAT_NJS_DataUtils(self.config, ctx.provenance)
+        output = du.generate_app_metrics(params)
         #END get_app_metrics
 
         # At some point might do deeper type checking...
