@@ -31,7 +31,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "3134b5b0a0232788a3a0a972889054979650f027"
+    GIT_COMMIT_HASH = "15a2064ba925536cfd29c7581a67be09be00b007"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -241,24 +241,22 @@ This KBase SDK module implements methods for generating various KBase metrics.
            to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST
            time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "job_stage"
            of String
-        :returns: instance of list of type "AppMetricsResult" -> structure:
-           parameter "wsid" of type "ws_id" (An integer for the workspace
-           id), parameter "job_states" of list of type "job_state" (Arbitrary
-           key-value pairs about a job.) -> mapping from String to String
+        :returns: instance of list of type "job_state" (Arbitrary key-value
+           pairs about a job.) -> mapping from String to String
         """
         # ctx is the context object
-        # return variables are: output
+        # return variables are: AppMetricsResult
         #BEGIN get_app_metrics
         du = UJS_CAT_NJS_DataUtils(self.config, ctx.provenance)
-        output = du.generate_app_metrics(params)
+        AppMetricsResult = du.generate_app_metrics(params)
         #END get_app_metrics
 
         # At some point might do deeper type checking...
-        if not isinstance(output, list):
+        if not isinstance(AppMetricsResult, list):
             raise ValueError('Method get_app_metrics return value ' +
-                             'output is not type list as required.')
+                             'AppMetricsResult is not type list as required.')
         # return the results
-        return [output]
+        return [AppMetricsResult]
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",

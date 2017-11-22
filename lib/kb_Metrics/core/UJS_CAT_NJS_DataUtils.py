@@ -84,11 +84,11 @@ class UJS_CAT_NJS_DataUtils:
         """
         """
         if params.get('user_ids', None) is None:
-            user_ids = [] #raise ValueError('Variable user_ids' + ' parameter is mandatory')
+            user_ids = []
+        else:
+            user_ids = params['user_ids']
         if not isinstance(params['user_ids'], list):
             raise ValueError('Variable user_ids' + ' must be a list.')
-        #if not params['user_ids']:
-            #raise ValueError('At least one user id must be provided')
 
         if not params.get('time_range', None) is None:
             time_start, time_end = params['time_range']
@@ -103,35 +103,16 @@ class UJS_CAT_NJS_DataUtils:
         if job_stage == 'completed':
             job_stage = 'complete'
 
-        user_ids = params['user_ids']
-        ws_ids = self.get_user_workspaces(user_ids, 0, 0)
+        ws_owners, ws_ids = self.get_user_workspaces(user_ids, 0, 0)
 
         ujs_ret = self.get_user_and_job_states(ws_ids)
-        #log("Before time frame: {}".format(len(ujs_ret)))
-        #if len(ujs_ret) > 0:
-            #log(pformat(ujs_ret[0]['job_states'][0]))
+        log("Before time_stage filter:{}".format(len(ujs_ret)))
+        jt_filtered_ujs = self.filter_by_time_stage(ujs_ret, job_stage, time_start, time_end)
 
-        ret_ujs = []
-        for ws_ujs in ujs_ret:
-            w_id = ws_ujs['ws_id']
-            j_states = ws_ujs['job_states']
-            filtered_ujs = []
-            for ujs_i in j_states:
-                if isinstance(ujs_i['creation_time'], int):
-                    cr_time = datetime.datetime.utcfromtimestamp(ujs_i['creation_time']/1000)
-                else:
-                    cr_time = _datetime_from_utc(ujs_i['creation_time'])
-                if (cr_time <= _datetime_from_utc(time_end) and
-                            cr_time >= _datetime_from_utc(time_start)):
-                    if (job_stage == 'all' or job_stage == ujs_i['stage']):
-                        filtered_ujs.append(ujs_i)
-            if len(filtered_ujs) > 0:
-                ret_ujs.append({'ws_id': w_id, 'job_states': filtered_ujs})
+        log("After time_stage filter:{}".format(len(jt_filtered_ujs)))
 
-        #log("After time frame: {}".format(len(ret_ujs)))
-        #if len(ret_ujs) > 0:
-            #log(pformat(ret_ujs[0]['job_states'][0]))
-        return ret_ujs
+        #jt_filtered_ujs = self.group_by_user(jt_filtered_ujs, user_ids)
+        return jt_filtered_ujs
 
 
     def get_user_workspaces(self, user_ids, showDeleted=0, showOnlyDeleted=0):
@@ -147,7 +128,6 @@ class UJS_CAT_NJS_DataUtils:
               lock_status lockstat,
               usermeta metadata> workspace_info;
 
-        return a list of ws_ids
         ws_info = self.ws_client.list_workspace_info({'owners':user_ids,
                         'showDeleted': showDeleted,
                         'showOnlyDeleted': showOnlyDeleted,
@@ -156,9 +136,11 @@ class UJS_CAT_NJS_DataUtils:
                         'after': '2017-04-03T08:56:32Z',
                         'before': '2017-11-03T08:56:32Z'
                 })
+
+        return a list of ws_owners and ws_ids
         """
         #ws_info = self.ws_client.list_workspace_info({})
-        log("Fetching workspace ids for {} {} users:\n{}".format('the' if user_ids else 'all', log(len(ws_ids)), user_ids if user_ids else ''))
+        log("Fetching workspace ids for {} users:\n{}".format('the' if user_ids else 'all', user_ids if user_ids else ''))
         ws_info = self.ws_client.list_workspace_info({'owners':user_ids,
                         'showDeleted': showDeleted,
                         'showOnlyDeleted': showOnlyDeleted,
@@ -169,29 +151,37 @@ class UJS_CAT_NJS_DataUtils:
 
         #log(pformat(ws_info))
         ws_ids = [ws[0] for ws in ws_info]
-        ws_names = [ws[1] for ws in ws_info]
+        ws_owners = [ws[2] for ws in ws_info]
 
         log(len(ws_ids))
 
-        return ws_ids
+        return (ws_owners, ws_ids)
 
 
     def get_user_and_job_states(self, ws_ids):
         """
         """
         # Pull the data
-        log("Fetching the job data ...for these workspaces:\n".format(ws_ids))
+        log("Fetching the job data...for these workspaces:\n".format(pformat(ws_ids)))
 
         wsj_states = []
         j_states = []
         clnt_groups = self.get_client_groups_from_cat()
+        counter = 0
+        while counter < len(ws_ids) // 10:
+            wid_slice = ws_ids[counter * 10 : (counter + 1) * 10]
+            j_states = self.retrieve_user_job_states(wid_slice, clnt_groups)
 
-        for wid in ws_ids:
-            j_states = self.retrieve_user_job_states([wid], clnt_groups)
             if len(j_states) > 0:
-                wsj_states.append({'ws_id': wid, 'job_states': j_states})
+                wsj_states += j_states
+            counter += 1
 
-        #log(pformat(wsj_states[0]['job_states][0]))
+        j_states = self.retrieve_user_job_states(ws_ids[counter * 10: ], clnt_groups)
+
+        if len(j_states) > 0:
+            wsj_states += j_states
+
+        #log(pformat(wsj_states[0][0]))
 
         return wsj_states
 
@@ -235,10 +225,8 @@ class UJS_CAT_NJS_DataUtils:
                 job_desc = [j[11] for j in nar_jobs]#[u'Execution engine job for kb_Metrics.count_ncbi_genome_features',...]
                 job_res = [j[12] for j in nar_jobs]#[{},None,...]
 
-                njs_ret = self.retrieve_ujs_via_njs(c_groups, job_ids, job_owners,
+                ret_ujs = self.retrieve_ujs_via_njs(c_groups, job_ids, job_owners,
                                 job_stages, job_status, job_time_info, job_error, job_desc)
-                if njs_ret:
-                    ret_ujs = njs_ret
 
         return ret_ujs
 
@@ -342,11 +330,11 @@ class UJS_CAT_NJS_DataUtils:
                     u_j_s['queued_time'] = str(delta) #delta.total_seconds()
                     u_j_s['status'] = 'queued'
                 else:
-                    u_j_s['status'] = 'not started'
+                    u_j_s['status'] = 'not created'
 
                 ujs_ret.append(u_j_s)
 
-        #log("Final count={}".format(len(ujs_ret)))
+        log("Final count={}".format(len(ujs_ret)))
         return ujs_ret
 
     def get_exec_stats_from_cat(self):
@@ -528,4 +516,35 @@ class UJS_CAT_NJS_DataUtils:
             print '%5s %3d %3d       %3d %3d   %3d %3d' %(labels[b],tmods, tapps,trmods,trapps,tmods-trmods,tapps-trapps)
 
         return kb_modules
+
+
+    def group_by_user(self, job_sts, user_ids):
+        grouped_ujs = []
+        if user_ids == []:
+            return {'user_id': 'all_users', 'job_states': job_sts}
+
+        for uid in user_ids:
+            ujs_by_user = []
+            for ujs_i in job_sts:
+                if uid == ujs_i['user_id']:
+                    ujs_by_user.append(ujs_i)
+            if len(ujs_by_user) > 0:
+                grouped_ujs.append({'user_id': uid, 'job_states': ujs_by_user})
+
+        return grouped_ujs
+
+
+    def filter_by_time_stage(self, job_sts, j_stage, j_start_time, j_end_time):
+        filtered_ujs = []
+        for ujs_i in job_sts:
+            if isinstance(ujs_i['creation_time'], int):
+                cr_time = datetime.datetime.utcfromtimestamp(ujs_i['creation_time']/1000)
+            else:
+                cr_time = _datetime_from_utc(ujs_i['creation_time'])
+            if (cr_time <= _datetime_from_utc(j_end_time) and
+                        cr_time >= _datetime_from_utc(j_start_time)):
+                if (j_stage == 'all' or j_stage == ujs_i['stage']):
+                    filtered_ujs.append(ujs_i)
+
+        return filtered_ujs
 
