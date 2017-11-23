@@ -106,13 +106,13 @@ class UJS_CAT_NJS_DataUtils:
         ws_owners, ws_ids = self.get_user_workspaces(user_ids, 0, 0)
 
         ujs_ret = self.get_user_and_job_states(ws_ids)
-        log("Before time_stage filter:{}".format(len(ujs_ret)))
+        #log("Before time_stage filter:{}".format(len(ujs_ret)))
         jt_filtered_ujs = self.filter_by_time_stage(ujs_ret, job_stage, time_start, time_end)
 
-        log("After time_stage filter:{}".format(len(jt_filtered_ujs)))
+        #log("After time_stage filter:{}".format(len(jt_filtered_ujs)))
 
         #jt_filtered_ujs = self.group_by_user(jt_filtered_ujs, user_ids)
-        return jt_filtered_ujs
+        return {'job_states':jt_filtered_ujs}
 
 
     def get_user_workspaces(self, user_ids, showDeleted=0, showOnlyDeleted=0):
@@ -165,23 +165,16 @@ class UJS_CAT_NJS_DataUtils:
         log("Fetching the job data...for these workspaces:\n".format(pformat(ws_ids)))
 
         wsj_states = []
-        j_states = []
         clnt_groups = self.get_client_groups_from_cat()
         counter = 0
         while counter < len(ws_ids) // 10:
+            j_states = []
             wid_slice = ws_ids[counter * 10 : (counter + 1) * 10]
-            j_states = self.retrieve_user_job_states(wid_slice, clnt_groups)
-
-            if len(j_states) > 0:
-                wsj_states += j_states
+            wsj_states += self.retrieve_user_job_states(wid_slice, clnt_groups)
             counter += 1
 
-        j_states = self.retrieve_user_job_states(ws_ids[counter * 10: ], clnt_groups)
-
-        if len(j_states) > 0:
-            wsj_states += j_states
-
-        #log(pformat(wsj_states[0][0]))
+        wsj_states += self.retrieve_user_job_states(ws_ids[counter * 10: ], clnt_groups)
+        #log(pformat(wsj_states[0]))
 
         return wsj_states
 
@@ -334,7 +327,7 @@ class UJS_CAT_NJS_DataUtils:
 
                 ujs_ret.append(u_j_s)
 
-        log("Final count={}".format(len(ujs_ret)))
+        log("Job count={}".format(len(ujs_ret)))
         return ujs_ret
 
     def get_exec_stats_from_cat(self):

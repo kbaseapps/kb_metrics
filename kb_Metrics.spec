@@ -138,8 +138,12 @@ module kb_Metrics {
         Arbitrary key-value pairs about a job.
     */
     typedef mapping<string, string> job_state;
+
+    typedef structure {
+        list<job_state> job_states;
+    } AppMetricsResult;
     
     funcdef get_app_metrics(AppMetricsParams params)
-        returns (list<job_state> AppMetricsResult) authentication required;
+        returns (AppMetricsResult output) authentication required;
 
 };

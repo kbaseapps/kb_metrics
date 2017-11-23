@@ -31,7 +31,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "15a2064ba925536cfd29c7581a67be09be00b007"
+    GIT_COMMIT_HASH = "0065f83335afe6e813e222bad44d57af7e486f3a"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -241,22 +241,23 @@ This KBase SDK module implements methods for generating various KBase metrics.
            to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST
            time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "job_stage"
            of String
-        :returns: instance of list of type "job_state" (Arbitrary key-value
+        :returns: instance of type "AppMetricsResult" -> structure: parameter
+           "job_states" of list of type "job_state" (Arbitrary key-value
            pairs about a job.) -> mapping from String to String
         """
         # ctx is the context object
-        # return variables are: AppMetricsResult
+        # return variables are: output
         #BEGIN get_app_metrics
         du = UJS_CAT_NJS_DataUtils(self.config, ctx.provenance)
-        AppMetricsResult = du.generate_app_metrics(params)
+        output = du.generate_app_metrics(params)
         #END get_app_metrics
 
         # At some point might do deeper type checking...
-        if not isinstance(AppMetricsResult, list):
+        if not isinstance(output, dict):
             raise ValueError('Method get_app_metrics return value ' +
-                             'AppMetricsResult is not type list as required.')
+                             'output is not type dict as required.')
         # return the results
-        return [AppMetricsResult]
+        return [output]
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",
