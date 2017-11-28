@@ -86,111 +86,55 @@ class UJS_CAT_NJS_DataUtils:
         _mkdir_p(self.metrics_dir)
 
 
-    def generate_user_metrics(self, input_params, token):
-        """
-        generate_user_metrics: get user data with structure as the following example:
-        [
-         {'creation_time': '2017-09-04 15:46:56.387000',
-          'user_data': {u'department': u'Biotechnology and food science',
-                        u'organization': u'NTNU'},
-          'user_name': {u'realname': u'Vetle Simensen', u'username': u'vetle'}},
-         {'creation_time': '2017-09-06 21:45:43.251000',
-          'user_data': {u'department': u'Department of Medicine',
-                        u'organization': u'University of Chicago'},
-          'user_name': {u'realname': u'\xd6zcan Esen', u'username': u'ozcan'}},
-         {'creation_time': '2017-08-30 21:47:51.711000',
-          'user_data': {u'department': u'Plant and Microbial Biology',
-                        u'organization': u'University of California-Berkeley'},
-          'user_name': {u'realname': u'Daniel Westcott', u'username': u'westcott'}},
-         ......
-        ]
-        """
-        self.init_clients(token)
-
-        params = self.process_user_parameters(input_params)
-        user_filter = params['filter_str']
-        time_start = params['time_start']
-        time_end = params['time_end']
-
-        kb_users = self.get_user_names(user_filter)
-
-        user_names = []
-        real_names = []
-        for u in kb_users:
-            user_names.append(u['username'])
-            real_names.append(u['realname'])
-
-        kb_uprof = self.get_user_profiles(user_names)
-        total_user_count = len(kb_uprof)
-        log("Before time_stage filter:{}".format(total_user_count))
-
-        if (time_start is not None or time_end is not None):
-            kb_uprof = self.filterUPROF_by_time_stage(kb_uprof, time_start, time_end)
-        period_user_count = len(kb_uprof)
-        log("After time_stage filter:{}".format(period_user_count))
-
-        return {'user_metrics': kb_uprof}
-
-
-    def get_user_names(self, filter_str):
-        """
-        get_user_names: given a filter string, get a list of User of structure as below:
-        typedef structure {
-                username username;
-                realname realname;
-                string thumbnail;
-        } User;
-        """
-        log("Fetching user name details for {} users\n{}".format(
-                'the' if filter_str else 'all', 'with id containing ' + filter_str if filter_str else ''))
-        user_names = self.uprf_client.filter_users({'filter': filter_str})
-        #log(pformat(user_names))
-        return user_names
-
-
-    def get_user_profiles(self, user_ids):
-        """
-        get_user_profiles: given the user ids, get a list of UserProfile of structure as below:
-        typedef structure {
-                username username;
-                realname realname;
-                string thumbnail;
-        } User;
-        typedef structure {
-                User user;
-                UnspecifiedObject profile;
-        } UserProfile;
-        example returned data:
-        [
-                {u'profile': {u'metadata': {u'created': u'2017-11-28T02:52:28.492Z',
-                                            u'createdBy': u'userprofile_ui_service'},
-                              u'preferences': {},
-                              u'synced': {u'gravatarHash': u'81793127ae5301c545a054846941c061'},
-                              u'userdata': {u'department': u'Physics',
-                                            u'organization': u'University of Illinois at Urbana-Champaign'}
-                             },
-                 u'user': {u'realname': u'Karna Gowda', u'username': u'karnagowda'}
-                },
-                {u'profile': {u'metadata': {u'created': u'2017-11-28T04:06:14.371Z',
-                                            u'createdBy': u'userprofile_ui_service'},
-                              u'preferences': {},
-                              u'synced': {u'gravatarHash': u'370bb047fc197fd60921eaf5d1683acf'},
-                              u'userdata': {u'department': u'Spirit Youth',
-                                            u'organization': u'WJS Canada'}
-                             },
-                 u'user': {u'realname': u'Nicole McMillan', u'username': u'n_mcmillan'}
-                },
-                .......
-        ]
-        """
-        log("Fetching profile info for {} users:\n".format(len(user_ids) if user_ids else 'all'))
-        user_prof = self.uprf_client.get_user_profile(user_ids)
-        #log(pformat(user_prof))
-        return user_prof
-
-
     def generate_app_metrics(self, input_params, token):
         """
+        generate_app_metrics: get app job state data with structure as the following example:
+        [
+         {'app_id': u'kb_Metrics/refseq_genome_counts',
+          'canceled': 0,
+          'creation_time': 1510159439977,
+          'error': 0,
+          'exec_start_time': 1510159441720,
+          'finish_time': 1510159449612,
+          'finished': 1,
+          'job_desc': u'Execution engine job for kb_Metrics.refseq_genome_counts',
+          'job_id': u'5a03344fe4b088e4b0e0e370',
+          'job_state': u'completed',
+          'method': u'refseq_genome_counts',
+          'module': u'kb_Metrics',
+          'result': [{u'report_name': u'kb_Metrics_report_f97f0567-fee5-48ea-8fc5-1f5e361ee2bd',
+                      u'report_ref': u'25735/121/1'}],
+          'run_time': '0:00:08',
+          'stage': u'complete',
+          'status': u'done',
+          'time_info': [u'2017-11-08T16:44:01+0000',
+                        u'2017-11-08T16:44:09+0000',
+                        None],
+          'user_id': u'qzhang',
+          'wsid': 25735},
+         {'app_id': u'kb_Metrics/report_metrics',
+          'canceled': 0,
+          'creation_time': 1510520157141,
+          'error': 0,
+          'exec_start_time': 1510520158928,
+          'finish_time': 1510520225972,
+          'finished': 1,
+          'job_desc': u'Execution engine job for kb_Metrics.report_metrics',
+          'job_id': u'5a08b55de4b088e4b0e0e59e',
+          'job_state': u'completed',
+          'method': u'report_metrics',
+          'module': u'kb_Metrics',
+          'result': [{u'report_name': None, u'report_ref': None}],
+          'run_time': '0:01:07',
+          'stage': u'complete',
+          'status': u'done',
+          'time_info': [u'2017-11-12T20:55:58+0000',
+                        u'2017-11-12T20:57:05+0000',
+                        None],
+          'user_id': u'qzhang',
+          'wsid': 25735},
+          ......
+        ]
         """
         self.init_clients(token)
 
@@ -202,9 +146,13 @@ class UJS_CAT_NJS_DataUtils:
 
         ws_owners, ws_ids = self.get_user_workspaces(user_ids, 0, 0)
         ujs_ret = self.get_user_and_job_states(ws_ids)
+        total_ujs_count = len(ujs_ret)
+        #log("Before time_stage filter:{}".format(total_ujs_count))
 
-        jt_filtered_ujs = self.filter_by_time_stage(ujs_ret, job_stage, time_start, time_end)
-        #jt_filtered_ujs = self.group_by_user(jt_filtered_ujs, user_ids)
+        jt_filtered_ujs = self.filterUJS_by_time_stage(ujs_ret, job_stage, time_start, time_end)
+        period_ujs_count = len(jt_filtered_ujs)
+        #log("After time_stage filter:{}".format(period_ujs_count))
+        #user_grouped_ujs = self.group_by_user(jt_filtered_ujs, user_ids)
         return {'job_states':jt_filtered_ujs}
 
 
@@ -677,6 +625,109 @@ class UJS_CAT_NJS_DataUtils:
             params['time_start'] = params['time_end'] - datetime.timedelta(days=90)
 
         return params
+
+
+    def generate_user_metrics(self, input_params, token):
+        """
+        generate_user_metrics: get user data with structure as the following example:
+        [
+         {'creation_time': '2017-09-04 15:46:56.387000',
+          'user_data': {u'department': u'Biotechnology and food science',
+                        u'organization': u'NTNU'},
+          'user_name': {u'realname': u'Vetle Simensen', u'username': u'vetle'}},
+         {'creation_time': '2017-09-06 21:45:43.251000',
+          'user_data': {u'department': u'Department of Medicine',
+                        u'organization': u'University of Chicago'},
+          'user_name': {u'realname': u'\xd6zcan Esen', u'username': u'ozcan'}},
+         {'creation_time': '2017-08-30 21:47:51.711000',
+          'user_data': {u'department': u'Plant and Microbial Biology',
+                        u'organization': u'University of California-Berkeley'},
+          'user_name': {u'realname': u'Daniel Westcott', u'username': u'westcott'}},
+         ......
+        ]
+        """
+        self.init_clients(token)
+
+        params = self.process_user_parameters(input_params)
+        user_filter = params['filter_str']
+        time_start = params['time_start']
+        time_end = params['time_end']
+
+        kb_users = self.get_user_names(user_filter)
+
+        user_names = []
+        real_names = []
+        for u in kb_users:
+            user_names.append(u['username'])
+            real_names.append(u['realname'])
+
+        kb_uprof = self.get_user_profiles(user_names)
+        total_user_count = len(kb_uprof)
+        log("Before time range filter:{}".format(total_user_count))
+
+        if (time_start is not None or time_end is not None):
+            kb_uprof = self.filterUPROF_by_time_stage(kb_uprof, time_start, time_end)
+        period_user_count = len(kb_uprof)
+        log("After time range filter:{}".format(period_user_count))
+
+        return {'user_metrics': kb_uprof}
+
+
+    def get_user_names(self, filter_str):
+        """
+        get_user_names: given a filter string, get a list of User of structure as below:
+        typedef structure {
+                username username;
+                realname realname;
+                string thumbnail;
+        } User;
+        """
+        log("Fetching user name details for {} users\n{}".format(
+                'the' if filter_str else 'all', 'with id containing ' + filter_str if filter_str else ''))
+        user_names = self.uprf_client.filter_users({'filter': filter_str})
+        #log(pformat(user_names))
+        return user_names
+
+
+    def get_user_profiles(self, user_ids):
+        """
+        get_user_profiles: given the user ids, get a list of UserProfile of structure as below:
+        typedef structure {
+                username username;
+                realname realname;
+                string thumbnail;
+        } User;
+        typedef structure {
+                User user;
+                UnspecifiedObject profile;
+        } UserProfile;
+        example returned data:
+        [
+                {u'profile': {u'metadata': {u'created': u'2017-11-28T02:52:28.492Z',
+                                            u'createdBy': u'userprofile_ui_service'},
+                              u'preferences': {},
+                              u'synced': {u'gravatarHash': u'81793127ae5301c545a054846941c061'},
+                              u'userdata': {u'department': u'Physics',
+                                            u'organization': u'University of Illinois at Urbana-Champaign'}
+                             },
+                 u'user': {u'realname': u'Karna Gowda', u'username': u'karnagowda'}
+                },
+                {u'profile': {u'metadata': {u'created': u'2017-11-28T04:06:14.371Z',
+                                            u'createdBy': u'userprofile_ui_service'},
+                              u'preferences': {},
+                              u'synced': {u'gravatarHash': u'370bb047fc197fd60921eaf5d1683acf'},
+                              u'userdata': {u'department': u'Spirit Youth',
+                                            u'organization': u'WJS Canada'}
+                             },
+                 u'user': {u'realname': u'Nicole McMillan', u'username': u'n_mcmillan'}
+                },
+                .......
+        ]
+        """
+        log("Fetching profile info for {} users:\n".format(len(user_ids) if user_ids else 'all'))
+        user_prof = self.uprf_client.get_user_profile(user_ids)
+        #log(pformat(user_prof))
+        return user_prof
 
 
     def filterUPROF_by_time_stage(self, user_prof, j_start_time, j_end_time):
