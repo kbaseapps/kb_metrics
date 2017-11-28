@@ -1,5 +1,7 @@
 import time
 import datetime
+import dateutil.parser
+import pytz
 import json
 import os
 import re
@@ -49,7 +51,11 @@ def ceildiv(a, b):
     return -(-a // b)
 
 def _datetime_from_utc(date_utc_str):
-    return datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S+0000')
+    try:#for u'2017-08-27T17:29:37+0000'
+        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S+0000')
+    except ValueError as v_er:#for ISO-formatted date & time, e.g., u'2015-02-15T22:31:47.763Z'
+        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S.%fZ')
+    return dt
 
 def _timestamp_from_utc(date_utc_str):
     dt = _datetime_from_utc(date_utc_str)
@@ -82,13 +88,29 @@ class UJS_CAT_NJS_DataUtils:
 
     def generate_user_metrics(self, input_params, token):
         """
+        generate_user_metrics: get user data with structure as the following example:
+        [
+         {'creation_time': '2017-09-04 15:46:56.387000',
+          'user_data': {u'department': u'Biotechnology and food science',
+                        u'organization': u'NTNU'},
+          'user_name': {u'realname': u'Vetle Simensen', u'username': u'vetle'}},
+         {'creation_time': '2017-09-06 21:45:43.251000',
+          'user_data': {u'department': u'Department of Medicine',
+                        u'organization': u'University of Chicago'},
+          'user_name': {u'realname': u'\xd6zcan Esen', u'username': u'ozcan'}},
+         {'creation_time': '2017-08-30 21:47:51.711000',
+          'user_data': {u'department': u'Plant and Microbial Biology',
+                        u'organization': u'University of California-Berkeley'},
+          'user_name': {u'realname': u'Daniel Westcott', u'username': u'westcott'}},
+         ......
+        ]
         """
         self.init_clients(token)
 
-        if input_parameters.get('filter_str', None) is None:
-            user_filter = ''
-        else:
-            user_filter = input_parameters['filter_str']
+        params = self.process_user_parameters(input_params)
+        user_filter = params['filter_str']
+        time_start = params['time_start']
+        time_end = params['time_end']
 
         kb_users = self.get_user_names(user_filter)
 
@@ -99,28 +121,15 @@ class UJS_CAT_NJS_DataUtils:
             real_names.append(u['realname'])
 
         kb_uprof = self.get_user_profiles(user_names)
+        total_user_count = len(kb_uprof)
+        log("Before time_stage filter:{}".format(total_user_count))
+
+        if (time_start is not None or time_end is not None):
+            kb_uprof = self.filterUPROF_by_time_stage(kb_uprof, time_start, time_end)
+        period_user_count = len(kb_uprof)
+        log("After time_stage filter:{}".format(period_user_count))
 
         return {'user_metrics': kb_uprof}
-
-
-    def get_user_profiles(self, user_ids):
-        """
-        get_user_profiles: given the user ids, get a list of UserProfile of structure as below:
-        typedef structure {
-                username username;
-                realname realname;
-                string thumbnail;
-        } User;
-        typedef structure {
-                User user;
-                UnspecifiedObject profile;
-        } UserProfile;
-
-        """
-        log("Fetching profile info for {} users:\n{}".format('the' if user_ids else 'all', user_ids if user_ids else ''))
-        user_prof = self.uprf_client.get_user_profile(user_ids)
-        #log(pformat(user_prof))
-        return user_prof
 
 
     def get_user_names(self, filter_str):
@@ -135,8 +144,49 @@ class UJS_CAT_NJS_DataUtils:
         log("Fetching user name details for {} users\n{}".format(
                 'the' if filter_str else 'all', 'with id containing ' + filter_str if filter_str else ''))
         user_names = self.uprf_client.filter_users({'filter': filter_str})
-        log(pformat(user_names))
+        #log(pformat(user_names))
         return user_names
+
+
+    def get_user_profiles(self, user_ids):
+        """
+        get_user_profiles: given the user ids, get a list of UserProfile of structure as below:
+        typedef structure {
+                username username;
+                realname realname;
+                string thumbnail;
+        } User;
+        typedef structure {
+                User user;
+                UnspecifiedObject profile;
+        } UserProfile;
+        example returned data:
+        [
+                {u'profile': {u'metadata': {u'created': u'2017-11-28T02:52:28.492Z',
+                                            u'createdBy': u'userprofile_ui_service'},
+                              u'preferences': {},
+                              u'synced': {u'gravatarHash': u'81793127ae5301c545a054846941c061'},
+                              u'userdata': {u'department': u'Physics',
+                                            u'organization': u'University of Illinois at Urbana-Champaign'}
+                             },
+                 u'user': {u'realname': u'Karna Gowda', u'username': u'karnagowda'}
+                },
+                {u'profile': {u'metadata': {u'created': u'2017-11-28T04:06:14.371Z',
+                                            u'createdBy': u'userprofile_ui_service'},
+                              u'preferences': {},
+                              u'synced': {u'gravatarHash': u'370bb047fc197fd60921eaf5d1683acf'},
+                              u'userdata': {u'department': u'Spirit Youth',
+                                            u'organization': u'WJS Canada'}
+                             },
+                 u'user': {u'realname': u'Nicole McMillan', u'username': u'n_mcmillan'}
+                },
+                .......
+        ]
+        """
+        log("Fetching profile info for {} users:\n".format(len(user_ids) if user_ids else 'all'))
+        user_prof = self.uprf_client.get_user_profile(user_ids)
+        #log(pformat(user_prof))
+        return user_prof
 
 
     def generate_app_metrics(self, input_params, token):
@@ -144,7 +194,7 @@ class UJS_CAT_NJS_DataUtils:
         """
         self.init_clients(token)
 
-        params = self.process_parameters(input_params)
+        params = self.process_app_parameters(input_params)
         user_ids = params['user_ids']
         time_start = params['time_start']
         time_end = params['time_end']
@@ -152,11 +202,8 @@ class UJS_CAT_NJS_DataUtils:
 
         ws_owners, ws_ids = self.get_user_workspaces(user_ids, 0, 0)
         ujs_ret = self.get_user_and_job_states(ws_ids)
-        #log("Before time_stage filter:{}".format(len(ujs_ret)))
 
         jt_filtered_ujs = self.filter_by_time_stage(ujs_ret, job_stage, time_start, time_end)
-        #log("After time_stage filter:{}".format(len(jt_filtered_ujs)))
-
         #jt_filtered_ujs = self.group_by_user(jt_filtered_ujs, user_ids)
         return {'job_states':jt_filtered_ujs}
 
@@ -567,7 +614,7 @@ class UJS_CAT_NJS_DataUtils:
         return grouped_ujs
 
 
-    def filter_by_time_stage(self, job_sts, j_stage, j_start_time, j_end_time):
+    def filterUJS_by_time_stage(self, job_sts, j_stage, j_start_time, j_end_time):
         filtered_ujs = []
         for ujs_i in job_sts:
             if isinstance(ujs_i['creation_time'], int):
@@ -591,7 +638,7 @@ class UJS_CAT_NJS_DataUtils:
         self.uprf_client = UserProfile('https://kbase.us/services/user_profile/rpc', auth_svc='https://kbase.us/services/auth/', token=token)
 
 
-    def process_parameters(self, params):
+    def process_app_parameters(self, params):
         if params.get('user_ids', None) is None:
             params['user_ids'] = []
         else:
@@ -612,3 +659,64 @@ class UJS_CAT_NJS_DataUtils:
             params['job_stage'] = 'complete'
 
         return params
+
+
+    def process_user_parameters(self, params):
+        if params.get('filter_str', None) is None:
+            params['filter_str'] = ''
+        else:
+            if not isinstance(params['filter_str'], str):
+                raise ValueError('Variable filter_str' + ' must be a string.')
+
+        if not params.get('time_range', None) is None:
+            time_start, time_end = params['time_range']
+            params['time_start'] = _convert_to_datetime(time_start)
+            params['time_end'] = _convert_to_datetime(time_end)
+        else: #set the most recent quarter (90 days)
+            params['time_end'] = datetime.datetime.utcnow()
+            params['time_start'] = params['time_end'] - datetime.timedelta(days=90)
+
+        return params
+
+
+    def filterUPROF_by_time_stage(self, user_prof, j_start_time, j_end_time):
+        """
+        example input data for user_prof:
+        [
+                {u'profile': {u'metadata': {u'created': u'2017-11-28T02:52:28.492Z',
+                                            u'createdBy': u'userprofile_ui_service'},
+                              u'preferences': {},
+                              u'synced': {u'gravatarHash': u'81793127ae5301c545a054846941c061'},
+                              u'userdata': {u'department': u'Physics',
+                                            u'organization': u'University of Illinois at Urbana-Champaign'}
+                             },
+                 u'user': {u'realname': u'Karna Gowda', u'username': u'karnagowda'}
+                },
+                {u'profile': {u'metadata': {u'created': u'2017-11-28T04:06:14.371Z',
+                                            u'createdBy': u'userprofile_ui_service'},
+                              u'preferences': {},
+                              u'synced': {u'gravatarHash': u'370bb047fc197fd60921eaf5d1683acf'},
+                              u'userdata': {u'department': u'Spirit Youth',
+                                            u'organization': u'WJS Canada'}
+                             },
+                 u'user': {u'realname': u'Nicole McMillan', u'username': u'n_mcmillan'}
+                },
+                .......
+        ]
+        """
+        filtered_uprof = []
+        for u_i in user_prof:
+            u_crt = u_i['profile']['metadata']['created']
+            if isinstance(u_crt, int):
+                cr_time = datetime.datetime.utcfromtimestamp(u_crt / 1000)
+            else:
+                cr_time = _datetime_from_utc(u_crt)
+            #log("Comparing {} between {} and {}".format(str(cr_time), str(j_start_time), str(j_end_time)))
+            if (cr_time <= j_end_time and cr_time >= j_start_time):
+                filtered_uprof.append({'user_name': u_i['user'],
+                                       'creation_time': str(cr_time),
+                                       'user_data': u_i['profile']['userdata']
+                                })
+
+        return filtered_uprof
+

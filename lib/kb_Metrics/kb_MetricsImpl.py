@@ -31,7 +31,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "904bb2b021e81c7431274bb4eb86b51f50dacfcb"
+    GIT_COMMIT_HASH = "477b7056ba877f448a163e55c9a014200643f32e"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -262,7 +262,16 @@ This KBase SDK module implements methods for generating various KBase metrics.
     def get_user_metrics(self, ctx, params):
         """
         :param params: instance of type "UserMetricsParams" -> structure:
-           parameter "filter_str" of String
+           parameter "filter_str" of String, parameter "time_range" of type
+           "time_range" (A time range defined by its lower and upper bound.)
+           -> tuple of size 2: parameter "t_lowerbound" of type "timestamp"
+           (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the
+           difference in time to UTC in the format +/-HHMM, eg:
+           2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC
+           time)), parameter "t_upperbound" of type "timestamp" (A time in
+           the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time
+           to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST
+           time) 2013-04-03T08:56:32+0000 (UTC time))
         :returns: instance of type "UserMetricsResult" -> structure:
            parameter "user_metrics" of unspecified object
         """

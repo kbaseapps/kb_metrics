@@ -149,6 +149,7 @@ module kb_Metrics {
 
     typedef structure {
         string filter_str; 
+        time_range time_range;
     } UserMetricsParams;
 
     typedef structure {
