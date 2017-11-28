@@ -329,7 +329,8 @@ class UJS_CAT_NJS_DataUtils:
                     u_j_s['creation_time'] = _timestamp_from_utc(u_j_s['time_info'][0])
                     if (u_j_s['stage'] == 'started' and u_j_s['status'] == 'running'):
                         u_j_s['exec_start_time'] = _timestamp_from_utc(u_j_s['time_info'][1])
-                    elif (u_j_s['stage'] == 'completed' or u_j_s['stage'] == 'complete'):
+                    elif (u_j_s['stage'] == 'completed' or u_j_s['stage'] == 'complete'
+                            or u_j_s['job_state'] == 'completed' or u_j_s['status'] == 'done'):
                         u_j_s['finish_time'] = _timestamp_from_utc(u_j_s['time_info'][1])
                     #get some info from the client groups
                     for clnt in c_groups:
@@ -342,18 +343,21 @@ class UJS_CAT_NJS_DataUtils:
                     #log("*******From ujs result directly*******:\n")
                     #log(pformat(u_j_s))
 
-                if (u_j_s['stage'] == 'started' and u_j_s['status'] == 'running'):
-                    delta = datetime.datetime.utcnow() - datetime.datetime.fromtimestamp(u_j_s['exec_start_time']/1000)
+                if ('exec_start_time' in u_j_s and u_j_s['stage'] == 'started'
+                        and u_j_s['status'] == 'running'):
+                    delta = (datetime.datetime.utcnow() -
+                            datetime.datetime.fromtimestamp(u_j_s['exec_start_time']/1000))
                     delta = delta - datetime.timedelta(microseconds=delta.microseconds)
                     u_j_s['running_time'] = str(delta) #delta.total_seconds()
-                elif u_j_s['stage'] == 'complete' or u_j_s['job_state'] == 'completed':
+                elif ('finish_time' in u_j_s and 'exec_start_time' in u_j_s
+                        and u_j_s['status'] == 'done'):
                     delta = (datetime.datetime.fromtimestamp(u_j_s['finish_time']/1000) -
                             datetime.datetime.fromtimestamp(u_j_s['exec_start_time']/1000))
                     delta = delta - datetime.timedelta(microseconds=delta.microseconds)
                     u_j_s['run_time'] = str(delta) #delta.total_seconds()
-                elif (u_j_s['stage'] == 'created'
-                      and u_j_s['status'] not in ['done','running','canceled by user','error']
-                      and job_error[j_idx] == {}):
+                elif (u_j_s['stage'] == 'created' and 'creation_time' in u_j_s
+                        and u_j_s['status'] not in ['done','running','canceled by user','error']
+                        and job_error[j_idx] == {}):
                     delta = (datetime.datetime.utcnow() - datetime.datetime.fromtimestamp(
                                     u_j_s['creation_time']/1000))
                     delta = delta - datetime.timedelta(microseconds=delta.microseconds)
