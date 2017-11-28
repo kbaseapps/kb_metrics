@@ -20,8 +20,8 @@ from Workspace.WorkspaceClient import Workspace as Workspace
 from Catalog.CatalogClient import Catalog
 from NarrativeJobService.NarrativeJobServiceClient import NarrativeJobService
 from UserAndJobState.UserAndJobStateClient import UserAndJobState
-#import biokbase.narrative.clients as clients
-#from biokbase.catalog.Client import Catalog
+from UserProfile.UserProfileClient import UserProfile
+
 
 def log(message, prefix_newline=False):
     """Logging function, provides a hook to suppress or redirect log messages."""
@@ -55,6 +55,16 @@ def _timestamp_from_utc(date_utc_str):
     dt = _datetime_from_utc(date_utc_str)
     return int(time.mktime(dt.timetuple())*1000) #in microseconds
 
+def _convert_to_datetime(dt):
+    new_dt = dt
+    if (not isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime)):
+        if isinstance(dt, int):
+            new_dt = datetime.datetime.utcfromtimestamp(dt / 1000)
+        else:
+            new_dt = _datetime_from_utc(dt)
+    return new_dt
+
+
 class UJS_CAT_NJS_DataUtils:
 
     def __init__(self, config, provenance):
@@ -66,49 +76,85 @@ class UJS_CAT_NJS_DataUtils:
         self.scratch = os.path.join(config['scratch'], str(uuid.uuid4()))
         _mkdir_p(self.scratch)
 
-        if 'shock-url' in config:
-            self.shock_url = config['shock-url']
-        if 'handle-service-url' in config:
-            self.handle_url = config['handle-service-url']
-
-        self.ws_client = Workspace(self.workspace_url, token=self.token)
-        #self.cat_client = Catalog(self.callback_url)
-        self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://kbase.us/services/auth/')
-        self.njs_client = NarrativeJobService('https://kbase.us/services/njs_wrapper', auth_svc='https://kbase.us/services/auth/')
-        self.ujs_client = UserAndJobState('https://kbase.us/services/userandjobstate', auth_svc='https://kbase.us/services/auth/')
         self.metrics_dir = os.path.join(self.scratch, str(uuid.uuid4()))
         _mkdir_p(self.metrics_dir)
 
 
-    def generate_app_metrics(self, params):
+    def generate_user_metrics(self, input_params, token):
         """
         """
-        if params.get('user_ids', None) is None:
-            user_ids = []
-        else:
-            user_ids = params['user_ids']
-        if not isinstance(params['user_ids'], list):
-            raise ValueError('Variable user_ids' + ' must be a list.')
+        self.init_clients(token)
 
-        if not params.get('time_range', None) is None:
-            time_start, time_end = params['time_range']
-        else: #set the most recent 48 hours range
-            time_end = datetime.datetime.utcnow()
-            time_start = utcnow - datetime.timedelta(hours=48)
-
-        if not params.get('job_stage', None) is None:
-            job_stage = params['job_stage']
+        if input_parameters.get('filter_str', None) is None:
+            user_filter = ''
         else:
-            job_stage = 'all'
-        if job_stage == 'completed':
-            job_stage = 'complete'
+            user_filter = input_parameters['filter_str']
+
+        kb_users = self.get_user_names(user_filter)
+
+        user_names = []
+        real_names = []
+        for u in kb_users:
+            user_names.append(u['username'])
+            real_names.append(u['realname'])
+
+        kb_uprof = self.get_user_profiles(user_names)
+
+        return {'user_metrics': kb_uprof}
+
+
+    def get_user_profiles(self, user_ids):
+        """
+        get_user_profiles: given the user ids, get a list of UserProfile of structure as below:
+        typedef structure {
+                username username;
+                realname realname;
+                string thumbnail;
+        } User;
+        typedef structure {
+                User user;
+                UnspecifiedObject profile;
+        } UserProfile;
+
+        """
+        log("Fetching profile info for {} users:\n{}".format('the' if user_ids else 'all', user_ids if user_ids else ''))
+        user_prof = self.uprf_client.get_user_profile(user_ids)
+        #log(pformat(user_prof))
+        return user_prof
+
+
+    def get_user_names(self, filter_str):
+        """
+        get_user_names: given a filter string, get a list of User of structure as below:
+        typedef structure {
+                username username;
+                realname realname;
+                string thumbnail;
+        } User;
+        """
+        log("Fetching user name details for {} users\n{}".format(
+                'the' if filter_str else 'all', 'with id containing ' + filter_str if filter_str else ''))
+        user_names = self.uprf_client.filter_users({'filter': filter_str})
+        log(pformat(user_names))
+        return user_names
+
+
+    def generate_app_metrics(self, input_params, token):
+        """
+        """
+        self.init_clients(token)
+
+        params = self.process_parameters(input_params)
+        user_ids = params['user_ids']
+        time_start = params['time_start']
+        time_end = params['time_end']
+        job_stage = params['job_stage']
 
         ws_owners, ws_ids = self.get_user_workspaces(user_ids, 0, 0)
-
         ujs_ret = self.get_user_and_job_states(ws_ids)
         #log("Before time_stage filter:{}".format(len(ujs_ret)))
-        jt_filtered_ujs = self.filter_by_time_stage(ujs_ret, job_stage, time_start, time_end)
 
+        jt_filtered_ujs = self.filter_by_time_stage(ujs_ret, job_stage, time_start, time_end)
         #log("After time_stage filter:{}".format(len(jt_filtered_ujs)))
 
         #jt_filtered_ujs = self.group_by_user(jt_filtered_ujs, user_ids)
@@ -117,7 +163,7 @@ class UJS_CAT_NJS_DataUtils:
 
     def get_user_workspaces(self, user_ids, showDeleted=0, showOnlyDeleted=0):
         """
-        get_user_workspaces: given the user ids, retrieve a list of data structure as the example below:
+        get_user_workspaces: given the user ids, get a list of data structure as the example below:
         typedef tuple<ws_id id,
               ws_name workspace,
               username owner,
@@ -139,8 +185,8 @@ class UJS_CAT_NJS_DataUtils:
 
         return a list of ws_owners and ws_ids
         """
+        #log("Fetching workspace ids for {} users:\n{}".format('the' if user_ids else 'all', user_ids if user_ids else ''))
         #ws_info = self.ws_client.list_workspace_info({})
-        log("Fetching workspace ids for {} users:\n{}".format('the' if user_ids else 'all', user_ids if user_ids else ''))
         ws_info = self.ws_client.list_workspace_info({'owners':user_ids,
                         'showDeleted': showDeleted,
                         'showOnlyDeleted': showOnlyDeleted,
@@ -148,21 +194,17 @@ class UJS_CAT_NJS_DataUtils:
                         'excludeGlobal': 1
                 })
 
-
         #log(pformat(ws_info))
         ws_ids = [ws[0] for ws in ws_info]
         ws_owners = [ws[2] for ws in ws_info]
 
-        log(len(ws_ids))
-
         return (ws_owners, ws_ids)
-
 
     def get_user_and_job_states(self, ws_ids):
         """
+        get_user_and_job_states: Get the user and job info for the given workspaces
         """
-        # Pull the data
-        log("Fetching the job data...for these workspaces:\n".format(pformat(ws_ids)))
+        #log("Fetching the job data...for these workspaces:\n{}".format(pformat(ws_ids)))
 
         wsj_states = []
         clnt_groups = self.get_client_groups_from_cat()
@@ -194,6 +236,7 @@ class UJS_CAT_NJS_DataUtils:
         ret_ujs = []
         try:
             nar_jobs = self.ujs_client.list_jobs2({
+                'filter': 'S',#all jobs are returned
                 'authstrat': 'kbaseworkspace',
                 'authparams': wid_p
             })
@@ -231,7 +274,6 @@ class UJS_CAT_NJS_DataUtils:
             job_info = self.njs_client.check_jobs({
                         'job_ids': job_ids, 'with_job_params': 1
                 })
-            #log("njs returned {} job_info".format(len(job_info.get('job_states', {}))))
         except Exception as e_njs: #RuntimeError as e_njs:
             log('NJS check_jobs raised error:\n')
             log(pformat(e_njs))
@@ -279,7 +321,7 @@ class UJS_CAT_NJS_DataUtils:
                             u_j_s['exec_start_time'] = u_j_s['time_info'][1]
                         if 'finish_time' in jbs:
                             u_j_s['finish_time'] = jbs['finish_time']
-                        elif u_j_s['stage'] == 'completed':
+                        elif (u_j_s['stage'] == 'completed' or u_j_s['stage'] == 'complete'):
                             u_j_s['finish_time'] = u_j_s['time_info'][1]
                     except KeyError as e_key:
                         log("KeyError for " + pformat(e_key))
@@ -292,7 +334,7 @@ class UJS_CAT_NJS_DataUtils:
                     u_j_s['creation_time'] = _timestamp_from_utc(u_j_s['time_info'][0])
                     if (u_j_s['stage'] == 'started' and u_j_s['status'] == 'running'):
                         u_j_s['exec_start_time'] = _timestamp_from_utc(u_j_s['time_info'][1])
-                    elif u_j_s['stage'] == 'completed':
+                    elif (u_j_s['stage'] == 'completed' or u_j_s['stage'] == 'complete'):
                         u_j_s['finish_time'] = _timestamp_from_utc(u_j_s['time_info'][1])
                     #get some info from the client groups
                     for clnt in c_groups:
@@ -327,7 +369,7 @@ class UJS_CAT_NJS_DataUtils:
 
                 ujs_ret.append(u_j_s)
 
-        log("Job count={}".format(len(ujs_ret)))
+        #log("Job count={}".format(len(ujs_ret)))
         return ujs_ret
 
     def get_exec_stats_from_cat(self):
@@ -348,9 +390,8 @@ class UJS_CAT_NJS_DataUtils:
         }
         """
         # Pull the data
-        log("Fetching the exec stats data from Catalog API...")
+        #log("Fetching the exec stats data from Catalog API...")
         raw_stats = self.cat_client.get_exec_raw_stats({})
-        #raw_stats = self.cat_client.get_exec_raw_stats({},{'begin': 1510558000, 'end': 1510680000})
 
         # Calculate queued_time and run_time (in seconds)
         for elem in raw_stats:
@@ -367,7 +408,7 @@ class UJS_CAT_NJS_DataUtils:
 
     def get_client_groups_from_cat(self):
         """
-        get_client_groups_from_cat
+        get_client_groups_from_cat: Get the client_groups data from Catalog API
         return an array of the following structure (example with data):
         {
             u'app_id': u'assemblyrast/run_arast',
@@ -377,7 +418,6 @@ class UJS_CAT_NJS_DataUtils:
         }
         """
         # Pull the data
-        log("Fetching the client_groups data from Catalog API...")
         client_groups = self.cat_client.get_client_groups({})
 
         #log("\nClient group example:\n{}".format(pformat(client_groups[0])))
@@ -531,13 +571,44 @@ class UJS_CAT_NJS_DataUtils:
         filtered_ujs = []
         for ujs_i in job_sts:
             if isinstance(ujs_i['creation_time'], int):
-                cr_time = datetime.datetime.utcfromtimestamp(ujs_i['creation_time']/1000)
+                cr_time = datetime.datetime.utcfromtimestamp(ujs_i['creation_time'] / 1000)
             else:
                 cr_time = _datetime_from_utc(ujs_i['creation_time'])
-            if (cr_time <= _datetime_from_utc(j_end_time) and
-                        cr_time >= _datetime_from_utc(j_start_time)):
+            #log("Comparing {} between {} and {}".format(str(cr_time), str(j_start_time), str(j_end_time)))
+            if (cr_time <= j_end_time and cr_time >= j_start_time):
                 if (j_stage == 'all' or j_stage == ujs_i['stage']):
                     filtered_ujs.append(ujs_i)
 
         return filtered_ujs
 
+
+    def init_clients(self, token):
+        self.ws_client = Workspace(self.workspace_url, token=token)
+        #self.cat_client = Catalog(self.callback_url)
+        self.cat_client = Catalog('https://kbase.us/services/catalog', auth_svc='https://kbase.us/services/auth/', token=token)
+        self.njs_client = NarrativeJobService('https://kbase.us/services/njs_wrapper', auth_svc='https://kbase.us/services/auth/', token=token)
+        self.ujs_client = UserAndJobState('https://kbase.us/services/userandjobstate', auth_svc='https://kbase.us/services/auth/', token=token)
+        self.uprf_client = UserProfile('https://kbase.us/services/user_profile/rpc', auth_svc='https://kbase.us/services/auth/', token=token)
+
+
+    def process_parameters(self, params):
+        if params.get('user_ids', None) is None:
+            params['user_ids'] = []
+        else:
+            if not isinstance(params['user_ids'], list):
+                raise ValueError('Variable user_ids' + ' must be a list.')
+
+        if not params.get('time_range', None) is None:
+            time_start, time_end = params['time_range']
+            params['time_start'] = _convert_to_datetime(time_start)
+            params['time_end'] = _convert_to_datetime(time_end)
+        else: #set the most recent 48 hours range
+            params['time_end'] = datetime.datetime.utcnow()
+            params['time_start'] = params['time_end'] - datetime.timedelta(hours=48)
+
+        if params.get('job_stage', None) is None:
+            params['job_stage'] = 'all'
+        if params['job_stage'] == 'completed':
+            params['job_stage'] = 'complete'
+
+        return params

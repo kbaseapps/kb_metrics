@@ -31,7 +31,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "0065f83335afe6e813e222bad44d57af7e486f3a"
+    GIT_COMMIT_HASH = "904bb2b021e81c7431274bb4eb86b51f50dacfcb"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -249,12 +249,33 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # return variables are: output
         #BEGIN get_app_metrics
         du = UJS_CAT_NJS_DataUtils(self.config, ctx.provenance)
-        output = du.generate_app_metrics(params)
+        output = du.generate_app_metrics(params, ctx['token'])
         #END get_app_metrics
 
         # At some point might do deeper type checking...
         if not isinstance(output, dict):
             raise ValueError('Method get_app_metrics return value ' +
+                             'output is not type dict as required.')
+        # return the results
+        return [output]
+
+    def get_user_metrics(self, ctx, params):
+        """
+        :param params: instance of type "UserMetricsParams" -> structure:
+           parameter "filter_str" of String
+        :returns: instance of type "UserMetricsResult" -> structure:
+           parameter "user_metrics" of unspecified object
+        """
+        # ctx is the context object
+        # return variables are: output
+        #BEGIN get_user_metrics
+        du = UJS_CAT_NJS_DataUtils(self.config, ctx.provenance)
+        output = du.generate_user_metrics(params, ctx['token'])
+        #END get_user_metrics
+
+        # At some point might do deeper type checking...
+        if not isinstance(output, dict):
+            raise ValueError('Method get_user_metrics return value ' +
                              'output is not type dict as required.')
         # return the results
         return [output]
