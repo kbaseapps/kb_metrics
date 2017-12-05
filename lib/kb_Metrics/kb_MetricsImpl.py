@@ -10,6 +10,7 @@ from KBaseReport.KBaseReportClient import KBaseReport
 from kb_Metrics.core.genome_feature_stats import genome_feature_stats
 from kb_Metrics.core.report_utils import report_utils
 from kb_Metrics.core.UJS_CAT_NJS_DataUtils import UJS_CAT_NJS_DataUtils
+from kb_Metrics.metricsdb_controller import MetricsMongoDBController
 #END_HEADER
 
 
@@ -31,7 +32,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "477b7056ba877f448a163e55c9a014200643f32e"
+    GIT_COMMIT_HASH = "53d7c09f840eb49b5df09a5c2a7e65d19e7b73cd"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -44,7 +45,8 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # Any configuration parameters that are important should be parsed and
         # saved in the constructor.
-        self.callback_url = os.environ['SDK_CALLBACK_URL']
+        #self.callback_url = os.environ['SDK_CALLBACK_URL']
+        self.ws_url = config['workspace-url']
         self.shared_folder = config['scratch']
         self.config = config
         #END_CONSTRUCTOR
@@ -183,8 +185,6 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # return variables are: output
         #BEGIN report_metrics
         rps = report_utils(self.config, ctx.provenance)
-
-        #output = rps.get_module_stats_from_cat()
         output = rps.create_stats_report(params)
         #END report_metrics
 
@@ -288,6 +288,28 @@ This KBase SDK module implements methods for generating various KBase metrics.
                              'output is not type dict as required.')
         # return the results
         return [output]
+
+    def get_user_job_states(self, ctx, params):
+        """
+        :param params: instance of type "UserJobStatesParams" -> structure:
+           parameter "user_ids" of list of type "user_id" (A string for the
+           user id), parameter "before" of Long, parameter "after" of Long
+        :returns: instance of type "UserJobStatesResult" -> structure:
+           parameter "user_job_states" of unspecified object
+        """
+        # ctx is the context object
+        # return variables are: ujs_records
+        #BEGIN get_user_job_states
+        mdb = MetricsMongoDBController(self.config)
+        ujs_records = mdb.get_user_job_states(ctx['user_id'], params, ctx['token'])
+        #END get_user_job_states
+
+        # At some point might do deeper type checking...
+        if not isinstance(ujs_records, dict):
+            raise ValueError('Method get_user_job_states return value ' +
+                             'ujs_records is not type dict as required.')
+        # return the results
+        return [ujs_records]
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",

@@ -13,3 +13,5 @@ module-version:
 owners:
     [qzhang]
 
+service-config:
+    dynamic-service: true

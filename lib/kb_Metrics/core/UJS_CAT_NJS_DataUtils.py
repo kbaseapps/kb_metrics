@@ -70,6 +70,10 @@ def _convert_to_datetime(dt):
             new_dt = _datetime_from_utc(dt)
     return new_dt
 
+def _unix_time_millis(dt):
+    epoch = datetime.datetime.utcfromtimestamp(0)
+    return int((dt - epoch).total_seconds()*1000)
+
 
 class UJS_CAT_NJS_DataUtils:
 
@@ -112,27 +116,31 @@ class UJS_CAT_NJS_DataUtils:
                         None],
           'user_id': u'qzhang',
           'wsid': 25735},
-         {'app_id': u'kb_Metrics/report_metrics',
+         {'app_id': u'RAST_SDK/annotate_contigset',
           'canceled': 0,
-          'creation_time': 1510520157141,
+          'creation_time': 1485974151389,
           'error': 0,
-          'exec_start_time': 1510520158928,
-          'finish_time': 1510520225972,
+          'exec_start_time': 1485974156377,
+          'finish_time': 1485974703341,
           'finished': 1,
-          'job_desc': u'Execution engine job for kb_Metrics.report_metrics',
-          'job_id': u'5a08b55de4b088e4b0e0e59e',
+          'job_desc': u'Execution engine job for RAST_SDK.annotate_genome',
+          'job_id': u'58922a87e4b0c1af1bf0981b',
           'job_state': u'completed',
-          'method': u'report_metrics',
-          'module': u'kb_Metrics',
-          'result': [{u'report_name': None, u'report_ref': None}],
-          'run_time': '0:01:07',
+          'method': u'annotate_genome',
+          'module': u'RAST_SDK',
+          'result': [{u'id': u'Pantoea.ananatis_contigs_beta_out',
+                      u'report_name': u'Pantoea.ananatis_contigs_beta_out.report',
+                      u'report_ref': u'19268/62/1',
+                      u'workspace': u'qzhang:narrative_1485914570215',
+                      u'ws_report_id': u'Pantoea.ananatis_contigs_beta_out.report'}],
+          'run_time': '0:09:07',
           'stage': u'complete',
           'status': u'done',
-          'time_info': [u'2017-11-12T20:55:58+0000',
-                        u'2017-11-12T20:57:05+0000',
+          'time_info': [u'2017-02-01T18:35:56+0000',
+                        u'2017-02-01T18:45:03+0000',
                         None],
           'user_id': u'qzhang',
-          'wsid': 25735},
+          'wsid': 19268},
           ......
         ]
         """
@@ -144,19 +152,20 @@ class UJS_CAT_NJS_DataUtils:
         time_end = params['time_end']
         job_stage = params['job_stage']
 
-        ws_owners, ws_ids = self.get_user_workspaces(user_ids, 0, 0)
+        ws_owners, ws_ids = self.get_user_workspaces(user_ids, time_start, time_end, 0, 0)
         ujs_ret = self.get_user_and_job_states(ws_ids)
         total_ujs_count = len(ujs_ret)
         #log("Before time_stage filter:{}".format(total_ujs_count))
 
         jt_filtered_ujs = self.filterUJS_by_time_stage(ujs_ret, job_stage, time_start, time_end)
         period_ujs_count = len(jt_filtered_ujs)
+        jt_filtered_ujs = self.convert_time_info(jt_filtered_ujs)
         #log("After time_stage filter:{}".format(period_ujs_count))
         #user_grouped_ujs = self.group_by_user(jt_filtered_ujs, user_ids)
         return {'job_states':jt_filtered_ujs}
 
 
-    def get_user_workspaces(self, user_ids, showDeleted=0, showOnlyDeleted=0):
+    def get_user_workspaces(self, user_ids, st_time, ed_time, showDeleted=0, showOnlyDeleted=0):
         """
         get_user_workspaces: given the user ids, get a list of data structure as the example below:
         typedef tuple<ws_id id,
@@ -186,7 +195,8 @@ class UJS_CAT_NJS_DataUtils:
                         'showDeleted': showDeleted,
                         'showOnlyDeleted': showOnlyDeleted,
                         'perm':'r',
-                        'excludeGlobal': 1
+                        'after': st_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        'before': ed_time.strftime("%Y-%m-%dT%H:%M:%SZ")
                 })
 
         #log(pformat(ws_info))
@@ -304,7 +314,7 @@ class UJS_CAT_NJS_DataUtils:
                         u_j_s['job_state'] = jbs['job_state']
                         if jbs['job_state'] == 'suspend':
                             u_j_s['error'] = jbs['error']
-                        elif jbs['job_state'] == 'completed':
+                        elif (jbs['job_state'] == 'completed' and 'result' in u_j_s):
                             u_j_s['result'] = jbs['result']
 
                         u_j_s['finished'] = jbs['finished']
@@ -581,6 +591,16 @@ class UJS_CAT_NJS_DataUtils:
         return filtered_ujs
 
 
+    def convert_time_info(self, ujs_arr):
+        #convert time_info from [utc_string, utc_string, utc_string] to [epoch_timestamp*3]
+        for u_j_s in ujs_arr:
+            if u_j_s['time_info']:
+                #log("Before {}".format(pformat(u_j_s['time_info'])))
+                u_j_s['time_info'] = [_timestamp_from_utc(t_j) if t_j else None for t_j in u_j_s['time_info']]
+                #log("After {}".format(pformat(u_j_s['time_info'])))
+        return ujs_arr
+
+
     def init_clients(self, token):
         self.ws_client = Workspace(self.workspace_url, token=token)
         #self.cat_client = Catalog(self.callback_url)
@@ -730,7 +750,7 @@ class UJS_CAT_NJS_DataUtils:
         """
         log("Fetching profile info for {} users:\n".format(len(user_ids) if user_ids else 'all'))
         user_prof = self.uprf_client.get_user_profile(user_ids)
-        #log(pformat(user_prof))
+        log(pformat(user_prof))
         return user_prof
 
 

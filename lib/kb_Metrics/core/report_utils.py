@@ -25,8 +25,6 @@ from Catalog.CatalogClient import Catalog
 from NarrativeJobService.NarrativeJobServiceClient import NarrativeJobService
 from UserAndJobState.UserAndJobStateClient import UserAndJobState
 from kb_Metrics.core.UJS_CAT_NJS_DataUtils import UJS_CAT_NJS_DataUtils
-#import biokbase.narrative.clients as clients
-#from biokbase.catalog.Client import Catalog
 
 def log(message, prefix_newline=False):
     """Logging function, provides a hook to suppress or redirect log messages."""
@@ -109,8 +107,11 @@ class report_utils:
         elif stats_name == 'exec_aggr_table':
             ret_stats = self.statdu.get_exec_aggrTable_from_cat()
         elif stats_name == 'user_job_states':
-            ws_ids = self.statdu.get_user_workspaces(['qzhang'], 0, 0)#ws_ids = [str(25735), str(25244)]
-            ret_stats = self.statdu.get_user_and_job_states(ws_ids)
+            #ws_ids = self.statdu.get_user_workspaces(['qzhang'], 0, 0)
+            #ws_ids = [str(25735), str(25244)]
+            #ws_owners, ws_ids = self.get_user_workspaces(user_ids, time_start, time_end, 0, 0)
+            #ret_stats = self.statdu.get_user_and_job_states(ws_ids)
+            ret_stats = self.statdu.generate_app_metrics(params, self.token)
         else:
             pass
 
