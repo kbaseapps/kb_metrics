@@ -41,16 +41,62 @@ class MongoMetricsDBI:
         self.metricsDBs = dict()
         for db in mongo_dbs:
             self.metricsDBs[db] = self.mongo[db]
-            #self.userstate = self.metricsDBs[db][MongoMetricsDBI._USERSTATE]
-            self.jobstate = self.db[MongoMetricsDBI._JOBSTATE]
 
-        # Make sure we have an index on module and git_repo_url
+        #self.userstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._USERSTATE]
+        self.jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
+        self.kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2USERS]
+        self.kbtasks = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_TASKS]
+
+        # Make sure we have an index on user, created and updated
         #self.userstate.ensure_index(('created', ASCENDING), sparse=False)
         self.jobstate.ensure_index([
             ('user', ASCENDING),
             ('created', ASCENDING),
             ('updated',ASCENDING)],
             unique=True, sparse=False)
+
+        self.users.ensure_index([
+            ('user', ASCENDING),
+            ('create', ASCENDING),
+            ('login',ASCENDING)],
+            unique=True, sparse=False)
+
+        self.tasks.ensure_index([
+            ('user', ASCENDING),
+            ('create', ASCENDING),
+            ('login',ASCENDING)],
+            unique=True, sparse=False)
+
+    def list_user_tasks(self, username):
+        query = {'user':username}
+        projection = {
+                'app_job_id':1,
+                'ujs_job_id':1,
+                'job_input':1,
+                'job_output':1,
+                'exec_start_time':1,
+                'creation_time':1,
+                'finish_time':1
+        }
+        return list(self.users.find(
+                        query, projection,
+                        sort=[['creation_time', ASCENDING]]))
+
+
+    def list_user_details(self, username):
+        query = {'user':username}
+        projection = {
+                'user':1,
+                'email':1,
+                'roles':1,
+                'create':1,
+                'login':1,
+                'lastrst':1
+        }
+        return list(self.users.find(
+                        query, projection,
+                        sort=[['create', ASCENDING]]))
+
 
     def list_user_jobs(self, username):
         query = {'user':username}
