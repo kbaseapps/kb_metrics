@@ -29,22 +29,22 @@ class MongoMetricsDBI:
     '''
 
     def __init__(self, mongo_host, mongo_dbs, mongo_user, mongo_psswd):
-        # create the client
-        self.mongo = MongoClient('mongodb://'+mongo_host)
-        # Try to authenticate, will throw an exception if the user/psswd is not valid for the db
-        if(mongo_user and mongo_psswd):
-            self.mongo[mongo_dbs[0]].authenticate(mongo_user, mongo_psswd)
-
-        # Grab a handle to each of the databases and its collections
+        self.mongo_clients = dict()
         self.metricsDBs = dict()
-        for db in mongo_dbs:
-            self.metricsDBs[db] = self.mongo[db]
+        for m_db in mongo_dbs:
+	    # create the client and authenticate
+	    self.mongo_clients[m_db] = MongoClient("mongodb://"+mongo_user+":"+mongo_psswd
+						+"@"+mongo_host+"/"+m_db)
+	    # grab a handle to the database
+            self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
 
-        #self.userstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._USERSTATE]
+	# grab handles to the database collections needed
+        self.userstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._USERSTATE]
         self.jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
         self.kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2USERS]
         self.kbtasks = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_TASKS]
 
+	'''
         # Make sure we have an index on user, created and updated
         #self.userstate.ensure_index(('created', ASCENDING), sparse=False)
         self.jobstate.ensure_index([
@@ -52,22 +52,38 @@ class MongoMetricsDBI:
             ('created', ASCENDING),
             ('updated', ASCENDING)],
             unique=True, sparse=False)
-
-        self.users.ensure_index([
+        self.kbusers.ensure_index([
             ('user', ASCENDING),
             ('create', ASCENDING),
             ('login', ASCENDING)],
             unique=True, sparse=False)
 
-        self.tasks.ensure_index([
+        self.kbtasks.ensure_index([
             ('user', ASCENDING),
             ('create', ASCENDING),
             ('login', ASCENDING)],
             unique=True, sparse=False)
+	'''
 
-    def list_user_tasks(self, username):
-        query = {'user':username}
+    def list_user_tasks(self, userIds, minTime, maxTime):
+        filter = {}
+
+        userFilter = {}
+        if (userIds is not None and len(userIds) > 0):
+            userFilter['$in'] = userIds
+        if len(userFilter) > 0:
+            filter['user'] = userFilter
+
+        creationTimeFilter = {}
+        if minTime is not None:
+            creationTimeFilter['$gte'] = minTime
+        if maxTime is not None:
+            creationTimeFilter['$lte'] = maxTime
+        if len(creationTimeFilter) > 0:
+            filter['creation_time'] = creationTimeFilter
+
         projection = {
+		'user':1,
                 'app_job_id':1,
                 'ujs_job_id':1,
                 'job_input':1,
@@ -76,13 +92,28 @@ class MongoMetricsDBI:
                 'creation_time':1,
                 'finish_time':1
         }
-        return list(self.users.find(
-                        query, projection,
+        return list(self.kbtasks.find(
+                        filter, projection,
                         sort=[['creation_time', ASCENDING]]))
 
 
-    def list_user_details(self, username):
-        query = {'user': username}
+    def list_user_details(self, userIds, minTime, maxTime):
+        filter = {}
+
+        userFilter = {}
+        if (userIds is not None and len(userIds) > 0):
+            userFilter['$in'] = userIds
+        if len(userFilter) > 0:
+            filter['user'] = userFilter
+
+        creationTimeFilter = {}
+        if minTime is not None:
+            creationTimeFilter['$gte'] = minTime
+        if maxTime is not None:
+            creationTimeFilter['$lte'] = maxTime
+        if len(creationTimeFilter) > 0:
+            filter['create'] = creationTimeFilter
+
         projection = {
                 'user':1,
                 'email':1,
@@ -91,13 +122,27 @@ class MongoMetricsDBI:
                 'login':1,
                 'lastrst':1
         }
-        return list(self.users.find(
-                        query, projection,
+        return list(self.kbusers.find(
+                        filter, projection,
                         sort=[['create', ASCENDING]]))
 
 
-    def list_user_jobs(self, username):
-        query = {'user':username}
+    def list_user_jobs(self, userIds, minTime, maxTime):
+        filter = {}
+
+        userFilter = {}
+        if (userIds is not None and len(userIds) > 0):
+            userFilter['$in'] = userIds
+        if len(userFilter) > 0:
+            filter['user'] = userFilter
+
+        creationTimeFilter = {}
+        if minTime is not None:
+            creationTimeFilter['$gte'] = minTime
+        if maxTime is not None:
+            creationTimeFilter['$lte'] = maxTime
+        if len(creationTimeFilter) > 0:
+            filter['created'] = creationTimeFilter
 
         projection = {
                 'user':1,
@@ -120,16 +165,19 @@ class MongoMetricsDBI:
                 'service':1
         }
         return list(self.jobstate.find(
-                        query, projection,
-                        sort=[['created', ASCENDING]]))
+                        filter, projection#,
+                        ))#sort=[['created', ASCENDING]]))
 
 
-    def get_user_job_states(self, userIds, minTime, maxTime):
+    def list_user_job_states(self, userIds, minTime, maxTime):
         filter = {}
 
         userFilter = {}
         if (userIds is not None and len(userIds) > 0):
             userFilter['$in'] = userIds
+        if len(userFilter) > 0:
+            filter['user'] = userFilter
+
         creationTimeFilter = {}
         if minTime is not None:
             creationTimeFilter['$gte'] = minTime
@@ -137,8 +185,6 @@ class MongoMetricsDBI:
             creationTimeFilter['$lte'] = maxTime
         if len(creationTimeFilter) > 0:
             filter['created'] = creationTimeFilter
-        if len(userFilter) > 0:
-            filter['user'] = userFilter
 
         projection = {
                 'user':1,
@@ -161,5 +207,8 @@ class MongoMetricsDBI:
                 'service':1
         }
 
-        return list(self.jobstate.find(filter, projection))
+        #return list(self.jobstate.find(filter, projection))
+        return list(self.jobstate.find(
+                        filter, projection#,
+                        ))#sort=[['created', ASCENDING]]))
 

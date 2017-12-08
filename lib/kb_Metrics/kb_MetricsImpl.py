@@ -31,8 +31,8 @@ This KBase SDK module implements methods for generating various KBase metrics.
     # the latter method is running.
     ######################################### noqa
     VERSION = "0.0.1"
-    GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "53d7c09f840eb49b5df09a5c2a7e65d19e7b73cd"
+    GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
+    GIT_COMMIT_HASH = "51bc8f9bc75c8be23703246cebf1b1444114a13a"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -289,9 +289,53 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # return the results
         return [output]
 
+    def get_user_tasks(self, ctx, params):
+        """
+        :param params: instance of type "UserJobStatsParams" -> structure:
+           parameter "user_ids" of list of type "user_id" (A string for the
+           user id), parameter "before" of Long, parameter "after" of Long
+        :returns: instance of type "UserTasksResult" -> structure: parameter
+           "user_tasks" of unspecified object
+        """
+        # ctx is the context object
+        # return variables are: ujs_records
+        #BEGIN get_user_tasks
+        mdb = MetricsMongoDBController(self.config)
+        ujs_records = mdb.get_user_tasks(ctx['user_id'], params, ctx['token'])
+        #END get_user_tasks
+
+        # At some point might do deeper type checking...
+        if not isinstance(ujs_records, dict):
+            raise ValueError('Method get_user_tasks return value ' +
+                             'ujs_records is not type dict as required.')
+        # return the results
+        return [ujs_records]
+
+    def get_user_details(self, ctx, params):
+        """
+        :param params: instance of type "UserJobStatsParams" -> structure:
+           parameter "user_ids" of list of type "user_id" (A string for the
+           user id), parameter "before" of Long, parameter "after" of Long
+        :returns: instance of type "UserDetailsResult" -> structure:
+           parameter "user_details" of unspecified object
+        """
+        # ctx is the context object
+        # return variables are: ujs_records
+        #BEGIN get_user_details
+        mdb = MetricsMongoDBController(self.config)
+        ujs_records = mdb.get_user_details(ctx['user_id'], params, ctx['token'])
+        #END get_user_details
+
+        # At some point might do deeper type checking...
+        if not isinstance(ujs_records, dict):
+            raise ValueError('Method get_user_details return value ' +
+                             'ujs_records is not type dict as required.')
+        # return the results
+        return [ujs_records]
+
     def get_user_job_states(self, ctx, params):
         """
-        :param params: instance of type "UserJobStatesParams" -> structure:
+        :param params: instance of type "UserJobStatsParams" -> structure:
            parameter "user_ids" of list of type "user_id" (A string for the
            user id), parameter "before" of Long, parameter "after" of Long
         :returns: instance of type "UserJobStatesResult" -> structure:

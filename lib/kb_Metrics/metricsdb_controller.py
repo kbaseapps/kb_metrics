@@ -14,12 +14,18 @@ from datetime import datetime
 from urlparse import urlparse
 from kb_Metrics.metricsDBs import MongoMetricsDBI
 
+from Workspace.WorkspaceClient import Workspace as Workspace
+from Catalog.CatalogClient import Catalog
+from NarrativeJobService.NarrativeJobServiceClient import NarrativeJobService
+from UserAndJobState.UserAndJobStateClient import UserAndJobState
+from UserProfile.UserProfileClient import UserProfile
 
 class MetricsMongoDBController:
 
     def __init__(self, config):
         pprint("initializing mdb......")
-        pprint(config)
+        #pprint(config)
+	'''
         # first grab the admin list
         self.adminList = []
         if 'admin-users' in config:
@@ -29,7 +35,8 @@ class MetricsMongoDBController:
                     self.adminList.append(t.strip())
         if not self.adminList:  # pragma: no cover
             warnings.warn('no "admin-users" are set in config of MetricsMongoDBController.')
-
+	'''
+        self.workspace_url = config['workspace-url']
         # make sure the minimal mongo settings are in place
         if 'mongodb-host' not in config: # pragma: no cover
             raise ValueError('"mongodb-host" config variable must be defined to start a MetricsMongoDBController!')
@@ -45,15 +52,16 @@ class MetricsMongoDBController:
             warnings.warn('"mongodb-pwd" is not set in config of MetricsMongoDBController.')
             config['mongodb-pwd']=''
         # instantiate the mongo client
-        db_names = {'userjobstate'}
-        self.db = MongoMetricsDBI(
+        db_names = ['userjobstate', 'exec_engine', 'auth2']
+        self.metrics_dbi = MongoMetricsDBI(
                     config['mongodb-host'],
-                    db_names,#config['mongodb-database'],
+                    db_names, #[config['mongodb-database']]
                     config['mongodb-user'],
                     config['mongodb-pwd'])
 
 
     def get_user_job_states(self, requesting_user, params, token):
+	'''
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -62,6 +70,7 @@ class MetricsMongoDBController:
         self.njs_client = NarrativeJobService('https://ci.kbase.us/services/njs_wrapper', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.ujs_client = UserAndJobState('https://ci.kbase.us/services/userandjobstate', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.uprf_client = UserProfile('https://ci.kbase.us/services/user_profile/rpc', auth_svc='https://ci.kbase.us/services/auth/', token=token)
+	'''
 
         minTime = None
         maxTime = None
@@ -73,6 +82,50 @@ class MetricsMongoDBController:
         if 'user_ids' in params:
             user_ids = params['user_ids']
 
-        return self.db.get_user_job_states(user_ids, minTime, maxTime)
+        db_ret = self.metrics_dbi.list_user_job_states(user_ids, minTime, maxTime)
+        return {'user_job_states': db_ret}
 
 
+    def get_user_tasks(self, requesting_user, params, token):
+        minTime = None
+        maxTime = None
+        user_ids = None
+        if 'after' in params:
+            minTime = params['after']
+        if 'before' in params:
+            maxTime = params['before']
+        if 'user_ids' in params:
+            user_ids = params['user_ids']
+
+        db_ret = self.metrics_dbi.list_user_tasks(user_ids, minTime, maxTime)
+        return {'user_tasks': db_ret}
+
+
+    def get_user_details(self, requesting_user, params, token):
+        minTime = None
+        maxTime = None
+        user_ids = None
+        if 'after' in params:
+            minTime = params['after']
+        if 'before' in params:
+            maxTime = params['before']
+        if 'user_ids' in params:
+            user_ids = params['user_ids']
+
+        db_ret = self.metrics_dbi.list_user_details(user_ids, minTime, maxTime)
+        return {'user_details': db_ret}
+
+
+    def get_user_jobs(self, requesting_user, params, token):
+        minTime = None
+        maxTime = None
+        user_ids = None
+        if 'after' in params:
+            minTime = params['after']
+        if 'before' in params:
+            maxTime = params['before']
+        if 'user_ids' in params:
+            user_ids = params['user_ids']
+
+        db_ret = self.metrics_dbi.list_user_jobs(user_ids, minTime, maxTime)
+        return {'user_jobs': db_ret}
