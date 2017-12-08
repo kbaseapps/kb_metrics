@@ -29,13 +29,11 @@ class MongoMetricsDBI:
     '''
 
     def __init__(self, mongo_host, mongo_dbs, mongo_user, mongo_psswd):
-
         # create the client
         self.mongo = MongoClient('mongodb://'+mongo_host)
-
         # Try to authenticate, will throw an exception if the user/psswd is not valid for the db
         if(mongo_user and mongo_psswd):
-            self.mongo[mongo_db].authenticate(mongo_user, mongo_psswd)
+            self.mongo[mongo_dbs[0]].authenticate(mongo_user, mongo_psswd)
 
         # Grab a handle to each of the databases and its collections
         self.metricsDBs = dict()
@@ -52,19 +50,19 @@ class MongoMetricsDBI:
         self.jobstate.ensure_index([
             ('user', ASCENDING),
             ('created', ASCENDING),
-            ('updated',ASCENDING)],
+            ('updated', ASCENDING)],
             unique=True, sparse=False)
 
         self.users.ensure_index([
             ('user', ASCENDING),
             ('create', ASCENDING),
-            ('login',ASCENDING)],
+            ('login', ASCENDING)],
             unique=True, sparse=False)
 
         self.tasks.ensure_index([
             ('user', ASCENDING),
             ('create', ASCENDING),
-            ('login',ASCENDING)],
+            ('login', ASCENDING)],
             unique=True, sparse=False)
 
     def list_user_tasks(self, username):
@@ -84,7 +82,7 @@ class MongoMetricsDBI:
 
 
     def list_user_details(self, username):
-        query = {'user':username}
+        query = {'user': username}
         projection = {
                 'user':1,
                 'email':1,
