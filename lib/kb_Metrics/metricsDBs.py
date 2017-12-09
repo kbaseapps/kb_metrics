@@ -38,33 +38,6 @@ class MongoMetricsDBI:
 	    # grab a handle to the database
             self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
 
-	# grab handles to the database collections needed
-        self.userstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._USERSTATE]
-        self.jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
-        self.kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2USERS]
-        self.kbtasks = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_TASKS]
-
-	'''
-        # Make sure we have an index on user, created and updated
-        #self.userstate.ensure_index(('created', ASCENDING), sparse=False)
-        self.jobstate.ensure_index([
-            ('user', ASCENDING),
-            ('created', ASCENDING),
-            ('updated', ASCENDING)],
-            unique=True, sparse=False)
-        self.kbusers.ensure_index([
-            ('user', ASCENDING),
-            ('create', ASCENDING),
-            ('login', ASCENDING)],
-            unique=True, sparse=False)
-
-        self.kbtasks.ensure_index([
-            ('user', ASCENDING),
-            ('create', ASCENDING),
-            ('login', ASCENDING)],
-            unique=True, sparse=False)
-	'''
-
     def list_user_tasks(self, userIds, minTime, maxTime):
         filter = {}
 
@@ -92,6 +65,19 @@ class MongoMetricsDBI:
                 'creation_time':1,
                 'finish_time':1
         }
+
+	# grab handle(s) to the database collections needed
+        self.kbtasks = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_TASKS]
+
+	'''
+        # Make sure we have an index on user, created and updated
+        self.kbtasks.ensure_index([
+            ('user', ASCENDING),
+            ('create', ASCENDING),
+            ('login', ASCENDING)],
+            unique=True, sparse=False)
+	'''
+
         return list(self.kbtasks.find(
                         filter, projection,
                         sort=[['creation_time', ASCENDING]]))
@@ -122,6 +108,19 @@ class MongoMetricsDBI:
                 'login':1,
                 'lastrst':1
         }
+
+	# grab handle(s) to the database collections needed
+        self.kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2USERS]
+
+	'''
+        # Make sure we have an index on user, created and updated
+        self.kbusers.ensure_index([
+            ('user', ASCENDING),
+            ('create', ASCENDING),
+            ('login', ASCENDING)],
+            unique=True, sparse=False)
+	'''
+
         return list(self.kbusers.find(
                         filter, projection,
                         sort=[['create', ASCENDING]]))
@@ -164,6 +163,21 @@ class MongoMetricsDBI:
                 'results':1,
                 'service':1
         }
+
+	# grab handle(s) to the database collections needed
+        self.userstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._USERSTATE]
+        self.jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
+
+	'''
+        # Make sure we have an index on user, created and updated
+        self.userstate.ensure_index(('created', ASCENDING), sparse=False)
+        self.jobstate.ensure_index([
+            ('user', ASCENDING),
+            ('created', ASCENDING),
+            ('updated', ASCENDING)],
+            unique=True, sparse=False)
+	'''
+
         return list(self.jobstate.find(
                         filter, projection#,
                         ))#sort=[['created', ASCENDING]]))
@@ -206,6 +220,20 @@ class MongoMetricsDBI:
                 'results':1,
                 'service':1
         }
+
+	# grab handle(s) to the database collections needed
+        self.userstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._USERSTATE]
+        self.jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
+
+	'''
+        # Make sure we have an index on user, created and updated
+        self.userstate.ensure_index(('created', ASCENDING), sparse=False)
+        self.jobstate.ensure_index([
+            ('user', ASCENDING),
+            ('created', ASCENDING),
+            ('updated', ASCENDING)],
+            unique=True, sparse=False)
+	'''
 
         #return list(self.jobstate.find(filter, projection))
         return list(self.jobstate.find(

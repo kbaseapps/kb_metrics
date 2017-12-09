@@ -25,24 +25,30 @@ class MetricsMongoDBController:
     def __init__(self, config):
         pprint("initializing mdb......")
         #pprint(config)
-	'''
         # first grab the admin list
         self.adminList = []
         if 'admin-users' in config:
-            tokens = config['admin-users'].split(',')
-            for t in tokens:
-                if t.strip():
-                    self.adminList.append(t.strip())
+            adm_ids = config['admin-users'].split(',')
+            for a_id in adm_ids:
+                if a_id.strip():
+                    self.adminList.append(a_id.strip())
         if not self.adminList:  # pragma: no cover
             warnings.warn('no "admin-users" are set in config of MetricsMongoDBController.')
-	'''
+
         self.workspace_url = config['workspace-url']
         # make sure the minimal mongo settings are in place
         if 'mongodb-host' not in config: # pragma: no cover
             raise ValueError('"mongodb-host" config variable must be defined to start a MetricsMongoDBController!')
-        if 'mongodb-database' not in config: # pragma: no cover
-            raise ValueError('"mongodb-database" config variable must be defined to start a MetricsMongoDBController!')
-
+        if 'mongodb-databases' not in config: # pragma: no cover
+            raise ValueError('"mongodb-databases" config variable must be defined to start a MetricsMongoDBController!')
+	self.mongodb_dbList = []
+        if 'mongodb-databases' in config:
+            db_ids = config['mongodb-databases'].split(',')
+            for d_id in db_ids:
+                if d_id.strip():
+                    self.mongodb_dbList.append(d_id.strip())
+        if not self.mongodb_dbList:  # pragma: no cover
+            warnings.warn('no "mongodb-databases" are set in config of MetricsMongoDBController.')
         # give warnings if no mongo user information is set
         if 'mongodb-user' not in config: # pragma: no cover
             warnings.warn('"mongodb-user" is not set in config of MetricsMongoDBController.')
@@ -52,10 +58,9 @@ class MetricsMongoDBController:
             warnings.warn('"mongodb-pwd" is not set in config of MetricsMongoDBController.')
             config['mongodb-pwd']=''
         # instantiate the mongo client
-        db_names = ['userjobstate', 'exec_engine', 'auth2']
         self.metrics_dbi = MongoMetricsDBI(
                     config['mongodb-host'],
-                    db_names, #[config['mongodb-database']]
+ 		    self.mongodb_dbList,
                     config['mongodb-user'],
                     config['mongodb-pwd'])
 
@@ -129,3 +134,9 @@ class MetricsMongoDBController:
 
         db_ret = self.metrics_dbi.list_user_jobs(user_ids, minTime, maxTime)
         return {'user_jobs': db_ret}
+
+    def is_admin(self, username):
+        if username in self.adminList:
+            return True
+        return False
+
