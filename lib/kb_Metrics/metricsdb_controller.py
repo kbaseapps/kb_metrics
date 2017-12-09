@@ -35,7 +35,6 @@ class MetricsMongoDBController:
         if not self.adminList:  # pragma: no cover
             warnings.warn('no "admin-users" are set in config of MetricsMongoDBController.')
 
-        self.workspace_url = config['workspace-url']
         # make sure the minimal mongo settings are in place
         if 'mongodb-host' not in config: # pragma: no cover
             raise ValueError('"mongodb-host" config variable must be defined to start a MetricsMongoDBController!')
@@ -64,18 +63,19 @@ class MetricsMongoDBController:
                     config['mongodb-user'],
                     config['mongodb-pwd'])
 
-
-    def get_user_job_states(self, requesting_user, params, token):
+	#initialize clients for accessing other services
 	'''
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
+        self.workspace_url = config['workspace-url']
         self.ws_client = Workspace(self.workspace_url, token=token)
         self.cat_client = Catalog('https://ci.kbase.us/services/catalog', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.njs_client = NarrativeJobService('https://ci.kbase.us/services/njs_wrapper', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.ujs_client = UserAndJobState('https://ci.kbase.us/services/userandjobstate', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.uprf_client = UserProfile('https://ci.kbase.us/services/user_profile/rpc', auth_svc='https://ci.kbase.us/services/auth/', token=token)
 	'''
+
+    def get_user_job_states(self, requesting_user, params, token):
+        if not self.is_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
 
         minTime = None
         maxTime = None
@@ -92,6 +92,9 @@ class MetricsMongoDBController:
 
 
     def get_user_tasks(self, requesting_user, params, token):
+        if not self.is_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
         minTime = None
         maxTime = None
         user_ids = None
@@ -107,6 +110,9 @@ class MetricsMongoDBController:
 
 
     def get_user_details(self, requesting_user, params, token):
+        if not self.is_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
         minTime = None
         maxTime = None
         user_ids = None
@@ -122,6 +128,9 @@ class MetricsMongoDBController:
 
 
     def get_user_jobs(self, requesting_user, params, token):
+        if not self.is_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
         minTime = None
         maxTime = None
         user_ids = None
@@ -134,6 +143,7 @@ class MetricsMongoDBController:
 
         db_ret = self.metrics_dbi.list_user_jobs(user_ids, minTime, maxTime)
         return {'user_jobs': db_ret}
+
 
     def is_admin(self, username):
         if username in self.adminList:
