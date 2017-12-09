@@ -38,6 +38,7 @@ class MongoMetricsDBI:
 	    # grab a handle to the database
             self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
 
+    # functions to query the databases...
     def list_user_tasks(self, userIds, minTime, maxTime):
         filter = {}
 

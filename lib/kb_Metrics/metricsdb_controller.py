@@ -73,6 +73,7 @@ class MetricsMongoDBController:
         self.uprf_client = UserProfile('https://ci.kbase.us/services/user_profile/rpc', auth_svc='https://ci.kbase.us/services/auth/', token=token)
 	'''
 
+    # functions to get the requested records...
     def get_user_job_states(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
