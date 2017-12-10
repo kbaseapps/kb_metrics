@@ -23,10 +23,6 @@ class MongoMetricsDBI:
     _EXEC_TASKS='exec_tasks'#exec_engine.exec_tasks
     _TASK_QUEUE='task_queue'#exec_engine.task_queue
 
-    '''
-    To get the job's 'status', 'complete'=true/false, etc., we can do joining as follows
-    userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
-    '''
 
     def __init__(self, mongo_host, mongo_dbs, mongo_user, mongo_psswd):
         self.mongo_clients = dict()
@@ -38,15 +34,10 @@ class MongoMetricsDBI:
 	    # grab a handle to the database
             self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
 
-    # functions to query the databases...
-    def list_user_tasks(self, userIds, minTime, maxTime):
-        filter = {}
 
-        userFilter = {}
-        if (userIds is not None and len(userIds) > 0):
-            userFilter['$in'] = userIds
-        if len(userFilter) > 0:
-            filter['user'] = userFilter
+    # functions to query the databases...
+    def list_exec_tasks(self, minTime, maxTime):
+        filter = {}
 
         creationTimeFilter = {}
         if minTime is not None:
@@ -57,11 +48,13 @@ class MongoMetricsDBI:
             filter['creation_time'] = creationTimeFilter
 
         projection = {
-		'user':1,
                 'app_job_id':1,
+                'awe_job_id':1,
                 'ujs_job_id':1,
                 'job_input':1,
                 'job_output':1,
+		'input_shock_id':1,
+		'output_shock_id':1,
                 'exec_start_time':1,
                 'creation_time':1,
                 'finish_time':1
@@ -73,13 +66,48 @@ class MongoMetricsDBI:
 	'''
         # Make sure we have an index on user, created and updated
         self.kbtasks.ensure_index([
-            ('user', ASCENDING),
-            ('create', ASCENDING),
-            ('login', ASCENDING)],
+            ('app_job_id', ASCENDING),
+            ('creation_time', ASCENDING)],
             unique=True, sparse=False)
 	'''
 
         return list(self.kbtasks.find(
+                        filter, projection,
+                        sort=[['creation_time', ASCENDING]]))
+
+
+    def list_exec_apps(self, minTime, maxTime):
+        filter = {}
+
+        creationTimeFilter = {}
+        if minTime is not None:
+            creationTimeFilter['$gte'] = minTime
+        if maxTime is not None:
+            creationTimeFilter['$lte'] = maxTime
+        if len(creationTimeFilter) > 0:
+            filter['creation_time'] = creationTimeFilter
+
+        projection = {
+                'app_job_id':1,
+                'app_job_state':1,# 'completed', 'suspend', 'in-progress','queued'
+                'app_state_data':1,
+                'creation_time':1,
+                'modification_time':1
+        }
+
+	# grab handle(s) to the database collections needed
+        self.kbapps = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_APPS]
+
+	'''
+        # Make sure we have an index on user, created and updated
+        self.kbapps.ensure_index([
+            ('app_job_state', ASCENDING),
+            ('creation_time', ASCENDING),
+            ('modification_time', ASCENDING)],
+            unique=True, sparse=False)
+	'''
+
+        return list(self.kbapps.find(
                         filter, projection,
                         sort=[['creation_time', ASCENDING]]))
 
@@ -127,7 +155,7 @@ class MongoMetricsDBI:
                         sort=[['create', ASCENDING]]))
 
 
-    def list_user_jobs(self, userIds, minTime, maxTime):
+    def list_ujs_jobs(self, userIds, minTime, maxTime):
         filter = {}
 
         userFilter = {}
@@ -164,7 +192,6 @@ class MongoMetricsDBI:
                 'results':1,
                 'service':1
         }
-
 	# grab handle(s) to the database collections needed
         self.userstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._USERSTATE]
         self.jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
@@ -184,7 +211,7 @@ class MongoMetricsDBI:
                         ))#sort=[['created', ASCENDING]]))
 
 
-    def list_user_job_states(self, userIds, minTime, maxTime):
+    def list_ujs_results(self, userIds, minTime, maxTime):
         filter = {}
 
         userFilter = {}
@@ -206,20 +233,20 @@ class MongoMetricsDBI:
                 'created':1,
                 'started':1,
                 'updated':1,
-                'status':1,
-                'progtype':1,
-                'authparam':1,
-                'authstrat':1,
+                'status':1,# e.g., "ws.18657.obj.1", "initializing", "canceled by user", etc.
+                'progtype':1,# e.g., "percent", "task"
+                'authparam':1,# "DEFAULT" or workspace_id
+                'authstrat':1,# "DEFAULT" or "kbaseworkspace"
                 'complete':1,
                 'desc':1,
                 'error':1,
                 'errormsg':1,
-                'estcompl':1,
+                'estcompl':1,# e.g.,x ISODate("9999-04-03T08:56:32Z")
                 'maxprog':1,
                 'meta':1,
                 'prog':1,
                 'results':1,
-                'service':1
+                'service':1# e.g., "bulkio" or "qzhang"
         }
 
 	# grab handle(s) to the database collections needed

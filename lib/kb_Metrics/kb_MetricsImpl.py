@@ -301,7 +301,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # return variables are: ujs_records
         #BEGIN get_user_tasks
         mdb = MetricsMongoDBController(self.config)
-        ujs_records = mdb.get_user_tasks(ctx['user_id'], params, ctx['token'])
+        ujs_records = mdb.get_exec_tasks(ctx['user_id'], params, ctx['token'])
         #END get_user_tasks
 
         # At some point might do deeper type checking...
