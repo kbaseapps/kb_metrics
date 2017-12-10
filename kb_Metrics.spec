@@ -166,11 +166,18 @@ module kb_Metrics {
     } UserJobStatsParams;
 
     typedef structure {
-        UnspecifiedObject user_tasks;
-    } UserTasksResult;
+        UnspecifiedObject user_apps;
+    } ExecAppsResult;
     
-    funcdef get_user_tasks(UserJobStatsParams params)
-        returns (UserTasksResult ujs_records) authentication required;
+    funcdef get_exec_apps(UserJobStatsParams params)
+        returns (ExecAppsResult ujs_records) authentication required;
+
+    typedef structure {
+        UnspecifiedObject user_tasks;
+    } ExecTasksResult;
+    
+    funcdef get_exec_tasks(UserJobStatsParams params)
+        returns (ExecTasksResult ujs_records) authentication required;
 
     typedef structure {
         UnspecifiedObject user_details;
@@ -182,6 +189,9 @@ module kb_Metrics {
     typedef structure {
         UnspecifiedObject user_job_states;
     } UserJobStatesResult;
+
+    funcdef get_user_ujs_results(UserJobStatsParams params)
+        returns (UserJobStatesResult ujs_records) authentication required;
     
     funcdef get_user_job_states(UserJobStatsParams params)
         returns (UserJobStatesResult ujs_records) authentication required;

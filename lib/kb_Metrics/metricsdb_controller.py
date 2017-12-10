@@ -1,6 +1,7 @@
 import warnings
 import threading
 import time
+import datetime
 import copy
 import os
 import random
@@ -9,8 +10,7 @@ import uuid
 import codecs
 from copy import deepcopy
 
-from pprint import pprint
-from datetime import datetime
+from pprint import pprint, pformat
 from urlparse import urlparse
 from kb_Metrics.metricsDBs import MongoMetricsDBI
 
@@ -19,6 +19,23 @@ from Catalog.CatalogClient import Catalog
 from NarrativeJobService.NarrativeJobServiceClient import NarrativeJobService
 from UserAndJobState.UserAndJobStateClient import UserAndJobState
 from UserProfile.UserProfileClient import UserProfile
+
+def _datetime_from_utc(date_utc_str):
+    try:#for u'2017-08-27T17:29:37+0000'
+        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S+0000')
+    except ValueError as v_er:#for ISO-formatted date & time, e.g., u'2015-02-15T22:31:47.763Z'
+        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S.%fZ')
+    return dt
+
+def _convert_to_datetime(dt):
+    new_dt = dt
+    if (not isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime)):
+        if isinstance(dt, int):
+            new_dt = datetime.datetime.utcfromtimestamp(dt / 1000)
+        else:
+            new_dt = _datetime_from_utc(dt)
+    return new_dt
+
 
 class MetricsMongoDBController:
 
@@ -121,6 +138,9 @@ class MetricsMongoDBController:
         if 'user_ids' in params:
             user_ids = params['user_ids']
 
+	minTime = _convert_to_datetime(minTime)
+	maxTime = _convert_to_datetime(maxTime)
+
 	# query dbs to get lists of tasks and jobs
         exec_tasks = self.metrics_dbi.list_exec_tasks(minTime, maxTime)
 	#pprint(exec_tasks[0:2])
@@ -129,7 +149,7 @@ class MetricsMongoDBController:
 	#pprint(exec_apps[0:2])
 	pprint("\n******Found {} apps".format(len(exec_apps)))
         ujs_jobs = self.metrics_dbi.list_ujs_jobs(user_ids, minTime, maxTime)
-	#pprint(ujs_jobs[0:2])
+	pprint(ujs_jobs[0:2])
 	pprint("\n******Found {} ujs jobs".format(len(ujs_jobs)))
 
 	# combine/join the apps, tasks and jobs lists to get the final return data
@@ -141,7 +161,6 @@ class MetricsMongoDBController:
 		    ('ujs_job_id' in t and a['app_job_id'] == t['ujs_job_id'])):
 		    ta = deepcopy(t)
 		    ta['job_state'] = a['app_job_state']
-                #'app_job_state':1,# 'completed', 'suspend', 'in-progress','queued'
 		    #app_task_list['app_state_data'] = a['app_state_data']
 		    ta['modification_time'] = a['modification_time']
 		    app_task_list.append(ta)
@@ -218,6 +237,9 @@ class MetricsMongoDBController:
         if 'user_ids' in params:
             user_ids = params['user_ids']
 
+	minTime = _convert_to_datetime(minTime)
+	maxTime = _convert_to_datetime(maxTime)
+
         db_ret = self.metrics_dbi.list_ujs_results(user_ids, minTime, maxTime)
 
         return {'user_jobs': db_ret}
@@ -237,8 +259,11 @@ class MetricsMongoDBController:
         if 'user_ids' in params:
             user_ids = params['user_ids']
 
+	minTime = _convert_to_datetime(minTime)
+	maxTime = _convert_to_datetime(maxTime)
+
         db_ret = self.metrics_dbi.list_exec_apps(minTime, maxTime)
-        return {'user_tasks': db_ret}
+        return {'user_apps': db_ret}
 
 
     def get_exec_tasks(self, requesting_user, params, token):
@@ -254,6 +279,9 @@ class MetricsMongoDBController:
             maxTime = params['before']
         if 'user_ids' in params:
             user_ids = params['user_ids']
+
+	minTime = _convert_to_datetime(minTime)
+	maxTime = _convert_to_datetime(maxTime)
 
         db_ret = self.metrics_dbi.list_exec_tasks(minTime, maxTime)
         return {'user_tasks': db_ret}
@@ -273,11 +301,14 @@ class MetricsMongoDBController:
         if 'user_ids' in params:
             user_ids = params['user_ids']
 
+	minTime = _convert_to_datetime(minTime)
+	maxTime = _convert_to_datetime(maxTime)
+
         db_ret = self.metrics_dbi.list_user_details(user_ids, minTime, maxTime)
         return {'user_details': db_ret}
 
 
-    def get_user_jobs(self, requesting_user, params, token):
+    def get_ujs_jobs(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -291,8 +322,11 @@ class MetricsMongoDBController:
         if 'user_ids' in params:
             user_ids = params['user_ids']
 
-        db_ret = self.metrics_dbi.list_user_job_states(user_ids, minTime, maxTime)
-        return {'user_jobs': db_ret}
+	minTime = _convert_to_datetime(minTime)
+	maxTime = _convert_to_datetime(maxTime)
+
+        db_ret = self.metrics_dbi.list_ujs_results(user_ids, minTime, maxTime)
+        return {'user_ujs_results': db_ret}
 
 
     def is_admin(self, username):
