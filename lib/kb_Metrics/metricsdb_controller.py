@@ -133,13 +133,12 @@ class MetricsMongoDBController:
         user_ids = None
         if 'after' in params:
             minTime = params['after']
+	    minTime = _convert_to_datetime(minTime)
         if 'before' in params:
             maxTime = params['before']
+	    maxTime = _convert_to_datetime(maxTime)
         if 'user_ids' in params:
             user_ids = params['user_ids']
-
-	minTime = _convert_to_datetime(minTime)
-	maxTime = _convert_to_datetime(maxTime)
 
 	# query dbs to get lists of tasks and jobs
         exec_tasks = self.metrics_dbi.list_exec_tasks(minTime, maxTime)
@@ -232,13 +231,12 @@ class MetricsMongoDBController:
         user_ids = None
         if 'after' in params:
             minTime = params['after']
+	    minTime = _convert_to_datetime(minTime)
         if 'before' in params:
             maxTime = params['before']
+	    maxTime = _convert_to_datetime(maxTime)
         if 'user_ids' in params:
             user_ids = params['user_ids']
-
-	minTime = _convert_to_datetime(minTime)
-	maxTime = _convert_to_datetime(maxTime)
 
         db_ret = self.metrics_dbi.list_ujs_results(user_ids, minTime, maxTime)
 
@@ -254,13 +252,13 @@ class MetricsMongoDBController:
         user_ids = None
         if 'after' in params:
             minTime = params['after']
+	    minTime = _convert_to_datetime(minTime)
         if 'before' in params:
             maxTime = params['before']
+	    maxTime = _convert_to_datetime(maxTime)
         if 'user_ids' in params:
             user_ids = params['user_ids']
 
-	minTime = _convert_to_datetime(minTime)
-	maxTime = _convert_to_datetime(maxTime)
 
         db_ret = self.metrics_dbi.list_exec_apps(minTime, maxTime)
         return {'user_apps': db_ret}
@@ -275,13 +273,12 @@ class MetricsMongoDBController:
         user_ids = None
         if 'after' in params:
             minTime = params['after']
+	    minTime = _convert_to_datetime(minTime)
         if 'before' in params:
             maxTime = params['before']
+	    maxTime = _convert_to_datetime(maxTime)
         if 'user_ids' in params:
             user_ids = params['user_ids']
-
-	minTime = _convert_to_datetime(minTime)
-	maxTime = _convert_to_datetime(maxTime)
 
         db_ret = self.metrics_dbi.list_exec_tasks(minTime, maxTime)
         return {'user_tasks': db_ret}
@@ -296,13 +293,12 @@ class MetricsMongoDBController:
         user_ids = None
         if 'after' in params:
             minTime = params['after']
+	    minTime = _convert_to_datetime(minTime)
         if 'before' in params:
             maxTime = params['before']
+	    maxTime = _convert_to_datetime(maxTime)
         if 'user_ids' in params:
             user_ids = params['user_ids']
-
-	minTime = _convert_to_datetime(minTime)
-	maxTime = _convert_to_datetime(maxTime)
 
         db_ret = self.metrics_dbi.list_user_details(user_ids, minTime, maxTime)
         return {'user_details': db_ret}
@@ -317,13 +313,12 @@ class MetricsMongoDBController:
         user_ids = None
         if 'after' in params:
             minTime = params['after']
+	    minTime = _convert_to_datetime(minTime)
         if 'before' in params:
             maxTime = params['before']
+	    maxTime = _convert_to_datetime(maxTime)
         if 'user_ids' in params:
             user_ids = params['user_ids']
-
-	minTime = _convert_to_datetime(minTime)
-	maxTime = _convert_to_datetime(maxTime)
 
         db_ret = self.metrics_dbi.list_ujs_results(user_ids, minTime, maxTime)
         return {'user_ujs_results': db_ret}
