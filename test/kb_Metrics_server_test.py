@@ -208,60 +208,55 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['user_metrics'][0:10]))
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_run_get_user_job_states")
+    #@unittest.skip("skipped test_run_get_user_job_states")
     def test_run_get_user_job_states(self):
         m_params = {
             'user_ids':['qzhang'],#'user_ids': [],
-            'after': u'2016-08-27T17:29:37+0000',#1505875876000,
-            'before': u'2017-11-27T17:29:42+0000'#1505876263000
+            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_job_states(self.getContext(), m_params)
-        print(pformat(ret[0]['user_job_states'][0:10]))
+        print(pformat(ret[0]['ujs_results'][0:10]))
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_exec_apps")
+    @unittest.skip("skipped test_run_get_exec_apps")
     def test_run_get_exec_apps(self):
         m_params = {
-            'user_ids':[]#,#['qzhang'],#'user_ids': [],
-            #'after': u'2016-08-27T17:29:37+0000',#1505875876000,
-            #'before': u'2017-11-27T17:29:42+0000'#1505876263000
+            'user_ids':[],#['qzhang'],#'user_ids': [],
+            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
         }
         # Second, call your implementation
         ret = self.getImpl().get_exec_apps(self.getContext(), m_params)
         print(pformat(ret[0]['user_apps'][0:10]))
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_exec_tasks")
+    @unittest.skip("skipped test_run_get_exec_tasks")
     def test_run_get_exec_tasks(self):
         m_params = {
-            'user_ids':[]#,#['qzhang'],#'user_ids': [],
-            #'after': u'2016-08-27T17:29:37+0000',#1505875876000,
-            #'before': u'2017-11-27T17:29:42+0000'#1505876263000
+            'user_ids':[],#['qzhang'],#'user_ids': [],
+            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
         }
         # Second, call your implementation
         ret = self.getImpl().get_exec_tasks(self.getContext(), m_params)
         print(pformat(ret[0]['user_tasks'][0:10]))
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_ujs_results")
+    @unittest.skip("skipped test_run_get_user_ujs_results")
     def test_run_get_user_ujs_results(self):
         m_params = {
-            'user_ids':[]#,#['qzhang'],#'user_ids': [],
-            #'after': 1505875876000,
-            #'before':1505876263000
+            'user_ids':[],#['qzhang'],#'user_ids': [],
+            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_ujs_results(self.getContext(), m_params)
-        print(pformat(ret[0]['user_ujs_results'][0:10]))
+        print(pformat(ret[0]['ujs_results'][0:10]))
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_details")
     def test_run_get_user_details(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
-            'after': 1505875876000,
-            'before':1505876263000
+            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_details(self.getContext(), m_params)

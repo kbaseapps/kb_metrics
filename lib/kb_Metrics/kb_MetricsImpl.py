@@ -32,7 +32,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "481191d936fd5faa4a3a357d98fd6574447f30e1"
+    GIT_COMMIT_HASH = "c785743e96611b8f6ede38d32c845c26367d61a7"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -293,81 +293,97 @@ This KBase SDK module implements methods for generating various KBase metrics.
         """
         :param params: instance of type "UserJobStatsParams" -> structure:
            parameter "user_ids" of list of type "user_id" (A string for the
-           user id), parameter "before" of Long, parameter "after" of Long
+           user id), parameter "epoch_range" of type "epoch_range" -> tuple
+           of size 2: parameter "t_lowerbound" of type "epoch" (A Unix epoch
+           (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "t_upperbound" of type "epoch" (A Unix epoch (the time
+           since 00:00:00 1/1/1970 UTC) in milliseconds.)
         :returns: instance of type "ExecAppsResult" -> structure: parameter
-           "user_tasks" of unspecified object
+           "user_apps" of unspecified object
         """
         # ctx is the context object
-        # return variables are: ujs_records
+        # return variables are: app_records
         #BEGIN get_exec_apps
         mdb = MetricsMongoDBController(self.config)
-        ujs_records = mdb.get_exec_apps(ctx['user_id'], params, ctx['token'])
+        app_records = mdb.get_exec_apps(ctx['user_id'], params, ctx['token'])
         #END get_exec_apps
 
         # At some point might do deeper type checking...
-        if not isinstance(ujs_records, dict):
+        if not isinstance(app_records, dict):
             raise ValueError('Method get_exec_apps return value ' +
-                             'ujs_records is not type dict as required.')
+                             'app_records is not type dict as required.')
         # return the results
-        return [ujs_records]
+        return [app_records]
 
     def get_exec_tasks(self, ctx, params):
         """
         :param params: instance of type "UserJobStatsParams" -> structure:
            parameter "user_ids" of list of type "user_id" (A string for the
-           user id), parameter "before" of Long, parameter "after" of Long
+           user id), parameter "epoch_range" of type "epoch_range" -> tuple
+           of size 2: parameter "t_lowerbound" of type "epoch" (A Unix epoch
+           (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "t_upperbound" of type "epoch" (A Unix epoch (the time
+           since 00:00:00 1/1/1970 UTC) in milliseconds.)
         :returns: instance of type "ExecTasksResult" -> structure: parameter
            "user_tasks" of unspecified object
         """
         # ctx is the context object
-        # return variables are: ujs_records
+        # return variables are: task_records
         #BEGIN get_exec_tasks
         mdb = MetricsMongoDBController(self.config)
-        ujs_records = mdb.get_exec_tasks(ctx['user_id'], params, ctx['token'])
+        task_records = mdb.get_exec_tasks(ctx['user_id'], params, ctx['token'])
         #END get_exec_tasks
 
         # At some point might do deeper type checking...
-        if not isinstance(ujs_records, dict):
+        if not isinstance(task_records, dict):
             raise ValueError('Method get_exec_tasks return value ' +
-                             'ujs_records is not type dict as required.')
+                             'task_records is not type dict as required.')
         # return the results
-        return [ujs_records]
+        return [task_records]
 
     def get_user_details(self, ctx, params):
         """
         :param params: instance of type "UserJobStatsParams" -> structure:
            parameter "user_ids" of list of type "user_id" (A string for the
-           user id), parameter "before" of Long, parameter "after" of Long
+           user id), parameter "epoch_range" of type "epoch_range" -> tuple
+           of size 2: parameter "t_lowerbound" of type "epoch" (A Unix epoch
+           (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "t_upperbound" of type "epoch" (A Unix epoch (the time
+           since 00:00:00 1/1/1970 UTC) in milliseconds.)
         :returns: instance of type "UserDetailsResult" -> structure:
            parameter "user_details" of unspecified object
         """
         # ctx is the context object
-        # return variables are: ujs_records
+        # return variables are: user_records
         #BEGIN get_user_details
         mdb = MetricsMongoDBController(self.config)
-        ujs_records = mdb.get_user_details(ctx['user_id'], params, ctx['token'])
+        user_records = mdb.get_user_details(ctx['user_id'], params, ctx['token'])
         #END get_user_details
 
         # At some point might do deeper type checking...
-        if not isinstance(ujs_records, dict):
+        if not isinstance(user_records, dict):
             raise ValueError('Method get_user_details return value ' +
-                             'ujs_records is not type dict as required.')
+                             'user_records is not type dict as required.')
         # return the results
-        return [ujs_records]
+        return [user_records]
 
     def get_user_ujs_results(self, ctx, params):
         """
         :param params: instance of type "UserJobStatsParams" -> structure:
            parameter "user_ids" of list of type "user_id" (A string for the
-           user id), parameter "before" of Long, parameter "after" of Long
+           user id), parameter "epoch_range" of type "epoch_range" -> tuple
+           of size 2: parameter "t_lowerbound" of type "epoch" (A Unix epoch
+           (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "t_upperbound" of type "epoch" (A Unix epoch (the time
+           since 00:00:00 1/1/1970 UTC) in milliseconds.)
         :returns: instance of type "UserJobStatesResult" -> structure:
-           parameter "user_job_states" of unspecified object
+           parameter "ujs_results" of unspecified object
         """
         # ctx is the context object
         # return variables are: ujs_records
         #BEGIN get_user_ujs_results
         mdb = MetricsMongoDBController(self.config)
-        ujs_records = mdb.get_ujs_jobs(ctx['user_id'], params, ctx['token'])
+        ujs_records = mdb.get_ujs_results(ctx['user_id'], params, ctx['token'])
         #END get_user_ujs_results
 
         # At some point might do deeper type checking...
@@ -381,9 +397,13 @@ This KBase SDK module implements methods for generating various KBase metrics.
         """
         :param params: instance of type "UserJobStatsParams" -> structure:
            parameter "user_ids" of list of type "user_id" (A string for the
-           user id), parameter "before" of Long, parameter "after" of Long
+           user id), parameter "epoch_range" of type "epoch_range" -> tuple
+           of size 2: parameter "t_lowerbound" of type "epoch" (A Unix epoch
+           (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "t_upperbound" of type "epoch" (A Unix epoch (the time
+           since 00:00:00 1/1/1970 UTC) in milliseconds.)
         :returns: instance of type "UserJobStatesResult" -> structure:
-           parameter "user_job_states" of unspecified object
+           parameter "ujs_results" of unspecified object
         """
         # ctx is the context object
         # return variables are: ujs_records

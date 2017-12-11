@@ -1,9 +1,22 @@
 import json
-import pprint
+from pprint import pprint, pformat
 import copy
+import datetime
 from pymongo import MongoClient
 from pymongo import ASCENDING
 from pymongo import DESCENDING
+
+
+def _convert_to_datetime(dt):
+    new_dt = dt
+    if (not isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime)):
+        if isinstance(dt, int):# miliseconds
+            new_dt = datetime.datetime.utcfromtimestamp(dt / 1000)
+	    #pprint(new_dt)
+        else:
+            new_dt = _datetime_from_utc(dt)
+    return new_dt
+
 
 class MongoMetricsDBI:
 
@@ -55,11 +68,10 @@ class MongoMetricsDBI:
                 'job_output':1,
 		'input_shock_id':1,
 		'output_shock_id':1,
-                'exec_start_time':1,
-                'creation_time':1,
+                'exec_start_time':1,#1449160731753L--miliseconds
+                'creation_time':1,#1449160731753L
                 'finish_time':1
         }
-
 	# grab handle(s) to the database collections needed
         self.kbtasks = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_TASKS]
 
@@ -91,7 +103,7 @@ class MongoMetricsDBI:
                 'app_job_id':1,
                 'app_job_state':1,# 'completed', 'suspend', 'in-progress','queued'
                 'app_state_data':1,
-                'creation_time':1,
+                'creation_time':1,#
                 'modification_time':1
         }
 
@@ -121,19 +133,19 @@ class MongoMetricsDBI:
         if len(userFilter) > 0:
             filter['user'] = userFilter
 
-        creationTimeFilter = {}
+        createFilter = {}
         if minTime is not None:
-            creationTimeFilter['$gte'] = minTime
+            createFilter['$gte'] = _convert_to_datetime(minTime)
         if maxTime is not None:
-            creationTimeFilter['$lte'] = maxTime
-        if len(creationTimeFilter) > 0:
-            filter['create'] = creationTimeFilter
+            createFilter['$lte'] = _convert_to_datetime(maxTime)
+        if len(createFilter) > 0:
+            filter['create'] = createFilter
 
         projection = {
                 'user':1,
                 'email':1,
                 'roles':1,
-                'create':1,
+                'create':1,#ISODate("2017-05-24T22:52:27.990Z")
                 'login':1,
                 'lastrst':1
         }
@@ -155,62 +167,6 @@ class MongoMetricsDBI:
                         sort=[['create', ASCENDING]]))
 
 
-    def list_ujs_jobs(self, userIds, minTime, maxTime):
-        filter = {}
-
-        userFilter = {}
-        if (userIds is not None and len(userIds) > 0):
-            userFilter['$in'] = userIds
-        if len(userFilter) > 0:
-            filter['user'] = userFilter
-
-        creationTimeFilter = {}
-        if minTime is not None:
-            creationTimeFilter['$gte'] = minTime
-        if maxTime is not None:
-            creationTimeFilter['$lte'] = maxTime
-        if len(creationTimeFilter) > 0:
-            filter['created'] = creationTimeFilter
-
-        projection = {
-                'user':1,
-                'created':1,
-                'started':1,
-                'updated':1,
-                'status':1,
-                'progtype':1,
-                'authparam':1,
-                'authstrat':1,
-                'complete':1,
-                'desc':1,
-                'error':1,
-                'errormsg':1,
-                'estcompl':1,
-                'maxprog':1,
-                'meta':1,
-                'prog':1,
-                'results':1,
-                'service':1
-        }
-	# grab handle(s) to the database collections needed
-        self.userstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._USERSTATE]
-        self.jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
-
-	'''
-        # Make sure we have an index on user, created and updated
-        self.userstate.ensure_index(('created', ASCENDING), sparse=False)
-        self.jobstate.ensure_index([
-            ('user', ASCENDING),
-            ('created', ASCENDING),
-            ('updated', ASCENDING)],
-            unique=True, sparse=False)
-	'''
-
-        return list(self.jobstate.find(
-                        filter, projection#,
-                        ))#sort=[['created', ASCENDING]]))
-
-
     def list_ujs_results(self, userIds, minTime, maxTime):
         filter = {}
 
@@ -220,17 +176,17 @@ class MongoMetricsDBI:
         if len(userFilter) > 0:
             filter['user'] = userFilter
 
-        creationTimeFilter = {}
+        createdFilter = {}
         if minTime is not None:
-            creationTimeFilter['$gte'] = minTime
+            createdFilter['$gte'] = _convert_to_datetime(minTime)
         if maxTime is not None:
-            creationTimeFilter['$lte'] = maxTime
-        if len(creationTimeFilter) > 0:
-            filter['created'] = creationTimeFilter
+            createdFilter['$lte'] = _convert_to_datetime(maxTime)
+        if len(createdFilter) > 0:
+            filter['created'] = createdFilter
 
         projection = {
                 'user':1,
-                'created':1,
+                'created':1,#datetime.datetime(2015, 1, 9, 19, 36, 8, 561000)
                 'started':1,
                 'updated':1,
                 'status':1,# e.g., "ws.18657.obj.1", "initializing", "canceled by user", etc.

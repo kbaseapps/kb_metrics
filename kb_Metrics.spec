@@ -126,6 +126,7 @@ module kb_Metrics {
         A time range defined by its lower and upper bound.
     */
     typedef tuple<timestamp t_lowerbound, timestamp t_upperbound> time_range;
+    typedef tuple<epoch t_lowerbound, epoch t_upperbound> epoch_range;
     
     /*job_stage has one of 'created', 'started', 'complete', 'canceled', 'error' or 'all' (default)*/
     typedef structure {
@@ -161,8 +162,7 @@ module kb_Metrics {
     
     typedef structure {
         list<user_id> user_ids;
-        int before;
-        int after;
+        epoch_range epoch_range;
     } UserJobStatsParams;
 
     typedef structure {
@@ -170,24 +170,24 @@ module kb_Metrics {
     } ExecAppsResult;
     
     funcdef get_exec_apps(UserJobStatsParams params)
-        returns (ExecAppsResult ujs_records) authentication required;
+        returns (ExecAppsResult app_records) authentication required;
 
     typedef structure {
         UnspecifiedObject user_tasks;
     } ExecTasksResult;
     
     funcdef get_exec_tasks(UserJobStatsParams params)
-        returns (ExecTasksResult ujs_records) authentication required;
+        returns (ExecTasksResult task_records) authentication required;
 
     typedef structure {
         UnspecifiedObject user_details;
     } UserDetailsResult;
     
     funcdef get_user_details(UserJobStatsParams params)
-        returns (UserDetailsResult ujs_records) authentication required;
+        returns (UserDetailsResult user_records) authentication required;
 
     typedef structure {
-        UnspecifiedObject user_job_states;
+        UnspecifiedObject ujs_results;
     } UserJobStatesResult;
 
     funcdef get_user_ujs_results(UserJobStatsParams params)

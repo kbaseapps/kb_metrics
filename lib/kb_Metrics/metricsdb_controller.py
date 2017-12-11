@@ -8,7 +8,6 @@ import random
 import re
 import uuid
 import codecs
-from copy import deepcopy
 
 from pprint import pprint, pformat
 from urlparse import urlparse
@@ -20,21 +19,20 @@ from NarrativeJobService.NarrativeJobServiceClient import NarrativeJobService
 from UserAndJobState.UserAndJobStateClient import UserAndJobState
 from UserProfile.UserProfileClient import UserProfile
 
+def _timestamp_from_utc(date_utc_str):
+    dt = _datetime_from_utc(date_utc_str)
+    return int(time.mktime(dt.timetuple())) #in miliseconds
+
+def _unix_time_millis_from_datetime(dt):
+    epoch = datetime.datetime.utcfromtimestamp(0)
+    return int((dt - epoch).total_seconds()*1000)
+
 def _datetime_from_utc(date_utc_str):
     try:#for u'2017-08-27T17:29:37+0000'
         dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S+0000')
     except ValueError as v_er:#for ISO-formatted date & time, e.g., u'2015-02-15T22:31:47.763Z'
         dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S.%fZ')
     return dt
-
-def _convert_to_datetime(dt):
-    new_dt = dt
-    if (not isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime)):
-        if isinstance(dt, int):
-            new_dt = datetime.datetime.utcfromtimestamp(dt / 1000)
-        else:
-            new_dt = _datetime_from_utc(dt)
-    return new_dt
 
 
 class MetricsMongoDBController:
@@ -128,37 +126,27 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-        minTime = None
-        maxTime = None
-        user_ids = None
-        if 'after' in params:
-            minTime = params['after']
-	    minTime = _convert_to_datetime(minTime)
-        if 'before' in params:
-            maxTime = params['before']
-	    maxTime = _convert_to_datetime(maxTime)
-        if 'user_ids' in params:
-            user_ids = params['user_ids']
+	params = self.process_parameters(params)
 
 	# query dbs to get lists of tasks and jobs
-        exec_tasks = self.metrics_dbi.list_exec_tasks(minTime, maxTime)
+        exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
 	#pprint(exec_tasks[0:2])
 	pprint("\n******Found {} tasks".format(len(exec_tasks)))
-        exec_apps = self.metrics_dbi.list_exec_apps(minTime, maxTime)
+        exec_apps = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
 	#pprint(exec_apps[0:2])
 	pprint("\n******Found {} apps".format(len(exec_apps)))
-        ujs_jobs = self.metrics_dbi.list_ujs_jobs(user_ids, minTime, maxTime)
-	pprint(ujs_jobs[0:2])
+	ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
+	#pprint(ujs_jobs[0:2])
 	pprint("\n******Found {} ujs jobs".format(len(ujs_jobs)))
 
 	# combine/join the apps, tasks and jobs lists to get the final return data
 	# 1) combine/join the apps and tasks to get the app_task_list
-	app_task_list = [] #deepcopy(exec_tasks) 
+	app_task_list = [] 
 	for a in exec_apps:
 	    for t in exec_tasks:
 		if (('app_job_id' in t and a['app_job_id'] == t['app_job_id']) or
 		    ('ujs_job_id' in t and a['app_job_id'] == t['ujs_job_id'])):
-		    ta = deepcopy(t)
+		    ta = copy.deepcopy(t)
 		    ta['job_state'] = a['app_job_state']
 		    #app_task_list['app_state_data'] = a['app_state_data']
 		    ta['modification_time'] = a['modification_time']
@@ -170,7 +158,7 @@ class MetricsMongoDBController:
 	for j in ujs_jobs:
 	    for lat in app_task_list:
 		if lat['ujs_job_id'] == j['_id']:
-		    j_a_t = deepcopy(j)
+		    j_a_t = copy.deepcopy(j)
 		    # from app_task_list
 		    #j_a_t['app_job_id'] = lat['app_job_id']
 		    j_a_t['creation_time'] = lat['creation_time']
@@ -182,8 +170,13 @@ class MetricsMongoDBController:
 		    if lat['modification_time']:
 			j_a_t['modification_time'] = lat['modification_time']
 		    if lat['job_input']:
-			    j_a_t['app_id'] = lat['job_input']['method']
 			    j_a_t['job_input'] = lat['job_input']
+			    if 'app_id' in lat['job_input']:
+			        j_a_t['app_id'] = lat['job_input']['app_id']
+			    if 'method' in lat['job_input']:
+			        j_a_t['method'] = lat['job_input']['method']
+			    if 'wsid' in lat['job_input']:
+				j_a_t['wsid'] = lat['job_input']['wsid']
 		    if lat['job_output']:
 		        j_a_t['job_output'] = lat['job_output']
 		    if (lat['job_state'] == 'completed' or 
@@ -197,10 +190,10 @@ class MetricsMongoDBController:
 
 		    ujs_ret.append(j_a_t)
 
-        return {'user_job_states': ujs_ret}
+        return {'ujs_results': ujs_ret}
 
 
-    def get_ujs_jobs(self, requesting_user, params, token):
+    def get_ujs_results(self, requesting_user, params, token):
 	'''
         jobs = {
                 'user':1,
@@ -226,41 +219,21 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-        minTime = None
-        maxTime = None
-        user_ids = None
-        if 'after' in params:
-            minTime = params['after']
-	    minTime = _convert_to_datetime(minTime)
-        if 'before' in params:
-            maxTime = params['before']
-	    maxTime = _convert_to_datetime(maxTime)
-        if 'user_ids' in params:
-            user_ids = params['user_ids']
+	params = self.process_parameters(params)
 
-        db_ret = self.metrics_dbi.list_ujs_results(user_ids, minTime, maxTime)
+        db_ret = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
 
-        return {'user_jobs': db_ret}
+        return {'ujs_results': db_ret}
 
 
     def get_exec_apps(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-        minTime = None
-        maxTime = None
-        user_ids = None
-        if 'after' in params:
-            minTime = params['after']
-	    minTime = _convert_to_datetime(minTime)
-        if 'before' in params:
-            maxTime = params['before']
-	    maxTime = _convert_to_datetime(maxTime)
-        if 'user_ids' in params:
-            user_ids = params['user_ids']
+	params = self.process_parameters(params)
 
+        db_ret = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
 
-        db_ret = self.metrics_dbi.list_exec_apps(minTime, maxTime)
         return {'user_apps': db_ret}
 
 
@@ -268,19 +241,10 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-        minTime = None
-        maxTime = None
-        user_ids = None
-        if 'after' in params:
-            minTime = params['after']
-	    minTime = _convert_to_datetime(minTime)
-        if 'before' in params:
-            maxTime = params['before']
-	    maxTime = _convert_to_datetime(maxTime)
-        if 'user_ids' in params:
-            user_ids = params['user_ids']
+	params = self.process_parameters(params)
 
-        db_ret = self.metrics_dbi.list_exec_tasks(minTime, maxTime)
+        db_ret = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
+
         return {'user_tasks': db_ret}
 
 
@@ -288,40 +252,30 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-        minTime = None
-        maxTime = None
-        user_ids = None
-        if 'after' in params:
-            minTime = params['after']
-	    minTime = _convert_to_datetime(minTime)
-        if 'before' in params:
-            maxTime = params['before']
-	    maxTime = _convert_to_datetime(maxTime)
-        if 'user_ids' in params:
-            user_ids = params['user_ids']
+	params = self.process_parameters(params)
 
-        db_ret = self.metrics_dbi.list_user_details(user_ids, minTime, maxTime)
+        db_ret = self.metrics_dbi.list_user_details(params['user_ids'], params['minTime'], params['maxTime'])
+
         return {'user_details': db_ret}
 
 
-    def get_ujs_jobs(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
+    def process_parameters(self, params):
+        if params.get('user_ids', None) is None:
+            params['user_ids'] = []
+        else:
+            if not isinstance(params['user_ids'], list):
+                raise ValueError('Variable user_ids' + ' must be a list.')
 
-        minTime = None
-        maxTime = None
-        user_ids = None
-        if 'after' in params:
-            minTime = params['after']
-	    minTime = _convert_to_datetime(minTime)
-        if 'before' in params:
-            maxTime = params['before']
-	    maxTime = _convert_to_datetime(maxTime)
-        if 'user_ids' in params:
-            user_ids = params['user_ids']
-
-        db_ret = self.metrics_dbi.list_ujs_results(user_ids, minTime, maxTime)
-        return {'user_ujs_results': db_ret}
+        if not params.get('epoch_range', None) is None:
+            minTime, maxTime = params['epoch_range']
+            params['minTime'] = minTime
+            params['maxTime'] = maxTime
+        else: #set the most recent 48 hours range
+            maxTime = datetime.datetime.utcnow()
+            minTime = maxTime - datetime.timedelta(hours=48)
+            params['minTime'] = _unix_time_millis_from_datetime(minTime)
+            params['maxTime'] = _unix_time_millis_from_datetime(maxTime)
+        return params
 
 
     def is_admin(self, username):
