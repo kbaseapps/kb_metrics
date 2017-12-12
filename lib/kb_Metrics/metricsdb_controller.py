@@ -40,7 +40,6 @@ class MetricsMongoDBController:
 
     def __init__(self, config):
         #pprint("initializing mdb......")
-        pprint(config)
         # first grab the admin list
         self.adminList = []
         if 'admin-users' in config:
