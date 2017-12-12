@@ -8,6 +8,7 @@ import random
 import re
 import uuid
 import codecs
+from bson.objectid import ObjectId
 
 from pprint import pprint, pformat
 from urlparse import urlparse
@@ -142,53 +143,73 @@ class MetricsMongoDBController:
 	# combine/join the apps, tasks and jobs lists to get the final return data
 	# 1) combine/join the apps and tasks to get the app_task_list
 	app_task_list = [] 
-	for a in exec_apps:
-	    for t in exec_tasks:
+	for t in exec_tasks:
+	    ta = copy.deepcopy(t)
+	    for a in exec_apps:
 		if (('app_job_id' in t and a['app_job_id'] == t['app_job_id']) or
 		    ('ujs_job_id' in t and a['app_job_id'] == t['ujs_job_id'])):
-		    ta = copy.deepcopy(t)
 		    ta['job_state'] = a['app_job_state']
 		    #app_task_list['app_state_data'] = a['app_state_data']
-		    ta['modification_time'] = a['modification_time']
-		    app_task_list.append(ta)
-	pprint("\n******Combined {} app_tasks".format(len(app_task_list)))
+		    #ta['modification_time'] = a['modification_time']
+	    app_task_list.append(ta)
 
 	# 2) combine/join app_task_list with ujs_jobs list to get the final return data
 	ujs_ret = []
 	for j in ujs_jobs:
-	    for lat in app_task_list:
-		if lat['ujs_job_id'] == j['_id']:
-		    j_a_t = copy.deepcopy(j)
-		    # from app_task_list
-		    #j_a_t['app_job_id'] = lat['app_job_id']
-		    j_a_t['creation_time'] = lat['creation_time']
-		    j_a_t['job_state'] = lat['job_state']
-		    if lat['exec_start_time']:
-			j_a_t['exec_start_time'] = lat['exec_start_time']
-		    if lat['finish_time']:
-			j_a_t['finish_time'] = lat['finish_time']
-		    if lat['modification_time']:
-			j_a_t['modification_time'] = lat['modification_time']
-		    if lat['job_input']:
-			    j_a_t['job_input'] = lat['job_input']
-			    if 'app_id' in lat['job_input']:
-			        j_a_t['app_id'] = lat['job_input']['app_id']
-			    if 'method' in lat['job_input']:
-			        j_a_t['method'] = lat['job_input']['method']
-			    if 'wsid' in lat['job_input']:
-				j_a_t['wsid'] = lat['job_input']['wsid']
-		    if lat['job_output']:
-		        j_a_t['job_output'] = lat['job_output']
-		    if (lat['job_state'] == 'completed' or 
-			lat['job_state'] == 'suspend'):
-			j_a_t['run_time'] = lat['modification_time'] - lat['exec_start_time']
-		    elif lat['job_state'] == 'in-progress': 
-			j_a_t['running_time'] = lat['modification_time'] - lat['exec_start_time']
-		    elif lat['job_state'] == 'queued': 
-			j_a_t['time_in_queue'] = lat['modification_time'] - lat['creation_time']
-		    j_a_t['time_info'] = [lat['creation_time'], lat['modification_time'], None]
+	    j_a_t = copy.deepcopy(j)
+	    j_a_t['creation_time'] = _unix_time_millis_from_datetime(j['created'])
+	    if 'started' in j:
+		j_a_t['exec_start_time'] = _unix_time_millis_from_datetime(j['started'])
+	    j_a_t['modification_time'] = _unix_time_millis_from_datetime(j['updated'])
+	    est = j.get('estcompl', None)
+	    estcompl = None if est is None else _unix_time_millis_from_datetime(est)
+	    j_a_t['time_info'] = [j_a_t['creation_time'], j_a_t['modification_time'], estcompl]
 
-		    ujs_ret.append(j_a_t)
+	    if 'complete' in j and j['complete'] == True:
+		if 'error' in j and j['error'] == False:
+		    j_a_t['job_state'] = 'completed'
+		elif 'error' in j and j['error'] == True: 
+		    j_a_t['job_state'] = 'suspend' 
+	    elif 'complete' in j and j['complete'] == False:
+		if 'error' in j and j['error'] == False:
+		    if j['status'] == "Initializing":
+		        j_a_t['job_state'] = j['status']
+		    elif 'started' in j: 
+		        j_a_t['job_state'] = 'in-progress' 
+	    elif j['created'] == j['updated']:
+		j_a_t['job_state'] = 'not-started' 
+	    elif j['created'] < j['updated'] and 'started' not in j:
+		j_a_t['job_state'] = 'queued'
+
+	    for lat in app_task_list:
+		if ObjectId(lat['ujs_job_id']) == j['_id']:
+		    if 'job_state' not in j_a_t:
+			j_a_t['job_state'] = lat['job_state']
+		if 'job_input' in lat:
+		    j_a_t['job_input'] = lat['job_input']
+		    if 'app_id' in lat['job_input']:
+			j_a_t['app_id'] = lat['job_input']['app_id']
+		    if 'method' in lat['job_input']:
+			j_a_t['method'] = lat['job_input']['method']
+		    if 'wsid' in lat['job_input']:
+			j_a_t['wsid'] = lat['job_input']['wsid']
+		    elif 'params' in lat['job_input']:
+			if 'ws_id' in lat['job_input']['params']:
+			    j_a_t['wsid'] = lat['job_input']['params']['ws_id']
+	        if 'job_output' in lat:
+		    j_a_t['job_output'] = lat['job_output']
+ 
+	    if j_a_t['job_state'] == 'completed':
+		j_a_t['finish_time'] = j_a_t['modification_time']
+		j_a_t['run_time'] = j_a_t['finish_time'] - j_a_t['exec_start_time']
+	    if j_a_t['job_state'] == 'suspend':
+		j_a_t['run_time'] = j_a_t['modification_time'] - j_a_t['exec_start_time']
+	    elif j_a_t['job_state'] == 'in-progress': 
+		j_a_t['running_time'] = j_a_t['modification_time'] - j_a_t['exec_start_time']
+	    elif lat['job_state'] == 'queued': 
+		j_a_t['time_in_queue'] = j_a_t['modification_time'] - j_a_t['creation_time']
+
+	    ujs_ret.append(j_a_t)
 
         return {'ujs_results': ujs_ret}
 
@@ -265,6 +286,8 @@ class MetricsMongoDBController:
         else:
             if not isinstance(params['user_ids'], list):
                 raise ValueError('Variable user_ids' + ' must be a list.')
+	if 'kbasetest' in params['user_ids']:
+		params['user_ids'].remove('kbasetest')
 
         if not params.get('epoch_range', None) is None:
             minTime, maxTime = params['epoch_range']

@@ -32,7 +32,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "c785743e96611b8f6ede38d32c845c26367d61a7"
+    GIT_COMMIT_HASH = "cc97b7e0bcec173fee04ed85cca84c9d135cfe28"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -83,19 +83,19 @@ This KBase SDK module implements methods for generating various KBase metrics.
            parameter "report_ref" of String
         """
         # ctx is the context object
-        # return variables are: output
+        # return variables are: return_records
         #BEGIN count_ncbi_genome_features
         gfs = genome_feature_stats(self.config, ctx.provenance)
 
-        output = gfs.count_ncbi_genome_features(params)
+        return_records = gfs.count_ncbi_genome_features(params)
         #END count_ncbi_genome_features
 
         # At some point might do deeper type checking...
-        if not isinstance(output, dict):
+        if not isinstance(return_records, dict):
             raise ValueError('Method count_ncbi_genome_features return value ' +
-                             'output is not type dict as required.')
+                             'return_records is not type dict as required.')
         # return the results
-        return [output]
+        return [return_records]
 
     def count_genome_features(self, ctx, params):
         """
@@ -123,19 +123,19 @@ This KBase SDK module implements methods for generating various KBase metrics.
            parameter "report_ref" of String
         """
         # ctx is the context object
-        # return variables are: output
+        # return variables are: return_records
         #BEGIN count_genome_features
         gfs = genome_feature_stats(self.config, ctx.provenance)
 
-        output = gfs.count_genome_features(params)
+        return_records = gfs.count_genome_features(params)
         #END count_genome_features
 
         # At some point might do deeper type checking...
-        if not isinstance(output, dict):
+        if not isinstance(return_records, dict):
             raise ValueError('Method count_genome_features return value ' +
-                             'output is not type dict as required.')
+                             'return_records is not type dict as required.')
         # return the results
-        return [output]
+        return [return_records]
 
     def refseq_genome_counts(self, ctx, params):
         """
@@ -153,19 +153,19 @@ This KBase SDK module implements methods for generating various KBase metrics.
            parameter "report_ref" of String
         """
         # ctx is the context object
-        # return variables are: output
+        # return variables are: return_records
         #BEGIN refseq_genome_counts
         gfs = genome_feature_stats(self.config, ctx.provenance)
 
-        output = gfs.count_refseq_genomes(params)
+        return_records = gfs.count_refseq_genomes(params)
         #END refseq_genome_counts
 
         # At some point might do deeper type checking...
-        if not isinstance(output, dict):
+        if not isinstance(return_records, dict):
             raise ValueError('Method refseq_genome_counts return value ' +
-                             'output is not type dict as required.')
+                             'return_records is not type dict as required.')
         # return the results
-        return [output]
+        return [return_records]
 
     def report_metrics(self, ctx, params):
         """
@@ -182,18 +182,18 @@ This KBase SDK module implements methods for generating various KBase metrics.
            parameter "report_ref" of String
         """
         # ctx is the context object
-        # return variables are: output
+        # return variables are: return_records
         #BEGIN report_metrics
         rps = report_utils(self.config, ctx.provenance)
-        output = rps.create_stats_report(params)
+        return_records = rps.create_stats_report(params)
         #END report_metrics
 
         # At some point might do deeper type checking...
-        if not isinstance(output, dict):
+        if not isinstance(return_records, dict):
             raise ValueError('Method report_metrics return value ' +
-                             'output is not type dict as required.')
+                             'return_records is not type dict as required.')
         # return the results
-        return [output]
+        return [return_records]
 
     def dummy_test0(self, ctx, params):
         """
@@ -210,20 +210,19 @@ This KBase SDK module implements methods for generating various KBase metrics.
            parameter "report_ref" of String
         """
         # ctx is the context object
-        # return variables are: output
+        # return variables are: return_records
         #BEGIN dummy_test0
         rps = report_utils(self.config, ctx.provenance)
-
-        #output = rps.get_module_stats_from_cat()
-        output = rps.create_stats_report(params)
+        #return_records = rps.get_module_stats_from_cat()
+        return_records = rps.create_stats_report(params)
         #END dummy_test0
 
         # At some point might do deeper type checking...
-        if not isinstance(output, dict):
+        if not isinstance(return_records, dict):
             raise ValueError('Method dummy_test0 return value ' +
-                             'output is not type dict as required.')
+                             'return_records is not type dict as required.')
         # return the results
-        return [output]
+        return [return_records]
 
     def get_app_metrics(self, ctx, params):
         """
@@ -246,18 +245,18 @@ This KBase SDK module implements methods for generating various KBase metrics.
            pairs about a job.) -> mapping from String to String
         """
         # ctx is the context object
-        # return variables are: output
+        # return variables are: return_records
         #BEGIN get_app_metrics
         du = UJS_CAT_NJS_DataUtils(self.config, ctx.provenance)
-        output = du.generate_app_metrics(params, ctx['token'])
+        return_records = du.generate_app_metrics(params, ctx['token'])
         #END get_app_metrics
 
         # At some point might do deeper type checking...
-        if not isinstance(output, dict):
+        if not isinstance(return_records, dict):
             raise ValueError('Method get_app_metrics return value ' +
-                             'output is not type dict as required.')
+                             'return_records is not type dict as required.')
         # return the results
-        return [output]
+        return [return_records]
 
     def get_user_metrics(self, ctx, params):
         """
@@ -276,148 +275,150 @@ This KBase SDK module implements methods for generating various KBase metrics.
            parameter "user_metrics" of unspecified object
         """
         # ctx is the context object
-        # return variables are: output
+        # return variables are: return_records
         #BEGIN get_user_metrics
-        du = UJS_CAT_NJS_DataUtils(self.config, ctx.provenance)
-        output = du.generate_user_metrics(params, ctx['token'])
+        #du = UJS_CAT_NJS_DataUtils(self.config, ctx.provenance)
+        #return_records = du.generate_user_metrics(params, ctx['token'])
+        mdb = MetricsMongoDBController(self.config)
+        return_records = mdb.get_user_details(ctx['user_id'], params, ctx['token'])
         #END get_user_metrics
 
         # At some point might do deeper type checking...
-        if not isinstance(output, dict):
+        if not isinstance(return_records, dict):
             raise ValueError('Method get_user_metrics return value ' +
-                             'output is not type dict as required.')
+                             'return_records is not type dict as required.')
         # return the results
-        return [output]
+        return [return_records]
 
     def get_exec_apps(self, ctx, params):
         """
         :param params: instance of type "UserJobStatsParams" -> structure:
            parameter "user_ids" of list of type "user_id" (A string for the
            user id), parameter "epoch_range" of type "epoch_range" -> tuple
-           of size 2: parameter "t_lowerbound" of type "epoch" (A Unix epoch
+           of size 2: parameter "e_lowerbound" of type "epoch" (A Unix epoch
            (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
-           parameter "t_upperbound" of type "epoch" (A Unix epoch (the time
+           parameter "e_upperbound" of type "epoch" (A Unix epoch (the time
            since 00:00:00 1/1/1970 UTC) in milliseconds.)
         :returns: instance of type "ExecAppsResult" -> structure: parameter
            "user_apps" of unspecified object
         """
         # ctx is the context object
-        # return variables are: app_records
+        # return variables are: return_records
         #BEGIN get_exec_apps
         mdb = MetricsMongoDBController(self.config)
-        app_records = mdb.get_exec_apps(ctx['user_id'], params, ctx['token'])
+        return_records = mdb.get_exec_apps(ctx['user_id'], params, ctx['token'])
         #END get_exec_apps
 
         # At some point might do deeper type checking...
-        if not isinstance(app_records, dict):
+        if not isinstance(return_records, dict):
             raise ValueError('Method get_exec_apps return value ' +
-                             'app_records is not type dict as required.')
+                             'return_records is not type dict as required.')
         # return the results
-        return [app_records]
+        return [return_records]
 
     def get_exec_tasks(self, ctx, params):
         """
         :param params: instance of type "UserJobStatsParams" -> structure:
            parameter "user_ids" of list of type "user_id" (A string for the
            user id), parameter "epoch_range" of type "epoch_range" -> tuple
-           of size 2: parameter "t_lowerbound" of type "epoch" (A Unix epoch
+           of size 2: parameter "e_lowerbound" of type "epoch" (A Unix epoch
            (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
-           parameter "t_upperbound" of type "epoch" (A Unix epoch (the time
+           parameter "e_upperbound" of type "epoch" (A Unix epoch (the time
            since 00:00:00 1/1/1970 UTC) in milliseconds.)
         :returns: instance of type "ExecTasksResult" -> structure: parameter
            "user_tasks" of unspecified object
         """
         # ctx is the context object
-        # return variables are: task_records
+        # return variables are: return_records
         #BEGIN get_exec_tasks
         mdb = MetricsMongoDBController(self.config)
-        task_records = mdb.get_exec_tasks(ctx['user_id'], params, ctx['token'])
+        return_records = mdb.get_exec_tasks(ctx['user_id'], params, ctx['token'])
         #END get_exec_tasks
 
         # At some point might do deeper type checking...
-        if not isinstance(task_records, dict):
+        if not isinstance(return_records, dict):
             raise ValueError('Method get_exec_tasks return value ' +
-                             'task_records is not type dict as required.')
+                             'return_records is not type dict as required.')
         # return the results
-        return [task_records]
+        return [return_records]
 
     def get_user_details(self, ctx, params):
         """
         :param params: instance of type "UserJobStatsParams" -> structure:
            parameter "user_ids" of list of type "user_id" (A string for the
            user id), parameter "epoch_range" of type "epoch_range" -> tuple
-           of size 2: parameter "t_lowerbound" of type "epoch" (A Unix epoch
+           of size 2: parameter "e_lowerbound" of type "epoch" (A Unix epoch
            (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
-           parameter "t_upperbound" of type "epoch" (A Unix epoch (the time
+           parameter "e_upperbound" of type "epoch" (A Unix epoch (the time
            since 00:00:00 1/1/1970 UTC) in milliseconds.)
         :returns: instance of type "UserDetailsResult" -> structure:
            parameter "user_details" of unspecified object
         """
         # ctx is the context object
-        # return variables are: user_records
+        # return variables are: return_records
         #BEGIN get_user_details
         mdb = MetricsMongoDBController(self.config)
-        user_records = mdb.get_user_details(ctx['user_id'], params, ctx['token'])
+        return_records = mdb.get_user_details(ctx['user_id'], params, ctx['token'])
         #END get_user_details
 
         # At some point might do deeper type checking...
-        if not isinstance(user_records, dict):
+        if not isinstance(return_records, dict):
             raise ValueError('Method get_user_details return value ' +
-                             'user_records is not type dict as required.')
+                             'return_records is not type dict as required.')
         # return the results
-        return [user_records]
+        return [return_records]
 
     def get_user_ujs_results(self, ctx, params):
         """
         :param params: instance of type "UserJobStatsParams" -> structure:
            parameter "user_ids" of list of type "user_id" (A string for the
            user id), parameter "epoch_range" of type "epoch_range" -> tuple
-           of size 2: parameter "t_lowerbound" of type "epoch" (A Unix epoch
+           of size 2: parameter "e_lowerbound" of type "epoch" (A Unix epoch
            (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
-           parameter "t_upperbound" of type "epoch" (A Unix epoch (the time
+           parameter "e_upperbound" of type "epoch" (A Unix epoch (the time
            since 00:00:00 1/1/1970 UTC) in milliseconds.)
         :returns: instance of type "UserJobStatesResult" -> structure:
            parameter "ujs_results" of unspecified object
         """
         # ctx is the context object
-        # return variables are: ujs_records
+        # return variables are: return_records
         #BEGIN get_user_ujs_results
         mdb = MetricsMongoDBController(self.config)
-        ujs_records = mdb.get_ujs_results(ctx['user_id'], params, ctx['token'])
+        return_records = mdb.get_ujs_results(ctx['user_id'], params, ctx['token'])
         #END get_user_ujs_results
 
         # At some point might do deeper type checking...
-        if not isinstance(ujs_records, dict):
+        if not isinstance(return_records, dict):
             raise ValueError('Method get_user_ujs_results return value ' +
-                             'ujs_records is not type dict as required.')
+                             'return_records is not type dict as required.')
         # return the results
-        return [ujs_records]
+        return [return_records]
 
     def get_user_job_states(self, ctx, params):
         """
         :param params: instance of type "UserJobStatsParams" -> structure:
            parameter "user_ids" of list of type "user_id" (A string for the
            user id), parameter "epoch_range" of type "epoch_range" -> tuple
-           of size 2: parameter "t_lowerbound" of type "epoch" (A Unix epoch
+           of size 2: parameter "e_lowerbound" of type "epoch" (A Unix epoch
            (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
-           parameter "t_upperbound" of type "epoch" (A Unix epoch (the time
+           parameter "e_upperbound" of type "epoch" (A Unix epoch (the time
            since 00:00:00 1/1/1970 UTC) in milliseconds.)
         :returns: instance of type "UserJobStatesResult" -> structure:
            parameter "ujs_results" of unspecified object
         """
         # ctx is the context object
-        # return variables are: ujs_records
+        # return variables are: return_records
         #BEGIN get_user_job_states
         mdb = MetricsMongoDBController(self.config)
-        ujs_records = mdb.get_user_job_states(ctx['user_id'], params, ctx['token'])
+        return_records = mdb.get_user_job_states(ctx['user_id'], params, ctx['token'])
         #END get_user_job_states
 
         # At some point might do deeper type checking...
-        if not isinstance(ujs_records, dict):
+        if not isinstance(return_records, dict):
             raise ValueError('Method get_user_job_states return value ' +
-                             'ujs_records is not type dict as required.')
+                             'return_records is not type dict as required.')
         # return the results
-        return [ujs_records]
+        return [return_records]
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",

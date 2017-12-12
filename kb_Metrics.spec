@@ -66,10 +66,10 @@ module kb_Metrics {
         'authentication required' modifier.
     */
     funcdef count_ncbi_genome_features(FeatureCountParams params)
-        returns (StatResults output) authentication required;
+        returns (StatResults return_records) authentication required;
 
     funcdef count_genome_features(FeatureCountParams params)
-        returns (StatResults output) authentication required;
+        returns (StatResults return_records) authentication required;
 
 
     typedef structure {
@@ -82,7 +82,7 @@ module kb_Metrics {
 
 
     funcdef refseq_genome_counts(GenomeCountParams params)
-        returns (StatResults output) authentication required;
+        returns (StatResults return_records) authentication required;
 
 
     typedef structure {
@@ -93,10 +93,10 @@ module kb_Metrics {
 
 
     funcdef report_metrics(StatsReportParams params)
-        returns (StatResults output) authentication required;
+        returns (StatResults return_records) authentication required;
 
     funcdef dummy_test0(StatsReportParams params)
-        returns (StatResults output) authentication required;
+        returns (StatResults return_records) authentication required;
 
     /********************************************************************************
 
@@ -126,7 +126,7 @@ module kb_Metrics {
         A time range defined by its lower and upper bound.
     */
     typedef tuple<timestamp t_lowerbound, timestamp t_upperbound> time_range;
-    typedef tuple<epoch t_lowerbound, epoch t_upperbound> epoch_range;
+    typedef tuple<epoch e_lowerbound, epoch e_upperbound> epoch_range;
     
     /*job_stage has one of 'created', 'started', 'complete', 'canceled', 'error' or 'all' (default)*/
     typedef structure {
@@ -145,8 +145,7 @@ module kb_Metrics {
     } AppMetricsResult;
     
     funcdef get_app_metrics(AppMetricsParams params)
-        returns (AppMetricsResult output) authentication required;
-
+        returns (AppMetricsResult return_records) authentication required;
 
     typedef structure {
         string filter_str; 
@@ -158,7 +157,7 @@ module kb_Metrics {
     } UserMetricsResult;
     
     funcdef get_user_metrics(UserMetricsParams params)
-        returns (UserMetricsResult output) authentication required;
+        returns (UserMetricsResult return_records) authentication required;
     
     typedef structure {
         list<user_id> user_ids;
@@ -170,29 +169,29 @@ module kb_Metrics {
     } ExecAppsResult;
     
     funcdef get_exec_apps(UserJobStatsParams params)
-        returns (ExecAppsResult app_records) authentication required;
+        returns (ExecAppsResult return_records) authentication required;
 
     typedef structure {
         UnspecifiedObject user_tasks;
     } ExecTasksResult;
     
     funcdef get_exec_tasks(UserJobStatsParams params)
-        returns (ExecTasksResult task_records) authentication required;
+        returns (ExecTasksResult return_records) authentication required;
 
     typedef structure {
         UnspecifiedObject user_details;
     } UserDetailsResult;
     
     funcdef get_user_details(UserJobStatsParams params)
-        returns (UserDetailsResult user_records) authentication required;
+        returns (UserDetailsResult return_records) authentication required;
 
     typedef structure {
         UnspecifiedObject ujs_results;
     } UserJobStatesResult;
 
     funcdef get_user_ujs_results(UserJobStatsParams params)
-        returns (UserJobStatesResult ujs_records) authentication required;
+        returns (UserJobStatesResult return_records) authentication required;
     
     funcdef get_user_job_states(UserJobStatsParams params)
-        returns (UserJobStatesResult ujs_records) authentication required;
+        returns (UserJobStatesResult return_records) authentication required;
 };

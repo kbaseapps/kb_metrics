@@ -113,6 +113,7 @@ class MongoMetricsDBI:
 	'''
         # Make sure we have an index on user, created and updated
         self.kbapps.ensure_index([
+            ('app_job_id', ASCENDING),
             ('app_job_state', ASCENDING),
             ('creation_time', ASCENDING),
             ('modification_time', ASCENDING)],
@@ -140,14 +141,16 @@ class MongoMetricsDBI:
             createFilter['$lte'] = _convert_to_datetime(maxTime)
         if len(createFilter) > 0:
             filter['create'] = createFilter
+	# exclude root, admin etc.
+        filter['lastrst'] = {'$exists': False}
 
         projection = {
                 'user':1,
                 'email':1,
+		'display':1,#full name
                 'roles':1,
                 'create':1,#ISODate("2017-05-24T22:52:27.990Z")
-                'login':1,
-                'lastrst':1
+                'login':1
         }
 
 	# grab handle(s) to the database collections needed
@@ -161,7 +164,6 @@ class MongoMetricsDBI:
             ('login', ASCENDING)],
             unique=True, sparse=False)
 	'''
-
         return list(self.kbusers.find(
                         filter, projection,
                         sort=[['create', ASCENDING]]))
@@ -194,6 +196,7 @@ class MongoMetricsDBI:
                 'authparam':1,# "DEFAULT" or workspace_id
                 'authstrat':1,# "DEFAULT" or "kbaseworkspace"
                 'complete':1,
+		'shared':1,
                 'desc':1,
                 'error':1,
                 'errormsg':1,

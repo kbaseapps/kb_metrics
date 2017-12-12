@@ -17,6 +17,12 @@ if __name__ == "__main__":
     config = ConfigParser()
     if os.path.isfile(sys.argv[2]):
         config.read(sys.argv[2])
+        # Pick up secure keys mainly for tests
+        for key in os.environ:
+            if key.startswith('KBASE_SECURE_CONFIG_PARAM_'):
+                param_name = key[len('KBASE_SECURE_CONFIG_PARAM_'):]
+                config.set('global', param_name, os.environ.get(key))
+
     elif "KBASE_ENDPOINT" in os.environ:
         kbase_endpoint = os.environ.get("KBASE_ENDPOINT")
         props = "[global]\n" + \
@@ -33,6 +39,10 @@ if __name__ == "__main__":
             props += "auth_service_url = " + kbase_endpoint + "/auth/api/legacy/KBase/Sessions/Login\n"
         props += "auth_service_url_allow_insecure = " + \
                  os.environ.get("AUTH_SERVICE_URL_ALLOW_INSECURE", "false") + "\n"
+        for key in os.environ:
+            if key.startswith('KBASE_SECURE_CONFIG_PARAM_'):
+                param_name = key[len('KBASE_SECURE_CONFIG_PARAM_'):]
+                props += param_name + " = " + os.environ.get(key) + "\n"
         config.readfp(StringIO.StringIO(props))
     else:
         raise ValueError('Neither ' + sys.argv[2] + ' file nor KBASE_ENDPOINT env-variable found')

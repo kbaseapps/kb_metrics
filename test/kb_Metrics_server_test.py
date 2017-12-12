@@ -211,8 +211,8 @@ class kb_MetricsTest(unittest.TestCase):
     #@unittest.skip("skipped test_run_get_user_job_states")
     def test_run_get_user_job_states(self):
         m_params = {
-            'user_ids':['qzhang'],#'user_ids': [],
-            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
+            'user_ids':[],#['qzhang'],#'user_ids': [],
+            'epoch_range':(1420083768000,1451606549000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2016,1,1)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_job_states(self.getContext(), m_params)
