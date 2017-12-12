@@ -28,7 +28,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "12f460b46d1ac829ec483d6d66ac85c7a7f6398e"
+    GIT_COMMIT_HASH = "821991ce9bedda11dfa3dca302c79f05561ce66b"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -73,35 +73,6 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
             raise ValueError('Method get_app_metrics return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
-    def get_user_metrics(self, ctx, params):
-        """
-        :param params: instance of type "UserMetricsParams" -> structure:
-           parameter "filter_str" of String, parameter "time_range" of type
-           "time_range" (A time range defined by its lower and upper bound.)
-           -> tuple of size 2: parameter "t_lowerbound" of type "timestamp"
-           (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the
-           difference in time to UTC in the format +/-HHMM, eg:
-           2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC
-           time)), parameter "t_upperbound" of type "timestamp" (A time in
-           the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time
-           to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST
-           time) 2013-04-03T08:56:32+0000 (UTC time))
-        :returns: instance of type "UserMetricsResult" -> structure:
-           parameter "user_metrics" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN get_user_metrics
-        return_records = self.mdb.get_user_details(ctx['user_id'], params, ctx['token'])
-        #END get_user_metrics
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_metrics return value ' +
                              'return_records is not type dict as required.')
         # return the results
         return [return_records]
@@ -177,6 +148,32 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
             raise ValueError('Method get_user_details return value ' +
+                             'return_records is not type dict as required.')
+        # return the results
+        return [return_records]
+
+    def get_user_metrics(self, ctx, params):
+        """
+        funcdef get_user_metrics(UserMetricsParams params)
+        :param params: instance of type "UserJobStatsParams" -> structure:
+           parameter "user_ids" of list of type "user_id" (A string for the
+           user id), parameter "epoch_range" of type "epoch_range" -> tuple
+           of size 2: parameter "e_lowerbound" of type "epoch" (A Unix epoch
+           (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "e_upperbound" of type "epoch" (A Unix epoch (the time
+           since 00:00:00 1/1/1970 UTC) in milliseconds.)
+        :returns: instance of type "UserDetailsResult" -> structure:
+           parameter "user_details" of unspecified object
+        """
+        # ctx is the context object
+        # return variables are: return_records
+        #BEGIN get_user_metrics
+        return_records = self.mdb.get_user_details(ctx['user_id'], params, ctx['token'])
+        #END get_user_metrics
+
+        # At some point might do deeper type checking...
+        if not isinstance(return_records, dict):
+            raise ValueError('Method get_user_metrics return value ' +
                              'return_records is not type dict as required.')
         # return the results
         return [return_records]

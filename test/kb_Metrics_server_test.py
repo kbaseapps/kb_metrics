@@ -184,7 +184,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_app_metrics")
+    @unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
 	'''
         m_params = {
@@ -210,14 +210,16 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    @unittest.skip("skipped test_run_get_user_metrics")
+    #@unittest.skip("skipped test_run_get_user_metrics")
     def test_run_get_user_metrics(self):
         m_params = {
-            'filter_str': ''
+            'user_ids':[],#['qzhang'],#'user_ids': [],
+            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_metrics(self.getContext(), m_params)
-        print(pformat(ret[0]['user_metrics'][0:10]))
+        print("get_user_metrics returns {} records:\n".format(len(ret[0]['user_details'])))
+	print(pformat(ret[0]['user_details'][0:10]))
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_job_states")

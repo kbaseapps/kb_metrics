@@ -55,9 +55,6 @@ module kb_Metrics {
         UnspecifiedObject user_metrics;
     } UserMetricsResult;
     
-    funcdef get_user_metrics(UserMetricsParams params)
-        returns (UserMetricsResult return_records) authentication required;
-    
     typedef structure {
         list<user_id> user_ids;
         epoch_range epoch_range;
@@ -84,6 +81,10 @@ module kb_Metrics {
     funcdef get_user_details(UserJobStatsParams params)
         returns (UserDetailsResult return_records) authentication required;
 
+    /*funcdef get_user_metrics(UserMetricsParams params)*/
+    funcdef get_user_metrics(UserJobStatsParams params)
+        returns (UserDetailsResult return_records) authentication required;
+    
     typedef structure {
         UnspecifiedObject ujs_results;
     } UserJobStatesResult;
