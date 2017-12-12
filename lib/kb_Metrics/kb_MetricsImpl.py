@@ -66,8 +66,8 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # ctx is the context object
         # return variables are: return_records
         #BEGIN get_app_metrics
-	mdb_ret = self.mdb.get_user_job_states(ctx['user_id'], params, ctx['token'])
-        return_records = {'job_states': mdb_ret['ujs_results']} 
+	#mdb_ret = self.mdb.get_user_job_states(ctx['user_id'], params, ctx['token'])
+        return_records = {}#{'job_states': mdb_ret['ujs_results']} 
         #END get_app_metrics
 
         # At some point might do deeper type checking...
