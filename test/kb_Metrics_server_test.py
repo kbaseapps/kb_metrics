@@ -208,14 +208,16 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['user_metrics'][0:10]))
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_job_states")
+    @unittest.skip("skipped test_run_get_user_job_states")
     def test_run_get_user_job_states(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
+            #'epoch_range':(1420083768000,1435677602000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2015,6,30)
             'epoch_range':(1420083768000,1451606549000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2016,1,1)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_job_states(self.getContext(), m_params)
+        print("Total number of records returned="+str(len(ret[0]['ujs_results'])))
         print(pformat(ret[0]['ujs_results'][0:10]))
 
     # Uncomment to skip this test
@@ -241,14 +243,17 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['user_tasks'][0:10]))
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_run_get_user_ujs_results")
+    #@unittest.skip("skipped test_run_get_user_ujs_results")
     def test_run_get_user_ujs_results(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
+            #'epoch_range':(1420083768000,1435677602000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2015,6,30)
+            #'epoch_range':(1420083768000,1451606549000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2016,1,1)
             'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_ujs_results(self.getContext(), m_params)
+        print("Total number of records returned="+str(len(ret[0]['ujs_results'])))
         print(pformat(ret[0]['ujs_results'][0:10]))
 
     # Uncomment to skip this test

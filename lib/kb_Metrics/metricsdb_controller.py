@@ -131,17 +131,21 @@ class MetricsMongoDBController:
 
 	# query dbs to get lists of tasks and jobs
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
-	#pprint(exec_tasks[0:2])
 	pprint("\n******Found {} tasks".format(len(exec_tasks)))
+
         exec_apps = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
-	#pprint(exec_apps[0:2])
 	pprint("\n******Found {} apps".format(len(exec_apps)))
+
 	ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
-	#pprint(ujs_jobs[0:2])
 	pprint("\n******Found {} ujs jobs".format(len(ujs_jobs)))
 
+        return {'ujs_results': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs)}
+
+
+    def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs):
 	# combine/join the apps, tasks and jobs lists to get the final return data
 	# 1) combine/join the apps and tasks to get the app_task_list
+	start_time = time.time()
 	app_task_list = [] 
 	for t in exec_tasks:
 	    ta = copy.deepcopy(t)
@@ -152,8 +156,10 @@ class MetricsMongoDBController:
 		    #app_task_list['app_state_data'] = a['app_state_data']
 		    #ta['modification_time'] = a['modification_time']
 	    app_task_list.append(ta)
+	elapsed_time1 = time.time() - start_time
 
 	# 2) combine/join app_task_list with ujs_jobs list to get the final return data
+	start_time = time.time()
 	ujs_ret = []
 	for j in ujs_jobs:
 	    j_a_t = copy.deepcopy(j)
@@ -206,12 +212,13 @@ class MetricsMongoDBController:
 		j_a_t['run_time'] = j_a_t['modification_time'] - j_a_t['exec_start_time']
 	    elif j_a_t['job_state'] == 'in-progress': 
 		j_a_t['running_time'] = j_a_t['modification_time'] - j_a_t['exec_start_time']
-	    elif lat['job_state'] == 'queued': 
+	    elif j_a_t['job_state'] == 'queued': 
 		j_a_t['time_in_queue'] = j_a_t['modification_time'] - j_a_t['creation_time']
 
 	    ujs_ret.append(j_a_t)
-
-        return {'ujs_results': ujs_ret}
+	elapsed_time2 = time.time() - start_time
+	pprint('Joining time t1={}, t2={}'.format(elapsed_time1, elapsed_time2))
+	return ujs_ret
 
 
     def get_ujs_results(self, requesting_user, params, token):
