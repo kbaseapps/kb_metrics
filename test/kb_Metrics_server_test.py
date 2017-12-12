@@ -184,8 +184,9 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    @unittest.skip("skipped test_run_get_app_metrics")
+    #@unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
+	'''
         m_params = {
             'user_ids': [],
             'time_range':(u'2017-08-27T17:29:37+0000', u'2017-11-27T17:29:42+0000'),#[u'2017-10-27T17:29:37+0000', u'2017-10-27T17:29:42+0000'],
@@ -194,6 +195,17 @@ class kb_MetricsTest(unittest.TestCase):
         # Second, call your implementation
         ret = self.getImpl().get_app_metrics(self.getContext(), m_params)
         prnt_count = len(ret[0]['job_states']) - 10
+        print(pformat(ret[0]['job_states'][prnt_count:]))
+	'''
+        m_params = {
+            'user_ids':[],#['qzhang'],#'user_ids': [],
+            'epoch_range':(1420083768000,1435677602000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2015,6,30)
+            #'epoch_range':(1420083768000,1451606549000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2016,1,1)
+        }
+        # Second, call your implementation
+        ret = self.getImpl().get_app_metrics(self.getContext(), m_params)
+        prnt_count = len(ret[0]['job_states']) - 10
+        print("Total number of records returned="+str(len(ret[0]['job_states'])))
         print(pformat(ret[0]['job_states'][prnt_count:]))
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
@@ -212,8 +224,8 @@ class kb_MetricsTest(unittest.TestCase):
     def test_run_get_user_job_states(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
-            #'epoch_range':(1420083768000,1435677602000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2015,6,30)
-            'epoch_range':(1420083768000,1451606549000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2016,1,1)
+            'epoch_range':(1435677602000,1451575202000)#(datetime.datetime(2015, 6, 1), datetime.datetime(2015,12,31)
+            #'epoch_range':(1420083768000,1451606549000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2016,1,1)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_job_states(self.getContext(), m_params)
@@ -243,7 +255,7 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['user_tasks'][0:10]))
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_ujs_results")
+    @unittest.skip("skipped test_run_get_user_ujs_results")
     def test_run_get_user_ujs_results(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],

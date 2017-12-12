@@ -131,6 +131,8 @@ class MongoMetricsDBI:
         userFilter = {}
         if (userIds is not None and len(userIds) > 0):
             userFilter['$in'] = userIds
+	elif userIds == []:
+	    userFilter['$ne'] = 'kbasetest'
         if len(userFilter) > 0:
             filter['user'] = userFilter
 
@@ -175,6 +177,8 @@ class MongoMetricsDBI:
         userFilter = {}
         if (userIds is not None and len(userIds) > 0):
             userFilter['$in'] = userIds
+	elif userIds == []:
+	    userFilter['$ne'] = 'kbasetest'
         if len(userFilter) > 0:
             filter['user'] = userFilter
 
@@ -185,13 +189,15 @@ class MongoMetricsDBI:
             createdFilter['$lte'] = _convert_to_datetime(maxTime)
         if len(createdFilter) > 0:
             filter['created'] = createdFilter
+	filter['desc'] = {'$exists': True}
+	filter['status'] = {'$exists': True}
 
         projection = {
                 'user':1,
                 'created':1,#datetime.datetime(2015, 1, 9, 19, 36, 8, 561000)
                 'started':1,
                 'updated':1,
-                'status':1,# e.g., "ws.18657.obj.1", "initializing", "canceled by user", etc.
+                'status':1,# e.g., "queued", "ws.18657.obj.1", "Initializing", "canceled by user", etc.
                 'progtype':1,# e.g., "percent", "task"
                 'authparam':1,# "DEFAULT" or workspace_id
                 'authstrat':1,# "DEFAULT" or "kbaseworkspace"

@@ -39,7 +39,7 @@ def _datetime_from_utc(date_utc_str):
 class MetricsMongoDBController:
 
     def __init__(self, config):
-        pprint("initializing mdb......")
+        #pprint("initializing mdb......")
         #pprint(config)
         # first grab the admin list
         self.adminList = []
@@ -79,15 +79,6 @@ class MetricsMongoDBController:
                     config['mongodb-user'],
                     config['mongodb-pwd'])
 
-	#initialize clients for accessing other services
-	'''
-        self.workspace_url = config['workspace-url']
-        self.ws_client = Workspace(self.workspace_url, token=token)
-        self.cat_client = Catalog('https://ci.kbase.us/services/catalog', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-        self.njs_client = NarrativeJobService('https://ci.kbase.us/services/njs_wrapper', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-        self.ujs_client = UserAndJobState('https://ci.kbase.us/services/userandjobstate', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-        self.uprf_client = UserProfile('https://ci.kbase.us/services/user_profile/rpc', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-	'''
 
     # functions to get the requested records...
     def get_user_job_states(self, requesting_user, params, token):
@@ -131,21 +122,28 @@ class MetricsMongoDBController:
 
 	# query dbs to get lists of tasks and jobs
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
-	pprint("\n******Found {} tasks".format(len(exec_tasks)))
 
         exec_apps = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
-	pprint("\n******Found {} apps".format(len(exec_apps)))
 
 	ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
-	pprint("\n******Found {} ujs jobs".format(len(ujs_jobs)))
+	#pprint("\n******Found {} ujs jobs".format(len(ujs_jobs)))
 
-        return {'ujs_results': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs)}
+        self.cat_client = Catalog('https://ci.kbase.us/services/catalog', auth_svc='https://ci.kbase.us/services/auth/', token=token)
+	'''
+        self.workspace_url = config['workspace-url']
+        self.ws_client = Workspace(self.workspace_url, token=token)
+        self.njs_client = NarrativeJobService('https://ci.kbase.us/services/njs_wrapper', auth_svc='https://ci.kbase.us/services/auth/', token=token)
+        self.ujs_client = UserAndJobState('https://ci.kbase.us/services/userandjobstate', auth_svc='https://ci.kbase.us/services/auth/', token=token)
+        self.uprf_client = UserProfile('https://ci.kbase.us/services/user_profile/rpc', auth_svc='https://ci.kbase.us/services/auth/', token=token)
+	'''
+        clnt_groups = self.cat_client.get_client_groups({})
+
+        return {'ujs_results': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs, clnt_groups)}
 
 
-    def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs):
+    def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs, c_groups):
 	# combine/join the apps, tasks and jobs lists to get the final return data
 	# 1) combine/join the apps and tasks to get the app_task_list
-	start_time = time.time()
 	app_task_list = [] 
 	for t in exec_tasks:
 	    ta = copy.deepcopy(t)
@@ -153,97 +151,82 @@ class MetricsMongoDBController:
 		if (('app_job_id' in t and a['app_job_id'] == t['app_job_id']) or
 		    ('ujs_job_id' in t and a['app_job_id'] == t['ujs_job_id'])):
 		    ta['job_state'] = a['app_job_state']
-		    #app_task_list['app_state_data'] = a['app_state_data']
-		    #ta['modification_time'] = a['modification_time']
 	    app_task_list.append(ta)
-	elapsed_time1 = time.time() - start_time
 
 	# 2) combine/join app_task_list with ujs_jobs list to get the final return data
 	start_time = time.time()
 	ujs_ret = []
 	for j in ujs_jobs:
-	    j_a_t = copy.deepcopy(j)
-	    j_a_t['creation_time'] = _unix_time_millis_from_datetime(j['created'])
+	    u_j_s = copy.deepcopy(j)
+	    u_j_s['creation_time'] = _unix_time_millis_from_datetime(j['created'])
 	    if 'started' in j:
-		j_a_t['exec_start_time'] = _unix_time_millis_from_datetime(j['started'])
-	    j_a_t['modification_time'] = _unix_time_millis_from_datetime(j['updated'])
+		u_j_s['exec_start_time'] = _unix_time_millis_from_datetime(j['started'])
+	    u_j_s['modification_time'] = _unix_time_millis_from_datetime(j['updated'])
 	    est = j.get('estcompl', None)
 	    estcompl = None if est is None else _unix_time_millis_from_datetime(est)
-	    j_a_t['time_info'] = [j_a_t['creation_time'], j_a_t['modification_time'], estcompl]
+	    u_j_s['time_info'] = [u_j_s['creation_time'], u_j_s['modification_time'], estcompl]
 
-	    if 'complete' in j and j['complete'] == True:
-		if 'error' in j and j['error'] == False:
-		    j_a_t['job_state'] = 'completed'
-		elif 'error' in j and j['error'] == True: 
-		    j_a_t['job_state'] = 'suspend' 
-	    elif 'complete' in j and j['complete'] == False:
-		if 'error' in j and j['error'] == False:
-		    if j['status'] == "Initializing":
-		        j_a_t['job_state'] = j['status']
+	    # Assuming complete, error and status all exist in the records returned
+	    if j['complete'] == True:
+		if j['error'] == False:
+		    u_j_s['job_state'] = 'completed'
+		else: 
+		    u_j_s['job_state'] = 'suspend' 
+	    else:
+		if j['error'] == False:
+		    if j['status'] == "Initializing" or j['status'] == 'queued':
+		        u_j_s['job_state'] = j['status']
+		    elif 'canceled' in j['status'] or 'cancelled' in j['status']: 
+		        u_j_s['job_state'] = 'canceled' 
 		    elif 'started' in j: 
-		        j_a_t['job_state'] = 'in-progress' 
-	    elif j['created'] == j['updated']:
-		j_a_t['job_state'] = 'not-started' 
-	    elif j['created'] < j['updated'] and 'started' not in j:
-		j_a_t['job_state'] = 'queued'
+		        u_j_s['job_state'] = 'in-progress' 
+		    elif j['created'] == j['updated']:
+			u_j_s['job_state'] = 'not-started' 
+		    elif j['created'] < j['updated'] and 'started' not in j:
+			u_j_s['job_state'] = 'queued'
+		    else:
+			u_j_s['job_state'] = 'unknown'
 
 	    for lat in app_task_list:
 		if ObjectId(lat['ujs_job_id']) == j['_id']:
-		    if 'job_state' not in j_a_t:
-			j_a_t['job_state'] = lat['job_state']
-		if 'job_input' in lat:
-		    j_a_t['job_input'] = lat['job_input']
-		    if 'app_id' in lat['job_input']:
-			j_a_t['app_id'] = lat['job_input']['app_id']
-		    if 'method' in lat['job_input']:
-			j_a_t['method'] = lat['job_input']['method']
-		    if 'wsid' in lat['job_input']:
-			j_a_t['wsid'] = lat['job_input']['wsid']
-		    elif 'params' in lat['job_input']:
-			if 'ws_id' in lat['job_input']['params']:
-			    j_a_t['wsid'] = lat['job_input']['params']['ws_id']
-	        if 'job_output' in lat:
-		    j_a_t['job_output'] = lat['job_output']
- 
-	    if j_a_t['job_state'] == 'completed':
-		j_a_t['finish_time'] = j_a_t['modification_time']
-		j_a_t['run_time'] = j_a_t['finish_time'] - j_a_t['exec_start_time']
-	    if j_a_t['job_state'] == 'suspend':
-		j_a_t['run_time'] = j_a_t['modification_time'] - j_a_t['exec_start_time']
-	    elif j_a_t['job_state'] == 'in-progress': 
-		j_a_t['running_time'] = j_a_t['modification_time'] - j_a_t['exec_start_time']
-	    elif j_a_t['job_state'] == 'queued': 
-		j_a_t['time_in_queue'] = j_a_t['modification_time'] - j_a_t['creation_time']
+		    #if 'job_state' not in u_j_s:
+			#u_j_s['job_state'] = lat['job_state']
+			if 'job_input' in lat:
+			    u_j_s['job_input'] = lat['job_input']
+			    if 'app_id' in lat['job_input']:
+				u_j_s['app_id'] = lat['job_input']['app_id']
+			    if 'method' in lat['job_input']:
+				u_j_s['method'] = lat['job_input']['method']
+			    if 'wsid' in lat['job_input']:
+				u_j_s['wsid'] = lat['job_input']['wsid']
+			    elif 'params' in lat['job_input']:
+				if 'ws_id' in lat['job_input']['params']:
+				    u_j_s['wsid'] = lat['job_input']['params']['ws_id']
+			if 'job_output' in lat:
+			    u_j_s['job_output'] = lat['job_output']
+	   
+	    #get some info from the client groups
+	    for clnt in c_groups:
+		if 'method' in u_j_s and clnt['module_name'] in u_j_s['method']:
+		    pprint("client func={} and ujs func={}".format(clnt['function_name'],u_j_s['method']))
+		    u_j_s['client_groups'] = clnt['client_groups']
+		    u_j_s['module'] = clnt['module_name']
+		    u_j_s['function'] = clnt['function_name']
+		    break
+	    if u_j_s['job_state'] == 'completed':
+		u_j_s['finish_time'] = u_j_s['modification_time']
+		u_j_s['run_time'] = u_j_s['finish_time'] - u_j_s['exec_start_time']
+	    if u_j_s['job_state'] == 'suspend':
+		u_j_s['run_time'] = u_j_s['modification_time'] - u_j_s['exec_start_time']
+	    elif u_j_s['job_state'] == 'in-progress': 
+		u_j_s['running_time'] = u_j_s['modification_time'] - u_j_s['exec_start_time']
+	    elif u_j_s['job_state'] == 'queued': 
+		u_j_s['time_in_queue'] = u_j_s['modification_time'] - u_j_s['creation_time']
 
-	    ujs_ret.append(j_a_t)
-	elapsed_time2 = time.time() - start_time
-	pprint('Joining time t1={}, t2={}'.format(elapsed_time1, elapsed_time2))
+	    ujs_ret.append(u_j_s)
 	return ujs_ret
 
-
     def get_ujs_results(self, requesting_user, params, token):
-	'''
-        jobs = {
-                'user':1,
-                'created':1,
-                'started':1,
-                'updated':1,
-                'status':1,
-                'progtype':1,
-                'authparam':1,
-                'authstrat':1,
-                'complete':1,
-                'desc':1,
-                'error':1,
-                'errormsg':1,
-                'estcompl':1,
-                'maxprog':1,
-                'meta':1,
-                'prog':1,
-                'results':1,
-                'service':1
-        }
-	'''
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -252,7 +235,6 @@ class MetricsMongoDBController:
         db_ret = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
 
         return {'ujs_results': db_ret}
-
 
     def get_exec_apps(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
@@ -264,7 +246,6 @@ class MetricsMongoDBController:
 
         return {'user_apps': db_ret}
 
-
     def get_exec_tasks(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
@@ -275,7 +256,6 @@ class MetricsMongoDBController:
 
         return {'user_tasks': db_ret}
 
-
     def get_user_details(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
@@ -285,7 +265,6 @@ class MetricsMongoDBController:
         db_ret = self.metrics_dbi.list_user_details(params['user_ids'], params['minTime'], params['maxTime'])
 
         return {'user_details': db_ret}
-
 
     def process_parameters(self, params):
         if params.get('user_ids', None) is None:
@@ -307,6 +286,31 @@ class MetricsMongoDBController:
             params['maxTime'] = _unix_time_millis_from_datetime(maxTime)
         return params
 
+    def get_client_groups_from_cat(self):
+        """
+        get_client_groups_from_cat: Get the client_groups data from Catalog API
+        return an array of the following structure (example with data):
+        {
+            u'app_id': u'assemblyrast/run_arast',
+            u'client_groups': [u'bigmemlong'],
+            u'function_name': u'run_arast',
+            u'module_name': u'AssemblyRAST'},
+        }
+        """
+	#initialize clients for accessing other services
+        self.cat_client = Catalog('https://ci.kbase.us/services/catalog', auth_svc='https://ci.kbase.us/services/auth/', token=token)
+	'''
+        self.workspace_url = config['workspace-url']
+        self.ws_client = Workspace(self.workspace_url, token=token)
+        self.njs_client = NarrativeJobService('https://ci.kbase.us/services/njs_wrapper', auth_svc='https://ci.kbase.us/services/auth/', token=token)
+        self.ujs_client = UserAndJobState('https://ci.kbase.us/services/userandjobstate', auth_svc='https://ci.kbase.us/services/auth/', token=token)
+        self.uprf_client = UserProfile('https://ci.kbase.us/services/user_profile/rpc', auth_svc='https://ci.kbase.us/services/auth/', token=token)
+	'''
+        # Pull the data
+        client_groups = self.cat_client.get_client_groups({})
+        #log("\nClient group example:\n{}".format(pformat(client_groups[0])))
+
+        return client_groups
 
     def is_admin(self, username):
         if username in self.adminList:
