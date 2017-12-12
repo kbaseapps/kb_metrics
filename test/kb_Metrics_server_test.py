@@ -184,7 +184,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    @unittest.skip("skipped test_run_get_app_metrics")
+    #@unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
 	'''
         m_params = {
@@ -222,7 +222,7 @@ class kb_MetricsTest(unittest.TestCase):
 	print(pformat(ret[0]['user_details'][0:10]))
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_run_get_user_job_states")
+    #@unittest.skip("skipped test_run_get_user_job_states")
     def test_run_get_user_job_states(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
@@ -235,7 +235,7 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['ujs_results'][0:10]))
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_run_get_exec_apps")
+    #@unittest.skip("skipped test_run_get_exec_apps")
     def test_run_get_exec_apps(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
@@ -246,7 +246,7 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['user_apps'][0:10]))
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_run_get_exec_tasks")
+    #@unittest.skip("skipped test_run_get_exec_tasks")
     def test_run_get_exec_tasks(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
@@ -257,7 +257,7 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['user_tasks'][0:10]))
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_run_get_user_ujs_results")
+    #@unittest.skip("skipped test_run_get_user_ujs_results")
     def test_run_get_user_ujs_results(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
@@ -271,7 +271,7 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['ujs_results'][0:10]))
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_run_get_user_details")
+    #@unittest.skip("skipped test_run_get_user_details")
     def test_run_get_user_details(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],

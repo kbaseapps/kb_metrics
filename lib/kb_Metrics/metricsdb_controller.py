@@ -207,7 +207,7 @@ class MetricsMongoDBController:
 	    #get some info from the client groups
 	    for clnt in c_groups:
 		if 'method' in u_j_s and clnt['module_name'] in u_j_s['method']:
-		    pprint("client func={} and ujs func={}".format(clnt['function_name'],u_j_s['method']))
+		    #pprint("client func={} and ujs func={}".format(clnt['function_name'],u_j_s['method']))
 		    u_j_s['client_groups'] = clnt['client_groups']
 		    u_j_s['module'] = clnt['module_name']
 		    u_j_s['function'] = clnt['function_name']
