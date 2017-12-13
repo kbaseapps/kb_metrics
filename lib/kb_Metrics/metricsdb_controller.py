@@ -264,6 +264,9 @@ class MetricsMongoDBController:
         db_ret = self.metrics_dbi.list_user_details(params['user_ids'], params['minTime'], params['maxTime'])
 	if len(db_ret) == 0:
 	    pprint("No records returned!")
+	else:
+	   for u in db_ret:
+		u['create'] = _unix_time_millis_from_datetime(u['create']
         return {'user_details': db_ret}
 
     def process_parameters(self, params):
