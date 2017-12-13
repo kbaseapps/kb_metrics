@@ -18,6 +18,8 @@ import random as _random
 import os
 from kb_Metrics.authclient import KBaseAuth as _KBaseAuth
 
+from bson.json_util import dumps
+
 DEPLOY = 'KB_DEPLOYMENT_CONFIG'
 SERVICE = 'KB_SERVICE_NAME'
 AUTH = 'auth-service-url'
@@ -76,7 +78,8 @@ class JSONRPCServiceCustom(JSONRPCService):
         """
         result = self.call_py(ctx, jsondata)
         if result is not None:
-            return json.dumps(result, cls=JSONObjectEncoder)
+            #return json.dumps(result, cls=JSONObjectEncoder)
+            return dumps(result)
 
         return None
 
