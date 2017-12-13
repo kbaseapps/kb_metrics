@@ -61,6 +61,7 @@ class MongoMetricsDBI:
             filter['creation_time'] = creationTimeFilter
 
         projection = {
+		'_id':0,
                 'app_job_id':1,
                 'awe_job_id':1,
                 'ujs_job_id':1,
@@ -100,6 +101,7 @@ class MongoMetricsDBI:
             filter['creation_time'] = creationTimeFilter
 
         projection = {
+		'_id':0,
                 'app_job_id':1,
                 'app_job_state':1,# 'completed', 'suspend', 'in-progress','queued'
                 'app_state_data':1,
@@ -147,6 +149,7 @@ class MongoMetricsDBI:
         filter['lastrst'] = {'$exists': False}
 
         projection = {
+		'_id':0,
                 'user':1,
                 'email':1,
 		'display':1,#full name

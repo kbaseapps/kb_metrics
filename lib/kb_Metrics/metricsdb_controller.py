@@ -157,6 +157,7 @@ class MetricsMongoDBController:
 	ujs_ret = []
 	for j in ujs_jobs:
 	    u_j_s = copy.deepcopy(j)
+	    u_j_s.remove('_id')
 	    u_j_s['creation_time'] = _unix_time_millis_from_datetime(j['created'])
 	    if 'started' in j:
 		u_j_s['exec_start_time'] = _unix_time_millis_from_datetime(j['started'])
