@@ -40,7 +40,6 @@ class MetricsMongoDBController:
 
     def __init__(self, config):
         #pprint("initializing mdb......")
-	pprint(config)
         # first grab the admin list
         self.adminList = []
         if 'admin-users' in config:
@@ -263,9 +262,7 @@ class MetricsMongoDBController:
 	params = self.process_parameters(params)
 
         db_ret = self.metrics_dbi.list_user_details(params['user_ids'], params['minTime'], params['maxTime'])
-	if len(db_ret) > 0:
-	    pprint(pformat(db_ret[:3]))
-	else:
+	if len(db_ret) == 0:
 	    pprint("No records returned!")
         return {'user_details': db_ret}
 
