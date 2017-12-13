@@ -167,8 +167,8 @@ class MongoMetricsDBI:
             unique=True, sparse=False)
 	'''
         return list(self.kbusers.find(
-                        filter, projection,
-                        sort=[['create', ASCENDING]]))
+                        filter, projection))#,
+                        #sort=[['create', ASCENDING]]))
 
 
     def list_ujs_results(self, userIds, minTime, maxTime):
