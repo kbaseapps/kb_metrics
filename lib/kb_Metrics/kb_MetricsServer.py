@@ -43,6 +43,7 @@ def get_config():
         retconfig[nameval[0]] = nameval[1]
     return retconfig
 
+
 config = get_config()
 
 from kb_Metrics.kb_MetricsImpl import kb_Metrics  # noqa @IgnorePep8
@@ -58,6 +59,8 @@ class JSONObjectEncoder(json.JSONEncoder):
             return list(obj)
         if hasattr(obj, 'toJSONable'):
             return obj.toJSONable()
+        if isinstance(obj, (datetime.datetime, datetime.date)):
+            return obj.isoformat()
         return json.JSONEncoder.default(self, obj)
 
 
