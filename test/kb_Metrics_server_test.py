@@ -78,125 +78,9 @@ class kb_MetricsTest(unittest.TestCase):
         return self.__class__.ctx
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
-    def load_fasta_file(self, filename, obj_name, contents):
-        f = open(filename, 'w')
-        f.write(contents)
-        f.close()
-        assemblyUtil = AssemblyUtil(self.callback_url)
-        assembly_ref = assemblyUtil.save_assembly_from_fasta({'file': {'path': filename},
-                                                              'workspace_name': self.getWsName(),
-                                                              'assembly_name': obj_name
-                                                              })
-        return assembly_ref
-
-    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
-    # Uncomment to skip this test
-    @unittest.skip("skipped test_run_count_genome_features")
-    def test_run_count_genome_features(self):
-        # First set input parameters
-        m_params =     {
-            'workspace_name': self.getWsName(),
-            'genbank_file_urls': ['ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/009/605/GCF_000009605.1_ASM960v1/GCF_000009605.1_ASM960v1_genomic.gbff.gz','ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/008/725/GCF_000008725.1_ASM872v1/GCF_000008725.1_ASM872v1_genomic.gbff.gz','ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/009/605/GCF_000009605.1_ASM960v1/GCF_000009605.1_ASM960v1_genomic.gbff.gz'],
-            'create_report': 1
-        }
-        # Second, call your implementation
-        ret = self.getImpl().count_genome_features(self.getContext(), m_params)
-
-        # Validate the returned data
-        #self.assertEqual(ret[0]['n_initial_contigs'], 3)
-        #self.assertEqual(ret[0]['n_contigs_removed'], 1)
-        #self.assertEqual(ret[0]['n_contigs_remaining'], 2)
-
-
-    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
-    # Uncomment to skip this test
-    @unittest.skip("skipped test_run_count_genbank_genome_features")
-    def test_run_count_genbank_genome_features(self):
-        # First set input parameters
-        m_params =     {
-            'workspace_name': self.getWsName(),
-            'genbank_files': [],
-            'genome_source': 'refseq',
-            'genome_domain': 'bacteria',#'archaea',#'bacteria','plant','fungi'
-            'refseq_category': 'reference',#'representative','na',
-            'create_report': 1 
-        }
-        # Second, call your implementation
-        ret = self.getImpl().count_ncbi_genome_features(self.getContext(), m_params)
-
-
-    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
-    # Uncomment to skip this test
-    @unittest.skip("skipped test_run_count_ensemblgenome_features")
-    def test_run_count_ensemblgenome_features(self):
-        # First set input parameters
-        m_params =     {
-            'workspace_name': self.getWsName(),
-            'genbank_files': ['ftp.ensemblgenomes.org/pub/release-37/plants/genbank/corchorus_capsularis/Corchorus_capsularis.CCACVL1_1.0.37.nonchromosomal.dat.gz'],
-            'create_report': 0
-        }
-        # Second, call your implementation
-        ret = self.getImpl().count_genome_features(self.getContext(), m_params)
-
-
-    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
-    # Uncomment to skip this test
-    @unittest.skip("skipped test_run_refseq_genome_counts")
-    def test_run_refseq_genome_counts(self):
-        # First set input parameters
-        m_params = {
-            'workspace_name': self.getWsName(),
-            'genome_source': 'refseq',
-            'genome_domain': 'fungi',#'archaea',#'bacteria','plant','fungi'
-            'refseq_category': 'reference', #'reference','representative','na',
-            'create_report': 1
-        }
-        # Second, call your implementation
-        ret = self.getImpl().refseq_genome_counts(self.getContext(), m_params)
-
-
-    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
-    # Uncomment to skip this test
-    @unittest.skip("skipped test_run_dummy_test")
-    def test_run_dummy_test(self):
-        m_params = {
-            'stats_name': 'user_job_states',
-            'workspace_name': self.getWsName(),
-            'create_report': 0
-        }
-        # Second, call your implementation
-        ret = self.getImpl().dummy_test0(self.getContext(), m_params)
-        print(pformat(ret[0]))
-
-    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
-    # Uncomment to skip this test
-    @unittest.skip("skipped test_run_report_metrics")
-    def test_run_report_metrics(self):
-        m_params = {
-            'stats_name': 'exec_stats',#'exec_aggr_stats','exec_aggr_table','user_job_states'
-            'workspace_name': self.getWsName(),
-            'create_report': 0
-        }
-        # Second, call your implementation
-        ret = self.getImpl().report_metrics(self.getContext(), m_params)
-        print(pformat(ret[0]))
-
-
-    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
     #@unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
-	'''
-        m_params = {
-            'user_ids': [],
-            'time_range':(u'2017-08-27T17:29:37+0000', u'2017-11-27T17:29:42+0000'),#[u'2017-10-27T17:29:37+0000', u'2017-10-27T17:29:42+0000'],
-            'job_stage': 'complete'#'created', 'started', 'complete', 'canceled', 'error' or 'all'
-        }
-        # Second, call your implementation
-        ret = self.getImpl().get_app_metrics(self.getContext(), m_params)
-        prnt_count = len(ret[0]['job_states']) - 10
-        print(pformat(ret[0]['job_states'][prnt_count:]))
-	'''
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
             'epoch_range':(1420083768000,1435677602000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2015,6,30)
@@ -210,7 +94,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_metrics")
+    @unittest.skip("skipped test_run_get_user_metrics")
     def test_run_get_user_metrics(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
@@ -222,7 +106,7 @@ class kb_MetricsTest(unittest.TestCase):
 	print(pformat(ret[0]['user_details'][0:10]))
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_job_states")
+    @unittest.skip("skipped test_run_get_user_job_states")
     def test_run_get_user_job_states(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
@@ -235,7 +119,7 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['ujs_results'][0:10]))
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_exec_apps")
+    @unittest.skip("skipped test_run_get_exec_apps")
     def test_run_get_exec_apps(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
@@ -246,7 +130,7 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['user_apps'][0:10]))
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_exec_tasks")
+    @unittest.skip("skipped test_run_get_exec_tasks")
     def test_run_get_exec_tasks(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
@@ -257,7 +141,7 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['user_tasks'][0:10]))
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_ujs_results")
+    @unittest.skip("skipped test_run_get_user_ujs_results")
     def test_run_get_user_ujs_results(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
@@ -271,7 +155,7 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['ujs_results'][0:10]))
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_details")
+    @unittest.skip("skipped test_run_get_user_details")
     def test_run_get_user_details(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],

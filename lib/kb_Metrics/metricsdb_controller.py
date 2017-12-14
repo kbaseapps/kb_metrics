@@ -125,6 +125,7 @@ class MetricsMongoDBController:
         exec_apps = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
 
 	ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
+	ujs_jobs = self.convert_isodate_to_millis(ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
 	#pprint("\n******Found {} ujs jobs".format(len(ujs_jobs)))
 
         self.cat_client = Catalog('https://ci.kbase.us/services/catalog', auth_svc='https://ci.kbase.us/services/auth/', token=token)
@@ -157,14 +158,13 @@ class MetricsMongoDBController:
 	ujs_ret = []
 	for j in ujs_jobs:
 	    u_j_s = copy.deepcopy(j)
-	    u_j_s.remove('_id')
-	    u_j_s['creation_time'] = _unix_time_millis_from_datetime(j['created'])
+	    del u_j_s['_id']
+	    u_j_s['creation_time'] = j['created']
 	    if 'started' in j:
-		u_j_s['exec_start_time'] = _unix_time_millis_from_datetime(j['started'])
-	    u_j_s['modification_time'] = _unix_time_millis_from_datetime(j['updated'])
-	    est = j.get('estcompl', None)
-	    estcompl = None if est is None else _unix_time_millis_from_datetime(est)
-	    u_j_s['time_info'] = [u_j_s['creation_time'], u_j_s['modification_time'], estcompl]
+		u_j_s['exec_start_time'] = j['started']
+	    u_j_s['modification_time'] = j['updated']
+	    u_j_s['estcompl'] = j.get('estcompl', None)
+	    u_j_s['time_info'] = [u_j_s['creation_time'], u_j_s['modification_time'], u_j_s['estcompl']]
 
 	    # Assuming complete, error and status all exist in the records returned
 	    if j['complete'] == True:
@@ -233,8 +233,10 @@ class MetricsMongoDBController:
 	params = self.process_parameters(params)
 
         db_ret = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
-
+	db_ret = self.convert_isodate_to_millis(db_ret, ['created', 'started', 'updated', 'estcompl'])
+	
         return {'ujs_results': db_ret}
+
 
     def get_exec_apps(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
@@ -266,8 +268,7 @@ class MetricsMongoDBController:
 	if len(db_ret) == 0:
 	    pprint("No records returned!")
 	else:
-	   for u in db_ret:
-		u['create'] = _unix_time_millis_from_datetime(u['create'])
+	    db_ret = self.convert_isodate_to_millis(db_ret, ['create', 'login'])
         return {'user_details': db_ret}
 
     def process_parameters(self, params):
@@ -321,3 +322,10 @@ class MetricsMongoDBController:
             return True
         return False
 
+
+    def convert_isodate_to_millis(self, src_list, dt_list):
+	for dr in src_list:
+	    for dt in dt_list:
+		if (dt in dr and isinstance(dr[dt], datetime.datetime)):
+        	    dr[dt] = _unix_time_millis_from_datetime(dr[dt])#dr[dt].__str__()
+	return src_list
