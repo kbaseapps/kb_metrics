@@ -233,6 +233,7 @@ class MetricsMongoDBController:
 	params = self.process_parameters(params)
 
         db_ret = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
+	del db_ret['_id']
 	db_ret = self.convert_isodate_to_millis(db_ret, ['created', 'started', 'updated', 'estcompl'])
 	
         return {'ujs_results': db_ret}
