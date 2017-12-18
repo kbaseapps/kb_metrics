@@ -158,7 +158,8 @@ class MetricsMongoDBController:
 	ujs_ret = []
 	for j in ujs_jobs:
 	    u_j_s = copy.deepcopy(j)
-	    del u_j_s['_id']
+	    u_j_s['job_id'] = str(u_j_s['_id'])
+ 	    del u_j_s['_id']	    
 	    u_j_s['creation_time'] = j['created']
 	    if 'started' in j:
 		u_j_s['exec_start_time'] = j['started']
@@ -189,21 +190,21 @@ class MetricsMongoDBController:
 
 	    for lat in app_task_list:
 		if ObjectId(lat['ujs_job_id']) == j['_id']:
-		    #if 'job_state' not in u_j_s:
-			#u_j_s['job_state'] = lat['job_state']
-			if 'job_input' in lat:
-			    u_j_s['job_input'] = lat['job_input']
-			    if 'app_id' in lat['job_input']:
-				u_j_s['app_id'] = lat['job_input']['app_id']
-			    if 'method' in lat['job_input']:
-				u_j_s['method'] = lat['job_input']['method']
-			    if 'wsid' in lat['job_input']:
-				u_j_s['wsid'] = lat['job_input']['wsid']
-			    elif 'params' in lat['job_input']:
-				if 'ws_id' in lat['job_input']['params']:
-				    u_j_s['wsid'] = lat['job_input']['params']['ws_id']
-			if 'job_output' in lat:
-			    u_j_s['job_output'] = lat['job_output']
+		    if 'job_state' not in u_j_s:
+			u_j_s['job_state'] = lat['job_state']
+		    if 'job_input' in lat:
+			u_j_s['job_input'] = lat['job_input']
+			if 'app_id' in lat['job_input']:
+			    u_j_s['app_id'] = lat['job_input']['app_id']
+			if 'method' in lat['job_input']:
+			    u_j_s['method'] = lat['job_input']['method']
+			if 'wsid' in lat['job_input']:
+			    u_j_s['wsid'] = lat['job_input']['wsid']
+			elif 'params' in lat['job_input']:
+			    if 'ws_id' in lat['job_input']['params']:
+				u_j_s['wsid'] = lat['job_input']['params']['ws_id']
+		    if 'job_output' in lat:
+			u_j_s['job_output'] = lat['job_output']
 	   
 	    #get some info from the client groups
 	    for clnt in c_groups:
@@ -217,6 +218,7 @@ class MetricsMongoDBController:
 		u_j_s['finish_time'] = u_j_s['modification_time']
 		u_j_s['run_time'] = u_j_s['finish_time'] - u_j_s['exec_start_time']
 	    if u_j_s['job_state'] == 'suspend':
+		u_j_s['finish_time'] = u_j_s['modification_time']
 		u_j_s['run_time'] = u_j_s['modification_time'] - u_j_s['exec_start_time']
 	    elif u_j_s['job_state'] == 'in-progress': 
 		u_j_s['running_time'] = u_j_s['modification_time'] - u_j_s['exec_start_time']
