@@ -85,8 +85,8 @@ class MetricsMongoDBController:
             raise ValueError('You do not have permission to view this data.')
 
 	params = self.process_parameters(params)
-	params['minTime'] = _datetime_from_utc("2017-09-30T23:59:59.000Z")
-	params['maxTime'] = _datetime_from_utc("2017-12-31T23:59:59.000Z")
+	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
         db_ret = self.metrics_dbi.aggr_total_logins(params['minTime'], params['maxTime'])
 
