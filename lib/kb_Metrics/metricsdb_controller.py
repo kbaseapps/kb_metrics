@@ -85,8 +85,8 @@ class MetricsMongoDBController:
             raise ValueError('You do not have permission to view this data.')
 
 	params = self.process_parameters(params)
-	minTime = _datetime_from_utc("2017-09-30T23:59:59.000Z")
-	maxTime = _datetime_from_utc("2017-12-31T23:59:59.000Z")
+	params['minTime'] = _datetime_from_utc("2017-09-30T23:59:59.000Z")
+	params['maxTime'] = _datetime_from_utc("2017-12-31T23:59:59.000Z")
 
         db_ret = self.metrics_dbi.aggr_total_logins(params['minTime'], params['maxTime'])
 
@@ -126,10 +126,11 @@ class MetricsMongoDBController:
           'wsid': 25735},
 	}
 	'''
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
 	params = self.process_parameters(params)
+        if not self.is_admin(requesting_user):
+            #raise ValueError('You do not have permission to view this data.')
+            #pprint(requesting_user + ': You have permission to view ONLY your jobs.')
+	    params['user_ids'] = [requesting_user]
 
 	# query dbs to get lists of tasks and jobs
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
@@ -241,12 +242,12 @@ class MetricsMongoDBController:
 	return ujs_ret
 
     def get_ujs_results(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
 	params = self.process_parameters(params)
-
-        db_ret = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
+        if not self.is_admin(requesting_user):
+            #pprint(requesting_user + ': You have permission to view ONLY your jobs.')
+	    params['user_ids'] = [requesting_user]
+	
+	db_ret = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
 	for dr in db_ret:
 	    dr['_id'] = str(dr['_id'])
 	db_ret = self.convert_isodate_to_millis(db_ret, ['created', 'started', 'updated', 'estcompl'])

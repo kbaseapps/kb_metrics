@@ -62,9 +62,11 @@ class MongoMetricsDBI:
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
 	m_cursor = self.kbworkspaces.aggregate(pipeline)
-
+	# list(m_cursor) only gets the keys [u'ok', u'result'] 
+	m_result = m_cursor['result']
+	# while list(m_result) gets the list of results
 	# convert cursor to list
-        return list(m_cursor)
+        return list(m_result)
 
     #def aggr_user_logins(self, userIds, minTime, maxTime):
 
