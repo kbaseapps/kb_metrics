@@ -79,6 +79,18 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
+    #@unittest.skip("skipped test_run_get_total_logins")
+    def test_run_get_total_logins(self):
+        m_params = {
+            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
+        }
+        # Second, call your implementation
+        ret = self.getImpl().get_total_logins(self.getContext(), m_params)
+        print("get_total_logins returns {} records:\n".format(len(ret[0]['metrics_result'])))
+	print(pformat(ret[0]['metrics_result'][0:10]))
+
+    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
+    # Uncomment to skip this test
     #@unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
         m_params = {
@@ -102,8 +114,8 @@ class kb_MetricsTest(unittest.TestCase):
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_metrics(self.getContext(), m_params)
-        print("get_user_metrics returns {} records:\n".format(len(ret[0]['user_details'])))
-	print(pformat(ret[0]['user_details'][0:10]))
+        print("get_user_metrics returns {} records:\n".format(len(ret[0]['metrics_result'])))
+	print(pformat(ret[0]['metrics_result'][0:10]))
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_job_states")
@@ -115,8 +127,8 @@ class kb_MetricsTest(unittest.TestCase):
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_job_states(self.getContext(), m_params)
-        print("Total number of records returned="+str(len(ret[0]['ujs_results'])))
-        print(pformat(ret[0]['ujs_results'][0:10]))
+        print("Total number of records returned="+str(len(ret[0]['metrics_result'])))
+        print(pformat(ret[0]['metrics_result'][0:10]))
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_exec_apps")
@@ -127,7 +139,7 @@ class kb_MetricsTest(unittest.TestCase):
         }
         # Second, call your implementation
         ret = self.getImpl().get_exec_apps(self.getContext(), m_params)
-        print(pformat(ret[0]['user_apps'][0:10]))
+        print(pformat(ret[0]['metrics_result'][0:10]))
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_exec_tasks")
@@ -138,7 +150,7 @@ class kb_MetricsTest(unittest.TestCase):
         }
         # Second, call your implementation
         ret = self.getImpl().get_exec_tasks(self.getContext(), m_params)
-        print(pformat(ret[0]['user_tasks'][0:10]))
+        print(pformat(ret[0]['metrics_result'][0:10]))
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_ujs_results")
@@ -151,8 +163,8 @@ class kb_MetricsTest(unittest.TestCase):
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_ujs_results(self.getContext(), m_params)
-        print("Total number of records returned="+str(len(ret[0]['ujs_results'])))
-        print(pformat(ret[0]['ujs_results'][0:10]))
+        print("Total number of records returned="+str(len(ret[0]['metrics_result'])))
+        print(pformat(ret[0]['metrics_result'][0:10]))
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_details")
@@ -163,4 +175,4 @@ class kb_MetricsTest(unittest.TestCase):
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_details(self.getContext(), m_params)
-        print(pformat(ret[0]['user_details'][0:10]))
+        print(pformat(ret[0]['metrics_result'][0:10]))

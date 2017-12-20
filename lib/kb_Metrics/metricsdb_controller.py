@@ -80,6 +80,18 @@ class MetricsMongoDBController:
 
 
     # functions to get the requested records...
+    def get_total_logins(self, requesting_user, params, token):
+        if not self.is_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+	params = self.process_parameters(params)
+	minTime = _datetime_from_utc("2017-09-30T23:59:59.000Z")
+	maxTime = _datetime_from_utc("2017-12-31T23:59:59.000Z")
+
+        db_ret = self.metrics_dbi.aggr_total_logins(params['minTime'], params['maxTime'])
+
+        return {'metrics_result': db_ret}
+
     def get_user_job_states(self, requesting_user, params, token):
 	'''
 	To get the job's 'status', 'complete'=true/false, etc., we can do joining as follows
@@ -138,7 +150,7 @@ class MetricsMongoDBController:
 	'''
         clnt_groups = self.cat_client.get_client_groups({})
 
-        return {'ujs_results': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs, clnt_groups)}
+        return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs, clnt_groups)}
 
 
     def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs, c_groups):
@@ -236,11 +248,10 @@ class MetricsMongoDBController:
 
         db_ret = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
 	for dr in db_ret:
-	    del dr['_id']
+	    dr['_id'] = str(dr['_id'])
 	db_ret = self.convert_isodate_to_millis(db_ret, ['created', 'started', 'updated', 'estcompl'])
 	
-        return {'ujs_results': db_ret}
-
+        return {'metrics_result': db_ret}
 
     def get_exec_apps(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
@@ -250,7 +261,7 @@ class MetricsMongoDBController:
 
         db_ret = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
 
-        return {'user_apps': db_ret}
+        return {'metrics_result': db_ret}
 
     def get_exec_tasks(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
@@ -260,7 +271,7 @@ class MetricsMongoDBController:
 
         db_ret = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
 
-        return {'user_tasks': db_ret}
+        return {'metrics_result': db_ret}
 
     def get_user_details(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
@@ -273,7 +284,7 @@ class MetricsMongoDBController:
 	    pprint("No records returned!")
 	else:
 	    db_ret = self.convert_isodate_to_millis(db_ret, ['create', 'login'])
-        return {'user_details': db_ret}
+        return {'metrics_result': db_ret}
 
     def process_parameters(self, params):
         if params.get('user_ids', None) is None:
@@ -325,7 +336,6 @@ class MetricsMongoDBController:
         if username in self.adminList:
             return True
         return False
-
 
     def convert_isodate_to_millis(self, src_list, dt_list):
 	for dr in src_list:

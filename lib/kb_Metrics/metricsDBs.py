@@ -5,6 +5,7 @@ import datetime
 from pymongo import MongoClient
 from pymongo import ASCENDING
 from pymongo import DESCENDING
+from bson.son import SON
 
 
 def _convert_to_datetime(dt):
@@ -36,6 +37,8 @@ class MongoMetricsDBI:
     _EXEC_TASKS='exec_tasks'#exec_engine.exec_tasks
     _TASK_QUEUE='task_queue'#exec_engine.task_queue
 
+    _WS_WORKSPACES='workspaces'#workspace.workspaces
+
 
     def __init__(self, mongo_host, mongo_dbs, mongo_user, mongo_psswd):
         self.mongo_clients = dict()
@@ -47,6 +50,23 @@ class MongoMetricsDBI:
 	    # grab a handle to the database
             self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
 
+    def aggr_total_logins(self, minTime, maxTime):
+	# Define the pipeline operations 
+	pipeline = [
+	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
+	    {"$project":{"year_mod":{"$year":"$moddate"},"month_mod":{"$month":"$moddate"},"date_mod":{"$dayOfMonth":"$moddate"},"owner":1,"ws":1,"numObj":1,"meta":1}},
+	    {"$group":{"_id":{"user":"$owner","year_mod":"$year_mod","month_mod":"$month_mod"},"count_user_ws_logins":{"$sum":1}}},
+	    {"$group":{"_id":{"year_mod":"$_id.year_mod","month_mod":"$_id.month_mod"},"year_mon_logins":{"$sum":"$count_user_ws_logins"}}},
+	    {"$sort":{"_id.year_mod":1, "_id.month_mod":1}}
+	]
+	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
+        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+	m_cursor = self.kbworkspaces.aggregate(pipeline)
+
+	# convert cursor to list
+        return list(m_cursor)
+
+    #def aggr_user_logins(self, userIds, minTime, maxTime):
 
     # functions to query the databases...
     def list_exec_tasks(self, minTime, maxTime):

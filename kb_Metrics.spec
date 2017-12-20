@@ -46,52 +46,34 @@ module kb_Metrics {
     funcdef get_app_metrics(AppMetricsParams params)
         returns (AppMetricsResult return_records) authentication required;
 
-    typedef structure {
-        string filter_str; 
-        time_range time_range;
-    } UserMetricsParams;
-
-    typedef structure {
-        UnspecifiedObject user_metrics;
-    } UserMetricsResult;
-    
+    /* unified input/output parameters*/
     typedef structure {
         list<user_id> user_ids;
         epoch_range epoch_range;
-    } UserJobStatsParams;
+    } MetricsInputParams;
 
     typedef structure {
-        UnspecifiedObject user_apps;
-    } ExecAppsResult;
+        UnspecifiedObject metrics_result;
+    } MetricsOutput;
     
-    funcdef get_exec_apps(UserJobStatsParams params)
-        returns (ExecAppsResult return_records) authentication required;
+    funcdef get_exec_apps(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
+    
+    funcdef get_exec_tasks(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
+    
+    funcdef get_user_details(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
 
-    typedef structure {
-        UnspecifiedObject user_tasks;
-    } ExecTasksResult;
+    funcdef get_total_logins(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
     
-    funcdef get_exec_tasks(UserJobStatsParams params)
-        returns (ExecTasksResult return_records) authentication required;
+    funcdef get_user_metrics(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
 
-    typedef structure {
-        UnspecifiedObject user_details;
-    } UserDetailsResult;
+    funcdef get_user_ujs_results(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
     
-    funcdef get_user_details(UserJobStatsParams params)
-        returns (UserDetailsResult return_records) authentication required;
-
-    /*funcdef get_user_metrics(UserMetricsParams params)*/
-    funcdef get_user_metrics(UserJobStatsParams params)
-        returns (UserDetailsResult return_records) authentication required;
-    
-    typedef structure {
-        UnspecifiedObject ujs_results;
-    } UserJobStatesResult;
-
-    funcdef get_user_ujs_results(UserJobStatsParams params)
-        returns (UserJobStatesResult return_records) authentication required;
-    
-    funcdef get_user_job_states(UserJobStatsParams params)
-        returns (UserJobStatesResult return_records) authentication required;
+    funcdef get_user_job_states(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
 };
