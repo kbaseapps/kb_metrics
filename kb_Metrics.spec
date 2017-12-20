@@ -67,6 +67,15 @@ module kb_Metrics {
 
     funcdef get_total_logins(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
+
+    funcdef get_user_ws(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
+
+    funcdef get_user_narratives(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
+
+    funcdef get_user_numObjs(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
     
     funcdef get_user_metrics(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;

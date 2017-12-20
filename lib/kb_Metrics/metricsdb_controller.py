@@ -92,6 +92,42 @@ class MetricsMongoDBController:
 
         return {'metrics_result': db_ret}
 
+    def get_user_ws(self, requesting_user, params, token):
+        if not self.is_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+	params = self.process_parameters(params)
+	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+
+        db_ret = self.metrics_dbi.aggr_user_ws(params['minTime'], params['maxTime'])
+
+        return {'metrics_result': db_ret}
+
+    def get_user_narratives(self, requesting_user, params, token):
+        if not self.is_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+	params = self.process_parameters(params)
+	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+
+        db_ret = self.metrics_dbi.aggr_user_narratives(params['minTime'], params['maxTime'])
+
+        return {'metrics_result': db_ret}
+
+    def get_user_numObjs(self, requesting_user, params, token):
+        if not self.is_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+	params = self.process_parameters(params)
+	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+
+        db_ret = self.metrics_dbi.aggr_user_numObjs(params['minTime'], params['maxTime'])
+
+        return {'metrics_result': db_ret}
+
     def get_user_job_states(self, requesting_user, params, token):
 	'''
 	To get the job's 'status', 'complete'=true/false, etc., we can do joining as follows

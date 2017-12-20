@@ -79,10 +79,11 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_total_logins")
+    @unittest.skip("skipped test_run_get_total_logins")
     def test_run_get_total_logins(self):
         m_params = {
-            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
+            'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+            #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
         }
         # Second, call your implementation
         ret = self.getImpl().get_total_logins(self.getContext(), m_params)
@@ -91,7 +92,43 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_app_metrics")
+    @unittest.skip("skipped test_run_get_user_ws")
+    def test_run_get_user_ws(self):
+        m_params = {
+            'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+        }
+        # Second, call your implementation
+        ret = self.getImpl().get_user_ws(self.getContext(), m_params)
+        print("get_user_ws returns {} records:\n".format(len(ret[0]['metrics_result'])))
+	print(pformat(ret[0]['metrics_result']))
+
+    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
+    # Uncomment to skip this test
+    #@unittest.skip("skipped test_run_get_user_narratives")
+    def test_run_get_user_narratives(self):
+        m_params = {
+            'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+        }
+        # Second, call your implementation
+        ret = self.getImpl().get_user_narratives(self.getContext(), m_params)
+        print("get_user_narratives returns {} records:\n".format(len(ret[0]['metrics_result'])))
+	print(pformat(ret[0]['metrics_result']))
+
+    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
+    # Uncomment to skip this test
+    #@unittest.skip("skipped test_run_get_user_numObjs")
+    def test_run_get_user_numObjs(self):
+        m_params = {
+            'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+        }
+        # Second, call your implementation
+        ret = self.getImpl().get_user_numObjs(self.getContext(), m_params)
+        print("get_user_numObjs returns {} records:\n".format(len(ret[0]['metrics_result'])))
+	print(pformat(ret[0]['metrics_result']))
+
+    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
+    # Uncomment to skip this test
+    @unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],

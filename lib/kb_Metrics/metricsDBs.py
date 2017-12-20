@@ -50,6 +50,7 @@ class MongoMetricsDBI:
 	    # grab a handle to the database
             self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
 
+    # functions to query the databases...
     def aggr_total_logins(self, minTime, maxTime):
 	# Define the pipeline operations 
 	pipeline = [
@@ -65,12 +66,56 @@ class MongoMetricsDBI:
 	# list(m_cursor) only gets the keys [u'ok', u'result'] 
 	m_result = m_cursor['result']
 	# while list(m_result) gets the list of results
-	# convert cursor to list
         return list(m_result)
 
-    #def aggr_user_logins(self, userIds, minTime, maxTime):
+    def aggr_user_ws(self, minTime, maxTime):
+	# Define the pipeline operations 
+	pipeline = [
+	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
+	    {"$project":{"year_mod":{"$year":"$moddate"},"month_mod":{"$month":"$moddate"},"date_mod":{"$dayOfMonth":"$moddate"},"owner":1,"ws":1,"numObj":1,"meta":1}},
+	    {"$group":{"_id":{"user":"$owner","year_mod":"$year_mod","month_mod":"$month_mod"},"count_user_ws":{"$sum":1}}},
+	    {"$sort":{"_id.user":1,"_id.year_mod":1, "_id.month_mod":1}}
+	]
+	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
+        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+	m_cursor = self.kbworkspaces.aggregate(pipeline)
+	# list(m_cursor) only gets the keys [u'ok', u'result'] 
+	m_result = m_cursor['result']
+	# while list(m_result) gets the list of results
+        return list(m_result)
 
-    # functions to query the databases...
+    def aggr_user_narratives(self, minTime, maxTime):
+	# Define the pipeline operations 
+	pipeline = [
+	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime},"meta":{"$exists":True,"$not":{"$size":0}}}},
+	    {"$project":{"year_mod":{"$year":"$moddate"},"month_mod":{"$month":"$moddate"},"date_mod":{"$dayOfMonth":"$moddate"},"owner":1,"ws":1,"numObj":1,"meta":1}},
+	    {"$group":{"_id":{"user":"$owner","year_mod":"$year_mod","month_mod":"$month_mod"},"count_user_narratives":{"$sum":1}}},
+	    {"$sort":{"_id.user":1,"_id.year_mod":1, "_id.month_mod":1}}
+	]
+	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
+        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+	m_cursor = self.kbworkspaces.aggregate(pipeline)
+	# list(m_cursor) only gets the keys [u'ok', u'result'] 
+	m_result = m_cursor['result']
+	# while list(m_result) gets the list of results
+        return list(m_result)
+
+    def aggr_user_numObjs(self, minTime, maxTime):
+	# Define the pipeline operations 
+	pipeline = [
+	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
+	    {"$project":{"year_mod":{"$year":"$moddate"},"month_mod":{"$month":"$moddate"},"date_mod":{"$dayOfMonth":"$moddate"},"owner":1,"ws":1,"numObj":1,"meta":1}},
+	    {"$group":{"_id":{"user":"$owner","year_mod":"$year_mod","month_mod":"$month_mod"},"count_user_numObjs":{"$sum":"$numObj"}}},
+	    {"$sort":{"_id.user":1,"_id.year_mod":1, "_id.month_mod":1}}
+	]
+	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
+        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+	m_cursor = self.kbworkspaces.aggregate(pipeline)
+	# list(m_cursor) only gets the keys [u'ok', u'result'] 
+	m_result = m_cursor['result']
+	# while list(m_result) gets the list of results
+        return list(m_result)
+
     def list_exec_tasks(self, minTime, maxTime):
         filter = {}
 
