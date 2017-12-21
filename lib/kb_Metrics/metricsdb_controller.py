@@ -215,6 +215,15 @@ class MetricsMongoDBController:
 	    u_j_s['modification_time'] = j['updated']
 	    u_j_s['estcompl'] = j.get('estcompl', None)
 	    u_j_s['time_info'] = [u_j_s['creation_time'], u_j_s['modification_time'], u_j_s['estcompl']]
+	    if not u_j_s.get('authstrat', None) is None:
+		if u_j_s.get('authstrat', None) == 'kbaseworkspace':
+		    u_j_s['wsid'] = u_j_s['authparam']
+	    if not u_j_s.get('desc', None) is None:
+		desc = u_j_s['desc'].split()[-1]
+		pprint(desc)
+		if '.' in desc:
+		    u_j_s['app_id'], u_j_s['method'] = desc.split('.')
+		   
 
 	    # Assuming complete, error and status all exist in the records returned
 	    if j['complete'] == True:
@@ -241,17 +250,25 @@ class MetricsMongoDBController:
 		if ObjectId(lat['ujs_job_id']) == j['_id']:
 		    if 'job_state' not in u_j_s:
 			u_j_s['job_state'] = lat['job_state']
+
 		    if 'job_input' in lat:
 			u_j_s['job_input'] = lat['job_input']
-			if 'app_id' in lat['job_input']:
-			    u_j_s['app_id'] = lat['job_input']['app_id']
-			if 'method' in lat['job_input']:
-			    u_j_s['method'] = lat['job_input']['method']
-			if 'wsid' in lat['job_input']:
-			    u_j_s['wsid'] = lat['job_input']['wsid']
-			elif 'params' in lat['job_input']:
-			    if 'ws_id' in lat['job_input']['params']:
-				u_j_s['wsid'] = lat['job_input']['params']['ws_id']
+			if u_j_s.get('app_id', None) is None:
+			    if 'app_id' in lat['job_input']:
+				u_j_s['app_id'] = lat['job_input']['app_id']
+			    if 'method' in lat['job_input']:
+				u_j_s['method'] = lat['job_input']['method']
+			if u_j_s.get('wsid', None) is None:
+			    if 'wsid' in lat['job_input']:
+				u_j_s['wsid'] = lat['job_input']['wsid']
+			    elif 'params' in lat['job_input']:
+				if 'ws_id' in lat['job_input']['params']:
+				    u_j_s['wsid'] = lat['job_input']['params']['ws_id']
+				if 'workspace' in lat['job_input']['params']:
+				    u_j_s['workspace'] = lat['job_input']['params']['workspace']
+				elif 'workspace_name' in lat['job_input']['params']:
+				    u_j_s['workspace'] = lat['job_input']['params']['workspace_name']
+
 		    if 'job_output' in lat:
 			u_j_s['job_output'] = lat['job_output']
 	   
@@ -263,6 +280,11 @@ class MetricsMongoDBController:
 		    u_j_s['module'] = clnt['module_name']
 		    u_j_s['function'] = clnt['function_name']
 		    break
+	    #default client groups to 'njs'
+	    if u_j_s.get('client_groups', None) is None:
+		u_j_s['client_groups'] = ['njs']
+
+	    #set the run/running/in_queue time
 	    if u_j_s['job_state'] == 'completed':
 		u_j_s['finish_time'] = u_j_s['modification_time']
 		u_j_s['run_time'] = u_j_s['finish_time'] - u_j_s['exec_start_time']
