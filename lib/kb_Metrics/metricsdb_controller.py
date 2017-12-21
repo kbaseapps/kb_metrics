@@ -176,8 +176,6 @@ class MetricsMongoDBController:
 	ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
 	ujs_jobs = self.convert_isodate_to_millis(ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
 	#pprint("\n******Found {} ujs jobs".format(len(ujs_jobs)))
-
-        self.cat_client = Catalog('https://ci.kbase.us/services/catalog', auth_svc='https://ci.kbase.us/services/auth/', token=token)
 	'''
         self.workspace_url = config['workspace-url']
         self.ws_client = Workspace(self.workspace_url, token=token)
@@ -185,15 +183,18 @@ class MetricsMongoDBController:
         self.ujs_client = UserAndJobState('https://ci.kbase.us/services/userandjobstate', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         self.uprf_client = UserProfile('https://ci.kbase.us/services/user_profile/rpc', auth_svc='https://ci.kbase.us/services/auth/', token=token)
 	'''
+        self.cat_client = Catalog('https://ci.kbase.us/services/catalog', auth_svc='https://ci.kbase.us/services/auth/', token=token)
         clnt_groups = self.cat_client.get_client_groups({})
-
+ 
         return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs, clnt_groups)}
 
 
     def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs, c_groups):
-	# combine/join the apps, tasks and jobs lists to get the final return data
+	"""
+	combine/join the apps, tasks and jobs lists to get the final return data
+	"""
 	# 1) combine/join the apps and tasks to get the app_task_list
-	app_task_list = [] 
+	app_task_list = []
 	for t in exec_tasks:
 	    ta = copy.deepcopy(t)
 	    for a in exec_apps:
@@ -255,9 +256,22 @@ class MetricsMongoDBController:
 			u_j_s['job_input'] = lat['job_input']
 			if u_j_s.get('app_id', None) is None:
 			    if 'app_id' in lat['job_input']:
-				u_j_s['app_id'] = lat['job_input']['app_id']
+				if '/' in lat['job_input']['app_id']:
+				    u_j_s['app_id'],u_j_s['method'] = lat['job_input']['app_id'].split('/')
+				elif '.' in lat['job_input']['app_id']:
+				    u_j_s['app_id'],u_j_s['method'] = lat['job_input']['app_id'].split('.')
+				else:
+				    u_j_s['app_id'] = lat['job_input']['app_id']
+
+			if u_j_s.get('method', None) is None:
 			    if 'method' in lat['job_input']:
-				u_j_s['method'] = lat['job_input']['method']
+				if '/' in lat['job_input']['method']:
+				    u_j_s['app_id'], u_j_s['method'] = lat['job_input']['method'].split('/')
+				elif '.' in lat['job_input']['method']:
+				    u_j_s['app_id'], u_j_s['method'] = lat['job_input']['method'].split('.')
+				else:				
+				    u_j_s['method'] = lat['job_input']['method']
+
 			if u_j_s.get('wsid', None) is None:
 			    if 'wsid' in lat['job_input']:
 				u_j_s['wsid'] = lat['job_input']['wsid']
@@ -265,20 +279,27 @@ class MetricsMongoDBController:
 				if 'ws_id' in lat['job_input']['params']:
 				    u_j_s['wsid'] = lat['job_input']['params']['ws_id']
 				if 'workspace' in lat['job_input']['params']:
-				    u_j_s['workspace'] = lat['job_input']['params']['workspace']
+				    u_j_s['workspace_name'] = lat['job_input']['params']['workspace']
 				elif 'workspace_name' in lat['job_input']['params']:
-				    u_j_s['workspace'] = lat['job_input']['params']['workspace_name']
+				    u_j_s['workspace_name'] = lat['job_input']['params']['workspace_name']
 
 		    if 'job_output' in lat:
 			u_j_s['job_output'] = lat['job_output']
-	   
+
+	    #get the narrative name and version if any
+	    if not u_j_s.get('wsid', None) is None:
+		n_nm, n_ver = self.map_narrative(u_j_s[ws_id]) 
+		if n_nm != "" and n_ver != 0:
+		    u_j_s['narrative_name'] = n_nm
+		    u_j_s['narrative_version'] = n_ver  
+
 	    #get some info from the client groups
 	    for clnt in c_groups:
-		if 'method' in u_j_s and clnt['module_name'] in u_j_s['method']:
+		if 'app_id' in u_j_s and clnt['module_name'] == u_j_s['app_id']:
 		    #pprint("client func={} and ujs func={}".format(clnt['function_name'],u_j_s['method']))
 		    u_j_s['client_groups'] = clnt['client_groups']
-		    u_j_s['module'] = clnt['module_name']
-		    u_j_s['function'] = clnt['function_name']
+		    #u_j_s['module'] = clnt['module_name']
+		    #u_j_s['function'] = clnt['function_name']
 		    break
 	    #default client groups to 'njs'
 	    if u_j_s.get('client_groups', None) is None:
@@ -298,6 +319,32 @@ class MetricsMongoDBController:
 
 	    ujs_ret.append(u_j_s)
 	return ujs_ret
+
+    def map_narrative(self, ws_id):
+	"""
+	get the narrative name and version
+	"""
+	n_name = ''
+	n_version = 0
+	ws_name = ''
+	ws_owner = ''
+	ws_narratives = self.metrics_dbi.list_ws_narratives()
+	for ws in ws_narratives:
+	    if string(ws['ws']) == str(ws_id):
+		ws_name = ws['name']
+		ws_owner = ws['owner']
+		n_name = ws_name
+		if not ws.get('meta', None) is None:
+		    w_meta = ws['meta']
+		    for w_m in w_meta:
+			if w_m['k'] == 'narrative':
+			    n_version = w_m['v']
+			elif w_m['k'] == 'narrative_nice_name':
+			    n_name = w_m['v']
+			else:
+			    pass
+		break
+	return (n_name, n_version)
 
     def get_ujs_results(self, requesting_user, params, token):
 	params = self.process_parameters(params)

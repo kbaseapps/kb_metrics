@@ -116,6 +116,20 @@ class MongoMetricsDBI:
 	# while list(m_result) gets the list of results
         return list(m_result)
 
+    def list_ws_narratives(self):
+	# Define the pipeline operations
+	pipeline = [
+	    {"$match":{"moddate":{"meta":{"$exists":True,"$not":{"$size":0}}}}},
+	    {"$project":{"owner":1,"ws":1,"name":1,"meta":1}}
+	]
+	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
+        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+	m_cursor = self.kbworkspaces.aggregate(pipeline)
+	# list(m_cursor) only gets the keys [u'ok', u'result'] 
+	m_result = m_cursor['result']
+	# while list(m_result) gets the list of results
+        return list(m_result)
+
     def list_exec_tasks(self, minTime, maxTime):
         filter = {}
 
