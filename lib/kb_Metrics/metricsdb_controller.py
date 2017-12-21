@@ -288,7 +288,7 @@ class MetricsMongoDBController:
 
 	    #get the narrative name and version if any
 	    if not u_j_s.get('wsid', None) is None:
-		n_nm, n_ver = self.map_narrative(u_j_s[ws_id]) 
+		n_nm, n_ver = self.map_narrative(u_j_s['wsid']) 
 		if n_nm != "" and n_ver != 0:
 		    u_j_s['narrative_name'] = n_nm
 		    u_j_s['narrative_version'] = n_ver  
