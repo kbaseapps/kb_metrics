@@ -20,21 +20,6 @@ from NarrativeJobService.NarrativeJobServiceClient import NarrativeJobService
 from UserAndJobState.UserAndJobStateClient import UserAndJobState
 from UserProfile.UserProfileClient import UserProfile
 
-def _timestamp_from_utc(date_utc_str):
-    dt = _datetime_from_utc(date_utc_str)
-    return int(time.mktime(dt.timetuple())) #in miliseconds
-
-def _unix_time_millis_from_datetime(dt):
-    epoch = datetime.datetime.utcfromtimestamp(0)
-    return int((dt - epoch).total_seconds()*1000)
-
-def _datetime_from_utc(date_utc_str):
-    try:#for u'2017-08-27T17:29:37+0000'
-        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S+0000')
-    except ValueError as v_er:#for ISO-formatted date & time, e.g., u'2015-02-15T22:31:47.763Z'
-        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S.%fZ')
-    return dt
-
 
 class MetricsMongoDBController:
 
@@ -272,6 +257,9 @@ class MetricsMongoDBController:
 				else:				
 				    u_j_s['method'] = lat['job_input']['method']
 
+			#add this line here to preserve the module_name/method for 'app_id'
+			u_j_s['app_id'] = u_j_s['app_id'] + '/' + u_j_s['method']
+
 			if u_j_s.get('wsid', None) is None:
 			    if 'wsid' in lat['job_input']:
 				u_j_s['wsid'] = lat['job_input']['wsid']
@@ -449,3 +437,20 @@ class MetricsMongoDBController:
 		if (dt in dr and isinstance(dr[dt], datetime.datetime)):
         	    dr[dt] = _unix_time_millis_from_datetime(dr[dt])#dr[dt].__str__()
 	return src_list
+
+
+def _timestamp_from_utc(date_utc_str):
+    dt = _datetime_from_utc(date_utc_str)
+    return int(time.mktime(dt.timetuple())) #in miliseconds
+
+def _datetime_from_utc(date_utc_str):
+    try:#for u'2017-08-27T17:29:37+0000'
+        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S+0000')
+    except ValueError as v_er:#for ISO-formatted date & time, e.g., u'2015-02-15T22:31:47.763Z'
+        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S.%fZ')
+    return dt
+
+def _unix_time_millis_from_datetime(dt):
+    epoch = datetime.datetime.utcfromtimestamp(0)
+    return int((dt - epoch).total_seconds()*1000)
+
