@@ -206,10 +206,8 @@ class MetricsMongoDBController:
 		    u_j_s['wsid'] = u_j_s['authparam']
 	    if not u_j_s.get('desc', None) is None:
 		desc = u_j_s['desc'].split()[-1]
-		pprint(desc)
 		if '.' in desc:
-		    u_j_s['app_id'], u_j_s['method'] = desc.split('.')
-		   
+		    u_j_s['method'] = desc
 
 	    # Assuming complete, error and status all exist in the records returned
 	    if j['complete'] == True:
@@ -240,25 +238,10 @@ class MetricsMongoDBController:
 		    if 'job_input' in lat:
 			u_j_s['job_input'] = lat['job_input']
 			if u_j_s.get('app_id', None) is None:
-			    if 'app_id' in lat['job_input']:
-				if '/' in lat['job_input']['app_id']:
-				    u_j_s['app_id'],u_j_s['method'] = lat['job_input']['app_id'].split('/')
-				elif '.' in lat['job_input']['app_id']:
-				    u_j_s['app_id'],u_j_s['method'] = lat['job_input']['app_id'].split('.')
-				else:
-				    u_j_s['app_id'] = lat['job_input']['app_id']
+			    u_j_s['app_id'] = self.parse_app_id(lat)
 
 			if u_j_s.get('method', None) is None:
-			    if 'method' in lat['job_input']:
-				if '/' in lat['job_input']['method']:
-				    u_j_s['app_id'], u_j_s['method'] = lat['job_input']['method'].split('/')
-				elif '.' in lat['job_input']['method']:
-				    u_j_s['app_id'], u_j_s['method'] = lat['job_input']['method'].split('.')
-				else:				
-				    u_j_s['method'] = lat['job_input']['method']
-
-			#add this line here to preserve the module_name/method for 'app_id'
-			u_j_s['app_id'] = u_j_s['app_id'] + '/' + u_j_s['method']
+			    u_j_s['method'] = self.parse_method(lat)
 
 			if u_j_s.get('wsid', None) is None:
 			    if 'wsid' in lat['job_input']:
@@ -273,6 +256,10 @@ class MetricsMongoDBController:
 
 		    if 'job_output' in lat:
 			u_j_s['job_output'] = lat['job_output']
+
+	    if (u_j_s.get('app_id', None) is None and
+		not u_j_s.get('method', None) is None):
+		    u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
 
 	    #get the narrative name and version if any
 	    if not u_j_s.get('wsid', None) is None:
@@ -307,6 +294,30 @@ class MetricsMongoDBController:
 
 	    ujs_ret.append(u_j_s)
 	return ujs_ret
+
+    def parse_app_id(self, lat):
+	app_id = ''
+	if 'app_id' in lat['job_input']:
+	    if '/' in lat['job_input']['app_id']:
+		app_id = lat['job_input']['app_id']
+	    elif '.' in lat['job_input']['app_id']:
+		app_id = lat['job_input']['app_id'].replace('.', '/')
+	    else:
+		app_id = lat['job_input']['app_id']
+
+	return app_id
+
+    def parse_method(self, lat):
+	method = ''
+	if 'method' in lat['job_input']:
+	    if '.' in lat['job_input']['method']:
+		method = lat['job_input']['method']
+	    elif '/' in lat['job_input']['method']:
+		method = lat['job_input']['method'].replace('/', '.')
+	    else:
+		method = lat['job_input']['method']
+
+	return app_id
 
     def map_narrative(self, ws_id):
 	"""
