@@ -62,6 +62,9 @@ class MetricsMongoDBController:
  		    self.mongodb_dbList,
                     config['mongodb-user'],
                     config['mongodb-pwd'])
+	# for access to the Catalog API
+	self.auth_service_url = config['auth-service-url']
+	self.catalog_url = config['kbase-endpoint'] + '/catalog'
 
 
     # functions to get the requested records...
@@ -161,15 +164,8 @@ class MetricsMongoDBController:
 	ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
 	ujs_jobs = self.convert_isodate_to_millis(ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
 	#pprint("\n******Found {} ujs jobs".format(len(ujs_jobs)))
-	'''
-        self.workspace_url = config['workspace-url']
-        self.ws_client = Workspace(self.workspace_url, token=token)
-        self.njs_client = NarrativeJobService('https://ci.kbase.us/services/njs_wrapper', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-        self.ujs_client = UserAndJobState('https://ci.kbase.us/services/userandjobstate', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-        self.uprf_client = UserProfile('https://ci.kbase.us/services/user_profile/rpc', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-	'''
-        self.cat_client = Catalog('https://ci.kbase.us/services/catalog', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-        clnt_groups = self.cat_client.get_client_groups({})
+
+        clnt_groups = self.get_client_groups_from_cat(token)
  
         return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs, clnt_groups)}
 
@@ -411,7 +407,7 @@ class MetricsMongoDBController:
             params['maxTime'] = _unix_time_millis_from_datetime(maxTime)
         return params
 
-    def get_client_groups_from_cat(self):
+    def get_client_groups_from_cat(self, token):
         """
         get_client_groups_from_cat: Get the client_groups data from Catalog API
         return an array of the following structure (example with data):
@@ -422,15 +418,9 @@ class MetricsMongoDBController:
             u'module_name': u'AssemblyRAST'},
         }
         """
-	#initialize clients for accessing other services
-        self.cat_client = Catalog('https://ci.kbase.us/services/catalog', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-	'''
-        self.workspace_url = config['workspace-url']
-        self.ws_client = Workspace(self.workspace_url, token=token)
-        self.njs_client = NarrativeJobService('https://ci.kbase.us/services/njs_wrapper', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-        self.ujs_client = UserAndJobState('https://ci.kbase.us/services/userandjobstate', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-        self.uprf_client = UserProfile('https://ci.kbase.us/services/user_profile/rpc', auth_svc='https://ci.kbase.us/services/auth/', token=token)
-	'''
+	#initialize client(s) for accessing other services
+        self.cat_client = Catalog(self.catalog_url,
+				auth_svc=self.auth_service_url, token=token)
         # Pull the data
         client_groups = self.cat_client.get_client_groups({})
         #log("\nClient group example:\n{}".format(pformat(client_groups[0])))
