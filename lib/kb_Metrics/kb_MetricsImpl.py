@@ -4,7 +4,6 @@
 import os
 from Bio import SeqIO
 from pprint import pprint, pformat
-from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from KBaseReport.KBaseReportClient import KBaseReport
 from kb_Metrics.metricsdb_controller import MetricsMongoDBController
 #END_HEADER

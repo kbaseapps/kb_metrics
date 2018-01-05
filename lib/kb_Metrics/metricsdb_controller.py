@@ -11,15 +11,8 @@ import codecs
 from bson.objectid import ObjectId
 
 from pprint import pprint, pformat
-from urlparse import urlparse
 from kb_Metrics.metricsDBs import MongoMetricsDBI
-
-from Workspace.WorkspaceClient import Workspace as Workspace
 from Catalog.CatalogClient import Catalog
-from NarrativeJobService.NarrativeJobServiceClient import NarrativeJobService
-from UserAndJobState.UserAndJobStateClient import UserAndJobState
-from UserProfile.UserProfileClient import UserProfile
-
 
 class MetricsMongoDBController:
 
