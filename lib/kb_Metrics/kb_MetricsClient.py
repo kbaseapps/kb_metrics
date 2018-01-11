@@ -33,45 +33,191 @@ class kb_Metrics(object):
             trust_all_ssl_certificates=trust_all_ssl_certificates,
             auth_svc=auth_svc)
 
-    def filter_contigs(self, params, context=None):
+    def get_app_metrics(self, params, context=None):
         """
-        The actual function is declared using 'funcdef' to specify the name
-        and input/return arguments to the function.  For all typical KBase
-        Apps that run in the Narrative, your function should have the 
-        'authentication required' modifier.
-        :param params: instance of type "FilterContigsParams" (A 'typedef'
-           can also be used to define compound or container objects, like
-           lists, maps, and structures.  The standard KBase convention is to
-           use structures, as shown here, to define the input and output of
-           your function.  Here the input is a reference to the Assembly data
-           object, a workspace to save output, and a length threshold for
-           filtering. To define lists and maps, use a syntax similar to C++
-           templates to indicate the type contained in the list or map.  For
-           example: list <string> list_of_strings; mapping <string, int>
-           map_of_ints;) -> structure: parameter "assembly_input_ref" of type
-           "assembly_ref" (A 'typedef' allows you to provide a more specific
-           name for a type.  Built-in primitive types include 'string',
-           'int', 'float'.  Here we define a type named assembly_ref to
-           indicate a string that should be set to a KBase ID reference to an
-           Assembly data object.), parameter "workspace_name" of String,
-           parameter "min_length" of Long
-        :returns: instance of type "FilterContigsResults" (Here is the
-           definition of the output of the function.  The output can be used
-           by other SDK modules which call your code, or the output
-           visualizations in the Narrative.  'report_name' and 'report_ref'
-           are special output fields- if defined, the Narrative can
-           automatically render your Report.) -> structure: parameter
-           "report_name" of String, parameter "report_ref" of String,
-           parameter "assembly_output" of type "assembly_ref" (A 'typedef'
-           allows you to provide a more specific name for a type.  Built-in
-           primitive types include 'string', 'int', 'float'.  Here we define
-           a type named assembly_ref to indicate a string that should be set
-           to a KBase ID reference to an Assembly data object.), parameter
-           "n_initial_contigs" of Long, parameter "n_contigs_removed" of
-           Long, parameter "n_contigs_remaining" of Long
+        :param params: instance of type "AppMetricsParams" (job_stage has one
+           of 'created', 'started', 'complete', 'canceled', 'error' or 'all'
+           (default)) -> structure: parameter "user_ids" of list of type
+           "user_id" (A string for the user id), parameter "epoch_range" of
+           type "epoch_range" -> tuple of size 2: parameter "e_lowerbound" of
+           type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970 UTC)
+           in milliseconds.), parameter "e_upperbound" of type "epoch" (A
+           Unix epoch (the time since 00:00:00 1/1/1970 UTC) in milliseconds.)
+        :returns: instance of type "AppMetricsResult" -> structure: parameter
+           "job_states" of unspecified object
         """
         return self._client.call_method(
-            'kb_Metrics.filter_contigs',
+            'kb_Metrics.get_app_metrics',
+            [params], self._service_ver, context)
+
+    def get_exec_apps(self, params, context=None):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        return self._client.call_method(
+            'kb_Metrics.get_exec_apps',
+            [params], self._service_ver, context)
+
+    def get_exec_tasks(self, params, context=None):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        return self._client.call_method(
+            'kb_Metrics.get_exec_tasks',
+            [params], self._service_ver, context)
+
+    def get_user_details(self, params, context=None):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        return self._client.call_method(
+            'kb_Metrics.get_user_details',
+            [params], self._service_ver, context)
+
+    def get_total_logins(self, params, context=None):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        return self._client.call_method(
+            'kb_Metrics.get_total_logins',
+            [params], self._service_ver, context)
+
+    def get_user_ws(self, params, context=None):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        return self._client.call_method(
+            'kb_Metrics.get_user_ws',
+            [params], self._service_ver, context)
+
+    def get_user_narratives(self, params, context=None):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        return self._client.call_method(
+            'kb_Metrics.get_user_narratives',
+            [params], self._service_ver, context)
+
+    def get_user_numObjs(self, params, context=None):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        return self._client.call_method(
+            'kb_Metrics.get_user_numObjs',
+            [params], self._service_ver, context)
+
+    def get_user_metrics(self, params, context=None):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        return self._client.call_method(
+            'kb_Metrics.get_user_metrics',
+            [params], self._service_ver, context)
+
+    def get_user_ujs_results(self, params, context=None):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        return self._client.call_method(
+            'kb_Metrics.get_user_ujs_results',
+            [params], self._service_ver, context)
+
+    def get_user_job_states(self, params, context=None):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        return self._client.call_method(
+            'kb_Metrics.get_user_job_states',
             [params], self._service_ver, context)
 
     def status(self, context=None):

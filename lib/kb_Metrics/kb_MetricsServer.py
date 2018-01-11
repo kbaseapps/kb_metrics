@@ -18,8 +18,6 @@ import random as _random
 import os
 from kb_Metrics.authclient import KBaseAuth as _KBaseAuth
 
-from bson.json_util import dumps
-
 DEPLOY = 'KB_DEPLOYMENT_CONFIG'
 SERVICE = 'KB_SERVICE_NAME'
 AUTH = 'auth-service-url'
@@ -45,7 +43,6 @@ def get_config():
         retconfig[nameval[0]] = nameval[1]
     return retconfig
 
-
 config = get_config()
 
 from kb_Metrics.kb_MetricsImpl import kb_Metrics  # noqa @IgnorePep8
@@ -61,8 +58,6 @@ class JSONObjectEncoder(json.JSONEncoder):
             return list(obj)
         if hasattr(obj, 'toJSONable'):
             return obj.toJSONable()
-        if isinstance(obj, (datetime.datetime, datetime.date)):
-            return obj.isoformat()
         return json.JSONEncoder.default(self, obj)
 
 
@@ -78,8 +73,7 @@ class JSONRPCServiceCustom(JSONRPCService):
         """
         result = self.call_py(ctx, jsondata)
         if result is not None:
-            #return json.dumps(result, cls=JSONObjectEncoder)
-            return dumps(result)
+            return json.dumps(result, cls=JSONObjectEncoder)
 
         return None
 
@@ -355,6 +349,22 @@ class Application(object):
                              name='kb_Metrics.get_user_details',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_user_details'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_total_logins,
+                             name='kb_Metrics.get_total_logins',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_total_logins'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_user_ws,
+                             name='kb_Metrics.get_user_ws',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_user_ws'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_user_narratives,
+                             name='kb_Metrics.get_user_narratives',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_user_narratives'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_user_numObjs,
+                             name='kb_Metrics.get_user_numObjs',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_user_numObjs'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.get_user_metrics,
                              name='kb_Metrics.get_user_metrics',
                              types=[dict])
