@@ -306,7 +306,7 @@ class MetricsMongoDBController:
 	    else:
 		method = lat['job_input']['method']
 
-	return app_id
+	return method_id
 
     def map_narrative(self, ws_id):
 	"""
@@ -390,15 +390,29 @@ class MetricsMongoDBController:
 		params['user_ids'].remove('kbasetest')
 
         if not params.get('epoch_range', None) is None:
-            minTime, maxTime = params['epoch_range']
-            params['minTime'] = minTime
-            params['maxTime'] = maxTime
+            start_time, end_time = params['epoch_range']
+	    if (not start_time is None and not end_time is None):
+		start_time = _convert_to_datetime(start_time)
+		end_time = _convert_to_datetime(end_time)
+		params['minTime'] = _unix_time_millis_from_datetime(start_time)
+		params['maxTime'] = _unix_time_millis_from_datetime(end_time)
+	    elif (not start_time is None and end_time is None):
+		start_time = _convert_to_datetime(start_time)
+		end_time = start_time + datetime.timedelta(hours=48)
+		params['minTime'] = _unix_time_millis_from_datetime(start_time)
+		params['maxTime'] = _unix_time_millis_from_datetime(end_time)
+	    elif (start_time is None and not end_time is None):
+		end_time = _convert_to_datetime(end_time)
+		start_time = end_time - datetime.timedelta(hours=48)
+		params['minTime'] = _unix_time_millis_from_datetime(start_time)
+		params['maxTime'] = _unix_time_millis_from_datetime(end_time)
         else: #set the most recent 48 hours range
-            maxTime = datetime.datetime.utcnow()
-            minTime = maxTime - datetime.timedelta(hours=48)
-            params['minTime'] = _unix_time_millis_from_datetime(minTime)
-            params['maxTime'] = _unix_time_millis_from_datetime(maxTime)
+            end_time = datetime.datetime.utcnow()
+            start_time = end_time - datetime.timedelta(hours=48)
+            params['minTime'] = _unix_time_millis_from_datetime(start_time)
+            params['maxTime'] = _unix_time_millis_from_datetime(end_time)
         return params
+
 
     def get_client_groups_from_cat(self, token):
         """
@@ -447,4 +461,13 @@ def _datetime_from_utc(date_utc_str):
 def _unix_time_millis_from_datetime(dt):
     epoch = datetime.datetime.utcfromtimestamp(0)
     return int((dt - epoch).total_seconds()*1000)
+
+def _convert_to_datetime(dt):
+    new_dt = dt
+    if (not isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime)):
+        if isinstance(dt, int):
+            new_dt = datetime.datetime.utcfromtimestamp(dt / 1000)
+        else:
+            new_dt = _datetime_from_utc(dt)
+    return new_dt
 

@@ -19,7 +19,6 @@ from kb_Metrics.kb_MetricsImpl import kb_Metrics
 from kb_Metrics.kb_MetricsServer import MethodContext
 from kb_Metrics.authclient import KBaseAuth as _KBaseAuth
 
-from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 
 class kb_MetricsTest(unittest.TestCase):
 
@@ -104,7 +103,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_narratives")
+    @unittest.skip("skipped test_run_get_user_narratives")
     def test_run_get_user_narratives(self):
         m_params = {
             'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
@@ -116,7 +115,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_numObjs")
+    @unittest.skip("skipped test_run_get_user_numObjs")
     def test_run_get_user_numObjs(self):
         m_params = {
             'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
@@ -128,10 +127,10 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    @unittest.skip("skipped test_run_get_app_metrics")
+    #@unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
         m_params = {
-            'user_ids':[],#['qzhang'],#'user_ids': [],
+            'user_ids':[],#'user_ids': [],
             'epoch_range':(1420083768000,1435677602000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2015,6,30)
             #'epoch_range':(1420083768000,1451606549000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2016,1,1)
         }
