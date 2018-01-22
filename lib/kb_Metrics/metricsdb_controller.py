@@ -167,6 +167,9 @@ class MetricsMongoDBController:
 	"""
 	combine/join the apps, tasks and jobs lists to get the final return data
 	"""
+	# 0) get the ws_narrative data for lookups
+	ws_narratives = self.metrics_dbi.list_ws_narratives()
+	pprint(ws_narratives)
 	# 1) combine/join the apps and tasks to get the app_task_list
 	app_task_list = []
 	for t in exec_tasks:
@@ -252,8 +255,9 @@ class MetricsMongoDBController:
 
 	    #get the narrative name and version if any
 	    if not u_j_s.get('wsid', None) is None:
-		n_nm, n_ver = self.map_narrative(u_j_s['wsid']) 
+		n_nm, n_ver = self.map_narrative(u_j_s['wsid'], ws_narratives) 
 		if n_nm != "" and n_ver != 0:
+		    print("Narrative name found:{}".format(n_nm))
 		    u_j_s['narrative_name'] = n_nm
 		    u_j_s['narrative_version'] = n_ver  
 
@@ -308,7 +312,7 @@ class MetricsMongoDBController:
 
 	return method_id
 
-    def map_narrative(self, ws_id):
+    def map_narrative(self, ws_id, ws_narratives):
 	"""
 	get the narrative name and version
 	"""
@@ -316,7 +320,6 @@ class MetricsMongoDBController:
 	n_version = 0
 	ws_name = ''
 	ws_owner = ''
-	ws_narratives = self.metrics_dbi.list_ws_narratives()
 	for ws in ws_narratives:
 	    if string(ws['ws']) == str(ws_id):
 		ws_name = ws['name']
