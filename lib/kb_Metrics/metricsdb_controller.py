@@ -73,6 +73,18 @@ class MetricsMongoDBController:
 
         return {'metrics_result': db_ret}
 
+    def get_user_logins(self, requesting_user, params, token):
+        if not self.is_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+	params = self.process_parameters(params)
+	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+
+        db_ret = self.metrics_dbi.aggr_user_logins(params['minTime'], params['maxTime'])
+
+        return {'metrics_result': db_ret}
+
     def get_user_ws(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
@@ -169,7 +181,7 @@ class MetricsMongoDBController:
 	"""
 	# 0) get the ws_narrative data for lookups
 	ws_narratives = self.metrics_dbi.list_ws_narratives()
-	pprint(ws_narratives)
+
 	# 1) combine/join the apps and tasks to get the app_task_list
 	app_task_list = []
 	for t in exec_tasks:
@@ -181,7 +193,6 @@ class MetricsMongoDBController:
 	    app_task_list.append(ta)
 
 	# 2) combine/join app_task_list with ujs_jobs list to get the final return data
-	start_time = time.time()
 	ujs_ret = []
 	for j in ujs_jobs:
 	    u_j_s = copy.deepcopy(j)
@@ -257,7 +268,6 @@ class MetricsMongoDBController:
 	    if not u_j_s.get('wsid', None) is None:
 		n_nm, n_ver = self.map_narrative(u_j_s['wsid'], ws_narratives) 
 		if n_nm != "" and n_ver != 0:
-		    print("Narrative name found:{}".format(n_nm))
 		    u_j_s['narrative_name'] = n_nm
 		    u_j_s['narrative_version'] = n_ver  
 
@@ -321,7 +331,7 @@ class MetricsMongoDBController:
 	ws_name = ''
 	ws_owner = ''
 	for ws in ws_narratives:
-	    if string(ws['ws']) == str(ws_id):
+	    if str(ws['ws']) == str(ws_id):
 		ws_name = ws['name']
 		ws_owner = ws['owner']
 		n_name = ws_name

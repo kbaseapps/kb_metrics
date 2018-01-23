@@ -21,7 +21,8 @@ RUN pip install cffi --upgrade \
     && pip install requests --upgrade \
     && pip install 'requests[security]' --upgrade
 
-#RUN pip install -U pymongo
+#RUN pip easy_install -U pymongo
+#RUN pip install pymongo --upgrade
 # -----------------------------------------
 
 COPY ./ /kb/module
