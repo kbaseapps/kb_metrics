@@ -181,7 +181,6 @@ class MetricsMongoDBController:
 	"""
 	# 0) get the ws_narrative data for lookups
 	ws_narratives = self.metrics_dbi.list_ws_narratives()
-
 	# 1) combine/join the apps and tasks to get the app_task_list
 	app_task_list = []
 	for t in exec_tasks:
@@ -266,10 +265,10 @@ class MetricsMongoDBController:
 
 	    #get the narrative name and version if any
 	    if not u_j_s.get('wsid', None) is None:
-		n_nm, n_ver = self.map_narrative(u_j_s['wsid'], ws_narratives) 
-		if n_nm != "" and n_ver != 0:
+		n_nm, n_obj = self.map_narrative(u_j_s['wsid'], ws_narratives) 
+		if n_nm != "" and n_obj != 0:
 		    u_j_s['narrative_name'] = n_nm
-		    u_j_s['narrative_version'] = n_ver  
+		    u_j_s['narrative_objNo'] = n_obj  
 
 	    #get some info from the client groups
 	    for clnt in c_groups:
@@ -327,7 +326,7 @@ class MetricsMongoDBController:
 	get the narrative name and version
 	"""
 	n_name = ''
-	n_version = 0
+	n_obj = 0
 	ws_name = ''
 	ws_owner = ''
 	for ws in ws_narratives:
@@ -339,13 +338,13 @@ class MetricsMongoDBController:
 		    w_meta = ws['meta']
 		    for w_m in w_meta:
 			if w_m['k'] == 'narrative':
-			    n_version = w_m['v']
+			    n_obj = w_m['v']
 			elif w_m['k'] == 'narrative_nice_name':
 			    n_name = w_m['v']
 			else:
 			    pass
 		break
-	return (n_name, n_version)
+	return (n_name, n_obj)
 
     def get_ujs_results(self, requesting_user, params, token):
 	params = self.process_parameters(params)
