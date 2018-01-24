@@ -124,6 +124,7 @@ class MongoMetricsDBI:
 	    {"$group":{"_id":{"user":"$owner","year":"$year","month":"$month"},"count_user_numObjs":{"$sum":"$numObj"}}},
 	    {"$sort":{"_id.user":1,"_id.year":1, "_id.month":1}}
 	]
+
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
 	m_cursor = self.kbworkspaces.aggregate(pipeline)
@@ -131,6 +132,7 @@ class MongoMetricsDBI:
 	m_result = m_cursor['result']
 	# while list(m_result) gets the list of results
         return list(m_result)
+
 
     def list_ws_narratives(self):
 	# Define the pipeline operations
@@ -145,21 +147,7 @@ class MongoMetricsDBI:
 	m_result = m_cursor['result']
 	# while list(m_result) gets the list of results
         return list(m_result)
-	'''
-        filter = {"meta":{"$exists":True,"$not":{"$size":0}}}
 
-        projection = {
-		'_id':0,
-                'owner':1,
-                'ws':1,
-		'name':1,#ws name
-                'meta':1
-        }
-
-	# grab handle(s) to the database collections needed
-        self.kbws = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
-        return list(self.kbws.find(filter, projection))
-	'''
 
     def list_exec_tasks(self, minTime, maxTime):
         filter = {}
@@ -237,6 +225,23 @@ class MongoMetricsDBI:
         return list(self.kbapps.find(
                         filter, projection,
                         sort=[['creation_time', ASCENDING]]))
+
+
+    def aggr_user_details(self, userIds, minTime, maxTime):
+	# Define the pipeline operations 
+	pipeline = [
+	    {"$match":{"user":{"$in":userIds,"$ne":"kbasetest"},"moddate":{"$gte":_convert_to_datetime(minTime),"$lte":_convert_to_datetime(maxTime)}}},
+	    {"$project":{"user_id":"$user","email_address","$email","full_name":"$display","account_created":"$create","most_recent_login":"$login","roles":1}},
+	    {"$sort":"account_created":1}
+	]
+
+	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
+        self.kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2USERS]
+	u_cursor = self.kbusers.aggregate(pipeline)
+	# list(u_cursor) only gets the keys [u'ok', u'result'] 
+	u_result = u_cursor['result']
+	# while list(u_result) gets the list of results
+	return list(u_result)
 
 
     def list_user_details(self, userIds, minTime, maxTime):
