@@ -390,7 +390,7 @@ class MetricsMongoDBController:
 	if len(db_ret) == 0:
 	    pprint("No records returned!")
 	else:
-	    db_ret = self.convert_isodate_to_millis(db_ret, ['create', 'login'])
+	    db_ret = self.convert_isodate_to_millis(db_ret, ['account_created', 'most_recent_login'])
         return {'metrics_result': db_ret}
 
     def process_parameters(self, params):
