@@ -8,6 +8,13 @@ from pymongo import DESCENDING
 from bson.son import SON
 
 
+def _datetime_from_utc(date_utc_str):
+    try:#for u'2017-08-27T17:29:37+0000'
+        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S+0000')
+    except ValueError as v_er:#for ISO-formatted date & time, e.g., u'2015-02-15T22:31:47.763Z'
+        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S.%fZ')
+    return dt
+
 def _convert_to_datetime(dt):
     new_dt = dt
     if (not isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime)):
@@ -234,6 +241,7 @@ class MongoMetricsDBI:
             {"$project":{"user_id":"$user","email_address":"$email","full_name":"$display","account_created":"$create","most_recent_login":"$login","roles":1}},
 	    {"$sort":{"account_created":1}}
 	]
+
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2USERS]
 	u_cursor = self.kbusers.aggregate(pipeline)
