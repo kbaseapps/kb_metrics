@@ -233,11 +233,25 @@ class MongoMetricsDBI:
                         sort=[['creation_time', ASCENDING]]))
 
 
-    def aggr_user_details(self, userIds, minTime, maxTime):
-	# Define the pipeline operations 
+    def aggr_user_details(self, userIds, minTime, maxTime, excluded_users=[]):
+	# Define the pipeline operations
+	if userIds == []:
+	    match_cond = {"$match":
+				{"user":{"$nin":excluded_users},
+				 "create":{"$gte":_convert_to_datetime(minTime),
+					  "$lte":_convert_to_datetime(maxTime)}}
+			 }
+	else:
+	    match_cond = {"$match":
+				{"user":{"$in":userIds,"$nin":excluded_users},
+				 "create":{"$gte":_convert_to_datetime(minTime),
+					   "$lte":_convert_to_datetime(maxTime)}}
+			 }
+
 	pipeline = [
-	    {"$match":{"user":{"$in":userIds,"$ne":"kbasetest"},"create":{"$gte":_convert_to_datetime(minTime),"$lte":_convert_to_datetime(maxTime)}}},
-            {"$project":{"user_id":"$user","email_address":"$email","full_name":"$display","account_created":"$create","most_recent_login":"$login","roles":1}},
+	    match_cond,
+            {"$project":{"user_id":"$user","email_address":"$email","full_name":"$display",
+			 "account_created":"$create","most_recent_login":"$login","roles":1}},
 	    {"$sort":{"account_created":1}}
 	]
 

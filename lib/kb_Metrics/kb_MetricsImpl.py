@@ -27,7 +27,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "b36be19624d8099b0889807e02c6a73c91c0803d"
+    GIT_COMMIT_HASH = "7cd23faa9c3e1058075a76c160153213b4c291ba"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -252,32 +252,6 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
             raise ValueError('Method get_user_numObjs return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
-    def get_user_metrics(self, ctx, params):
-        """
-        :param params: instance of type "MetricsInputParams" (unified
-           input/output parameters) -> structure: parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.)
-        :returns: instance of type "MetricsOutput" -> structure: parameter
-           "metrics_result" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN get_user_metrics
-        return_records = self.mdb_controller.get_user_details(ctx['user_id'], params, ctx['token'])
-        #END get_user_metrics
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_metrics return value ' +
                              'return_records is not type dict as required.')
         # return the results
         return [return_records]

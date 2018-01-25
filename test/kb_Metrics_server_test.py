@@ -4,6 +4,7 @@ import os  # noqa: F401
 import json  # noqa: F401
 import time
 import requests
+import datetime
 
 from os import environ
 try:
@@ -78,7 +79,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_total_logins")
+    @unittest.skip("skipped test_run_get_total_logins")
     def test_run_get_total_logins(self):
         m_params = {
             'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
@@ -91,7 +92,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_logins")
+    @unittest.skip("skipped test_run_get_user_logins")
     def test_run_get_user_logins(self):
         m_params = {
             'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
@@ -105,7 +106,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_ws")
+    @unittest.skip("skipped test_run_get_user_ws")
     def test_run_get_user_ws(self):
         m_params = {
             'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
@@ -117,7 +118,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_narratives")
+    @unittest.skip("skipped test_run_get_user_narratives")
     def test_run_get_user_narratives(self):
         m_params = {
             'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
@@ -129,7 +130,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_numObjs")
+    @unittest.skip("skipped test_run_get_user_numObjs")
     def test_run_get_user_numObjs(self):
         m_params = {
             'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
@@ -155,21 +156,8 @@ class kb_MetricsTest(unittest.TestCase):
         print("Total number of records returned="+str(len(ret[0]['job_states'])))
         print(pformat(ret[0]['job_states'][prnt_count:len(ret[0]['job_states'])-10]))
 
-    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_metrics")
-    def test_run_get_user_metrics(self):
-        m_params = {
-            'user_ids':[],#['qzhang'],#'user_ids': [],
-            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
-        }
-        # Second, call your implementation
-        ret = self.getImpl().get_user_metrics(self.getContext(), m_params)
-        print("get_user_metrics returns {} records:\n".format(len(ret[0]['metrics_result'])))
-	print(pformat(ret[0]['metrics_result'][0:10]))
-
-    # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_exec_apps")
+    @unittest.skip("skipped test_run_get_exec_apps")
     def test_run_get_exec_apps(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
@@ -180,7 +168,7 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['metrics_result'][0:10]))
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_exec_tasks")
+    @unittest.skip("skipped test_run_get_exec_tasks")
     def test_run_get_exec_tasks(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
@@ -191,7 +179,7 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['metrics_result'][0:10]))
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_ujs_results")
+    @unittest.skip("skipped test_run_get_user_ujs_results")
     def test_run_get_user_ujs_results(self):
         m_params = {
             'user_ids':['qzhang'],#'user_ids': [],
