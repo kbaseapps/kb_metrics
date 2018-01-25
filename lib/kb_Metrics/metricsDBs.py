@@ -231,8 +231,8 @@ class MongoMetricsDBI:
 	# Define the pipeline operations 
 	pipeline = [
 	    {"$match":{"user":{"$in":userIds,"$ne":"kbasetest"},"moddate":{"$gte":_convert_to_datetime(minTime),"$lte":_convert_to_datetime(maxTime)}}},
-	    {"$project":{"user_id":"$user","email_address","$email","full_name":"$display","account_created":"$create","most_recent_login":"$login","roles":1}},
-	    {"$sort":"account_created":1}
+            {"$project":{"user_id":"$user","email_address":"$email","full_name":"$display","account_created":"$create","most_recent_login":"$login","roles":1}},
+	    {"$sort":{"account_created":1}}
 	]
 
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
