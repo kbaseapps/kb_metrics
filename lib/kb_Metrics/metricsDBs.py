@@ -20,7 +20,6 @@ def _convert_to_datetime(dt):
     if (not isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime)):
         if isinstance(dt, int):# miliseconds
             new_dt = datetime.datetime.utcfromtimestamp(dt / 1000)
-	    #pprint(new_dt)
         else:
             new_dt = _datetime_from_utc(dt)
     return new_dt
