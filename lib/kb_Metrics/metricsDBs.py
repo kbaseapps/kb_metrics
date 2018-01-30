@@ -8,23 +8,6 @@ from pymongo import DESCENDING
 from bson.son import SON
 
 
-def _datetime_from_utc(date_utc_str):
-    try:#for u'2017-08-27T17:29:37+0000'
-        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S+0000')
-    except ValueError as v_er:#for ISO-formatted date & time, e.g., u'2015-02-15T22:31:47.763Z'
-        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S.%fZ')
-    return dt
-
-def _convert_to_datetime(dt):
-    new_dt = dt
-    if (not isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime)):
-        if isinstance(dt, int):# miliseconds
-            new_dt = datetime.datetime.utcfromtimestamp(dt / 1000)
-        else:
-            new_dt = _datetime_from_utc(dt)
-    return new_dt
-
-
 class MongoMetricsDBI:
 
     # Collection Names
@@ -35,6 +18,7 @@ class MongoMetricsDBI:
     _JOBSTATE='jobstate'#userjobstate.jobstate
 
     _AUTH2USERS='users'#auth2.users
+    _METRICS_USERS='metrics_users'#metrics.users
 
     _USERPROFILES='profiles'#user_profile_db.profiles
 
@@ -56,7 +40,43 @@ class MongoMetricsDBI:
 	    # grab a handle to the database
             self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
 
-    # functions to query the databases...
+
+    ## Begin functions to write to the metrics database...
+    def add_user(self, user_id, email_addr, creation_time, login_time, full_name,
+			organization, roles, nar_num, obj_num, job_num, app_num,
+			time_period, status='A', cancellation={},
+			kb_internal=False,time_stamp=None):
+	if time_stamp is None:
+	    #number of mili-seconds since the epoch
+	    time_stamp = int(datetime.datetime.utcnow().timestamp()*1000)
+
+	query = {
+	    'user_name': user_id,
+	    'email_address': email_addr
+	}
+	set_data = {
+	    'account_created': creation_time,
+            'most_recent_login': login_time,
+            'full_name': full_name,
+	    'organization': organization,
+            'roles': roles,
+	    'status': status,
+	    'cancellation': cancellation,
+	    'kbase_internal': kb_internal,
+            'last_update_from_auth2': time_stamp
+        }
+	inc_data = {
+	    'narrative_count': nar_num,
+	    'object_count': obj_num,
+	    'job_count': job_num,
+	    'app_count': app_num
+	}
+
+        self.metrics_users.update(query, {'$inc': inc_data, '$set': set_data}, upsert=True)
+
+    ## End functions to write to the metrics database...
+
+    ## Begin functions to query the databases...
     def aggr_user_logins(self, minTime, maxTime):
 	# Define the pipeline operations 
 	pipeline = [
@@ -72,6 +92,7 @@ class MongoMetricsDBI:
 	m_result = m_cursor['result']
 	# while list(m_result) gets the list of results
         return list(m_result)
+
 
     def aggr_total_logins(self, minTime, maxTime):
 	# Define the pipeline operations 
@@ -372,4 +393,24 @@ class MongoMetricsDBI:
         return list(self.jobstate.find(
                         filter, projection#,
                         ))#sort=[['created', ASCENDING]]))
+
+
+def _datetime_from_utc(date_utc_str):
+    time_format_one = '%Y-%m-%dT%H:%M:%S+0000'
+    time_format_two = '%Y-%m-%dT%H:%M:%S.%fZ'
+    try:#for u'2017-08-27T17:29:37+0000'
+        dt = datetime.datetime.strptime(date_utc_str, time_format_one)
+    except ValueError as v_er:#for ISO-formatted date & time, e.g., u'2015-02-15T22:31:47.763Z'
+        dt = datetime.datetime.strptime(date_utc_str, time_format_two)
+    return dt
+
+def _convert_to_datetime(dt):
+    new_dt = dt
+    if (not isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime)):
+        if isinstance(dt, int):# miliseconds
+            new_dt = datetime.datetime.utcfromtimestamp(dt / 1000)
+        else:
+            new_dt = _datetime_from_utc(dt)
+    return new_dt
+
 
