@@ -77,13 +77,29 @@ class MongoMetricsDBI:
     ## End functions to write to the metrics database...
 
     ## Begin functions to query the databases...
+    def aggr_user_daily_activities(self, minTime, maxTime):
+	# Define the pipeline operations 
+	pipeline = [
+	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
+	    {"$project":{"year_mod":{"$year":"$moddate"},"month_mod":{"$month":"$moddate"},"date_mod":{"$dayOfMonth":"$moddate"},"owner":1,"ws":1,"numObj":1,"_id":0}},
+	    {"$group":{"_id":{"username":"$owner","year_mod":"$year","month_mod":"$month_mod","day_mod":"$date_mod"},"ws_numModified":{"$sum":1},"ws_numObjs":{"$sum":"$numObj"}}},
+	    {"$sort":{"_id.username":1,"_id.year_mod":1, "_id.month_mod":1, "_id.day_mod":1}}
+	]
+	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
+        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+	m_cursor = self.kbworkspaces.aggregate(pipeline)
+	# list(m_cursor) only gets the keys [u'ok', u'result'] 
+	m_result = m_cursor['result']
+	# while list(m_result) gets the list of results
+        return list(m_result)
+
     def aggr_user_logins(self, minTime, maxTime):
 	# Define the pipeline operations 
 	pipeline = [
 	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
 	    {"$project":{"year":{"$year":"$moddate"},"month":{"$month":"$moddate"},"date":{"$dayOfMonth":"$moddate"},"owner":1,"ws":1,"numObj":1,"meta":1,"_id":0}},
-	    {"$group":{"_id":{"user":"$owner","year":"$year","month":"$month"},"year_mon_user_logins":{"$sum":1}}},
-	    {"$sort":{"_id.user":1,"_id.year":1, "_id.month":1}}
+	    {"$group":{"_id":{"username":"$owner","year":"$year","month":"$month"},"year_mon_user_logins":{"$sum":1}}},
+	    {"$sort":{"_id.username":1,"_id.year":1, "_id.month":1}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
