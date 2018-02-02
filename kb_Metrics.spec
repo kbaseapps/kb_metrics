@@ -85,4 +85,8 @@ module kb_Metrics {
     
     funcdef get_user_job_states(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
+   
+    /** For writing to mongodb metrics **/ 
+    funcdef update_metrics(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
 };

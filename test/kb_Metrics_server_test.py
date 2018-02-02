@@ -142,7 +142,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_app_metrics")
+    @unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
         m_params = {
             'user_ids':['qzhang'],#'user_ids': [],
@@ -206,13 +206,28 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['metrics_result'][0:10]))
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_details")
+    @unittest.skip("skipped test_run_get_user_details")
     def test_run_get_user_details(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
-            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
+            #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20))
+            'epoch_range':(datetime.datetime(2018, 1, 31), datetime.datetime(2018,2,1))
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_details(self.getContext(), m_params)
+        print("Total number of records get_user_details returned="+str(len(ret[0]['metrics_result'])))
+        print(pformat(ret[0]['metrics_result'][0:10]))
+
+
+    # Uncomment to skip this test
+    #@unittest.skip("skipped test_run_update_metrics")
+    def test_run_update_metrics(self):
+        m_params = {
+            'user_ids':[],#['qzhang'],#'user_ids': [],
+            #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20))
+            'epoch_range':(datetime.datetime(2018, 1, 31), datetime.datetime(2018,2,1))
+        }
+        # Second, call your implementation
+        ret = self.getImpl().update_metrics(self.getContext(), m_params)
         print("Total number of records get_user_details returned="+str(len(ret[0]['metrics_result'])))
         print(pformat(ret[0]['metrics_result'][0:10]))

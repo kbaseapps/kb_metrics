@@ -6,6 +6,9 @@ from pymongo import MongoClient
 from pymongo import ASCENDING
 from pymongo import DESCENDING
 from bson.son import SON
+#from pymongo import InsertOne, DeleteOne, ReplaceOne
+from pymongo import ASCENDING, DESCENDING#, IndexModel
+from pymongo.errors import BulkWriteError
 
 
 class MongoMetricsDBI:
@@ -17,8 +20,9 @@ class MongoMetricsDBI:
     _USERSTATE='userstate'#userjobstate.userstate
     _JOBSTATE='jobstate'#userjobstate.jobstate
 
-    _AUTH2USERS='users'#auth2.users
-    _METRICS_USERS='metrics_users'#metrics.users
+    _AUTH2_USERS='users'#auth2.users
+    _MT_USERS='metrics_users'#metrics.users
+    _MT_DAILY_ACTIVITIES='user_daily_activities'#metrics.user_daily_activities
 
     _USERPROFILES='profiles'#user_profile_db.profiles
 
@@ -42,7 +46,54 @@ class MongoMetricsDBI:
 
 
     ## Begin functions to write to the metrics database...
-    def add_user(self, user_id, email_addr, creation_time, login_time, full_name,
+    def insert_activity_records(self, mt_docs, time_stamp=None):
+	if not isinstance(mt_docs, list):
+	    raise ValueError('The variable mt_docs must be a list of mutable mapping type data.')
+	
+	if time_stamp is None:
+	    #number of mili-seconds since the epoch
+    	    epoch = datetime.datetime.utcfromtimestamp(0)
+	    time_stamp = int((datetime.datetime.utcnow() - epoch).total_seconds()*1000)
+
+	# grab handle(s) to the database collection(s) targeted
+        self.kb_coll = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
+	insert_ret = None
+	try:
+	    insert_ret = self.kb_coll.insert_many(mt_docs, ordered=False,
+				bypass_document_validation=False)
+	except BulkWriteError as bwe:
+	    #pprint(bwe.details['writeErrors'])
+	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
+	    if len(panic) > 0:
+		print "really panic"
+		raise
+	    #if bwe.details['writeErrors']['code'] == 11000:#duplicate key found
+	else:# everything is fine
+	    pprint('Inserted {} records.'.format(len(insert_ret.inserted_ids)))
+	    pprint(insert_ret.inserted_ids)
+	return insert_ret
+
+
+    def bulk_write(self, mt_db, mt_coll, requests):
+	"""
+	requests: A list of write operations (see examples below).
+	Example:
+	requests = [InsertOne({'y': 1}), DeleteOne({'x': 1}),
+             ReplaceOne({'w': 1}, {'z': 1}, upsert=True)]
+	result = mt_db.mt_coll.bulk_write(requests)
+	pprint(result.inserted_count)
+	1
+	pprint(result.deleted_count)
+	1
+	pprint(result.modified_count)
+	0
+	pprint(result.upserted_ids)
+	{2: ObjectId('54f62ee28891e756a6e1abd5')}
+	"""
+	pass
+
+
+    def add_user_info(self, user_id, email_addr, creation_time, login_time, full_name,
 			organization, roles, nar_num, obj_num, job_num, app_num,
 			time_period, status='A', cancellation={},
 			kb_internal=False,time_stamp=None):
@@ -72,7 +123,10 @@ class MongoMetricsDBI:
 	    'app_count': app_num
 	}
 
+	# grab handle(s) to the database collection(s) targeted
+        self.metrics_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
         self.metrics_users.update(query, {'$inc': inc_data, '$set': set_data}, upsert=True)
+
 
     ## End functions to write to the metrics database...
 
@@ -82,16 +136,16 @@ class MongoMetricsDBI:
 	pipeline = [
 	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
 	    {"$project":{"year_mod":{"$year":"$moddate"},"month_mod":{"$month":"$moddate"},"date_mod":{"$dayOfMonth":"$moddate"},"owner":1,"ws":1,"numObj":1,"_id":0}},
-	    {"$group":{"_id":{"username":"$owner","year_mod":"$year","month_mod":"$month_mod","day_mod":"$date_mod"},"ws_numModified":{"$sum":1},"ws_numObjs":{"$sum":"$numObj"}}},
-	    {"$sort":{"_id.username":1,"_id.year_mod":1, "_id.month_mod":1, "_id.day_mod":1}}
+	    {"$group":{"_id":{"username":"$owner","year_mod":"$year_mod","month_mod":"$month_mod","day_mod":"$date_mod"},"ws_numModified":{"$sum":1},"ws_numObjs":{"$sum":"$numObj"}}},
+	    {"$sort":{"_id.username":ASCENDING,"_id.year_mod":ASCENDING, "_id.month_mod":ASCENDING, "_id.day_mod":ASCENDING}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
 	m_cursor = self.kbworkspaces.aggregate(pipeline)
 	# list(m_cursor) only gets the keys [u'ok', u'result'] 
-	m_result = m_cursor['result']
+	#m_result = m_cursor['result']
 	# while list(m_result) gets the list of results
-        return list(m_result)
+        return list(m_cursor)#list(m_result)
 
     def aggr_user_logins(self, minTime, maxTime):
 	# Define the pipeline operations 
@@ -99,7 +153,7 @@ class MongoMetricsDBI:
 	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
 	    {"$project":{"year":{"$year":"$moddate"},"month":{"$month":"$moddate"},"date":{"$dayOfMonth":"$moddate"},"owner":1,"ws":1,"numObj":1,"meta":1,"_id":0}},
 	    {"$group":{"_id":{"username":"$owner","year":"$year","month":"$month"},"year_mon_user_logins":{"$sum":1}}},
-	    {"$sort":{"_id.username":1,"_id.year":1, "_id.month":1}}
+	    {"$sort":{"_id.username":ASCENDING,"_id.year":ASCENDING, "_id.month":ASCENDING}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
@@ -117,7 +171,7 @@ class MongoMetricsDBI:
 	    {"$project":{"year":{"$year":"$moddate"},"month":{"$month":"$moddate"},"date":{"$dayOfMonth":"$moddate"},"owner":1,"ws":1,"numObj":1,"meta":1,"_id":0}},
 	    {"$group":{"_id":{"user":"$owner","year":"$year","month":"$month"},"count_user_ws_logins":{"$sum":1}}},
 	    {"$group":{"_id":{"year":"$_id.year","month":"$_id.month"},"year_mon_total_logins":{"$sum":"$count_user_ws_logins"}}},
-	    {"$sort":{"_id.year":1, "_id.month":1}}
+	    {"$sort":{"_id.year":ASCENDING, "_id.month":ASCENDING}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
@@ -133,7 +187,7 @@ class MongoMetricsDBI:
 	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
 	    {"$project":{"year":{"$year":"$moddate"},"month":{"$month":"$moddate"},"date":{"$dayOfMonth":"$moddate"},"owner":1,"ws":1,"numObj":1,"meta":1,"_id":0}},
 	    {"$group":{"_id":{"user":"$owner","year":"$year","month":"$month"},"count_user_ws":{"$sum":1}}},
-	    {"$sort":{"_id.user":1,"_id.year":1, "_id.month":1}}
+	    {"$sort":{"_id.user":ASCENDING,"_id.year":ASCENDING, "_id.month":ASCENDING}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
@@ -149,7 +203,7 @@ class MongoMetricsDBI:
 	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime},"meta":{"$exists":True,"$not":{"$size":0}}}},
 	    {"$project":{"year":{"$year":"$moddate"},"month":{"$month":"$moddate"},"date":{"$dayOfMonth":"$moddate"},"owner":1,"ws":1,"numObj":1,"meta":1,"_id":0}},
 	    {"$group":{"_id":{"user":"$owner","year":"$year","month":"$month"},"count_user_narratives":{"$sum":1}}},
-	    {"$sort":{"_id.user":1,"_id.year":1, "_id.month":1}}
+	    {"$sort":{"_id.user":ASCENDING,"_id.year":ASCENDING, "_id.month":ASCENDING}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
@@ -165,7 +219,7 @@ class MongoMetricsDBI:
 	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
 	    {"$project":{"year":{"$year":"$moddate"},"month":{"$month":"$moddate"},"date":{"$dayOfMonth":"$moddate"},"owner":1,"ws":1,"numObj":1,"meta":1,"_id":0}},
 	    {"$group":{"_id":{"user":"$owner","year":"$year","month":"$month"},"count_user_numObjs":{"$sum":"$numObj"}}},
-	    {"$sort":{"_id.user":1,"_id.year":1, "_id.month":1}}
+	    {"$sort":{"_id.user":ASCENDING,"_id.year":ASCENDING, "_id.month":ASCENDING}}
 	]
 
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
@@ -293,7 +347,7 @@ class MongoMetricsDBI:
 	]
 
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
-        self.kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2USERS]
+        self.kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
 	u_cursor = self.kbusers.aggregate(pipeline)
 	# list(u_cursor) only gets the keys [u'ok', u'result'] 
 	u_result = u_cursor['result']
@@ -333,7 +387,7 @@ class MongoMetricsDBI:
         }
 
 	# grab handle(s) to the database collections needed
-        self.kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2USERS]
+        self.kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
 
 	'''
         # Make sure we have an index on user, created and updated

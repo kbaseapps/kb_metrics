@@ -61,18 +61,34 @@ class MetricsMongoDBController:
 
 
     ## function(s) to update the metrics db
-    def update_metrics(self, requesting_user, coll_name, metrics_doc):
+    def update_metrics(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
-	self.db.add_user(user_id, email_addr, creation_time, login_time, full_name,
-	                        roles, status='A', cancellation={}, kb_internal=False,time_stamp=None)
-	parts = datetime.fromtimestamp(creation_time).isocalendar()
-	week_time_range = str(parts[0]) + "-W" + str(parts[1])
-        #self.db.add_exec_stats_users(user_id, creation_time, exec_start_time, 
-                                    #finish_time, is_error, "w", week_time_range)
+	#self.db.add_user_info(user_id, email_addr, creation_time, login_time, full_name,
+	                        #roles, status='A', cancellation={}, kb_internal=False,time_stamp=None)
+	db_ret = self.get_activities(requesting_user, params, token)
+	act_list = db_ret['metrics_result']
+	#pprint(act_list)
+	try:
+	    insert_ret = self.metrics_dbi.insert_activity_records(act_list)
+	except BulkWriteError as bwe:
+	    pprint(bwe.details)
+	return db_ret
 
 
     ## functions to get the requested records...
+    def get_activities(self, requesting_user, params, token):
+        if not self.is_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+	params = self.process_parameters(params)
+	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+
+        db_ret = self.metrics_dbi.aggr_user_daily_activities(params['minTime'], params['maxTime'])
+
+        return {'metrics_result': db_ret}
+
     def get_total_logins(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
