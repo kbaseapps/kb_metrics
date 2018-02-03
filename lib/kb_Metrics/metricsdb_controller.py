@@ -64,20 +64,67 @@ class MetricsMongoDBController:
     def update_metrics(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
-	#self.db.add_user_info(user_id, email_addr, creation_time, login_time, full_name,
+
+	# 1. insert user info reported from auth2
+	#action_ret = self.metrics_dbi.add_user_info(user_id, email_addr, creation_time, login_time, full_name,
 	                        #roles, status='A', cancellation={}, kb_internal=False,time_stamp=None)
-	db_ret = self.get_activities(requesting_user, params, token)
-	act_list = db_ret['metrics_result']
+	# 2. insert activities
+	#action_result = self.insert_user_activities(requesting_user, params, token)
+
+	# 3. update activities
+	action_result = self.update_user_activities(requesting_user, params, token)
+
+	return action_result
+
+
+    def update_user_activities(self, requesting_user, params, token):
+	"""
+	update user activities reported from Workspace.
+	If match not found, insert that record as new.
+	"""
+	ws_ret = self.get_activities_from_ws(requesting_user, params, token)
+	act_list = ws_ret['metrics_result']
+	pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
 	#pprint(act_list)
+	idKeys = ['_id']
+	countKeys = ['ws_numModified', 'ws_numObjs']
+	idData = []
+	countData = []
+	for a_data in act_list:
+	    filterByKey = lambda keys: {x: a_data[x] for x in keys}
+	    idData.append(filterByKey(idKeys))
+	    countData.append(filterByKey(countKeys))
+	print(idData, countData)
+	return ws_ret
+	'''
+	try:
+	    update_ret = self.metrics_dbi.update_activity_records(act_list)
+	except Exception as e:
+	    pprint(e)
+	    return {'metrics_result': e}
+	else:
+	    return {'metrics_result': update_ret}
+	'''
+
+    def insert_user_activities(self, requesting_user, params, token):
+	"""
+	insert user activities reported from Workspace.
+	If duplicated ids found, skip that record.
+	"""
+	ws_ret = self.get_activities_from_ws(requesting_user, params, token)
+	act_list = ws_ret['metrics_result']
+	pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
 	try:
 	    insert_ret = self.metrics_dbi.insert_activity_records(act_list)
-	except BulkWriteError as bwe:
-	    pprint(bwe.details)
-	return db_ret
+	except Exception as e:
+	    pprint(e)
+	    return {'metrics_result': e}
+	else:
+	    return {'metrics_result': insert_ret}
 
 
     ## functions to get the requested records...
-    def get_activities(self, requesting_user, params, token):
+    def get_activities_from_ws(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -300,7 +347,8 @@ class MetricsMongoDBController:
 
 	    #get some info from the client groups
 	    for clnt in c_groups:
-		if 'app_id' in u_j_s and clnt['module_name'] == u_j_s['app_id']:
+		if ('app_id' in u_j_s and 
+			str(clnt['module_name']).lower() in str(u_j_s['app_id']).lower()):
 		    #pprint("client func={} and ujs func={}".format(clnt['function_name'],u_j_s['method']))
 		    u_j_s['client_groups'] = clnt['client_groups']
 		    #u_j_s['module'] = clnt['module_name']
@@ -311,12 +359,9 @@ class MetricsMongoDBController:
 		u_j_s['client_groups'] = ['njs']
 
 	    #set the run/running/in_queue time
-	    if u_j_s['job_state'] == 'completed':
+	    if u_j_s['job_state'] == 'completed' or u_j_s['job_state'] == 'suspend':
 		u_j_s['finish_time'] = u_j_s['modification_time']
 		u_j_s['run_time'] = u_j_s['finish_time'] - u_j_s['exec_start_time']
-	    if u_j_s['job_state'] == 'suspend':
-		u_j_s['finish_time'] = u_j_s['modification_time']
-		u_j_s['run_time'] = u_j_s['modification_time'] - u_j_s['exec_start_time']
 	    elif u_j_s['job_state'] == 'in-progress': 
 		u_j_s['running_time'] = u_j_s['modification_time'] - u_j_s['exec_start_time']
 	    elif u_j_s['job_state'] == 'queued': 

@@ -22,7 +22,7 @@ class MongoMetricsDBI:
 
     _AUTH2_USERS='users'#auth2.users
     _MT_USERS='metrics_users'#metrics.users
-    _MT_DAILY_ACTIVITIES='user_daily_activities'#metrics.user_daily_activities
+    _MT_DAILY_ACTIVITIES='test_activities'#'user_daily_activities'#metrics.user_daily_activities
 
     _USERPROFILES='profiles'#user_profile_db.profiles
 
@@ -46,7 +46,41 @@ class MongoMetricsDBI:
 
 
     ## Begin functions to write to the metrics database...
+    def update_activity_records(self, upd_filter, upd_data, time_stamp=None):
+	"""
+	Insert an iterable of user activity documents
+	"""
+	if time_stamp is None:
+	    #number of mili-seconds since the epoch
+    	    epoch = datetime.datetime.utcfromtimestamp(0)
+	    time_stamp = int((datetime.datetime.utcnow() - epoch).total_seconds()*1000)
+
+	upd_op = { "$set": upd_data,
+		   "$setOnInsert": {upd_filter, upd_data}
+		 }
+	upsert = { "upsert": true }
+
+	# grab handle(s) to the database collection(s) targeted
+        self.kb_coll = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
+	update_ret = None
+	try:
+	    #return an instance of UpdateResult(raw_result, acknowledged)
+	    update_ret = self.kb_coll.update_many(upd_filter, upd_op, upsert)#upsert=True
+	except BulkWriteError as bwe:
+	    #pprint(bwe.details['writeErrors'])
+	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
+	    if len(panic) > 0:
+		print "really panic"
+		raise
+	else:# everything is fine
+	    pprint('matched {} records and updated {} records.'.format(
+			update_ret.matched_count, update_ret.modified_count))
+	return update_ret
+
     def insert_activity_records(self, mt_docs, time_stamp=None):
+	"""
+	Insert an iterable of user activity documents
+	"""
 	if not isinstance(mt_docs, list):
 	    raise ValueError('The variable mt_docs must be a list of mutable mapping type data.')
 	
@@ -59,8 +93,8 @@ class MongoMetricsDBI:
         self.kb_coll = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
 	insert_ret = None
 	try:
-	    insert_ret = self.kb_coll.insert_many(mt_docs, ordered=False,
-				bypass_document_validation=False)
+	    #get an instance of InsertManyResult(inserted_ids, acknowledged)
+	    insert_ret = self.kb_coll.insert_many(mt_docs, True)#ordered=True
 	except BulkWriteError as bwe:
 	    #pprint(bwe.details['writeErrors'])
 	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
@@ -70,7 +104,7 @@ class MongoMetricsDBI:
 	    #if bwe.details['writeErrors']['code'] == 11000:#duplicate key found
 	else:# everything is fine
 	    pprint('Inserted {} records.'.format(len(insert_ret.inserted_ids)))
-	    pprint(insert_ret.inserted_ids)
+	    #pprint(insert_ret.inserted_ids)#inserted_ids is a list
 	return insert_ret
 
 
@@ -159,9 +193,9 @@ class MongoMetricsDBI:
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
 	m_cursor = self.kbworkspaces.aggregate(pipeline)
 	# list(m_cursor) only gets the keys [u'ok', u'result'] 
-	m_result = m_cursor['result']
+	#m_result = m_cursor['result']
 	# while list(m_result) gets the list of results
-        return list(m_result)
+        return list(m_cursor)#list(m_result)
 
 
     def aggr_total_logins(self, minTime, maxTime):
@@ -177,9 +211,9 @@ class MongoMetricsDBI:
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
 	m_cursor = self.kbworkspaces.aggregate(pipeline)
 	# list(m_cursor) only gets the keys [u'ok', u'result'] 
-	m_result = m_cursor['result']
+	#m_result = m_cursor['result']
 	# while list(m_result) gets the list of results
-        return list(m_result)
+        return list(m_cursor)#list(m_result)
 
     def aggr_user_ws(self, minTime, maxTime):
 	# Define the pipeline operations 
@@ -193,9 +227,9 @@ class MongoMetricsDBI:
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
 	m_cursor = self.kbworkspaces.aggregate(pipeline)
 	# list(m_cursor) only gets the keys [u'ok', u'result'] 
-	m_result = m_cursor['result']
+	#m_result = m_cursor['result']
 	# while list(m_result) gets the list of results
-        return list(m_result)
+        return list(m_cursor)#list(m_result)
 
     def aggr_user_narratives(self, minTime, maxTime):
 	# Define the pipeline operations 
@@ -209,9 +243,9 @@ class MongoMetricsDBI:
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
 	m_cursor = self.kbworkspaces.aggregate(pipeline)
 	# list(m_cursor) only gets the keys [u'ok', u'result'] 
-	m_result = m_cursor['result']
+	#m_result = m_cursor['result']
 	# while list(m_result) gets the list of results
-        return list(m_result)
+        return list(m_cursor)#list(m_result)
 
     def aggr_user_numObjs(self, minTime, maxTime):
 	# Define the pipeline operations 
@@ -226,9 +260,9 @@ class MongoMetricsDBI:
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
 	m_cursor = self.kbworkspaces.aggregate(pipeline)
 	# list(m_cursor) only gets the keys [u'ok', u'result'] 
-	m_result = m_cursor['result']
+	#m_result = m_cursor['result']
 	# while list(m_result) gets the list of results
-        return list(m_result)
+        return list(m_cursor)#list(m_result)
 
 
     def list_ws_narratives(self):
@@ -241,9 +275,9 @@ class MongoMetricsDBI:
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
 	m_cursor = self.kbworkspaces.aggregate(pipeline)
 	# list(m_cursor) only gets the keys [u'ok', u'result'] 
-	m_result = m_cursor['result']
+	#m_result = m_cursor['result']
 	# while list(m_result) gets the list of results
-        return list(m_result)
+        return list(m_cursor)#list(m_result)
 
 
     def list_exec_tasks(self, minTime, maxTime):
