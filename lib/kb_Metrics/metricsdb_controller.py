@@ -246,7 +246,6 @@ class MetricsMongoDBController:
 	#pprint("\n******Found {} ujs jobs".format(len(ujs_jobs)))
 
         clnt_groups = self.get_client_groups_from_cat(token)
- 
         return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs, clnt_groups)}
 
 
@@ -347,12 +346,10 @@ class MetricsMongoDBController:
 
 	    #get some info from the client groups
 	    for clnt in c_groups:
+		clnt_app_id = clnt['app_id']
 		if ('app_id' in u_j_s and 
-			str(clnt['module_name']).lower() in str(u_j_s['app_id']).lower()):
-		    #pprint("client func={} and ujs func={}".format(clnt['function_name'],u_j_s['method']))
+			str(clnt_app_id).lower() == str(u_j_s['app_id']).lower()):
 		    u_j_s['client_groups'] = clnt['client_groups']
-		    #u_j_s['module'] = clnt['module_name']
-		    #u_j_s['function'] = clnt['function_name']
 		    break
 	    #default client groups to 'njs'
 	    if u_j_s.get('client_groups', None) is None:
