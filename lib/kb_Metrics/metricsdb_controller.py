@@ -163,7 +163,27 @@ class MetricsMongoDBController:
 	    return {'metrics_result': insert_ret}
 
 
-    ## functions to get the requested records...
+    ## End functions to write to the metrics database
+
+
+    ## functions to get the requested records from metrics db...
+    def get_user_details(self, requesting_user, params, token):
+        if not self.is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+	params = self.process_parameters(params)
+
+        mt_ret = self.metrics_dbi.get_user_info(
+			params['user_ids'], params['minTime'], params['maxTime'])
+	if len(mt_ret) == 0:
+	    pprint("No records returned!")
+        return {'metrics_result': mt_ret}
+
+
+    ## End functions to get the requested records from metrics db
+
+
+    ## functions to get the requested records from other dbs...
     def get_activities_from_ws(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
@@ -489,7 +509,7 @@ class MetricsMongoDBController:
 
         return {'metrics_result': db_ret}
 
-    def get_user_details(self, requesting_user, params, token):
+    def get_users_from_auth2(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -578,6 +598,7 @@ class MetricsMongoDBController:
         	    dr[dt] = _unix_time_millis_from_datetime(dr[dt])#dr[dt].__str__()
 	return src_list
 
+## utility functions
 
 def _timestamp_from_utc(date_utc_str):
     dt = _datetime_from_utc(date_utc_str)

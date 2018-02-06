@@ -21,8 +21,8 @@ class MongoMetricsDBI:
     _JOBSTATE='jobstate'#userjobstate.jobstate
 
     _AUTH2_USERS='users'#auth2.users
-    _MT_USERS='test_users'#'users'#metrics.users
-    _MT_DAILY_ACTIVITIES='test_activities'#'user_daily_activities'#metrics.user_daily_activities
+    _MT_USERS='users'#'test_users'#'users'#metrics.users
+    _MT_DAILY_ACTIVITIES='user_daily_activities'#'test_activities'#metrics.user_daily_activities
 
     _USERPROFILES='profiles'#user_profile_db.profiles
 
@@ -57,14 +57,14 @@ class MongoMetricsDBI:
 		 }
 
 	# grab handle(s) to the database collection(s) targeted
-	self.kb_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
+	self.mt_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
 	update_ret = None
 	try:
 	    #return an instance of UpdateResult(raw_result, acknowledged)
-	    update_ret = self.kb_users.update_one(upd_filter, upd_op, upsert=True)
+	    update_ret = self.mt_users.update_one(upd_filter, upd_op, upsert=True)
 	except BulkWriteError as bwe:
-	    print("kb_users.update errored\n:")
-	    pprint(bwe.details['writeErrors'])
+	    #print("mt_users.update errored\n:")
+	    #pprint(bwe.details['writeErrors'])
 	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
 	    if len(panic) > 0:
 		print "really panic"
@@ -86,11 +86,11 @@ class MongoMetricsDBI:
 		 }
 
 	# grab handle(s) to the database collection(s) targeted
-        self.kb_coll = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
+        self.mt_coll = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
 	update_ret = None
 	try:
 	    #return an instance of UpdateResult(raw_result, acknowledged)
-	    update_ret = self.kb_coll.update_one(upd_filter, upd_op, upsert=True)
+	    update_ret = self.mt_coll.update_one(upd_filter, upd_op, upsert=True)
 	except BulkWriteError as bwe:
 	    #pprint(bwe.details['writeErrors'])
 	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
@@ -112,11 +112,11 @@ class MongoMetricsDBI:
 	    raise ValueError('The variable mt_docs must be a list of mutable mapping type data.')
 	
 	# grab handle(s) to the database collection(s) targeted
-        self.kb_coll = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
+        self.mt_act = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
 	insert_ret = None
 	try:
 	    #get an instance of InsertManyResult(inserted_ids, acknowledged)
-	    insert_ret = self.kb_coll.insert_many(mt_docs, ordered=True)
+	    insert_ret = self.mt_act.insert_many(mt_docs, ordered=True)
 	except BulkWriteError as bwe:
 	    #skip uplicate key error (code=11000)
 	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
@@ -132,7 +132,57 @@ class MongoMetricsDBI:
 
     ## End functions to write to the metrics database
 
-    ## Begin functions to query the databases...
+
+    ## Begin functions to query the other dbs...
+    def get_user_info(self, userIds, minTime, maxTime):
+        filter = {}
+
+        userFilter = {}
+        if (userIds is not None and len(userIds) > 0):
+            userFilter['$in'] = userIds
+	elif userIds == []:
+	    userFilter['$ne'] = 'kbasetest'
+        if len(userFilter) > 0:
+            filter['user'] = userFilter
+
+        signupTimeFilter = {}
+        if minTime is not None:
+            signupTimeFilter['$gte'] = _convert_to_datetime(minTime)
+        if maxTime is not None:
+            signupTimeFilter['$lte'] = _convert_to_datetime(maxTime)
+        if len(signupTimeFilter) > 0:
+            filter['signup_at'] = signupTimeFilter
+
+        projection = {
+		'_id':0,
+                'username':1,
+                'email':1,
+                'full_name':1,
+                'signup_at':1,
+                'last_signin_at':1,
+		'kbase_staff':1,
+		'roles':1
+        }
+	# grab handle(s) to the database collections needed
+        self.mt_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
+
+	'''
+        # Make sure we have an index on user, created and updated
+        self.mt_users.ensure_index([
+            ('username', ASCENDING),
+            ('signup_at', ASCENDING)],
+            unique=True, sparse=False)
+	'''
+
+        return list(self.mt_users.find(
+                        filter, projection,
+                        sort=[['signup_at', ASCENDING]]))
+
+
+    ## End functions to query the metrics db
+
+
+    ## Begin functions to query the other dbs...
     def aggr_user_daily_activities(self, minTime, maxTime):
 	# Define the pipeline operations 
 	pipeline = [
@@ -466,6 +516,10 @@ class MongoMetricsDBI:
                         filter, projection#,
                         ))#sort=[['created', ASCENDING]]))
 
+    ## End functions to query the other dbs...
+
+
+## utility functions
 
 def _datetime_from_utc(date_utc_str):
     time_format_one = '%Y-%m-%dT%H:%M:%S+0000'
