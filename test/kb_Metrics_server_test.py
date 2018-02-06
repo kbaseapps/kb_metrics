@@ -145,11 +145,12 @@ class kb_MetricsTest(unittest.TestCase):
     @unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
         m_params = {
-            'user_ids':['qzhang'],#'user_ids': [],
+            'user_ids':['rhizorick'],#'user_ids': [],
             #'epoch_range':(1420083768000,1435677602000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2015,6,30)
             #'epoch_range':(1420083768000,1451606549000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2016,1,1)
-            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
-        }
+            #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
+            'epoch_range':(u'2018-02-01T00:00:00+0000', u'2018-02-28T17:29:42+0000')
+	}
         # Second, call your implementation
         ret = self.getImpl().get_app_metrics(self.getContext(), m_params)
         prnt_count = len(ret[0]['job_states']) - 20
@@ -225,9 +226,9 @@ class kb_MetricsTest(unittest.TestCase):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20))
-            'epoch_range':(datetime.datetime(2018, 1, 31), datetime.datetime(2018,2,1))
+            'epoch_range':(datetime.datetime(2018, 1, 1), datetime.datetime(2018,2,28))
         }
         # Second, call your implementation
         ret = self.getImpl().update_metrics(self.getContext(), m_params)
-        print("Total number of records get_user_details returned="+str(len(ret[0]['metrics_result'])))
-        print(pformat(ret[0]['metrics_result'][0:10]))
+	if not ret[0]['metrics_result'] is None:
+	    print(ret[0]['metrics_result'])

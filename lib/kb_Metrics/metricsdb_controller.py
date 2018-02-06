@@ -18,7 +18,7 @@ class MetricsMongoDBController:
 
     def __init__(self, config):
         #pprint("initializing mdb......")
-        # first grab the admin list
+        # first grab the admin/kbstaff lists
         self.adminList = []
         if 'admin-users' in config:
             adm_ids = config['admin-users'].split(',')
@@ -27,6 +27,22 @@ class MetricsMongoDBController:
                     self.adminList.append(a_id.strip())
         if not self.adminList:  # pragma: no cover
             warnings.warn('no "admin-users" are set in config of MetricsMongoDBController.')
+
+        self.metricsAdmins = []
+        if 'metrics-admins' in config:
+            madm_ids = config['metrics-admins'].split(',')
+            for m_id in madm_ids:
+                if m_id.strip():
+                    self.metricsAdmins.append(m_id.strip())
+        if not self.metricsAdmins:  # pragma: no cover
+            warnings.warn('no "metrics-admins" are set in config of MetricsMongoDBController.')
+
+	self.kbstaffList = []
+        if 'kbase-staff' in config:
+	    kb_staff_ids = config['kbase-staff'].split(',')
+	    for k_id in kb_staff_ids:
+		if k_id.strip():
+		    self.kbstaffList.append(k_id.strip())
 
         # make sure the minimal mongo settings are in place
         if 'mongodb-host' not in config: # pragma: no cover
@@ -62,55 +78,79 @@ class MetricsMongoDBController:
 
     ## function(s) to update the metrics db
     def update_metrics(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
+        if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-	# 1. insert user info reported from auth2
-	#action_ret = self.metrics_dbi.add_user_info(user_id, email_addr, creation_time, login_time, full_name,
-	                        #roles, status='A', cancellation={}, kb_internal=False,time_stamp=None)
-	# 2. insert activities
-	#action_result = self.insert_user_activities(requesting_user, params, token)
+	# 1. update users
+	action_result1 = self.update_user_info(requesting_user, params, token)
 
-	# 3. update activities
-	action_result = self.update_user_activities(requesting_user, params, token)
+	# 2. update activities
+	action_result2 = self.update_user_activities(requesting_user, params, token)
 
-	return action_result
+        return {'metrics_result':
+			{'user_updates': action_result1,
+		 	 'activity_updates': action_result2}
+		}
 
+    def update_user_info(self, requesting_user, params, token):
+	"""
+	update user info
+	If match not found, insert that record as new.
+	"""
+        if not self.is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to invoke this action.')
+
+	params = self.process_parameters(params)
+        auth2_ret = self.metrics_dbi.aggr_user_details(params['user_ids'], params['minTime'], params['maxTime'])
+	if len(auth2_ret) == 0:
+	    pprint("No records returned!")
+
+	pprint('\nRetrieved {} user record(s)'.format(len(auth2_ret)))
+	idKeys = ['username', 'email']
+	dataKeys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
+	updData = []
+	for u_data in auth2_ret:
+	    filterByKey = lambda keys: {x: u_data[x] for x in keys}
+	    idData = filterByKey(idKeys)
+	    userData = filterByKey(dataKeys)
+	    isKbstaff = 1 if idData['username'] in self.kbstaffList else 0
+	    update_ret = self.metrics_dbi.update_user_records(idData, userData, isKbstaff)
+	    updData.append(update_ret.raw_result)
+
+	return updData
 
     def update_user_activities(self, requesting_user, params, token):
 	"""
 	update user activities reported from Workspace.
 	If match not found, insert that record as new.
 	"""
+        if not self.is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to invoke this action.')
+
 	ws_ret = self.get_activities_from_ws(requesting_user, params, token)
 	act_list = ws_ret['metrics_result']
-	pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
-	#pprint(act_list)
+	#pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
+
 	idKeys = ['_id']
 	countKeys = ['ws_numModified', 'ws_numObjs']
-	idData = []
-	countData = []
+	updData = []
 	for a_data in act_list:
 	    filterByKey = lambda keys: {x: a_data[x] for x in keys}
-	    idData.append(filterByKey(idKeys))
-	    countData.append(filterByKey(countKeys))
-	print(idData, countData)
-	return ws_ret
-	'''
-	try:
-	    update_ret = self.metrics_dbi.update_activity_records(act_list)
-	except Exception as e:
-	    pprint(e)
-	    return {'metrics_result': e}
-	else:
-	    return {'metrics_result': update_ret}
-	'''
+	    idData = filterByKey(idKeys)
+	    countData = filterByKey(countKeys)
+	    update_ret = self.metrics_dbi.update_activity_records(idData, countData)
+	    updData.append(update_ret.raw_result)
+
+	return updData
 
     def insert_user_activities(self, requesting_user, params, token):
 	"""
 	insert user activities reported from Workspace.
 	If duplicated ids found, skip that record.
 	"""
+        if not self.is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to invoke this action.')
+
 	ws_ret = self.get_activities_from_ws(requesting_user, params, token)
 	act_list = ws_ret['metrics_result']
 	pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
@@ -455,12 +495,11 @@ class MetricsMongoDBController:
 
 	params = self.process_parameters(params)
 
-        #db_ret = self.metrics_dbi.list_user_details(params['user_ids'], params['minTime'], params['maxTime'])
         db_ret = self.metrics_dbi.aggr_user_details(params['user_ids'], params['minTime'], params['maxTime'])
 	if len(db_ret) == 0:
 	    pprint("No records returned!")
 	else:
-	    db_ret = self.convert_isodate_to_millis(db_ret, ['account_created', 'most_recent_login'])
+	    db_ret = self.convert_isodate_to_millis(db_ret, ['signup_at', 'last_signin_at'])
         return {'metrics_result': db_ret}
 
     def process_parameters(self, params):
@@ -519,6 +558,16 @@ class MetricsMongoDBController:
 
     def is_admin(self, username):
         if username in self.adminList:
+            return True
+        return False
+
+    def is_metrics_admin(self, username):
+        if username in self.metricsAdmins:
+            return True
+        return False
+
+    def is_kbstaff(self, username):
+        if username in self.kbstaffList:
             return True
         return False
 

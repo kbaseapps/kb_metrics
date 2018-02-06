@@ -7,7 +7,7 @@ from pymongo import ASCENDING
 from pymongo import DESCENDING
 from bson.son import SON
 #from pymongo import InsertOne, DeleteOne, ReplaceOne
-from pymongo import ASCENDING, DESCENDING#, IndexModel
+from pymongo import ASCENDING, DESCENDING, ReturnDocument#, IndexModel
 from pymongo.errors import BulkWriteError
 
 
@@ -21,7 +21,7 @@ class MongoMetricsDBI:
     _JOBSTATE='jobstate'#userjobstate.jobstate
 
     _AUTH2_USERS='users'#auth2.users
-    _MT_USERS='metrics_users'#metrics.users
+    _MT_USERS='test_users'#'users'#metrics.users
     _MT_DAILY_ACTIVITIES='test_activities'#'user_daily_activities'#metrics.user_daily_activities
 
     _USERPROFILES='profiles'#user_profile_db.profiles
@@ -46,123 +46,91 @@ class MongoMetricsDBI:
 
 
     ## Begin functions to write to the metrics database...
-    def update_activity_records(self, upd_filter, upd_data, time_stamp=None):
+    def update_user_records(self, upd_filter, upd_data, kbstaff):
 	"""
 	Insert an iterable of user activity documents
 	"""
-	if time_stamp is None:
-	    #number of mili-seconds since the epoch
-    	    epoch = datetime.datetime.utcfromtimestamp(0)
-	    time_stamp = int((datetime.datetime.utcnow() - epoch).total_seconds()*1000)
-
-	upd_op = { "$set": upd_data,
-		   "$setOnInsert": {upd_filter, upd_data}
+	upd_op = { 
+		   '$currentDate': { 'lastUpdated': True },
+		   '$set': upd_data, 
+		   '$setOnInsert': {'kbase_staff': kbstaff}
 		 }
-	upsert = { "upsert": true }
+
+	# grab handle(s) to the database collection(s) targeted
+	self.kb_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
+	update_ret = None
+	try:
+	    #return an instance of UpdateResult(raw_result, acknowledged)
+	    update_ret = self.kb_users.update_one(upd_filter, upd_op, upsert=True)
+	except BulkWriteError as bwe:
+	    print("kb_users.update errored\n:")
+	    pprint(bwe.details['writeErrors'])
+	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
+	    if len(panic) > 0:
+		print "really panic"
+		raise
+	else:
+	    pass
+	    #pprint(update_ret.raw_result)
+	    #if update_ret.upserted_id:
+		#print(update_ret.upserted_id)
+	return update_ret
+
+    def update_activity_records(self, upd_filter, upd_data):
+	"""
+	Insert an iterable of user activity documents
+	"""
+	upd_op = { 
+		   '$currentDate': { 'lastUpdated': True },
+		   "$set": upd_data
+		 }
 
 	# grab handle(s) to the database collection(s) targeted
         self.kb_coll = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
 	update_ret = None
 	try:
 	    #return an instance of UpdateResult(raw_result, acknowledged)
-	    update_ret = self.kb_coll.update_many(upd_filter, upd_op, upsert)#upsert=True
+	    update_ret = self.kb_coll.update_one(upd_filter, upd_op, upsert=True)
 	except BulkWriteError as bwe:
 	    #pprint(bwe.details['writeErrors'])
 	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
 	    if len(panic) > 0:
 		print "really panic"
 		raise
-	else:# everything is fine
-	    pprint('matched {} records and updated {} records.'.format(
-			update_ret.matched_count, update_ret.modified_count))
+	else:
+	    pass
+	    #pprint(update_ret.raw_result)
+	    #if update_ret.upserted_id:
+		#print(update_ret.upserted_id)
 	return update_ret
 
-    def insert_activity_records(self, mt_docs, time_stamp=None):
+    def insert_activity_records(self, mt_docs):
 	"""
 	Insert an iterable of user activity documents
 	"""
 	if not isinstance(mt_docs, list):
 	    raise ValueError('The variable mt_docs must be a list of mutable mapping type data.')
 	
-	if time_stamp is None:
-	    #number of mili-seconds since the epoch
-    	    epoch = datetime.datetime.utcfromtimestamp(0)
-	    time_stamp = int((datetime.datetime.utcnow() - epoch).total_seconds()*1000)
-
 	# grab handle(s) to the database collection(s) targeted
         self.kb_coll = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
 	insert_ret = None
 	try:
 	    #get an instance of InsertManyResult(inserted_ids, acknowledged)
-	    insert_ret = self.kb_coll.insert_many(mt_docs, True)#ordered=True
+	    insert_ret = self.kb_coll.insert_many(mt_docs, ordered=True)
 	except BulkWriteError as bwe:
-	    #pprint(bwe.details['writeErrors'])
+	    #skip uplicate key error (code=11000)
 	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
 	    if len(panic) > 0:
 		print "really panic"
 		raise
-	    #if bwe.details['writeErrors']['code'] == 11000:#duplicate key found
-	else:# everything is fine
+	else:
+	    #insert_ret.inserted_ids is a list
 	    pprint('Inserted {} records.'.format(len(insert_ret.inserted_ids)))
-	    #pprint(insert_ret.inserted_ids)#inserted_ids is a list
 	return insert_ret
 
 
-    def bulk_write(self, mt_db, mt_coll, requests):
-	"""
-	requests: A list of write operations (see examples below).
-	Example:
-	requests = [InsertOne({'y': 1}), DeleteOne({'x': 1}),
-             ReplaceOne({'w': 1}, {'z': 1}, upsert=True)]
-	result = mt_db.mt_coll.bulk_write(requests)
-	pprint(result.inserted_count)
-	1
-	pprint(result.deleted_count)
-	1
-	pprint(result.modified_count)
-	0
-	pprint(result.upserted_ids)
-	{2: ObjectId('54f62ee28891e756a6e1abd5')}
-	"""
-	pass
 
-
-    def add_user_info(self, user_id, email_addr, creation_time, login_time, full_name,
-			organization, roles, nar_num, obj_num, job_num, app_num,
-			time_period, status='A', cancellation={},
-			kb_internal=False,time_stamp=None):
-	if time_stamp is None:
-	    #number of mili-seconds since the epoch
-	    time_stamp = int(datetime.datetime.utcnow().timestamp()*1000)
-
-	query = {
-	    'user_name': user_id,
-	    'email_address': email_addr
-	}
-	set_data = {
-	    'account_created': creation_time,
-            'most_recent_login': login_time,
-            'full_name': full_name,
-	    'organization': organization,
-            'roles': roles,
-	    'status': status,
-	    'cancellation': cancellation,
-	    'kbase_internal': kb_internal,
-            'last_update_from_auth2': time_stamp
-        }
-	inc_data = {
-	    'narrative_count': nar_num,
-	    'object_count': obj_num,
-	    'job_count': job_num,
-	    'app_count': app_num
-	}
-
-	# grab handle(s) to the database collection(s) targeted
-        self.metrics_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
-        self.metrics_users.update(query, {'$inc': inc_data, '$set': set_data}, upsert=True)
-
-
-    ## End functions to write to the metrics database...
+    ## End functions to write to the metrics database
 
     ## Begin functions to query the databases...
     def aggr_user_daily_activities(self, minTime, maxTime):
@@ -375,18 +343,18 @@ class MongoMetricsDBI:
 
 	pipeline = [
 	    match_cond,
-            {"$project":{"user_id":"$user","email_address":"$email","full_name":"$display",
-			 "account_created":"$create","most_recent_login":"$login","roles":1,"_id":0}},
-	    {"$sort":{"account_created":1}}
+            {"$project":{"username":"$user","email":"$email","full_name":"$display",
+			 "signup_at":"$create","last_signin_at":"$login","roles":1,"_id":0}},
+	    {"$sort":{"signup_at":1}}
 	]
 
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
 	u_cursor = self.kbusers.aggregate(pipeline)
 	# list(u_cursor) only gets the keys [u'ok', u'result'] 
-	u_result = u_cursor['result']
+	#u_result = u_cursor['result']
 	# while list(u_result) gets the list of results
-	return list(u_result)
+	return list(u_cursor)#list(u_result)
 
 
     def list_user_details(self, userIds, minTime, maxTime):
