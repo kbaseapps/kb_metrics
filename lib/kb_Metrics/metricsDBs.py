@@ -140,10 +140,9 @@ class MongoMetricsDBI:
         userFilter = {}
         if (userIds is not None and len(userIds) > 0):
             userFilter['$in'] = userIds
-	elif userIds == []:
-	    userFilter['$ne'] = 'kbasetest'
+	userFilter['$nin'] = ['kbasetest','***ROOT***','ciservices']
         if len(userFilter) > 0:
-            filter['user'] = userFilter
+            filter['username'] = userFilter
 
         signupTimeFilter = {}
         if minTime is not None:
