@@ -22,7 +22,7 @@ class MongoMetricsDBI:
 
     _AUTH2_USERS='users'#auth2.users
     _MT_USERS='users'#'test_users'#'users'#metrics.users
-    _MT_DAILY_ACTIVITIES='user_daily_activities'#'test_activities'#metrics.user_daily_activities
+    _MT_DAILY_ACTIVITIES='user_daily_activities'#'user_daily_activities'#metrics.user_daily_activities
 
     _USERPROFILES='profiles'#user_profile_db.profiles
 
