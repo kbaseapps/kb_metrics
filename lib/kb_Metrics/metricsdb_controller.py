@@ -102,7 +102,7 @@ class MetricsMongoDBController:
 
 	params = self.process_parameters(params)
         auth2_ret = self.metrics_dbi.aggr_user_details(params['user_ids'], params['minTime'], params['maxTime'])
-	updData = []
+	updData = 0
 	if len(auth2_ret) == 0:
 	    pprint("No user records returned for update!")
 	    return updData
@@ -116,7 +116,7 @@ class MetricsMongoDBController:
 	    userData = filterByKey(dataKeys)
 	    isKbstaff = 1 if idData['username'] in self.kbstaffList else 0
 	    update_ret = self.metrics_dbi.update_user_records(idData, userData, isKbstaff)
-	    updData.append(update_ret.raw_result)
+	    updData += update_ret.raw_result['nModified']
 
 	return updData
 
@@ -130,7 +130,7 @@ class MetricsMongoDBController:
 
 	ws_ret = self.get_activities_from_ws(requesting_user, params, token)
 	act_list = ws_ret['metrics_result']
-	updData = []
+	updData = 0
 	if len(act_list) == 0:
 	    pprint("No activity records returned for update!")
 	    return updData
@@ -143,7 +143,7 @@ class MetricsMongoDBController:
 	    idData = filterByKey(idKeys)
 	    countData = filterByKey(countKeys)
 	    update_ret = self.metrics_dbi.update_activity_records(idData, countData)
-	    updData.append(update_ret.raw_result)
+	    updData += update_ret.raw_result['nModified']
 
 	return updData
 
