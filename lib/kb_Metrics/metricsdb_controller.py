@@ -102,13 +102,14 @@ class MetricsMongoDBController:
 
 	params = self.process_parameters(params)
         auth2_ret = self.metrics_dbi.aggr_user_details(params['user_ids'], params['minTime'], params['maxTime'])
+	updData = []
 	if len(auth2_ret) == 0:
-	    pprint("No records returned!")
+	    pprint("No user records returned for update!")
+	    return updData
 
 	pprint('\nRetrieved {} user record(s)'.format(len(auth2_ret)))
 	idKeys = ['username', 'email']
 	dataKeys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
-	updData = []
 	for u_data in auth2_ret:
 	    filterByKey = lambda keys: {x: u_data[x] for x in keys}
 	    idData = filterByKey(idKeys)
@@ -129,11 +130,14 @@ class MetricsMongoDBController:
 
 	ws_ret = self.get_activities_from_ws(requesting_user, params, token)
 	act_list = ws_ret['metrics_result']
-	#pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
+	updData = []
+	if len(act_list) == 0:
+	    pprint("No activity records returned for update!")
+	    return updData
 
+	pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
 	idKeys = ['_id']
 	countKeys = ['ws_numModified', 'ws_numObjs']
-	updData = []
 	for a_data in act_list:
 	    filterByKey = lambda keys: {x: a_data[x] for x in keys}
 	    idData = filterByKey(idKeys)
@@ -153,6 +157,10 @@ class MetricsMongoDBController:
 
 	ws_ret = self.get_activities_from_ws(requesting_user, params, token)
 	act_list = ws_ret['metrics_result']
+	if len(act_list) == 0:
+	    pprint("No activity records returned for insertion!")
+	    return {'metrics_result': []}
+
 	pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
 	try:
 	    insert_ret = self.metrics_dbi.insert_activity_records(act_list)
@@ -197,7 +205,7 @@ class MetricsMongoDBController:
 
         return {'metrics_result': db_ret}
 
-    def get_total_logins(self, requesting_user, params, token):
+    def get_total_logins_from_ws(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -209,7 +217,7 @@ class MetricsMongoDBController:
 
         return {'metrics_result': db_ret}
 
-    def get_user_logins(self, requesting_user, params, token):
+    def get_user_logins_from_ws(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -221,7 +229,7 @@ class MetricsMongoDBController:
 
         return {'metrics_result': db_ret}
 
-    def get_user_ws(self, requesting_user, params, token):
+    def get_user_ws_from_ws(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -233,7 +241,7 @@ class MetricsMongoDBController:
 
         return {'metrics_result': db_ret}
 
-    def get_user_narratives(self, requesting_user, params, token):
+    def get_user_narratives_from_ws(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -245,7 +253,7 @@ class MetricsMongoDBController:
 
         return {'metrics_result': db_ret}
 
-    def get_user_numObjs(self, requesting_user, params, token):
+    def get_user_numObjs_from_ws(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
