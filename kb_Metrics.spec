@@ -89,4 +89,8 @@ module kb_Metrics {
     /** For writing to mongodb metrics **/ 
     funcdef update_metrics(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
+
+    /** For retrieving from mongodb metrics **/ 
+    funcdef get_user_activities(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
 };

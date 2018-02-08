@@ -101,6 +101,8 @@ class MetricsMongoDBController:
             raise ValueError('You do not have permission to invoke this action.')
 
 	params = self.process_parameters(params)
+	##TODO: set the param['minTime'] and param['maxTime'] to a given time window,
+	##such as most current 24 hours instead of 48 hours as for others.
         auth2_ret = self.metrics_dbi.aggr_user_details(params['user_ids'], params['minTime'], params['maxTime'])
 	updData = 0
 	if len(auth2_ret) == 0:
@@ -120,6 +122,7 @@ class MetricsMongoDBController:
 
 	return updData
 
+
     def update_user_activities(self, requesting_user, params, token):
 	"""
 	update user activities reported from Workspace.
@@ -128,7 +131,9 @@ class MetricsMongoDBController:
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-	ws_ret = self.get_activities_from_ws(requesting_user, params, token)
+	##TODO: set the param['minTime'] and param['maxTime'] to a given time window,
+	##such as most current 24 hours instead of 48 hours as for others.
+	ws_ret = self.get_activities_from_wsobjs(requesting_user, params, token)
 	act_list = ws_ret['metrics_result']
 	updData = 0
 	if len(act_list) == 0:
@@ -136,6 +141,8 @@ class MetricsMongoDBController:
 	    return updData
 
 	pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
+	pprint(act_list)
+	'''
 	idKeys = ['_id']
 	countKeys = ['ws_numModified', 'ws_numObjs']
 	for a_data in act_list:
@@ -144,7 +151,7 @@ class MetricsMongoDBController:
 	    countData = filterByKey(countKeys)
 	    update_ret = self.metrics_dbi.update_activity_records(idData, countData)
 	    updData += update_ret.raw_result['nModified']
-
+	'''
 	return updData
 
     def insert_user_activities(self, requesting_user, params, token):
@@ -193,6 +200,19 @@ class MetricsMongoDBController:
 
 
     ## functions to get the requested records from other dbs...
+    def get_activities_from_wsobjs(self, requesting_user, params, token):
+        if not self.is_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+	params = self.process_parameters(params)
+	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+
+        db_ret = self.metrics_dbi.aggr_activities_from_ws(params['minTime'], params['maxTime'])
+
+        return {'metrics_result': db_ret}
+
+
     def get_activities_from_ws(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
@@ -201,7 +221,7 @@ class MetricsMongoDBController:
 	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
 	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        db_ret = self.metrics_dbi.aggr_user_daily_activities(params['minTime'], params['maxTime'])
+        db_ret = self.metrics_dbi.aggr_activities_from_ws(params['minTime'], params['maxTime'])
 
         return {'metrics_result': db_ret}
 
@@ -225,7 +245,7 @@ class MetricsMongoDBController:
 	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
 	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        db_ret = self.metrics_dbi.aggr_user_logins(params['minTime'], params['maxTime'])
+        db_ret = self.metrics_dbi.aggr_user_logins_from_ws(params['minTime'], params['maxTime'])
 
         return {'metrics_result': db_ret}
 
@@ -460,7 +480,7 @@ class MetricsMongoDBController:
 
 	return method_id
 
-    def map_narrative(self, ws_id, ws_narratives):
+    def map_narrative(self, wsid, ws_narratives):
 	"""
 	get the narrative name and version
 	"""
@@ -469,7 +489,7 @@ class MetricsMongoDBController:
 	ws_name = ''
 	ws_owner = ''
 	for ws in ws_narratives:
-	    if str(ws['ws']) == str(ws_id):
+	    if str(ws['ws_id']) == str(wsid):
 		ws_name = ws['name']
 		ws_owner = ws['owner']
 		n_name = ws_name
