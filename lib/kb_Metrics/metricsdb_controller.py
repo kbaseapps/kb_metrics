@@ -190,8 +190,6 @@ class MetricsMongoDBController:
         mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'])
 	if len(mt_ret) == 0:
 	    pprint("No records returned!")
-	else:
-	    mt_ret = self.convert_isodate_to_millis(mt_ret, ['signup_at', 'last_signin_at'])
         return {'metrics_result': mt_ret}
 
 
