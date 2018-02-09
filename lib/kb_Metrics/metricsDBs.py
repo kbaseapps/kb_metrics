@@ -21,8 +21,8 @@ class MongoMetricsDBI:
     _JOBSTATE='jobstate'#userjobstate.jobstate
 
     _AUTH2_USERS='users'#auth2.users
-    _MT_USERS='users'#'test_users'#'users'#metrics.users
-    _MT_DAILY_ACTIVITIES='user_daily_activities'#'user_daily_activities'#metrics.user_daily_activities
+    _MT_USERS='test_users'#'users'#metrics.users
+    _MT_DAILY_ACTIVITIES='test_activities'#'user_daily_activities'#metrics.user_daily_activities
 
     _USERPROFILES='profiles'#user_profile_db.profiles
 
@@ -134,6 +134,31 @@ class MongoMetricsDBI:
 
 
     ## Begin functions to query the other dbs...
+    def aggr_unique_users_per_day(self, minTime, maxTime):
+	# Define the pipeline operations
+	minDate = _convert_to_datetime(minTime)
+	maxDate = _convert_to_datetime(maxTime)
+
+	pipeline = [
+	    {"$match":{"_id.year_mod":{"$gte":minDate.year,"$lte":maxDate.year},
+		       "_id.month_mod":{"$gte":minDate.month,"$lte":maxDate.month},
+		       "_id.day_mod":{"$gte":minDate.day,"$lte":maxDate.day},
+		       "obj_numModified":{"$gt":0}}},
+	    {"$project":{"yyyy-mm-dd":{"$concat":[{"$substr":["$_id.year_mod", 0, -1 ]},'-',
+			{"$substr":["$_id.month_mod", 0, -1 ]},'-',
+			{"$substr":["$_id.day_mod", 0, -1 ]}]},
+			 "username":"$_id.username","_id":0}},
+	    {"$group":{"_id":{"yyyy-mm-dd":"$yyyy-mm-dd","username":"$username"}}},
+	    {"$group":{"_id":{"yyyy-mm-dd":"$_id.yyyy-mm-dd"},"numOfUsers":{"$sum":1}}},
+	    {"$project":{"yyyy-mm-dd":"$_id.yyyy-mm-dd","numOfUsers":1,"_id":0}},
+	    {"$sort":{"yyyy-mm-dd":ASCENDING}}
+	]
+	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
+        self.mt_acts = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
+	m_cursor = self.mt_acts.aggregate(pipeline)
+        return list(m_cursor)
+
+
     def get_user_info(self, userIds, minTime, maxTime):
         filter = {}
 
@@ -187,8 +212,8 @@ class MongoMetricsDBI:
 	pipeline = [
 	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
 	    {"$project":{"year_mod":{"$year":"$moddate"},"month_mod":{"$month":"$moddate"},"date_mod":{"$dayOfMonth":"$moddate"},"obj_name":"$name","obj_id":"$id","obj_version":"$numver","ws_id":"$ws","_id":0}},
-	    {"$group":{"_id":{"ws_id":"$ws","year_mod":"$year_mod","month_mod":"$month_mod","day_mod":"$date_mod"},"obj_numModified":{"$sum":1}}},
-	    {"$sort":{"_id.ws_id":ASCENDING,"_id.year_mod":ASCENDING, "_id.month_mod":ASCENDING, "_id.day_mod":ASCENDING}}
+	    {"$group":{"_id":{"ws_id":"$ws_id","year_mod":"$year_mod","month_mod":"$month_mod","day_mod":"$date_mod"},"obj_numModified":{"$sum":1}}},
+	    {"$sort":{"_id":ASCENDING}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WSOBJECTS]
@@ -202,7 +227,7 @@ class MongoMetricsDBI:
 	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
 	    {"$project":{"year_mod":{"$year":"$moddate"},"month_mod":{"$month":"$moddate"},"date_mod":{"$dayOfMonth":"$moddate"},"owner":1,"ws_id":"$ws","numObj":1,"_id":0}},
 	    {"$group":{"_id":{"username":"$owner","year_mod":"$year_mod","month_mod":"$month_mod","day_mod":"$date_mod"},"ws_numModified":{"$sum":1},"ws_numObjs":{"$sum":"$numObj"}}},
-	    {"$sort":{"_id.username":ASCENDING,"_id.year_mod":ASCENDING, "_id.month_mod":ASCENDING, "_id.day_mod":ASCENDING}}
+	    {"$sort":{"_id":ASCENDING}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
@@ -216,7 +241,7 @@ class MongoMetricsDBI:
 	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
 	    {"$project":{"year":{"$year":"$moddate"},"month":{"$month":"$moddate"},"date":{"$dayOfMonth":"$moddate"},"owner":1,"ws_id":"$ws","numObj":1,"meta":1,"_id":0}},
 	    {"$group":{"_id":{"username":"$owner","year":"$year","month":"$month"},"year_mon_user_logins":{"$sum":1}}},
-	    {"$sort":{"_id.username":ASCENDING,"_id.year":ASCENDING, "_id.month":ASCENDING}}
+	    {"$sort":{"_id":ASCENDING}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
@@ -229,9 +254,9 @@ class MongoMetricsDBI:
 	pipeline = [
 	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
 	    {"$project":{"year":{"$year":"$moddate"},"month":{"$month":"$moddate"},"date":{"$dayOfMonth":"$moddate"},"owner":1,"ws_id":"$ws","numObj":1,"meta":1,"_id":0}},
-	    {"$group":{"_id":{"user":"$owner","year":"$year","month":"$month"},"count_user_ws_logins":{"$sum":1}}},
+	    {"$group":{"_id":{"username":"$owner","year":"$year","month":"$month"},"count_user_ws_logins":{"$sum":1}}},
 	    {"$group":{"_id":{"year":"$_id.year","month":"$_id.month"},"year_mon_total_logins":{"$sum":"$count_user_ws_logins"}}},
-	    {"$sort":{"_id.year":ASCENDING, "_id.month":ASCENDING}}
+	    {"$sort":{"_id":ASCENDING}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
@@ -244,8 +269,8 @@ class MongoMetricsDBI:
 	pipeline = [
 	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
 	    {"$project":{"year":{"$year":"$moddate"},"month":{"$month":"$moddate"},"date":{"$dayOfMonth":"$moddate"},"owner":1,"ws_id":"$ws","numObj":1,"meta":1,"_id":0}},
-	    {"$group":{"_id":{"user":"$owner","year":"$year","month":"$month"},"count_user_ws":{"$sum":1}}},
-	    {"$sort":{"_id.user":ASCENDING,"_id.year":ASCENDING, "_id.month":ASCENDING}}
+	    {"$group":{"_id":{"username":"$owner","year":"$year","month":"$month"},"count_user_ws":{"$sum":1}}},
+	    {"$sort":{"_id":ASCENDING}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
@@ -258,8 +283,8 @@ class MongoMetricsDBI:
 	pipeline = [
 	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime},"meta":{"$exists":True,"$not":{"$size":0}}}},
 	    {"$project":{"year":{"$year":"$moddate"},"month":{"$month":"$moddate"},"date":{"$dayOfMonth":"$moddate"},"owner":1,"ws_id":"$ws","numObj":1,"meta":1,"_id":0}},
-	    {"$group":{"_id":{"user":"$owner","year":"$year","month":"$month"},"count_user_narratives":{"$sum":1}}},
-	    {"$sort":{"_id.user":ASCENDING,"_id.year":ASCENDING, "_id.month":ASCENDING}}
+	    {"$group":{"_id":{"username":"$owner","year":"$year","month":"$month"},"count_user_narratives":{"$sum":1}}},
+	    {"$sort":{"_id":ASCENDING}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
@@ -272,10 +297,22 @@ class MongoMetricsDBI:
 	pipeline = [
 	    {"$match":{"moddate":{"$gte":minTime,"$lte":maxTime}}},
 	    {"$project":{"year":{"$year":"$moddate"},"month":{"$month":"$moddate"},"date":{"$dayOfMonth":"$moddate"},"owner":1,"ws_id":"$ws","numObj":1,"meta":1,"_id":0}},
-	    {"$group":{"_id":{"user":"$owner","year":"$year","month":"$month"},"count_user_numObjs":{"$sum":"$numObj"}}},
-	    {"$sort":{"_id.user":ASCENDING,"_id.year":ASCENDING, "_id.month":ASCENDING}}
+	    {"$group":{"_id":{"username":"$owner","year":"$year","month":"$month"},"count_user_numObjs":{"$sum":"$numObj"}}},
+	    {"$sort":{"_id":ASCENDING}}
 	]
 
+	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
+        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+	m_cursor = self.kbworkspaces.aggregate(pipeline)
+        return list(m_cursor)
+
+
+    def list_ws_owners(self):
+	# Define the pipeline operations
+	pipeline = [
+	    {"$match":{}},
+	    {"$project":{"username":"$owner","ws_id":"$ws","name":1,"_id":0}}
+	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
 	m_cursor = self.kbworkspaces.aggregate(pipeline)
@@ -286,7 +323,7 @@ class MongoMetricsDBI:
 	# Define the pipeline operations
 	pipeline = [
 	    {"$match":{"meta":{"$exists":True,"$not":{"$size":0}}}},
-	    {"$project":{"owner":1,"ws_id":"$ws","name":1,"meta":1,"_id":0}}
+	    {"$project":{"username":"$owner","ws_id":"$ws","name":1,"meta":1,"_id":0}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
@@ -376,13 +413,13 @@ class MongoMetricsDBI:
 	# Define the pipeline operations
 	if userIds == []:
 	    match_cond = {"$match":
-				{"user":{"$nin":excluded_users},
+				{"username":{"$nin":excluded_users},
 				 "create":{"$gte":_convert_to_datetime(minTime),
 					  "$lte":_convert_to_datetime(maxTime)}}
 			 }
 	else:
 	    match_cond = {"$match":
-				{"user":{"$in":userIds,"$nin":excluded_users},
+				{"username":{"$in":userIds,"$nin":excluded_users},
 				 "create":{"$gte":_convert_to_datetime(minTime),
 					   "$lte":_convert_to_datetime(maxTime)}}
 			 }

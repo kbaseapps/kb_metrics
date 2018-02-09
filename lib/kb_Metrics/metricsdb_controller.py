@@ -142,17 +142,16 @@ class MetricsMongoDBController:
 
 	pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
 	pprint(act_list)
-	'''
 	idKeys = ['_id']
-	countKeys = ['ws_numModified', 'ws_numObjs']
+	countKeys = ['obj_numModified']
 	for a_data in act_list:
 	    filterByKey = lambda keys: {x: a_data[x] for x in keys}
 	    idData = filterByKey(idKeys)
 	    countData = filterByKey(countKeys)
 	    update_ret = self.metrics_dbi.update_activity_records(idData, countData)
 	    updData += update_ret.raw_result['nModified']
-	'''
 	return updData
+
 
     def insert_user_activities(self, requesting_user, params, token):
 	"""
@@ -182,6 +181,20 @@ class MetricsMongoDBController:
 
 
     ## functions to get the requested records from metrics db...
+    def get_active_users_counts(self, requesting_user, params, token):
+        if not self.is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+	params = self.process_parameters(params)
+
+        mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'])
+	if len(mt_ret) == 0:
+	    pprint("No records returned!")
+	else:
+	    mt_ret = self.convert_isodate_to_millis(mt_ret, ['signup_at', 'last_signin_at'])
+        return {'metrics_result': mt_ret}
+
+
     def get_user_details(self, requesting_user, params, token):
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
@@ -196,6 +209,13 @@ class MetricsMongoDBController:
         return {'metrics_result': mt_ret}
 
 
+    def get_user_activities(self, requesting_user, params, token):
+        if not self.is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+	return self.get_activities_from_wsobjs(requesting_user, params, token)
+
+
     ## End functions to get the requested records from metrics db
 
 
@@ -208,9 +228,13 @@ class MetricsMongoDBController:
 	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
 	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        db_ret = self.metrics_dbi.aggr_activities_from_ws(params['minTime'], params['maxTime'])
-
-        return {'metrics_result': db_ret}
+        ws_objs = self.metrics_dbi.aggr_activities_from_wsobjs(params['minTime'], params['maxTime'])
+	ws_owners = self.metrics_dbi.list_ws_owners()
+	for wo in ws_owners:
+	    for obj in ws_objs:
+		if wo['ws_id'] == obj['_id']['ws_id']:
+		    obj['_id'][u'username'] = wo['username']
+        return {'metrics_result': ws_objs}
 
 
     def get_activities_from_ws(self, requesting_user, params, token):
