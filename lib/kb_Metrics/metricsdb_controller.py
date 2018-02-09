@@ -515,7 +515,7 @@ class MetricsMongoDBController:
 	for ws in ws_narratives:
 	    if str(ws['ws_id']) == str(wsid):
 		ws_name = ws['name']
-		ws_owner = ws['owner']
+		ws_owner = ws['username']
 		n_name = ws_name
 		if not ws.get('meta', None) is None:
 		    w_meta = ws['meta']
