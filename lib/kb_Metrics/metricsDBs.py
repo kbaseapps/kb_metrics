@@ -144,15 +144,19 @@ class MongoMetricsDBI:
 		       "_id.month_mod":{"$gte":minDate.month,"$lte":maxDate.month},
 		       "_id.day_mod":{"$gte":minDate.day,"$lte":maxDate.day},
 		       "obj_numModified":{"$gt":0}}},
+	    {"$project":{"year_mod":"$_id.year_mod", "month_mod":"$_id.month_mod","day_mod":"$_id.day_mod",
+			 "username":"$_id.username","_id":0}},
+	    {"$group":{"_id":{"year_mod":"$year_mod","month_mod":"$month_mod","day_mod":"$day_mod",
+			"username":"$username"}}},
+	    {"$group":{"_id":{"year_mod":"$_id.year_mod","month_mod":"$_id.month_mod",
+			"day_mod":"$_id.day_mod"},"numOfUsers":{"$sum":1}}},
+	    {"$sort":{"_id.year_mod":ASCENDING, "_id.month_mod":ASCENDING, "_id.day_mod":ASCENDING}},
 	    {"$project":{"yyyy-mm-dd":{"$concat":[{"$substr":["$_id.year_mod", 0, -1 ]},'-',
 			{"$substr":["$_id.month_mod", 0, -1 ]},'-',
 			{"$substr":["$_id.day_mod", 0, -1 ]}]},
-			 "username":"$_id.username","_id":0}},
-	    {"$group":{"_id":{"yyyy-mm-dd":"$yyyy-mm-dd","username":"$username"}}},
-	    {"$group":{"_id":{"yyyy-mm-dd":"$_id.yyyy-mm-dd"},"numOfUsers":{"$sum":1}}},
-	    {"$project":{"yyyy-mm-dd":"$_id.yyyy-mm-dd","numOfUsers":1,"_id":0}},
-	    {"$sort":{"yyyy-mm-dd":ASCENDING}}
+			"numOfUsers":1,"_id":0}}
 	]
+
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.mt_acts = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
 	m_cursor = self.mt_acts.aggregate(pipeline)
