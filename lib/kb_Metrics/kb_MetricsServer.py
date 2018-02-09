@@ -365,10 +365,10 @@ class Application(object):
                              name='kb_Metrics.get_user_numObjs',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_user_numObjs'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.get_user_metrics,
-                             name='kb_Metrics.get_user_metrics',
+        self.rpc_service.add(impl_kb_Metrics.get_user_logins,
+                             name='kb_Metrics.get_user_logins',
                              types=[dict])
-        self.method_authentication['kb_Metrics.get_user_metrics'] = 'required'  # noqa
+        self.method_authentication['kb_Metrics.get_user_logins'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.get_user_ujs_results,
                              name='kb_Metrics.get_user_ujs_results',
                              types=[dict])
@@ -377,6 +377,18 @@ class Application(object):
                              name='kb_Metrics.get_user_job_states',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_user_job_states'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.update_metrics,
+                             name='kb_Metrics.update_metrics',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.update_metrics'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_user_activities,
+                             name='kb_Metrics.get_user_activities',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_user_activities'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_user_counts_per_day,
+                             name='kb_Metrics.get_user_counts_per_day',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_user_counts_per_day'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.status,
                              name='kb_Metrics.status',
                              types=[dict])
