@@ -925,9 +925,9 @@ MetricsOutput is a reference to a hash where the following keys are defined:
  
 
 
-=head2 get_user_metrics
+=head2 get_user_logins
 
-  $return_records = $obj->get_user_metrics($params)
+  $return_records = $obj->get_user_logins($params)
 
 =over 4
 
@@ -979,7 +979,7 @@ MetricsOutput is a reference to a hash where the following keys are defined:
 
 =cut
 
- sub get_user_metrics
+ sub get_user_logins
 {
     my($self, @args) = @_;
 
@@ -988,7 +988,7 @@ MetricsOutput is a reference to a hash where the following keys are defined:
     if ((my $n = @args) != 1)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function get_user_metrics (received $n, expecting 1)");
+							       "Invalid argument count for function get_user_logins (received $n, expecting 1)");
     }
     {
 	my($params) = @args;
@@ -996,31 +996,31 @@ MetricsOutput is a reference to a hash where the following keys are defined:
 	my @_bad_arguments;
         (ref($params) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 1 \"params\" (value was \"$params\")");
         if (@_bad_arguments) {
-	    my $msg = "Invalid arguments passed to get_user_metrics:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    my $msg = "Invalid arguments passed to get_user_logins:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-								   method_name => 'get_user_metrics');
+								   method_name => 'get_user_logins');
 	}
     }
 
     my $url = $self->{url};
     my $result = $self->{client}->call($url, $self->{headers}, {
-	    method => "kb_Metrics.get_user_metrics",
+	    method => "kb_Metrics.get_user_logins",
 	    params => \@args,
     });
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
 					       code => $result->content->{error}->{code},
-					       method_name => 'get_user_metrics',
+					       method_name => 'get_user_logins',
 					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
 	}
     } else {
-        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method get_user_metrics",
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method get_user_logins",
 					    status_line => $self->{client}->status_line,
-					    method_name => 'get_user_metrics',
+					    method_name => 'get_user_logins',
 				       );
     }
 }
@@ -1229,6 +1229,312 @@ MetricsOutput is a reference to a hash where the following keys are defined:
     }
 }
  
+
+
+=head2 update_metrics
+
+  $return_records = $obj->update_metrics($params)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$params is a kb_Metrics.MetricsInputParams
+$return_records is a kb_Metrics.MetricsOutput
+MetricsInputParams is a reference to a hash where the following keys are defined:
+	user_ids has a value which is a reference to a list where each element is a kb_Metrics.user_id
+	epoch_range has a value which is a kb_Metrics.epoch_range
+user_id is a string
+epoch_range is a reference to a list containing 2 items:
+	0: (e_lowerbound) a kb_Metrics.epoch
+	1: (e_upperbound) a kb_Metrics.epoch
+epoch is an int
+MetricsOutput is a reference to a hash where the following keys are defined:
+	metrics_result has a value which is an UnspecifiedObject, which can hold any non-null object
+
+</pre>
+
+=end html
+
+=begin text
+
+$params is a kb_Metrics.MetricsInputParams
+$return_records is a kb_Metrics.MetricsOutput
+MetricsInputParams is a reference to a hash where the following keys are defined:
+	user_ids has a value which is a reference to a list where each element is a kb_Metrics.user_id
+	epoch_range has a value which is a kb_Metrics.epoch_range
+user_id is a string
+epoch_range is a reference to a list containing 2 items:
+	0: (e_lowerbound) a kb_Metrics.epoch
+	1: (e_upperbound) a kb_Metrics.epoch
+epoch is an int
+MetricsOutput is a reference to a hash where the following keys are defined:
+	metrics_result has a value which is an UnspecifiedObject, which can hold any non-null object
+
+
+=end text
+
+=item Description
+
+For writing to mongodb metrics *
+
+=back
+
+=cut
+
+ sub update_metrics
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function update_metrics (received $n, expecting 1)");
+    }
+    {
+	my($params) = @args;
+
+	my @_bad_arguments;
+        (ref($params) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 1 \"params\" (value was \"$params\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to update_metrics:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'update_metrics');
+	}
+    }
+
+    my $url = $self->{url};
+    my $result = $self->{client}->call($url, $self->{headers}, {
+	    method => "kb_Metrics.update_metrics",
+	    params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'update_metrics',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method update_metrics",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'update_metrics',
+				       );
+    }
+}
+ 
+
+
+=head2 get_user_activities
+
+  $return_records = $obj->get_user_activities($params)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$params is a kb_Metrics.MetricsInputParams
+$return_records is a kb_Metrics.MetricsOutput
+MetricsInputParams is a reference to a hash where the following keys are defined:
+	user_ids has a value which is a reference to a list where each element is a kb_Metrics.user_id
+	epoch_range has a value which is a kb_Metrics.epoch_range
+user_id is a string
+epoch_range is a reference to a list containing 2 items:
+	0: (e_lowerbound) a kb_Metrics.epoch
+	1: (e_upperbound) a kb_Metrics.epoch
+epoch is an int
+MetricsOutput is a reference to a hash where the following keys are defined:
+	metrics_result has a value which is an UnspecifiedObject, which can hold any non-null object
+
+</pre>
+
+=end html
+
+=begin text
+
+$params is a kb_Metrics.MetricsInputParams
+$return_records is a kb_Metrics.MetricsOutput
+MetricsInputParams is a reference to a hash where the following keys are defined:
+	user_ids has a value which is a reference to a list where each element is a kb_Metrics.user_id
+	epoch_range has a value which is a kb_Metrics.epoch_range
+user_id is a string
+epoch_range is a reference to a list containing 2 items:
+	0: (e_lowerbound) a kb_Metrics.epoch
+	1: (e_upperbound) a kb_Metrics.epoch
+epoch is an int
+MetricsOutput is a reference to a hash where the following keys are defined:
+	metrics_result has a value which is an UnspecifiedObject, which can hold any non-null object
+
+
+=end text
+
+=item Description
+
+For retrieving from mongodb metrics *
+
+=back
+
+=cut
+
+ sub get_user_activities
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function get_user_activities (received $n, expecting 1)");
+    }
+    {
+	my($params) = @args;
+
+	my @_bad_arguments;
+        (ref($params) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 1 \"params\" (value was \"$params\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to get_user_activities:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'get_user_activities');
+	}
+    }
+
+    my $url = $self->{url};
+    my $result = $self->{client}->call($url, $self->{headers}, {
+	    method => "kb_Metrics.get_user_activities",
+	    params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'get_user_activities',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method get_user_activities",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'get_user_activities',
+				       );
+    }
+}
+ 
+
+
+=head2 get_user_counts_per_day
+
+  $return_records = $obj->get_user_counts_per_day($params)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$params is a kb_Metrics.MetricsInputParams
+$return_records is a kb_Metrics.MetricsOutput
+MetricsInputParams is a reference to a hash where the following keys are defined:
+	user_ids has a value which is a reference to a list where each element is a kb_Metrics.user_id
+	epoch_range has a value which is a kb_Metrics.epoch_range
+user_id is a string
+epoch_range is a reference to a list containing 2 items:
+	0: (e_lowerbound) a kb_Metrics.epoch
+	1: (e_upperbound) a kb_Metrics.epoch
+epoch is an int
+MetricsOutput is a reference to a hash where the following keys are defined:
+	metrics_result has a value which is an UnspecifiedObject, which can hold any non-null object
+
+</pre>
+
+=end html
+
+=begin text
+
+$params is a kb_Metrics.MetricsInputParams
+$return_records is a kb_Metrics.MetricsOutput
+MetricsInputParams is a reference to a hash where the following keys are defined:
+	user_ids has a value which is a reference to a list where each element is a kb_Metrics.user_id
+	epoch_range has a value which is a kb_Metrics.epoch_range
+user_id is a string
+epoch_range is a reference to a list containing 2 items:
+	0: (e_lowerbound) a kb_Metrics.epoch
+	1: (e_upperbound) a kb_Metrics.epoch
+epoch is an int
+MetricsOutput is a reference to a hash where the following keys are defined:
+	metrics_result has a value which is an UnspecifiedObject, which can hold any non-null object
+
+
+=end text
+
+=item Description
+
+
+
+=back
+
+=cut
+
+ sub get_user_counts_per_day
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function get_user_counts_per_day (received $n, expecting 1)");
+    }
+    {
+	my($params) = @args;
+
+	my @_bad_arguments;
+        (ref($params) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 1 \"params\" (value was \"$params\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to get_user_counts_per_day:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'get_user_counts_per_day');
+	}
+    }
+
+    my $url = $self->{url};
+    my $result = $self->{client}->call($url, $self->{headers}, {
+	    method => "kb_Metrics.get_user_counts_per_day",
+	    params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'get_user_counts_per_day',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method get_user_counts_per_day",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'get_user_counts_per_day',
+				       );
+    }
+}
+ 
   
 sub status
 {
@@ -1272,16 +1578,16 @@ sub version {
             Bio::KBase::Exceptions::JSONRPC->throw(
                 error => $result->error_message,
                 code => $result->content->{code},
-                method_name => 'get_user_job_states',
+                method_name => 'get_user_counts_per_day',
             );
         } else {
             return wantarray ? @{$result->result} : $result->result->[0];
         }
     } else {
         Bio::KBase::Exceptions::HTTP->throw(
-            error => "Error invoking method get_user_job_states",
+            error => "Error invoking method get_user_counts_per_day",
             status_line => $self->{client}->status_line,
-            method_name => 'get_user_job_states',
+            method_name => 'get_user_counts_per_day',
         );
     }
 }
