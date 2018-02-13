@@ -491,14 +491,14 @@ class MetricsMongoDBController:
 	return app_id
 
     def parse_method(self, lat):
-	method = ''
+	method_id = ''
 	if 'method' in lat['job_input']:
 	    if '.' in lat['job_input']['method']:
-		method = lat['job_input']['method']
+		method_id = lat['job_input']['method']
 	    elif '/' in lat['job_input']['method']:
-		method = lat['job_input']['method'].replace('/', '.')
+		method_id = lat['job_input']['method'].replace('/', '.')
 	    else:
-		method = lat['job_input']['method']
+		method_id = lat['job_input']['method']
 
 	return method_id
 
