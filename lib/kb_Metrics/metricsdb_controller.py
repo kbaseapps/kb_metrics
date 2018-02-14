@@ -187,9 +187,14 @@ class MetricsMongoDBController:
 
 	params = self.process_parameters(params)
 
-        mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'], exclude_kbstaff)
+	if excude_kbstaff:
+            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'], self.kbstaffList)
+	else:
+            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'], [])
+
 	if len(mt_ret) == 0:
 	    pprint("No records returned!")
+
         return {'metrics_result': mt_ret}
 
 
@@ -199,7 +204,7 @@ class MetricsMongoDBController:
 
 	params = self.process_parameters(params)
 
-        mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'], params['maxTime'], exclude_kbstaff)
+        mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'], params['maxTime'])
 	if len(mt_ret) == 0:
 	    pprint("No records returned!")
 	else:

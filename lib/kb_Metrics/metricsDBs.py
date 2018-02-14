@@ -134,7 +134,7 @@ class MongoMetricsDBI:
 
 
     ## Begin functions to query the other dbs...
-    def aggr_unique_users_per_day(self, minTime, maxTime, exclude_kbstaff=True):
+    def aggr_unique_users_per_day(self, minTime, maxTime, kbstaff=[]):
 	# Define the pipeline operations
 	minDate = _convert_to_datetime(minTime)
 	maxDate = _convert_to_datetime(maxTime)
@@ -144,7 +144,7 @@ class MongoMetricsDBI:
 		       "_id.day_mod":{"$gte":minDate.day,"$lte":maxDate.day},
 		       "obj_numModified":{"$gt":0}}
 	if exclude_kbstaff:
-	    match_filter['kbase_staff'] = False
+	    match_filter['_id.username'] = {"$nin":kbstaff}
 
 	pipeline = [
 	    {"$match":match_filter},
