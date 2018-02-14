@@ -187,7 +187,7 @@ class MetricsMongoDBController:
 
 	params = self.process_parameters(params)
 
-	if excude_kbstaff:
+	if exclude_kbstaff:
             mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'], self.kbstaffList)
 	else:
             mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'], [])
