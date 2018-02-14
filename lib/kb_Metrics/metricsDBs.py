@@ -134,16 +134,20 @@ class MongoMetricsDBI:
 
 
     ## Begin functions to query the other dbs...
-    def aggr_unique_users_per_day(self, minTime, maxTime):
+    def aggr_unique_users_per_day(self, minTime, maxTime, exclude_kbstaff=True):
 	# Define the pipeline operations
 	minDate = _convert_to_datetime(minTime)
 	maxDate = _convert_to_datetime(maxTime)
 
-	pipeline = [
-	    {"$match":{"_id.year_mod":{"$gte":minDate.year,"$lte":maxDate.year},
+	match_filter = {"_id.year_mod":{"$gte":minDate.year,"$lte":maxDate.year},
 		       "_id.month_mod":{"$gte":minDate.month,"$lte":maxDate.month},
 		       "_id.day_mod":{"$gte":minDate.day,"$lte":maxDate.day},
-		       "obj_numModified":{"$gt":0}}},
+		       "obj_numModified":{"$gt":0}}
+	if exclude_kbstaff:
+	    match_filter['kbase_staff'] = False
+
+	pipeline = [
+	    {"$match":match_filter},
 	    {"$project":{"year_mod":"$_id.year_mod", "month_mod":"$_id.month_mod","day_mod":"$_id.day_mod",
 			 "username":"$_id.username","_id":0}},
 	    {"$group":{"_id":{"year_mod":"$year_mod","month_mod":"$month_mod","day_mod":"$day_mod",
@@ -163,7 +167,7 @@ class MongoMetricsDBI:
         return list(m_cursor)
 
 
-    def get_user_info(self, userIds, minTime, maxTime):
+    def get_user_info(self, userIds, minTime, maxTime, exclude_kbstaff=True):
         filter = {}
 
         userFilter = {}
@@ -173,6 +177,9 @@ class MongoMetricsDBI:
         if len(userFilter) > 0:
             filter['username'] = userFilter
 
+	if exclude_kbstaff:
+            filter['kbase_staff'] = False
+ 
         signupTimeFilter = {}
         if minTime is not None:
             signupTimeFilter['$gte'] = _convert_to_datetime(minTime)

@@ -181,25 +181,25 @@ class MetricsMongoDBController:
 
 
     ## functions to get the requested records from metrics db...
-    def get_active_users_counts(self, requesting_user, params, token):
+    def get_active_users_counts(self, requesting_user, params, token, exclude_kbstaff=True):
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
 	params = self.process_parameters(params)
 
-        mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'])
+        mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'], exclude_kbstaff)
 	if len(mt_ret) == 0:
 	    pprint("No records returned!")
         return {'metrics_result': mt_ret}
 
 
-    def get_user_details(self, requesting_user, params, token):
+    def get_user_details(self, requesting_user, params, token, exclude_kbstaff=True):
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
 	params = self.process_parameters(params)
 
-        mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'], params['maxTime'])
+        mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'], params['maxTime'], exclude_kbstaff)
 	if len(mt_ret) == 0:
 	    pprint("No records returned!")
 	else:
