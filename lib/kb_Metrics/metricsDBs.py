@@ -48,7 +48,7 @@ class MongoMetricsDBI:
     ## Begin functions to write to the metrics database...
     def update_user_records(self, upd_filter, upd_data, kbstaff):
 	"""
-	Insert an iterable of user activity documents
+	update_user_records--
 	"""
 	upd_op = { 
 		   '$currentDate': { 'lastUpdated': True },
@@ -78,7 +78,7 @@ class MongoMetricsDBI:
 
     def update_activity_records(self, upd_filter, upd_data):
 	"""
-	Insert an iterable of user activity documents
+	update_activity_records--
 	"""
 	upd_op = { 
 		   '$currentDate': { 'lastUpdated': True },
