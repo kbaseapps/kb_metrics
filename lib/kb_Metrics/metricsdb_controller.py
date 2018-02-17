@@ -198,7 +198,7 @@ class MetricsMongoDBController:
         return {'metrics_result': mt_ret}
 
 
-    def get_user_details(self, requesting_user, params, token, exclude_kbstaff=True):
+    def get_user_details(self, requesting_user, params, token, exclude_kbstaff=False):
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
