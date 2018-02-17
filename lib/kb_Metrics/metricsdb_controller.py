@@ -204,7 +204,7 @@ class MetricsMongoDBController:
 
 	params = self.process_parameters(params)
 
-        mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'], params['maxTime'])
+        mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'], params['maxTime'], exclude_kbstaff)
 	if len(mt_ret) == 0:
 	    pprint("No records returned!")
 	else:
