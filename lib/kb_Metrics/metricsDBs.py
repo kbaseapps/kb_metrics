@@ -167,7 +167,7 @@ class MongoMetricsDBI:
         return list(m_cursor)
 
 
-    def get_user_info(self, userIds, minTime, maxTime, exclude_kbstaff=True):
+    def get_user_info(self, userIds, minTime, maxTime, exclude_kbstaff=False):
         filter = {}
 
         userFilter = {}
