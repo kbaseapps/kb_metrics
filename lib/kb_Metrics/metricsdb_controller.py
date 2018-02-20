@@ -275,7 +275,7 @@ class MetricsMongoDBController:
         return {'metrics_result': mt_ret}
 
 
-    def get_user_activities(self, requesting_user, params, token):
+    def get_activities(self, requesting_user, params, token):
 	##TODO not yet pointing to the metrics db yet
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
@@ -283,11 +283,18 @@ class MetricsMongoDBController:
 	return self.get_activities_from_wsobjs(requesting_user, params, token)
 
 
+    def get_narratives(self, requesting_user, params, token):
+	##TODO not yet pointing to the metrics db yet
+        if not self.is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+	return self.get_narratives_from_wsobjs(requesting_user, params, token)
+
     ## End functions to get the requested records from metrics db
 
 
     ## functions to get the requested records from other dbs...
-    def get_narratives(self, requesting_user, params, token):
+    def get_narratives_from_wsobjs(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
