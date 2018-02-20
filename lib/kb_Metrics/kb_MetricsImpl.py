@@ -168,7 +168,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # ctx is the context object
         # return variables are: return_records
         #BEGIN get_total_logins
-        return_records = self.mdb_controller.get_total_logins_stats_from_ws(ctx['user_id'], params, ctx['token'])
+        return_records = self.mdb_controller.get_total_logins_from_ws(ctx['user_id'], params, ctx['token'])
         #END get_total_logins
 
         # At some point might do deeper type checking...
