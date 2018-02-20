@@ -71,7 +71,7 @@ module kb_Metrics {
     funcdef get_user_ws(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
 
-    funcdef get_user_narratives(MetricsInputParams params)
+    funcdef get_user_narrative_stats(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
 
     funcdef get_user_numObjs(MetricsInputParams params)
@@ -84,6 +84,9 @@ module kb_Metrics {
         returns (MetricsOutput return_records) authentication required;
     
     funcdef get_user_job_states(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
+    
+    funcdef get_user_narratives(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
    
     /** For writing to mongodb metrics **/ 

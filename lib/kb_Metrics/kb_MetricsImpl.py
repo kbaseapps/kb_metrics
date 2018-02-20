@@ -27,7 +27,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.1.0"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "e35234875ff127b230f6fae3d087c22460d3ea2d"
+    GIT_COMMIT_HASH = "839aaa116269b4b04f0ce183662fbff30cad9492"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -168,7 +168,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # ctx is the context object
         # return variables are: return_records
         #BEGIN get_total_logins
-        return_records = self.mdb_controller.get_total_logins_from_ws(ctx['user_id'], params, ctx['token'])
+        return_records = self.mdb_controller.get_total_logins_stats_from_ws(ctx['user_id'], params, ctx['token'])
         #END get_total_logins
 
         # At some point might do deeper type checking...
@@ -194,7 +194,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # ctx is the context object
         # return variables are: return_records
         #BEGIN get_user_ws
-        return_records = self.mdb_controller.get_user_ws_from_ws(ctx['user_id'], params, ctx['token'])
+        return_records = self.mdb_controller.get_user_ws_stats_from_ws(ctx['user_id'], params, ctx['token'])
         #END get_user_ws
 
         # At some point might do deeper type checking...
@@ -204,7 +204,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # return the results
         return [return_records]
 
-    def get_user_narratives(self, ctx, params):
+    def get_user_narrative_stats(self, ctx, params):
         """
         :param params: instance of type "MetricsInputParams" (unified
            input/output parameters) -> structure: parameter "user_ids" of
@@ -219,13 +219,13 @@ This KBase SDK module implements methods for generating various KBase metrics.
         """
         # ctx is the context object
         # return variables are: return_records
-        #BEGIN get_user_narratives
-        return_records = self.mdb_controller.get_user_narratives_from_ws(ctx['user_id'], params, ctx['token'])
-        #END get_user_narratives
+        #BEGIN get_user_narrative_stats
+        return_records = self.mdb_controller.get_user_narrative_stats_from_ws(ctx['user_id'], params, ctx['token'])
+        #END get_user_narrative_stats
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_narratives return value ' +
+            raise ValueError('Method get_user_narrative_stats return value ' +
                              'return_records is not type dict as required.')
         # return the results
         return [return_records]
@@ -330,6 +330,33 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
             raise ValueError('Method get_user_job_states return value ' +
+                             'return_records is not type dict as required.')
+        # return the results
+        return [return_records]
+
+    def get_user_narratives(self, ctx, params):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        # ctx is the context object
+        # return variables are: return_records
+        #BEGIN get_user_narratives
+        #return_records = self.mdb_controller.get_narratives(ctx['user_id'], params, ctx['token'])
+        return_records = self.mdb_controller.insert_narratives(ctx['user_id'], params, ctx['token'])
+        #END get_user_narratives
+
+        # At some point might do deeper type checking...
+        if not isinstance(return_records, dict):
+            raise ValueError('Method get_user_narratives return value ' +
                              'return_records is not type dict as required.')
         # return the results
         return [return_records]

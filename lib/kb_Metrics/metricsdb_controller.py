@@ -131,8 +131,6 @@ class MetricsMongoDBController:
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-	##TODO: set the param['minTime'] and param['maxTime'] to a given time window,
-	##such as most current 24 hours instead of 48 hours as for others.
 	ws_ret = self.get_activities_from_wsobjs(requesting_user, params, token)
 	act_list = ws_ret['metrics_result']
 	updData = 0
@@ -150,8 +148,38 @@ class MetricsMongoDBController:
 	    countData = filterByKey(countKeys)
 	    update_ret = self.metrics_dbi.update_activity_records(idData, countData)
 	    updData += update_ret.raw_result['nModified']
+
 	return updData
 
+    def update_user_narratives(self, requesting_user, params, token):
+	"""
+	{"workspace_id":9999,"object_id":1,"object_version":4,"first_access":"2015-09-08T00:00:00+00:00","access_count":1,"name":"Narrative.1441055148705","nice_name":"DataHubMC","type_version":"3.0","last_saved_at":"2015-09-08T15:33:31+00:00","last_saved_by":"mikaelacashman","deleted":0,"state":"valid"}
+	update user narratives reported from Workspace.
+	If match not found, insert that record as new.
+	"""
+        if not self.is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to invoke this action.')
+
+	ws_ret = self.get_narratives(requesting_user, params, token)
+	narr_list = ws_ret['metrics_result']
+	updData = 0
+	if len(narr_list) == 0:
+	    pprint("No narrative records returned for update!")
+	    return updData
+
+	pprint('\nRetrieved narratives of {} record(s)'.format(len(narr_list)))
+	pprint(narr_list)
+	idKeys = ['object_id', 'workspace_id']
+
+	otherKeys = ['name','last_saved_at','last_saved_by','numobj','deleted','object_version','nice_name']
+	for n_data in narr_list:
+	    filterByKey = lambda keys: {x: n_data[x] for x in keys}
+	    idData = filterByKey(idKeys)
+	    otherData = filterByKey(otherKeys)
+	    update_ret = self.metrics_dbi.update_narrative_records(idData, otherData)
+	    updData += update_ret.raw_result['nModified']
+
+	return updData
 
     def insert_user_activities(self, requesting_user, params, token):
 	"""
@@ -176,6 +204,29 @@ class MetricsMongoDBController:
 	else:
 	    return {'metrics_result': insert_ret}
 
+
+    def insert_narratives(self, requesting_user, params, token):
+	"""
+	insert narratives reported from Workspaces and workspaceObjects.
+	If duplicated ids found, skip that record.
+	"""
+        if not self.is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to invoke this action.')
+
+	ws_ret = self.get_narratives(requesting_user, params, token)
+	narr_list = ws_ret['metrics_result']
+	if len(narr_list) == 0:
+	    pprint("No narrative records returned for insertion!")
+	    return {'metrics_result': []}
+
+	pprint('\nRetrieved narratives of {} record(s)'.format(len(narr_list)))
+	try:
+	    insert_ret = self.metrics_dbi.insert_narrative_records(narr_list)
+	except Exception as e:
+	    pprint(e)
+	    return {'metrics_result': e}
+	else:
+	    return {'metrics_result': insert_ret}
 
     ## End functions to write to the metrics database
 
@@ -204,7 +255,8 @@ class MetricsMongoDBController:
 
 	params = self.process_parameters(params)
 
-        mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'], params['maxTime'], exclude_kbstaff)
+        mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'],
+						params['maxTime'], exclude_kbstaff)
 	if len(mt_ret) == 0:
 	    pprint("No records returned!")
 	else:
@@ -213,6 +265,7 @@ class MetricsMongoDBController:
 
 
     def get_user_activities(self, requesting_user, params, token):
+	##TODO not yet pointing to the metrics db yet
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -223,6 +276,54 @@ class MetricsMongoDBController:
 
 
     ## functions to get the requested records from other dbs...
+    def get_narratives(self, requesting_user, params, token):
+        if not self.is_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+	params = self.process_parameters(params)
+	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+
+        wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(params['minTime'], params['maxTime'])
+	ws_narrs = self.metrics_dbi.list_ws_narratives(params['minTime'], params['maxTime'])
+
+	ws_narrs1 = []
+	for wn in ws_narrs:
+	    for obj in wsobjs:
+		if wn['workspace_id'] == obj['workspace_id']:
+		    if wn['name'] == obj['object_name']:
+			wn[u'object_id'] = obj['object_id']
+			wn[u'object_version'] = obj['object_version']
+			wn[u'latest'] = obj['latest']
+			break
+		    elif ':' in wn['name']:
+			wts = wn['name'].split(':')[1]
+			p = re.compile(wts, re.IGNORECASE)
+			if p.search(obj['object_name']):
+			    wn[u'object_id'] = obj['object_id']
+			    wn[u'object_version'] = obj['object_version']
+			    wn[u'latest'] = obj['latest']
+			    break
+
+	for wn in ws_narrs:
+	    if not wn.get('object_id', None) is None:
+	        wn[u'last_saved_by'] = wn['username']
+	        del wn['username']
+
+	        wn[u'nice_name'] = ''
+	        if not wn.get('meta', None) is None:
+		    w_meta = wn['meta']
+		    for w_m in w_meta:
+			if w_m['k'] == 'narrative_nice_name':
+			    wn[u'nice_name'] = w_m['v']
+	            del wn['meta']
+	        if wn.get('first_access', None) is None:
+		    wn[u'first_access'] = wn['last_saved_by']
+		    wn['access_count'] = 1
+		ws_narrs1.append(wn)
+
+        return {'metrics_result': ws_narrs1}
+
     def get_activities_from_wsobjs(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
@@ -231,13 +332,14 @@ class MetricsMongoDBController:
 	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
 	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        ws_objs = self.metrics_dbi.aggr_activities_from_wsobjs(params['minTime'], params['maxTime'])
+        wsobjs_act = self.metrics_dbi.aggr_activities_from_wsobjs(params['minTime'], params['maxTime'])
 	ws_owners = self.metrics_dbi.list_ws_owners()
+
 	for wo in ws_owners:
-	    for obj in ws_objs:
+	    for obj in wsobjs_act:
 		if wo['ws_id'] == obj['_id']['ws_id']:
 		    obj['_id'][u'username'] = wo['username']
-        return {'metrics_result': ws_objs}
+        return {'metrics_result': wsobjs_act}
 
 
     def get_activities_from_ws(self, requesting_user, params, token):
@@ -264,7 +366,7 @@ class MetricsMongoDBController:
 
         return {'metrics_result': db_ret}
 
-    def get_user_logins_from_ws(self, requesting_user, params, token):
+    def get_user_logins_stats_from_ws(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -276,7 +378,7 @@ class MetricsMongoDBController:
 
         return {'metrics_result': db_ret}
 
-    def get_user_ws_from_ws(self, requesting_user, params, token):
+    def get_user_ws_stats_from_ws(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -288,7 +390,7 @@ class MetricsMongoDBController:
 
         return {'metrics_result': db_ret}
 
-    def get_user_narratives_from_ws(self, requesting_user, params, token):
+    def get_user_narrative_stats_from_ws(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -297,6 +399,18 @@ class MetricsMongoDBController:
 	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
         db_ret = self.metrics_dbi.aggr_user_narratives(params['minTime'], params['maxTime'])
+
+        return {'metrics_result': db_ret}
+
+    def get_user_narratives_ws_wsobjs(self, requesting_user, params, token):
+        if not self.is_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+	params = self.process_parameters(params)
+	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+
+        db_ret = self.metrics_dbi.aggr_user_narratives_ws_wsobjs(params['minTime'], params['maxTime'])
 
         return {'metrics_result': db_ret}
 
@@ -361,16 +475,19 @@ class MetricsMongoDBController:
 	ujs_jobs = self.convert_isodate_to_millis(ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
 	#pprint("\n******Found {} ujs jobs".format(len(ujs_jobs)))
 
+	#get the ws_narrative data for lookups
+	ws_narratives = self.metrics_dbi.list_ws_narratives(params['minTime'], params['maxTime'])
+
         clnt_groups = self.get_client_groups_from_cat(token)
-        return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs, clnt_groups)}
+
+        return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs, 
+							clnt_groups,ws_narratives)}
 
 
-    def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs, c_groups):
+    def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs, c_groups, ws_narratives):
 	"""
 	combine/join the apps, tasks and jobs lists to get the final return data
 	"""
-	# 0) get the ws_narrative data for lookups
-	ws_narratives = self.metrics_dbi.list_ws_narratives()
 	# 1) combine/join the apps and tasks to get the app_task_list
 	app_task_list = []
 	for t in exec_tasks:
@@ -516,7 +633,7 @@ class MetricsMongoDBController:
 	ws_name = ''
 	ws_owner = ''
 	for ws in ws_narratives:
-	    if str(ws['ws_id']) == str(wsid):
+	    if str(ws['workspace_id']) == str(wsid):
 		ws_name = ws['name']
 		ws_owner = ws['username']
 		n_name = ws_name

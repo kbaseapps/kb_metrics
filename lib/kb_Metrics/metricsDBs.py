@@ -23,6 +23,7 @@ class MongoMetricsDBI:
     _AUTH2_USERS='users'#auth2.users
     _MT_USERS='users'#'test_users'#metrics.users
     _MT_DAILY_ACTIVITIES='user_daily_activities'#'test_activities'#metrics.user_daily_activities
+    _MT_NARRATIVES='test_narratives'#metrics.narratives
 
     _USERPROFILES='profiles'#user_profile_db.profiles
 
@@ -104,6 +105,36 @@ class MongoMetricsDBI:
 		#print(update_ret.upserted_id)
 	return update_ret
 
+    def update_narrative_records(self, upd_filter, upd_data):
+	"""
+	update_narrative_records--
+	"""
+	upd_op = { 
+		   '$currentDate': { 'lastUpdated': True },
+		   '$set': upd_data, 
+		   '$setOnInsert': {'access_count':1,'first_access':upd_data['last_saved_at']}
+		 }
+
+	# grab handle(s) to the database collection(s) targeted
+	self.mt_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
+	update_ret = None
+	try:
+	    #return an instance of UpdateResult(raw_result, acknowledged)
+	    update_ret = self.mt_users.update_one(upd_filter, upd_op, upsert=True)
+	except BulkWriteError as bwe:
+	    #print("mt_users.update errored\n:")
+	    #pprint(bwe.details['writeErrors'])
+	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
+	    if len(panic) > 0:
+		print "really panic"
+		raise
+	else:
+	    pass
+	    #pprint(update_ret.raw_result)
+	    #if update_ret.upserted_id:
+		#print(update_ret.upserted_id)
+	return update_ret
+
     def insert_activity_records(self, mt_docs):
 	"""
 	Insert an iterable of user activity documents
@@ -128,6 +159,30 @@ class MongoMetricsDBI:
 	    pprint('Inserted {} records.'.format(len(insert_ret.inserted_ids)))
 	return insert_ret
 
+
+    def insert_narrative_records(self, mt_docs):
+	"""
+	Insert an iterable of narrative documents
+	"""
+	if not isinstance(mt_docs, list):
+	    raise ValueError('The variable mt_docs must be a list of mutable mapping type data.')
+	
+	# grab handle(s) to the database collection(s) targeted
+        self.mt_act = self.metricsDBs['metrics'][MongoMetricsDBI._MT_NARRATIVES]
+	insert_ret = None
+	try:
+	    #get an instance of InsertManyResult(inserted_ids, acknowledged)
+	    insert_ret = self.mt_act.insert_many(mt_docs, ordered=True)
+	except BulkWriteError as bwe:
+	    #skip uplicate key error (code=11000)
+	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
+	    if len(panic) > 0:
+		print "really panic"
+		raise
+	else:
+	    #insert_ret.inserted_ids is a list
+	    pprint('Inserted {} records.'.format(len(insert_ret.inserted_ids)))
+	return insert_ret
 
 
     ## End functions to write to the metrics database
@@ -330,14 +385,29 @@ class MongoMetricsDBI:
         return list(m_cursor)
 
 
-    def list_ws_narratives(self):
+    def list_ws_narratives(self, minTime, maxTime):
 	# Define the pipeline operations
 	pipeline = [
-	    {"$match":{"meta":{"$exists":True,"$not":{"$size":0}}}},
-	    {"$project":{"username":"$owner","ws_id":"$ws","name":1,"meta":1,"_id":0}}
+	    {"$match":{"del":False,"moddate":{"$gte":minTime,"$lte":maxTime},
+			"meta":{"$exists":True,"$not":{"$size":0}}}},
+	    {"$project":{"username":"$owner","workspace_id":"$ws","name":1,"meta":1,
+			 "deleted":"$del", "desc":1,"numObj":1,"last_saved_at":"$moddate","_id":0}}
 	]
 	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+	m_cursor = self.kbworkspaces.aggregate(pipeline)
+        return list(m_cursor)
+
+
+    def list_user_objects_from_wsobjs(self, minTime, maxTime):
+	# Define the pipeline operations
+	pipeline = [
+	    {"$match":{"del":False,"moddate":{"$gte":minTime,"$lte":maxTime}}},
+	    {"$project":{"moddate":1,"workspace_id":"$ws","object_id":"$id","object_name":"$name",
+			 "object_version":"$numver","deleted":"$del","latest":1,"_id":0}}
+	]
+	# grab handle(s) to the database collections needed and retrieve a MongoDB cursor
+        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WSOBJECTS]
 	m_cursor = self.kbworkspaces.aggregate(pipeline)
         return list(m_cursor)
 
