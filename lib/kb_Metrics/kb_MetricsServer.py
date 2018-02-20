@@ -357,10 +357,10 @@ class Application(object):
                              name='kb_Metrics.get_user_ws',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_user_ws'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.get_user_narratives,
-                             name='kb_Metrics.get_user_narratives',
+        self.rpc_service.add(impl_kb_Metrics.get_user_narrative_stats,
+                             name='kb_Metrics.get_user_narrative_stats',
                              types=[dict])
-        self.method_authentication['kb_Metrics.get_user_narratives'] = 'required'  # noqa
+        self.method_authentication['kb_Metrics.get_user_narrative_stats'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.get_user_numObjs,
                              name='kb_Metrics.get_user_numObjs',
                              types=[dict])
@@ -377,6 +377,10 @@ class Application(object):
                              name='kb_Metrics.get_user_job_states',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_user_job_states'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_user_narratives,
+                             name='kb_Metrics.get_user_narratives',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_user_narratives'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.update_metrics,
                              name='kb_Metrics.update_metrics',
                              types=[dict])

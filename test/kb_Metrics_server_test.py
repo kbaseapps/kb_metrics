@@ -207,7 +207,7 @@ class kb_MetricsTest(unittest.TestCase):
         print(pformat(ret[0]['metrics_result'][0:10]))
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_run_update_metrics")
+    #@unittest.skip("skipped test_run_update_metrics")
     def test_run_update_metrics(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
@@ -261,12 +261,12 @@ class kb_MetricsTest(unittest.TestCase):
 
 
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_user_narratives")
+    @unittest.skip("skipped test_run_get_user_narratives")
     def test_run_get_user_narratives(self):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20))
-            'epoch_range':(datetime.datetime(2017, 1, 1), datetime.datetime(2017,10,31))
+            'epoch_range':(datetime.datetime(2016, 1, 1), datetime.datetime(2018,2,28))
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_narratives(self.getContext(), m_params)

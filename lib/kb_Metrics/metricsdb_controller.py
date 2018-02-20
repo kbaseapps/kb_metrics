@@ -85,11 +85,15 @@ class MetricsMongoDBController:
 	action_result1 = self.update_user_info(requesting_user, params, token)
 
 	# 2. update activities
-	action_result2 = self.update_user_activities(requesting_user, params, token)
+	action_result2 = self.update_daily_activities(requesting_user, params, token)
+
+	# 3. update narratives
+	action_result3 = self.update_narratives(requesting_user, params, token)
 
         return {'metrics_result':
 			{'user_updates': action_result1,
-		 	 'activity_updates': action_result2}
+		 	 'activity_updates': action_result2,
+		 	 'narrative_updates': action_result3}
 		}
 
     def update_user_info(self, requesting_user, params, token):
@@ -123,7 +127,7 @@ class MetricsMongoDBController:
 	return updData
 
 
-    def update_user_activities(self, requesting_user, params, token):
+    def update_daily_activities(self, requesting_user, params, token):
 	"""
 	update user activities reported from Workspace.
 	If match not found, insert that record as new.
@@ -139,7 +143,6 @@ class MetricsMongoDBController:
 	    return updData
 
 	pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
-	pprint(act_list)
 	idKeys = ['_id']
 	countKeys = ['obj_numModified']
 	for a_data in act_list:
@@ -151,37 +154,7 @@ class MetricsMongoDBController:
 
 	return updData
 
-    def update_user_narratives(self, requesting_user, params, token):
-	"""
-	{"workspace_id":9999,"object_id":1,"object_version":4,"first_access":"2015-09-08T00:00:00+00:00","access_count":1,"name":"Narrative.1441055148705","nice_name":"DataHubMC","type_version":"3.0","last_saved_at":"2015-09-08T15:33:31+00:00","last_saved_by":"mikaelacashman","deleted":0,"state":"valid"}
-	update user narratives reported from Workspace.
-	If match not found, insert that record as new.
-	"""
-        if not self.is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to invoke this action.')
-
-	ws_ret = self.get_narratives(requesting_user, params, token)
-	narr_list = ws_ret['metrics_result']
-	updData = 0
-	if len(narr_list) == 0:
-	    pprint("No narrative records returned for update!")
-	    return updData
-
-	pprint('\nRetrieved narratives of {} record(s)'.format(len(narr_list)))
-	pprint(narr_list)
-	idKeys = ['object_id', 'workspace_id']
-
-	otherKeys = ['name','last_saved_at','last_saved_by','numobj','deleted','object_version','nice_name']
-	for n_data in narr_list:
-	    filterByKey = lambda keys: {x: n_data[x] for x in keys}
-	    idData = filterByKey(idKeys)
-	    otherData = filterByKey(otherKeys)
-	    update_ret = self.metrics_dbi.update_narrative_records(idData, otherData)
-	    updData += update_ret.raw_result['nModified']
-
-	return updData
-
-    def insert_user_activities(self, requesting_user, params, token):
+    def insert_daily_activities(self, requesting_user, params, token):
 	"""
 	insert user activities reported from Workspace.
 	If duplicated ids found, skip that record.
@@ -196,6 +169,10 @@ class MetricsMongoDBController:
 	    return {'metrics_result': []}
 
 	pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
+
+	for al in act_list:#set default for inserting records at the first time
+	    al['recordLastUpdated'] = datetime.datetime.utcnow() 
+
 	try:
 	    insert_ret = self.metrics_dbi.insert_activity_records(act_list)
 	except Exception as e:
@@ -215,11 +192,18 @@ class MetricsMongoDBController:
 
 	ws_ret = self.get_narratives(requesting_user, params, token)
 	narr_list = ws_ret['metrics_result']
+
 	if len(narr_list) == 0:
 	    pprint("No narrative records returned for insertion!")
 	    return {'metrics_result': []}
 
 	pprint('\nRetrieved narratives of {} record(s)'.format(len(narr_list)))
+	for wn in narr_list:#set default for inserting records at the first time
+	    wn['recordLastUpdated'] = datetime.datetime.utcnow() 
+	    if wn.get('first_access', None) is None:
+		wn[u'first_access'] = wn['last_saved_at']
+		wn['access_count'] = 1
+
 	try:
 	    insert_ret = self.metrics_dbi.insert_narrative_records(narr_list)
 	except Exception as e:
@@ -227,6 +211,33 @@ class MetricsMongoDBController:
 	    return {'metrics_result': e}
 	else:
 	    return {'metrics_result': insert_ret}
+
+    def update_narratives(self, requesting_user, params, token):
+	"""
+	update user narratives reported from Workspace.
+	If match not found, insert that record as new.
+	"""
+        if not self.is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to invoke this action.')
+
+	ws_ret = self.get_narratives(requesting_user, params, token)
+	narr_list = ws_ret['metrics_result']
+	updData = 0
+	if len(narr_list) == 0:
+	    pprint("No narrative records returned for update!")
+	    return updData
+
+	pprint('\nRetrieved i{} narratives record(s)'.format(len(narr_list)))
+	idKeys = ['object_id', 'workspace_id']
+	otherKeys = ['name','last_saved_at','last_saved_by','numobj','deleted','object_version','nice_name','access_count','latest','desc']
+	for n_data in narr_list:
+	    filterByKey = lambda keys: {x: n_data[x] for x in keys}
+	    idData = filterByKey(idKeys)
+	    otherData = filterByKey(otherKeys)
+	    update_ret = self.metrics_dbi.update_narrative_records(idData, otherData)
+	    updData += update_ret.raw_result['nModified']
+
+	return updData
 
     ## End functions to write to the metrics database
 
@@ -317,9 +328,6 @@ class MetricsMongoDBController:
 			if w_m['k'] == 'narrative_nice_name':
 			    wn[u'nice_name'] = w_m['v']
 	            del wn['meta']
-	        if wn.get('first_access', None) is None:
-		    wn[u'first_access'] = wn['last_saved_by']
-		    wn['access_count'] = 1
 		ws_narrs1.append(wn)
 
         return {'metrics_result': ws_narrs1}

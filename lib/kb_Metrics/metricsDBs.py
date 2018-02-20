@@ -21,8 +21,8 @@ class MongoMetricsDBI:
     _JOBSTATE='jobstate'#userjobstate.jobstate
 
     _AUTH2_USERS='users'#auth2.users
-    _MT_USERS='users'#'test_users'#metrics.users
-    _MT_DAILY_ACTIVITIES='user_daily_activities'#'test_activities'#metrics.user_daily_activities
+    _MT_USERS='test_users'#'users'#'users'#metrics.users
+    _MT_DAILY_ACTIVITIES='test_activities'#'daily_activities'#metrics.daily_activities
     _MT_NARRATIVES='test_narratives'#metrics.narratives
 
     _USERPROFILES='profiles'#user_profile_db.profiles
@@ -52,7 +52,7 @@ class MongoMetricsDBI:
 	update_user_records--
 	"""
 	upd_op = { 
-		   '$currentDate': { 'lastUpdated': True },
+		   '$currentDate': { 'recordLastUpdated': True },
 		   '$set': upd_data, 
 		   '$setOnInsert': {'kbase_staff': kbstaff}
 		 }
@@ -82,7 +82,7 @@ class MongoMetricsDBI:
 	update_activity_records--
 	"""
 	upd_op = { 
-		   '$currentDate': { 'lastUpdated': True },
+		   '$currentDate': { 'recordLastUpdated': True },
 		   "$set": upd_data
 		 }
 
@@ -93,36 +93,6 @@ class MongoMetricsDBI:
 	    #return an instance of UpdateResult(raw_result, acknowledged)
 	    update_ret = self.mt_coll.update_one(upd_filter, upd_op, upsert=True)
 	except BulkWriteError as bwe:
-	    #pprint(bwe.details['writeErrors'])
-	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
-	    if len(panic) > 0:
-		print "really panic"
-		raise
-	else:
-	    pass
-	    #pprint(update_ret.raw_result)
-	    #if update_ret.upserted_id:
-		#print(update_ret.upserted_id)
-	return update_ret
-
-    def update_narrative_records(self, upd_filter, upd_data):
-	"""
-	update_narrative_records--
-	"""
-	upd_op = { 
-		   '$currentDate': { 'lastUpdated': True },
-		   '$set': upd_data, 
-		   '$setOnInsert': {'access_count':1,'first_access':upd_data['last_saved_at']}
-		 }
-
-	# grab handle(s) to the database collection(s) targeted
-	self.mt_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
-	update_ret = None
-	try:
-	    #return an instance of UpdateResult(raw_result, acknowledged)
-	    update_ret = self.mt_users.update_one(upd_filter, upd_op, upsert=True)
-	except BulkWriteError as bwe:
-	    #print("mt_users.update errored\n:")
 	    #pprint(bwe.details['writeErrors'])
 	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
 	    if len(panic) > 0:
@@ -159,6 +129,35 @@ class MongoMetricsDBI:
 	    pprint('Inserted {} records.'.format(len(insert_ret.inserted_ids)))
 	return insert_ret
 
+    def update_narrative_records(self, upd_filter, upd_data):
+	"""
+	update_narrative_records--
+	"""
+	upd_op = { 
+		   '$currentDate': { 'recordLastUpdated': True },
+		   '$set': upd_data, 
+		   '$setOnInsert': {'access_count':1,'first_access':upd_data['last_saved_at']}
+		 }
+
+	# grab handle(s) to the database collection(s) targeted
+	self.mt_narrs = self.metricsDBs['metrics'][MongoMetricsDBI._MT_NARRATIVES]
+	update_ret = None
+	try:
+	    #return an instance of UpdateResult(raw_result, acknowledged)
+	    update_ret = self.mt_narrs.update_one(upd_filter, upd_op, upsert=True)
+	except BulkWriteError as bwe:
+	    #print("mt_users.update errored\n:")
+	    #pprint(bwe.details['writeErrors'])
+	    panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
+	    if len(panic) > 0:
+		print "really panic"
+		raise
+	else:
+	    pass
+	    #pprint(update_ret.raw_result)
+	    #if update_ret.upserted_id:
+		#print(update_ret.upserted_id)
+	return update_ret
 
     def insert_narrative_records(self, mt_docs):
 	"""
