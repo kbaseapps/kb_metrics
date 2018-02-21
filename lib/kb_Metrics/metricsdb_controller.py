@@ -162,7 +162,7 @@ class MetricsMongoDBController:
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-	ws_ret = self.get_activities_from_ws(requesting_user, params, token)
+	ws_ret = self.get_activities_from_wsobjs(requesting_user, params, token)
 	act_list = ws_ret['metrics_result']
 	if len(act_list) == 0:
 	    pprint("No activity records returned for insertion!")
@@ -227,9 +227,9 @@ class MetricsMongoDBController:
 	    pprint("No narrative records returned for update!")
 	    return updData
 
-	pprint('\nRetrieved i{} narratives record(s)'.format(len(narr_list)))
+	pprint('\nRetrieved {} narratives record(s)'.format(len(narr_list)))
 	idKeys = ['object_id', 'workspace_id']
-	otherKeys = ['name','last_saved_at','last_saved_by','numobj','deleted','object_version','nice_name','access_count','latest','desc']
+	otherKeys = ['name','last_saved_at','last_saved_by','numObj','deleted','object_version','nice_name','latest','desc']
 	for n_data in narr_list:
 	    filterByKey = lambda keys: {x: n_data[x] for x in keys}
 	    idData = filterByKey(idKeys)
@@ -250,7 +250,8 @@ class MetricsMongoDBController:
 	params = self.process_parameters(params)
 
 	if exclude_kbstaff:
-            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'], self.kbstaffList)
+            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'],
+								self.kbstaffList)
 	else:
             mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'], [])
 

@@ -21,9 +21,9 @@ class MongoMetricsDBI:
     _JOBSTATE='jobstate'#userjobstate.jobstate
 
     _AUTH2_USERS='users'#auth2.users
-    _MT_USERS='test_users'#'users'#'users'#metrics.users
-    _MT_DAILY_ACTIVITIES='test_activities'#'daily_activities'#metrics.daily_activities
-    _MT_NARRATIVES='test_narratives'#metrics.narratives
+    _MT_USERS='users'#'test_users'#metrics.users
+    _MT_DAILY_ACTIVITIES='daily_activities'#'test_activities'#metrics.daily_activities
+    _MT_NARRATIVES='narratives'#metrics.narratives
 
     _USERPROFILES='profiles'#user_profile_db.profiles
 
@@ -136,7 +136,8 @@ class MongoMetricsDBI:
 	upd_op = { 
 		   '$currentDate': { 'recordLastUpdated': True },
 		   '$set': upd_data, 
-		   '$setOnInsert': {'access_count':1,'first_access':upd_data['last_saved_at']}
+		   '$setOnInsert': {'access_count':1,'first_access':upd_data['last_saved_at']},
+		   '$inc': {'access_count':1}
 		 }
 
 	# grab handle(s) to the database collection(s) targeted
@@ -254,7 +255,6 @@ class MongoMetricsDBI:
         }
 	# grab handle(s) to the database collections needed
         self.mt_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
-
 	'''
         # Make sure we have an index on user, created and updated
         self.mt_users.ensure_index([
