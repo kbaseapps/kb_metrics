@@ -54,6 +54,7 @@ class MongoMetricsDBI:
 	upd_op = { 
 		   '$currentDate': { 'recordLastUpdated': True },
 		   '$set': upd_data, 
+		   #'$setOnInsert': {'kbase_staff': kbstaff, 'last_signin_at':upd_data['signup_at']}
 		   '$setOnInsert': {'kbase_staff': kbstaff}
 		 }
 

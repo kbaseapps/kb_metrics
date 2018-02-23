@@ -352,6 +352,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
         #BEGIN get_user_narratives
         return_records = self.mdb_controller.get_narratives(ctx['user_id'], params, ctx['token'])
         #return_records = self.mdb_controller.insert_narratives(ctx['user_id'], params, ctx['token'])
+        #return_records = self.mdb_controller.insert_daily_activities(ctx['user_id'], params, ctx['token'])
         #END get_user_narratives
 
         # At some point might do deeper type checking...
