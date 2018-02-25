@@ -385,11 +385,10 @@ class MongoMetricsDBI:
         return list(m_cursor)
 
 
-    def list_ws_narratives(self, minTime, maxTime):
+    def list_ws_narratives(self):
 	# Define the pipeline operations
 	pipeline = [
-	    {"$match":{"del":False,"moddate":{"$gte":minTime,"$lte":maxTime},
-			"meta":{"$exists":True,"$not":{"$size":0}}}},
+	    {"$match":{"del":False,"meta":{"$exists":True,"$not":{"$size":0}}}},
 	    {"$project":{"username":"$owner","workspace_id":"$ws","name":1,"meta":1,
 			 "deleted":"$del", "desc":1,"numObj":1,"last_saved_at":"$moddate","_id":0}}
 	]

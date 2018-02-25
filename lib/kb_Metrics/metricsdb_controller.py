@@ -17,7 +17,7 @@ from Catalog.CatalogClient import Catalog
 class MetricsMongoDBController:
 
     def __init__(self, config):
-        #pprint("initializing mdb......")
+        #print("initializing mdb......")
         # first grab the admin/kbstaff lists
         self.adminList = []
         if 'admin-users' in config:
@@ -110,10 +110,10 @@ class MetricsMongoDBController:
         auth2_ret = self.metrics_dbi.aggr_user_details(params['user_ids'], params['minTime'], params['maxTime'])
 	updData = 0
 	if len(auth2_ret) == 0:
-	    pprint("No user records returned for update!")
+	    print("No user records returned for update!")
 	    return updData
 
-	pprint('\nRetrieved {} user record(s)'.format(len(auth2_ret)))
+	print('Retrieved {} user record(s)'.format(len(auth2_ret)))
 	idKeys = ['username', 'email']
 	dataKeys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
 	for u_data in auth2_ret:
@@ -139,10 +139,10 @@ class MetricsMongoDBController:
 	act_list = ws_ret['metrics_result']
 	updData = 0
 	if len(act_list) == 0:
-	    pprint("No activity records returned for update!")
+	    print("No activity records returned for update!")
 	    return updData
 
-	pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
+	print('Retrieved activities of {} record(s)'.format(len(act_list)))
 	idKeys = ['_id']
 	countKeys = ['obj_numModified']
 	for a_data in act_list:
@@ -165,10 +165,10 @@ class MetricsMongoDBController:
 	ws_ret = self.get_activities_from_wsobjs(requesting_user, params, token)
 	act_list = ws_ret['metrics_result']
 	if len(act_list) == 0:
-	    pprint("No activity records returned for insertion!")
+	    print("No activity records returned for insertion!")
 	    return {'metrics_result': []}
 
-	pprint('\nRetrieved activities of {} record(s)'.format(len(act_list)))
+	print('Retrieved activities of {} record(s)'.format(len(act_list)))
 
 	for al in act_list:#set default for inserting records at the first time
 	    al['recordLastUpdated'] = datetime.datetime.utcnow() 
@@ -176,7 +176,7 @@ class MetricsMongoDBController:
 	try:
 	    insert_ret = self.metrics_dbi.insert_activity_records(act_list)
 	except Exception as e:
-	    pprint(e)
+	    print(e)
 	    return {'metrics_result': e}
 	else:
 	    return {'metrics_result': insert_ret}
@@ -190,14 +190,14 @@ class MetricsMongoDBController:
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-	ws_ret = self.get_narratives(requesting_user, params, token)
+	ws_ret = self.get_narratives_from_wsobjs(requesting_user, params, token)
 	narr_list = ws_ret['metrics_result']
 
 	if len(narr_list) == 0:
-	    pprint("No narrative records returned for insertion!")
+	    print("No narrative records returned for insertion!")
 	    return {'metrics_result': []}
 
-	pprint('\nRetrieved narratives of {} record(s)'.format(len(narr_list)))
+	print('Retrieved narratives of {} record(s)'.format(len(narr_list)))
 	for wn in narr_list:#set default for inserting records at the first time
 	    wn['recordLastUpdated'] = datetime.datetime.utcnow() 
 	    if wn.get('first_access', None) is None:
@@ -207,7 +207,7 @@ class MetricsMongoDBController:
 	try:
 	    insert_ret = self.metrics_dbi.insert_narrative_records(narr_list)
 	except Exception as e:
-	    pprint(e)
+	    print(e)
 	    return {'metrics_result': e}
 	else:
 	    return {'metrics_result': insert_ret}
@@ -220,14 +220,14 @@ class MetricsMongoDBController:
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-	ws_ret = self.get_narratives(requesting_user, params, token)
+	ws_ret = self.get_narratives_from_wsobjs(requesting_user, params, token)
 	narr_list = ws_ret['metrics_result']
 	updData = 0
 	if len(narr_list) == 0:
-	    pprint("No narrative records returned for update!")
+	    print("No narrative records returned for update!")
 	    return updData
 
-	pprint('\nRetrieved {} narratives record(s)'.format(len(narr_list)))
+	print('Retrieved {} narratives record(s)'.format(len(narr_list)))
 	idKeys = ['object_id', 'workspace_id']
 	otherKeys = ['name','last_saved_at','last_saved_by','numObj','deleted','object_version','nice_name','latest','desc']
 	for n_data in narr_list:
@@ -256,7 +256,7 @@ class MetricsMongoDBController:
             mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'], [])
 
 	if len(mt_ret) == 0:
-	    pprint("No records returned!")
+	    print("No records returned!")
 
         return {'metrics_result': mt_ret}
 
@@ -269,7 +269,7 @@ class MetricsMongoDBController:
 	mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'],
 						params['maxTime'], exclude_kbstaff)
 	if len(mt_ret) == 0:
-	    pprint("No records returned!")
+	    print("No records returned!")
 	else:
 	    mt_ret = self.convert_isodate_to_millis(mt_ret, ['signup_at', 'last_signin_at'])
         return {'metrics_result': mt_ret}
@@ -302,8 +302,8 @@ class MetricsMongoDBController:
 	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
 	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(params['minTime'], params['maxTime'])
-	ws_narrs = self.metrics_dbi.list_ws_narratives(params['minTime'], params['maxTime'])
+	ws_narrs = self.metrics_dbi.list_ws_narratives()
+	wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(params['minTime'], params['maxTime'])
 
 	ws_narrs1 = []
 	for wn in ws_narrs:
@@ -336,7 +336,6 @@ class MetricsMongoDBController:
 			    wn[u'nice_name'] = w_m['v']
 	            del wn['meta']
 		ws_narrs1.append(wn)
-
         return {'metrics_result': ws_narrs1}
 
     def get_activities_from_wsobjs(self, requesting_user, params, token):
@@ -478,8 +477,11 @@ class MetricsMongoDBController:
 	params = self.process_parameters(params)
         if not self.is_admin(requesting_user):
             #raise ValueError('You do not have permission to view this data.')
-            #pprint(requesting_user + ': You have permission to view ONLY your jobs.')
+            #print(requesting_user + ': You have permission to view ONLY your jobs.')
 	    params['user_ids'] = [requesting_user]
+
+	#get the ws_narrative data for lookups
+	ws_narratives = self.metrics_dbi.list_ws_narratives()
 
 	# query dbs to get lists of tasks and jobs
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
@@ -488,12 +490,7 @@ class MetricsMongoDBController:
 
 	ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
 	ujs_jobs = self.convert_isodate_to_millis(ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
-	#pprint("\n******Found {} ujs jobs".format(len(ujs_jobs)))
-
-	#get the ws_narrative data for lookups
-	ws_narratives = self.metrics_dbi.list_ws_narratives(params['minTime'], params['maxTime'])
-
-        clnt_groups = self.get_client_groups_from_cat(token)
+	clnt_groups = self.get_client_groups_from_cat(token)
 
         return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs, 
 							clnt_groups,ws_narratives)}
@@ -667,7 +664,7 @@ class MetricsMongoDBController:
     def get_ujs_results(self, requesting_user, params, token):
 	params = self.process_parameters(params)
         if not self.is_admin(requesting_user):
-            #pprint(requesting_user + ': You have permission to view ONLY your jobs.')
+	    #print(requesting_user + ': You have permission to view ONLY your jobs.')
 	    params['user_ids'] = [requesting_user]
 	
 	db_ret = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
@@ -705,7 +702,7 @@ class MetricsMongoDBController:
 
         db_ret = self.metrics_dbi.aggr_user_details(params['user_ids'], params['minTime'], params['maxTime'])
 	if len(db_ret) == 0:
-	    pprint("No records returned!")
+	    print("No records returned!")
 	else:
 	    db_ret = self.convert_isodate_to_millis(db_ret, ['signup_at', 'last_signin_at'])
         return {'metrics_result': db_ret}

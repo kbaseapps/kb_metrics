@@ -212,7 +212,7 @@ class kb_MetricsTest(unittest.TestCase):
         m_params = {
             'user_ids':[],#['qzhang'],#'user_ids': [],
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20))
-            'epoch_range':(datetime.datetime(2014, 2, 20), datetime.datetime(2018,2,28))
+            'epoch_range':(datetime.datetime(2018, 2, 24), datetime.datetime(2018,2,28))
         }
         # Second, call your implementation
         ret = self.getImpl().update_metrics(self.getContext(), m_params)
@@ -264,7 +264,7 @@ class kb_MetricsTest(unittest.TestCase):
     @unittest.skip("skipped test_run_get_user_narratives")
     def test_run_get_user_narratives(self):
         m_params = {
-            'user_ids':[],#['qzhang'],#'user_ids': [],
+            'user_ids':['psdehal'],#['qzhang'],#'user_ids': [],
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20))
             'epoch_range':(datetime.datetime(2014, 1, 1), datetime.datetime(2018,2,28))
         }
