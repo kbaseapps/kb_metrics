@@ -3,7 +3,6 @@ import unittest
 import os  # noqa: F401
 import json  # noqa: F401
 import time
-import requests
 import datetime
 
 from os import environ
@@ -14,7 +13,6 @@ except:
 
 from pprint import pprint, pformat  # noqa: F401
 
-#from biokbase.catalog.Client import Catalog
 from biokbase.workspace.client import Workspace as workspaceService
 from kb_Metrics.kb_MetricsImpl import kb_Metrics
 from kb_Metrics.kb_MetricsServer import MethodContext
@@ -82,87 +80,92 @@ class kb_MetricsTest(unittest.TestCase):
     @unittest.skip("skipped test_run_get_total_logins")
     def test_run_get_total_logins(self):
         m_params = {
-            'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+            # (datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+            'epoch_range': (1506815999000, 1514764799000)
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
         }
         # Second, call your implementation
         ret = self.getImpl().get_total_logins(self.getContext(), m_params)
         print("get_total_logins returns {} records:\n".format(len(ret[0]['metrics_result'])))
-	print(pformat(ret[0]['metrics_result']))
+        print(pformat(ret[0]['metrics_result']))
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_logins")
     def test_run_get_user_logins(self):
         m_params = {
-            'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+            # (datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+            'epoch_range': (1506815999000, 1514764799000)
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_logins(self.getContext(), m_params)
         print("get_user_logins returns {} records:\n".format(len(ret[0]['metrics_result'])))
-	print(pformat(ret[0]['metrics_result']))
-
+        print(pformat(ret[0]['metrics_result']))
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_ws")
     def test_run_get_user_ws(self):
         m_params = {
-            'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+            # (datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+            'epoch_range': (1506815999000, 1514764799000)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_ws(self.getContext(), m_params)
         print("get_user_ws returns {} records:\n".format(len(ret[0]['metrics_result'])))
-	print(pformat(ret[0]['metrics_result']))
+        print(pformat(ret[0]['metrics_result']))
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_narratives")
     def test_run_get_user_narratives(self):
         m_params = {
-            'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+            # (datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+            'epoch_range': (1506815999000, 1514764799000)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_narratives(self.getContext(), m_params)
         print("get_user_narratives returns {} records:\n".format(len(ret[0]['metrics_result'])))
-	print(pformat(ret[0]['metrics_result']))
+        print(pformat(ret[0]['metrics_result']))
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_numObjs")
     def test_run_get_user_numObjs(self):
         m_params = {
-            'epoch_range':(1506815999000, 1514764799000)#(datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+            # (datetime.datetime(2017, 9, 30), datetime.datetime(2017,12,31)
+            'epoch_range': (1506815999000, 1514764799000)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_numObjs(self.getContext(), m_params)
         print("get_user_numObjs returns {} records:\n".format(len(ret[0]['metrics_result'])))
-	print(pformat(ret[0]['metrics_result']))
+        print(pformat(ret[0]['metrics_result']))
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
     #@unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
         m_params = {
-            'user_ids':[],#['rhizorick'],#'user_ids': [],
+            'user_ids': [],  # ['rhizorick'],#'user_ids': [],
             #'epoch_range':(1420083768000,1435677602000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2015,6,30)
             #'epoch_range':(1420083768000,1451606549000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2016,1,1)
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
-            'epoch_range':(u'2018-02-23T00:00:00+0000', u'2018-02-28T17:29:42+0000')
-	}
+            'epoch_range': (u'2018-02-01T00:00:00+0000', u'2018-02-28T17:29:42+0000')
+        }
         # Second, call your implementation
         ret = self.getImpl().get_app_metrics(self.getContext(), m_params)
         prnt_count = len(ret[0]['job_states']) - 20
-        print("Total number of records returned="+str(len(ret[0]['job_states'])))
-        print(pformat(ret[0]['job_states'][prnt_count:len(ret[0]['job_states'])-10]))
+        print("Total number of records returned=" + str(len(ret[0]['job_states'])))
+        print(pformat(ret[0]['job_states'][prnt_count:len(ret[0]['job_states']) - 10]))
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_exec_apps")
     def test_run_get_exec_apps(self):
         m_params = {
-            'user_ids':[],#['qzhang'],#'user_ids': [],
-            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
+            'user_ids': [],  # ['qzhang'],#'user_ids': [],
+            # (datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
+            'epoch_range': (1420083768000, 1505876263000)
         }
         # Second, call your implementation
         ret = self.getImpl().get_exec_apps(self.getContext(), m_params)
@@ -172,8 +175,9 @@ class kb_MetricsTest(unittest.TestCase):
     @unittest.skip("skipped test_run_get_exec_tasks")
     def test_run_get_exec_tasks(self):
         m_params = {
-            'user_ids':[],#['qzhang'],#'user_ids': [],
-            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
+            'user_ids': [],  # ['qzhang'],#'user_ids': [],
+            # (datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
+            'epoch_range': (1420083768000, 1505876263000)
         }
         # Second, call your implementation
         ret = self.getImpl().get_exec_tasks(self.getContext(), m_params)
@@ -183,94 +187,97 @@ class kb_MetricsTest(unittest.TestCase):
     @unittest.skip("skipped test_run_get_user_ujs_results")
     def test_run_get_user_ujs_results(self):
         m_params = {
-            'user_ids':['qzhang'],#'user_ids': [],
+            'user_ids': ['qzhang'],  # 'user_ids': [],
             #'epoch_range':(1420083768000,1435677602000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2015,6,30)
             #'epoch_range':(1420083768000,1451606549000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2016,1,1)
-            'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
+            # (datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
+            'epoch_range': (1420083768000, 1505876263000)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_ujs_results(self.getContext(), m_params)
-        print("Number of records get_user_ujs_results returned="+str(len(ret[0]['metrics_result'])))
+        print("Number of records get_user_ujs_results returned=" +
+              str(len(ret[0]['metrics_result'])))
         print(pformat(ret[0]['metrics_result'][0:10]))
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_job_states")
     def test_run_get_user_job_states(self):
         m_params = {
-            'user_ids':[],#['qzhang'],#'user_ids': [],
-            'epoch_range':(1435677602000,1451575202000)#(datetime.datetime(2015, 6, 1), datetime.datetime(2015,12,31)
+            'user_ids': [],  # ['qzhang'],#'user_ids': [],
+            # (datetime.datetime(2015, 6, 1), datetime.datetime(2015,12,31)
+            'epoch_range': (1435677602000, 1451575202000)
             #'epoch_range':(1420083768000,1451606549000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2016,1,1)
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_ujs_results(self.getContext(), m_params)
-        print("Total number of records get_user_ujs_results returned="+str(len(ret[0]['metrics_result'])))
+        print("Total number of records get_user_ujs_results returned=" +
+              str(len(ret[0]['metrics_result'])))
         print(pformat(ret[0]['metrics_result'][0:10]))
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_update_metrics")
     def test_run_update_metrics(self):
         m_params = {
-            'user_ids':[],#['qzhang'],#'user_ids': [],
+            'user_ids': [],  # ['qzhang'],#'user_ids': [],
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20))
-            'epoch_range':(datetime.datetime(2018, 2, 24), datetime.datetime(2018,2,28))
+            'epoch_range': (datetime.datetime(2018, 2, 24), datetime.datetime(2018, 2, 28))
         }
         # Second, call your implementation
         ret = self.getImpl().update_metrics(self.getContext(), m_params)
-	if not ret[0]['metrics_result'] is None:
-	    print(ret[0]['metrics_result'])
+        if not ret[0]['metrics_result'] is None:
+            print(ret[0]['metrics_result'])
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_details")
     def test_run_get_user_details(self):
         m_params = {
-            'user_ids':[],#['qzhang'],#'user_ids': [],
+            'user_ids': [],  # ['qzhang'],#'user_ids': [],
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20))
-            'epoch_range':(datetime.datetime(2016, 1, 1), datetime.datetime(2018,6,28))
+            'epoch_range': (datetime.datetime(2016, 1, 1), datetime.datetime(2018, 6, 28))
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_details(self.getContext(), m_params)
-        print("Total number of records get_user_details returned="+str(len(ret[0]['metrics_result'])))
-        #print(pformat(ret[0]['metrics_result']))
+        print("Total number of records get_user_details returned=" +
+              str(len(ret[0]['metrics_result'])))
+        # print(pformat(ret[0]['metrics_result']))
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_activities")
     def test_run_get_user_activities(self):
         m_params = {
-            'user_ids':[],#['qzhang'],#'user_ids': [],
+            'user_ids': [],  # ['qzhang'],#'user_ids': [],
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20))
-            'epoch_range':(datetime.datetime(2017, 1, 1), datetime.datetime(2017,6,28))
+            'epoch_range': (datetime.datetime(2017, 1, 1), datetime.datetime(2017, 6, 28))
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_activities(self.getContext(), m_params)
-        print("Total number of records get_user_activities returned="+str(len(ret[0]['metrics_result'])))
+        print("Total number of records get_user_activities returned=" +
+              str(len(ret[0]['metrics_result'])))
         print(pformat(ret[0]['metrics_result']))
-
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_counts_per_day")
     def test_run_get_user_counts_per_day(self):
         m_params = {
-            'user_ids':[],#['qzhang'],#'user_ids': [],
+            'user_ids': [],  # ['qzhang'],#'user_ids': [],
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20))
-            'epoch_range':(datetime.datetime(2017, 1, 1), datetime.datetime(2017,6,28))
+            'epoch_range': (datetime.datetime(2017, 1, 1), datetime.datetime(2017, 6, 28))
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_counts_per_day(self.getContext(), m_params)
-        print("Total number of records get_user_counts_per_day returned="+str(len(ret[0]['metrics_result'])))
+        print("Total number of records get_user_counts_per_day returned=" +
+              str(len(ret[0]['metrics_result'])))
         print(pformat(ret[0]['metrics_result']))
-
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_user_narratives")
     def test_run_get_user_narratives(self):
         m_params = {
-            'user_ids':['psdehal'],#['qzhang'],#'user_ids': [],
+            'user_ids': ['psdehal'],  # ['qzhang'],#'user_ids': [],
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20))
-            'epoch_range':(datetime.datetime(2014, 1, 1), datetime.datetime(2018,2,28))
+            'epoch_range': (datetime.datetime(2014, 1, 1), datetime.datetime(2018, 2, 28))
         }
         # Second, call your implementation
         ret = self.getImpl().get_user_narratives(self.getContext(), m_params)
         #print("Total number of records get_user_narratives returned="+str(len(ret[0]['metrics_result'])))
         print(pformat(ret[0]['metrics_result']))
-
-
