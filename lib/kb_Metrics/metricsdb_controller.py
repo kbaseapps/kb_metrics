@@ -72,10 +72,20 @@ class MetricsMongoDBController:
         self.auth_service_url = config['auth-service-url']
         self.catalog_url = config['kbase-endpoint'] + '/catalog'
 
+        self.ws_narratives = None
+        self.client_groups = None
+
     # function(s) to update the metrics db
+
     def update_metrics(self, requesting_user, params, token):
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
+
+        # 0. get the ws_narrative and client_groups data for lookups
+        if self.ws_narratives is None:
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+        if self.client_groups is None:
+            self.client_groups = self.get_client_groups_from_cat(token)
 
         # 1. update users
         action_result1 = self.update_user_info(requesting_user, params, token)
@@ -295,9 +305,10 @@ class MetricsMongoDBController:
         params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
         params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        ws_narrs = self.metrics_dbi.list_ws_narratives()
-        wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(
-            params['minTime'], params['maxTime'])
+        # ws_narrs = self.metrics_dbi.list_ws_narratives()
+        ws_narrs = copy.deepcopy(self.ws_narratives)
+        wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(params['minTime'],
+                                                                params['maxTime'])
 
         ws_narrs1 = []
         for wn in ws_narrs:
@@ -311,11 +322,11 @@ class MetricsMongoDBController:
                     elif ':' in wn['name']:
                         wts = wn['name'].split(':')[1]
                         p = re.compile(wts, re.IGNORECASE)
-                        if p.search(obj['object_name']):
-                            wn[u'object_id'] = obj['object_id']
-                            wn[u'object_version'] = obj['object_version']
-                            wn[u'latest'] = obj['latest']
-                            break
+                    if p.search(obj['object_name']):
+                        wn[u'object_id'] = obj['object_id']
+                        wn[u'object_version'] = obj['object_version']
+                        wn[u'latest'] = obj['latest']
+                        break
 
         for wn in ws_narrs:
             if not wn.get('object_id', None) is None:
@@ -325,11 +336,12 @@ class MetricsMongoDBController:
                 wn[u'nice_name'] = ''
                 if not wn.get('meta', None) is None:
                     w_meta = wn['meta']
-                    for w_m in w_meta:
-                        if w_m['k'] == 'narrative_nice_name':
-                            wn[u'nice_name'] = w_m['v']
-                    del wn['meta']
-                ws_narrs1.append(wn)
+                for w_m in w_meta:
+                    if w_m['k'] == 'narrative_nice_name':
+                        wn[u'nice_name'] = w_m['v']
+                        del wn['meta']
+            ws_narrs1.append(wn)
+
         return {'metrics_result': ws_narrs1}
 
     def get_activities_from_wsobjs(self, requesting_user, params, token):
@@ -437,12 +449,6 @@ class MetricsMongoDBController:
 
     def get_user_job_states(self, requesting_user, params, token):
         '''
-        To get the job's 'status', 'complete'=true/false, etc., we can do joining as follows
-        --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
-        To join exec_engine.exec_apps with exec_engine.exec_tasks:
-        --exec_apps['app_job_id']==exec_tasks['app_job_id']
-        To join exec_engine.exec_apps with ujs.jobstate:
-        --ObjectId(exec_apps.app_job_state['job_id'])==jobstate['_id']
         return a list of the following structure:
         [
          {'app_id': u'kb_Metrics/refseq_genome_counts',
@@ -475,24 +481,49 @@ class MetricsMongoDBController:
             # print(requesting_user + ': You have permission to view ONLY your jobs.')
             params['user_ids'] = [requesting_user]
 
-        # get the ws_narrative data for lookups
-        ws_narratives = self.metrics_dbi.list_ws_narratives()
+        return self.get_jobdata_from_ws_exec_ujs(params, token)
 
-        # query dbs to get lists of tasks and jobs
+    def get_jobdata_from_metrics(self, params, token):
+        """
+        get_jobdata_from_metrics--The implementation to get data for appcatalog
+        from querying the designated mongodb 'metrics'
+        """
+
+        # get the ws_narrative data for lookups
+        # ws_narratives = self.metrics_dbi.list_ws_narratives()
+        ws_narrs = copy.deepcopy(self.ws_narratives)
+
+    def get_jobdata_from_ws_exec_ujs(self, params, token):
+        """
+        get_jobdata_from_ws_exec_ujs--The original implementation to get data for appcatalog
+        from querying execution_engine, catalog, workspace and userjobstate
+        ----------------------
+        To get the job's 'status', 'complete'=true/false, etc., we can do joining as follows
+        --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
+        To join exec_engine.exec_apps with exec_engine.exec_tasks:
+        --exec_apps['app_job_id']==exec_tasks['app_job_id']
+        To join exec_engine.exec_apps with ujs.jobstate:
+        --ObjectId(exec_apps.app_job_state['job_id'])==jobstate['_id']
+        """
+
+        # 0. get the ws_narrative and client_groups data for lookups
+        if self.ws_narratives is None:
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+        if self.client_groups is None:
+            self.client_groups = self.get_client_groups_from_cat(token)
+
+        # 1. query dbs to get lists of tasks and jobs
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
 
         exec_apps = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
 
-        ujs_jobs = self.metrics_dbi.list_ujs_results(
-            params['user_ids'], params['minTime'], params['maxTime'])
-        ujs_jobs = self.convert_isodate_to_millis(
-            ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
-        clnt_groups = self.get_client_groups_from_cat(token)
+        ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'],
+                                                     params['maxTime'])
+        ujs_jobs = self.convert_isodate_to_millis(ujs_jobs, ['created', 'started',
+                                                             'updated', 'estcompl'])
+        return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs)}
 
-        return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs,
-                                                     clnt_groups, ws_narratives)}
-
-    def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs, c_groups, ws_narratives):
+    def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs):
         """
         combine/join the apps, tasks and jobs lists to get the final return data
         """
@@ -502,7 +533,7 @@ class MetricsMongoDBController:
             ta = copy.deepcopy(t)
             for a in exec_apps:
                 if (('app_job_id' in t and a['app_job_id'] == t['app_job_id']) or
-                        ('ujs_job_id' in t and a['app_job_id'] == t['ujs_job_id'])):
+                   ('ujs_job_id' in t and a['app_job_id'] == t['ujs_job_id'])):
                     ta['job_state'] = a['app_job_state']
             app_task_list.append(ta)
 
@@ -511,21 +542,20 @@ class MetricsMongoDBController:
         for j in ujs_jobs:
             u_j_s = copy.deepcopy(j)
             u_j_s['job_id'] = str(u_j_s['_id'])
-            del u_j_s['_id']
+            del u_j_s['_id']        
             u_j_s['creation_time'] = j['created']
             if 'started' in j:
                 u_j_s['exec_start_time'] = j['started']
             u_j_s['modification_time'] = j['updated']
             u_j_s['estcompl'] = j.get('estcompl', None)
-            u_j_s['time_info'] = [u_j_s['creation_time'],
-                                  u_j_s['modification_time'], u_j_s['estcompl']]
+            u_j_s['time_info'] = [u_j_s['creation_time'], u_j_s['modification_time'], u_j_s['estcompl']]
             if not u_j_s.get('authstrat', None) is None:
                 if u_j_s.get('authstrat', None) == 'kbaseworkspace':
                     u_j_s['wsid'] = u_j_s['authparam']
             if not u_j_s.get('desc', None) is None:
                 desc = u_j_s['desc'].split()[-1]
-                if '.' in desc:
-                    u_j_s['method'] = desc
+            if '.' in desc:
+                u_j_s['method'] = desc
 
             # Assuming complete, error and status all exist in the records returned
             if j['complete']:
@@ -555,49 +585,45 @@ class MetricsMongoDBController:
 
                     if 'job_input' in lat:
                         u_j_s['job_input'] = lat['job_input']
-                        if u_j_s.get('app_id', None) is None:
-                            u_j_s['app_id'] = self.parse_app_id(lat)
+                    if u_j_s.get('app_id', None) is None:
+                        u_j_s['app_id'] = self.parse_app_id(lat)
 
-                        if u_j_s.get('method', None) is None:
-                            u_j_s['method'] = self.parse_method(lat)
+                    if u_j_s.get('method', None) is None:
+                        u_j_s['method'] = self.parse_method(lat)
 
-                        if u_j_s.get('wsid', None) is None:
-                            if 'wsid' in lat['job_input']:
-                                u_j_s['wsid'] = lat['job_input']['wsid']
-                            elif 'params' in lat['job_input']:
-                                if 'ws_id' in lat['job_input']['params']:
-                                    u_j_s['wsid'] = lat['job_input']['params']['ws_id']
-                                if 'workspace' in lat['job_input']['params']:
-                                    u_j_s['workspace_name'] = lat[
-                                        'job_input']['params']['workspace']
-                                elif 'workspace_name' in lat['job_input']['params']:
-                                    u_j_s['workspace_name'] = lat['job_input'][
-                                        'params']['workspace_name']
+                    if u_j_s.get('wsid', None) is None:
+                        if 'wsid' in lat['job_input']:
+                            u_j_s['wsid'] = lat['job_input']['wsid']
+                        elif 'params' in lat['job_input']:
+                            if 'ws_id' in lat['job_input']['params']:
+                                u_j_s['wsid'] = lat['job_input']['params']['ws_id']
+                            if 'workspace' in lat['job_input']['params']:
+                                u_j_s['workspace_name'] = lat['job_input']['params']['workspace']
+                            elif 'workspace_name' in lat['job_input']['params']:
+                                u_j_s['workspace_name'] = lat['job_input']['params']['workspace_name']
 
                     if 'job_output' in lat:
                         u_j_s['job_output'] = lat['job_output']
 
             if (u_j_s.get('app_id', None) is None and
-                    not u_j_s.get('method', None) is None):
-                u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
+               not u_j_s.get('method', None) is None):
+                    u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
 
             # get the narrative name and version if any
             if not u_j_s.get('wsid', None) is None:
-                n_nm, n_obj = self.map_narrative(u_j_s['wsid'], ws_narratives)
+                n_nm, n_obj = self.map_narrative(u_j_s['wsid'], self.ws_narratives)
                 if n_nm != "" and n_obj != 0:
                     u_j_s['narrative_name'] = n_nm
                     u_j_s['narrative_objNo'] = n_obj
 
             # get some info from the client groups
-            for clnt in c_groups:
+            u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
+            for clnt in self.client_groups:
                 clnt_app_id = clnt['app_id']
                 if ('app_id' in u_j_s and
                         str(clnt_app_id).lower() == str(u_j_s['app_id']).lower()):
                     u_j_s['client_groups'] = clnt['client_groups']
                     break
-            # default client groups to 'njs'
-            if u_j_s.get('client_groups', None) is None:
-                u_j_s['client_groups'] = ['njs']
 
             # set the run/running/in_queue time
             if u_j_s['job_state'] == 'completed' or u_j_s['job_state'] == 'suspend':
