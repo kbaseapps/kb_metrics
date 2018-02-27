@@ -37,19 +37,19 @@ class MetricsMongoDBController:
         if not self.metricsAdmins:  # pragma: no cover
             warnings.warn('no "metrics-admins" are set in config of MetricsMongoDBController.')
 
-	self.kbstaffList = []
+        self.kbstaffList = []
         if 'kbase-staff' in config:
-	    kb_staff_ids = config['kbase-staff'].split(',')
-	    for k_id in kb_staff_ids:
-		if k_id.strip():
-		    self.kbstaffList.append(k_id.strip())
+            kb_staff_ids = config['kbase-staff'].split(',')
+            for k_id in kb_staff_ids:
+                if k_id.strip():
+                    self.kbstaffList.append(k_id.strip())
 
         # make sure the minimal mongo settings are in place
         if 'mongodb-host' not in config: # pragma: no cover
             raise ValueError('"mongodb-host" config variable must be defined to start a MetricsMongoDBController!')
         if 'mongodb-databases' not in config: # pragma: no cover
             raise ValueError('"mongodb-databases" config variable must be defined to start a MetricsMongoDBController!')
-	self.mongodb_dbList = []
+        self.mongodb_dbList = []
         if 'mongodb-databases' in config:
             db_ids = config['mongodb-databases'].split(',')
             for d_id in db_ids:
@@ -67,186 +67,185 @@ class MetricsMongoDBController:
             config['mongodb-pwd']=''
         # instantiate the mongo client
         self.metrics_dbi = MongoMetricsDBI(
-                    config['mongodb-host'],
- 		    self.mongodb_dbList,
-                    config['mongodb-user'],
-                    config['mongodb-pwd'])
-	# for access to the Catalog API
-	self.auth_service_url = config['auth-service-url']
-	self.catalog_url = config['kbase-endpoint'] + '/catalog'
+                config['mongodb-host'],
+                self.mongodb_dbList,
+                config['mongodb-user'],
+                config['mongodb-pwd'])
+        # for access to the Catalog API
+        self.auth_service_url = config['auth-service-url']
+        self.catalog_url = config['kbase-endpoint'] + '/catalog'
 
-	# commonly used data
-	self.ws_narratives = None
-	self.client_groups = None
+        # commonly used data
+        self.ws_narratives = None
+        self.client_groups = None
+
 
     ## function(s) to update the metrics db
     def update_metrics(self, requesting_user, params, token):
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-	# 0. get the ws_narrative and client_groups data for lookups
-	if self.ws_narratives is None:
-	    self.ws_narratives = self.metrics_dbi.list_ws_narratives()
-	if self.client_groups is None:
-	    self.client_groups = self.get_client_groups_from_cat(token)
+        # 0. get the ws_narrative and client_groups data for lookups
+        if self.ws_narratives is None:
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+        if self.client_groups is None:
+            self.client_groups = self.get_client_groups_from_cat(token)
 
-	# 1. update users
-	action_result1 = self.update_user_info(requesting_user, params, token)
+        # 1. update users
+        action_result1 = self.update_user_info(requesting_user, params, token)
 
-	# 2. update activities
-	action_result2 = self.update_daily_activities(requesting_user, params, token)
+        # 2. update activities
+        action_result2 = self.update_daily_activities(requesting_user, params, token)
 
-	# 3. update narratives
-	action_result3 = self.update_narratives(requesting_user, params, token)
+        # 3. update narratives
+        action_result3 = self.update_narratives(requesting_user, params, token)
 
-        return {'metrics_result':
-			{'user_updates': action_result1,
-		 	 'activity_updates': action_result2,
-		 	 'narrative_updates': action_result3}
-		}
+        return {'metrics_result':{'user_updates': action_result1,
+                'activity_updates': action_result2,
+                'narrative_updates': action_result3}}
 
     def update_user_info(self, requesting_user, params, token):
-	"""
-	update user info
-	If match not found, insert that record as new.
-	"""
+        """
+        update user info
+        If match not found, insert that record as new.
+        """
         if not self.is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to invoke this action.')
+                raise ValueError('You do not have permission to invoke this action.')
 
-	params = self.process_parameters(params)
-	##TODO: set the param['minTime'] and param['maxTime'] to a given time window,
-	##such as most current 24 hours instead of 48 hours as for others.
+        params = self.process_parameters(params)
+        ##TODO: set the param['minTime'] and param['maxTime'] to a given time window,
+        ##such as most current 24 hours instead of 48 hours as for others.
         auth2_ret = self.metrics_dbi.aggr_user_details(params['user_ids'], params['minTime'], params['maxTime'])
-	updData = 0
-	if len(auth2_ret) == 0:
-	    print("No user records returned for update!")
-	    return updData
+        updData = 0
+        if len(auth2_ret) == 0:
+            print("No user records returned for update!")
+            return updData
 
-	print('Retrieved {} user record(s)'.format(len(auth2_ret)))
-	idKeys = ['username', 'email']
-	dataKeys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
-	for u_data in auth2_ret:
-	    filterByKey = lambda keys: {x: u_data[x] for x in keys}
-	    idData = filterByKey(idKeys)
-	    userData = filterByKey(dataKeys)
-	    isKbstaff = 1 if idData['username'] in self.kbstaffList else 0
-	    update_ret = self.metrics_dbi.update_user_records(idData, userData, isKbstaff)
-	    updData += update_ret.raw_result['nModified']
+        print('Retrieved {} user record(s)'.format(len(auth2_ret)))
+        idKeys = ['username', 'email']
+        dataKeys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
+        for u_data in auth2_ret:
+            filterByKey = lambda keys: {x: u_data[x] for x in keys}
+            idData = filterByKey(idKeys)
+            userData = filterByKey(dataKeys)
+            isKbstaff = 1 if idData['username'] in self.kbstaffList else 0
+            update_ret = self.metrics_dbi.update_user_records(idData, userData, isKbstaff)
+        updData += update_ret.raw_result['nModified']
 
-	return updData
+        return updData
 
 
     def update_daily_activities(self, requesting_user, params, token):
-	"""
-	update user activities reported from Workspace.
-	If match not found, insert that record as new.
-	"""
+        """
+        update user activities reported from Workspace.
+        If match not found, insert that record as new.
+        """
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-	ws_ret = self.get_activities_from_wsobjs(requesting_user, params, token)
-	act_list = ws_ret['metrics_result']
-	updData = 0
-	if len(act_list) == 0:
-	    print("No activity records returned for update!")
-	    return updData
+        ws_ret = self.get_activities_from_wsobjs(requesting_user, params, token)
+        act_list = ws_ret['metrics_result']
+        updData = 0
+        if len(act_list) == 0:
+            print("No activity records returned for update!")
+            return updData
 
-	print('Retrieved activities of {} record(s)'.format(len(act_list)))
-	idKeys = ['_id']
-	countKeys = ['obj_numModified']
-	for a_data in act_list:
-	    filterByKey = lambda keys: {x: a_data[x] for x in keys}
-	    idData = filterByKey(idKeys)
-	    countData = filterByKey(countKeys)
-	    update_ret = self.metrics_dbi.update_activity_records(idData, countData)
-	    updData += update_ret.raw_result['nModified']
+        print('Retrieved activities of {} record(s)'.format(len(act_list)))
+        idKeys = ['_id']
+        countKeys = ['obj_numModified']
+        for a_data in act_list:
+            filterByKey = lambda keys: {x: a_data[x] for x in keys}
+            idData = filterByKey(idKeys)
+            countData = filterByKey(countKeys)
+            update_ret = self.metrics_dbi.update_activity_records(idData, countData)
+            updData += update_ret.raw_result['nModified']
 
-	return updData
+        return updData
 
     def insert_daily_activities(self, requesting_user, params, token):
-	"""
-	insert user activities reported from Workspace.
-	If duplicated ids found, skip that record.
-	"""
+        """
+        insert user activities reported from Workspace.
+        If duplicated ids found, skip that record.
+        """
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-	ws_ret = self.get_activities_from_wsobjs(requesting_user, params, token)
-	act_list = ws_ret['metrics_result']
-	if len(act_list) == 0:
-	    print("No activity records returned for insertion!")
-	    return {'metrics_result': []}
+        ws_ret = self.get_activities_from_wsobjs(requesting_user, params, token)
+        act_list = ws_ret['metrics_result']
+        if len(act_list) == 0:
+            print("No activity records returned for insertion!")
+            return {'metrics_result': []}
 
-	print('Retrieved activities of {} record(s)'.format(len(act_list)))
+        print('Retrieved activities of {} record(s)'.format(len(act_list)))
 
-	for al in act_list:#set default for inserting records at the first time
-	    al['recordLastUpdated'] = datetime.datetime.utcnow() 
+        for al in act_list:#set default for inserting records at the first time
+            al['recordLastUpdated'] = datetime.datetime.utcnow()
 
-	try:
-	    insert_ret = self.metrics_dbi.insert_activity_records(act_list)
-	except Exception as e:
-	    print(e)
-	    return {'metrics_result': e}
-	else:
-	    return {'metrics_result': insert_ret}
+        try:
+            insert_ret = self.metrics_dbi.insert_activity_records(act_list)
+        except Exception as e:
+            print(e)
+            return {'metrics_result': e}
+        else:
+            return {'metrics_result': insert_ret}
 
 
     def insert_narratives(self, requesting_user, params, token):
-	"""
-	insert narratives reported from Workspaces and workspaceObjects.
-	If duplicated ids found, skip that record.
-	"""
+        """
+        insert narratives reported from Workspaces and workspaceObjects.
+        If duplicated ids found, skip that record.
+        """
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-	ws_ret = self.get_narratives_from_wsobjs(requesting_user, params, token)
-	narr_list = ws_ret['metrics_result']
+        ws_ret = self.get_narratives_from_wsobjs(requesting_user, params, token)
+        narr_list = ws_ret['metrics_result']
 
-	if len(narr_list) == 0:
-	    print("No narrative records returned for insertion!")
-	    return {'metrics_result': []}
+        if len(narr_list) == 0:
+            print("No narrative records returned for insertion!")
+            return {'metrics_result': []}
 
-	print('Retrieved narratives of {} record(s)'.format(len(narr_list)))
-	for wn in narr_list:#set default for inserting records at the first time
-	    wn['recordLastUpdated'] = datetime.datetime.utcnow() 
-	    if wn.get('first_access', None) is None:
-		wn[u'first_access'] = wn['last_saved_at']
-		wn['access_count'] = 1
+        print('Retrieved narratives of {} record(s)'.format(len(narr_list)))
+        for wn in narr_list:#set default for inserting records at the first time
+            wn['recordLastUpdated'] = datetime.datetime.utcnow()
+            if wn.get('first_access', None) is None:
+                wn[u'first_access'] = wn['last_saved_at']
+                wn['access_count'] = 1
 
-	try:
-	    insert_ret = self.metrics_dbi.insert_narrative_records(narr_list)
-	except Exception as e:
-	    print(e)
-	    return {'metrics_result': e}
-	else:
-	    return {'metrics_result': insert_ret}
+        try:
+            insert_ret = self.metrics_dbi.insert_narrative_records(narr_list)
+        except Exception as e:
+            print(e)
+            return {'metrics_result': e}
+        else:
+            return {'metrics_result': insert_ret}
 
     def update_narratives(self, requesting_user, params, token):
-	"""
-	update user narratives reported from Workspace.
-	If match not found, insert that record as new.
-	"""
+        """
+        update user narratives reported from Workspace.
+        If match not found, insert that record as new.
+        """
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-	ws_ret = self.get_narratives_from_wsobjs(requesting_user, params, token)
-	narr_list = ws_ret['metrics_result']
-	updData = 0
-	if len(narr_list) == 0:
-	    print("No narrative records returned for update!")
-	    return updData
+        ws_ret = self.get_narratives_from_wsobjs(requesting_user, params, token)
+        narr_list = ws_ret['metrics_result']
+        updData = 0
+        if len(narr_list) == 0:
+            print("No narrative records returned for update!")
+            return updData
 
-	print('Retrieved {} narratives record(s)'.format(len(narr_list)))
-	idKeys = ['object_id', 'workspace_id']
-	otherKeys = ['name','last_saved_at','last_saved_by','numObj','deleted','object_version','nice_name','latest','desc']
-	for n_data in narr_list:
-	    filterByKey = lambda keys: {x: n_data[x] for x in keys}
-	    idData = filterByKey(idKeys)
-	    otherData = filterByKey(otherKeys)
-	    update_ret = self.metrics_dbi.update_narrative_records(idData, otherData)
-	    updData += update_ret.raw_result['nModified']
+        print('Retrieved {} narratives record(s)'.format(len(narr_list)))
+        idKeys = ['object_id', 'workspace_id']
+        otherKeys = ['name','last_saved_at','last_saved_by','numObj','deleted','object_version','nice_name','latest','desc']
+        for n_data in narr_list:
+            filterByKey = lambda keys: {x: n_data[x] for x in keys}
+            idData = filterByKey(idKeys)
+            otherData = filterByKey(otherKeys)
+            update_ret = self.metrics_dbi.update_narrative_records(idData, otherData)
+            updData += update_ret.raw_result['nModified']
 
-	return updData
+        return updData
 
     ## End functions to write to the metrics database
 
@@ -256,16 +255,16 @@ class MetricsMongoDBController:
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
+        params = self.process_parameters(params)
 
-	if exclude_kbstaff:
+        if exclude_kbstaff:
             mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'],
 								self.kbstaffList)
-	else:
+        else:
             mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'], [])
 
-	if len(mt_ret) == 0:
-	    print("No records returned!")
+        if len(mt_ret) == 0:
+            print("No records returned!")
 
         return {'metrics_result': mt_ret}
 
@@ -274,30 +273,28 @@ class MetricsMongoDBController:
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
-	mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'],
+        params = self.process_parameters(params)
+        mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'],
 						params['maxTime'], exclude_kbstaff)
-	if len(mt_ret) == 0:
-	    print("No records returned!")
-	else:
-	    mt_ret = self.convert_isodate_to_millis(mt_ret, ['signup_at', 'last_signin_at'])
+        if len(mt_ret) == 0:
+            print("No records returned!")
+        else:
+            mt_ret = self.convert_isodate_to_millis(mt_ret, ['signup_at', 'last_signin_at'])
         return {'metrics_result': mt_ret}
 
 
     def get_activities(self, requesting_user, params, token):
-	##TODO not yet pointing to the metrics db yet
+        ##TODO not yet pointing to the metrics db yet
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
-
-	return self.get_activities_from_wsobjs(requesting_user, params, token)
+        return self.get_activities_from_wsobjs(requesting_user, params, token)
 
 
     def get_narratives(self, requesting_user, params, token):
-	##TODO not yet pointing to the metrics db yet
+        ##TODO not yet pointing to the metrics db yet
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
-
-	return self.get_narratives_from_wsobjs(requesting_user, params, token)
+        return self.get_narratives_from_wsobjs(requesting_user, params, token)
 
     ## End functions to get the requested records from metrics db
 
@@ -307,62 +304,62 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
-	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+        params = self.process_parameters(params)
+        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-	#ws_narrs = self.metrics_dbi.list_ws_narratives()
-	ws_narrs = copy.deepcopy(self.ws_narratives)
-	wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(params['minTime'], params['maxTime'])
+        #ws_narrs = self.metrics_dbi.list_ws_narratives()
+        ws_narrs = copy.deepcopy(self.ws_narratives)
+        wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(params['minTime'], params['maxTime'])
 
-	ws_narrs1 = []
-	for wn in ws_narrs:
-	    for obj in wsobjs:
-		if wn['workspace_id'] == obj['workspace_id']:
-		    if wn['name'] == obj['object_name']:
-			wn[u'object_id'] = obj['object_id']
-			wn[u'object_version'] = obj['object_version']
-			wn[u'latest'] = obj['latest']
-			break
-		    elif ':' in wn['name']:
-			wts = wn['name'].split(':')[1]
-			p = re.compile(wts, re.IGNORECASE)
-			if p.search(obj['object_name']):
-			    wn[u'object_id'] = obj['object_id']
-			    wn[u'object_version'] = obj['object_version']
-			    wn[u'latest'] = obj['latest']
-			    break
+        ws_narrs1 = []
+        for wn in ws_narrs:
+            for obj in wsobjs:
+                if wn['workspace_id'] == obj['workspace_id']:
+                    if wn['name'] == obj['object_name']:
+                        wn[u'object_id'] = obj['object_id']
+                        wn[u'object_version'] = obj['object_version']
+                        wn[u'latest'] = obj['latest']
+                        break
+                elif ':' in wn['name']:
+                    wts = wn['name'].split(':')[1]
+                    p = re.compile(wts, re.IGNORECASE)
+                    if p.search(obj['object_name']):
+                        wn[u'object_id'] = obj['object_id']
+                        wn[u'object_version'] = obj['object_version']
+                        wn[u'latest'] = obj['latest']
+                        break
 
-	for wn in ws_narrs:
-	    if not wn.get('object_id', None) is None:
-	        wn[u'last_saved_by'] = wn['username']
-	        del wn['username']
+        for wn in ws_narrs:
+            if not wn.get('object_id', None) is None:
+                wn[u'last_saved_by'] = wn['username']
+                del wn['username']
 
-	        wn[u'nice_name'] = ''
-	        if not wn.get('meta', None) is None:
-		    w_meta = wn['meta']
-		    for w_m in w_meta:
-			if w_m['k'] == 'narrative_nice_name':
-			    wn[u'nice_name'] = w_m['v']
-	            del wn['meta']
-		ws_narrs1.append(wn)
+                wn[u'nice_name'] = ''
+                if not wn.get('meta', None) is None:
+                    w_meta = wn['meta']
+                    for w_m in w_meta:
+                        if w_m['k'] == 'narrative_nice_name':
+                            wn[u'nice_name'] = w_m['v']
+                    del wn['meta']
+                ws_narrs1.append(wn)
         return {'metrics_result': ws_narrs1}
 
     def get_activities_from_wsobjs(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
-	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+        params = self.process_parameters(params)
+        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
         wsobjs_act = self.metrics_dbi.aggr_activities_from_wsobjs(params['minTime'], params['maxTime'])
-	ws_owners = self.metrics_dbi.list_ws_owners()
+        ws_owners = self.metrics_dbi.list_ws_owners()
 
-	for wo in ws_owners:
-	    for obj in wsobjs_act:
-		if wo['ws_id'] == obj['_id']['ws_id']:
-		    obj['_id'][u'username'] = wo['username']
+        for wo in ws_owners:
+            for obj in wsobjs_act:
+                if wo['ws_id'] == obj['_id']['ws_id']:
+                    obj['_id'][u'username'] = wo['username']
         return {'metrics_result': wsobjs_act}
 
 
@@ -370,9 +367,9 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
-	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+        params = self.process_parameters(params)
+        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
         db_ret = self.metrics_dbi.aggr_activities_from_ws(params['minTime'], params['maxTime'])
 
@@ -382,9 +379,9 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
-	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+        params = self.process_parameters(params)
+        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
         db_ret = self.metrics_dbi.aggr_total_logins(params['minTime'], params['maxTime'])
 
@@ -394,9 +391,9 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
-	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+        params = self.process_parameters(params)
+        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
         db_ret = self.metrics_dbi.aggr_user_logins_from_ws(params['minTime'], params['maxTime'])
 
@@ -406,9 +403,9 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
-	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+        params = self.process_parameters(params)
+        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
         db_ret = self.metrics_dbi.aggr_user_ws(params['minTime'], params['maxTime'])
 
@@ -418,9 +415,9 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
-	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+        params = self.process_parameters(params)
+        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
         db_ret = self.metrics_dbi.aggr_user_narratives(params['minTime'], params['maxTime'])
 
@@ -430,9 +427,9 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
-	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+        params = self.process_parameters(params)
+        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
         db_ret = self.metrics_dbi.aggr_user_narratives_ws_wsobjs(params['minTime'], params['maxTime'])
 
@@ -442,19 +439,19 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
-	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+        params = self.process_parameters(params)
+        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
         db_ret = self.metrics_dbi.aggr_user_numObjs(params['minTime'], params['maxTime'])
 
         return {'metrics_result': db_ret}
 
     def get_user_job_states(self, requesting_user, params, token):
-	'''
-	return a list of the following structure:
+        '''
+        return a list of the following structure:
         [
-	 {'app_id': u'kb_Metrics/refseq_genome_counts',
+         {'app_id': u'kb_Metrics/refseq_genome_counts',
           'canceled': 0,
           'creation_time': 1510159439977,
           'error': 0,
@@ -476,238 +473,238 @@ class MetricsMongoDBController:
                         None],
           'user_id': u'qzhang',
           'wsid': 25735},
-	}
-	'''
-	params = self.process_parameters(params)
+        }
+        '''
+        params = self.process_parameters(params)
         if not self.is_admin(requesting_user):
             #raise ValueError('You do not have permission to view this data.')
             #print(requesting_user + ': You have permission to view ONLY your jobs.')
-	    params['user_ids'] = [requesting_user]
+            params['user_ids'] = [requesting_user]
 
-	return self.get_jobdata_from_ws_exec_ujs(params, token)
+        return self.get_jobdata_from_ws_exec_ujs(params, token)
 
 
     def get_jobdata_from_metrics(self, params, token):
-	"""
-	get_jobdata_from_metrics--The implementation to get data for appcatalog
-	from querying the designated mongodb 'metrics'
-	"""
+        """
+        get_jobdata_from_metrics--The implementation to get data for appcatalog
+        from querying the designated mongodb 'metrics'
+        """
 
-	#get the ws_narrative data for lookups
-	#ws_narratives = self.metrics_dbi.list_ws_narratives()
-	ws_narrs = copy.deepcopy(self.ws_narratives)
+        #get the ws_narrative data for lookups
+        #ws_narratives = self.metrics_dbi.list_ws_narratives()
+        ws_narrs = copy.deepcopy(self.ws_narratives)
 
 
     def get_jobdata_from_ws_exec_ujs(self, params, token):
-	"""
-	get_jobdata_from_ws_exec_ujs--The original implementation to get data for appcatalog
-	from querying execution_engine, catalog, workspace and userjobstate
-	----------------------
-	To get the job's 'status', 'complete'=true/false, etc., we can do joining as follows
-	--userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
-	To join exec_engine.exec_apps with exec_engine.exec_tasks:
-	--exec_apps['app_job_id']==exec_tasks['app_job_id']
-	To join exec_engine.exec_apps with ujs.jobstate:
-	--ObjectId(exec_apps.app_job_state['job_id'])==jobstate['_id']
-	"""
+        """
+        get_jobdata_from_ws_exec_ujs--The original implementation to get data for appcatalog
+        from querying execution_engine, catalog, workspace and userjobstate
+        ----------------------
+        To get the job's 'status', 'complete'=true/false, etc., we can do joining as follows
+        --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
+        To join exec_engine.exec_apps with exec_engine.exec_tasks:
+        --exec_apps['app_job_id']==exec_tasks['app_job_id']
+        To join exec_engine.exec_apps with ujs.jobstate:
+        --ObjectId(exec_apps.app_job_state['job_id'])==jobstate['_id']
+        """
 
-	# 0. get the ws_narrative and client_groups data for lookups
-	if self.ws_narratives is None:
-	    self.ws_narratives = self.metrics_dbi.list_ws_narratives()
-	if self.client_groups is None:
-	    self.client_groups = self.get_client_groups_from_cat(token)
+        # 0. get the ws_narrative and client_groups data for lookups
+        if self.ws_narratives is None:
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+        if self.client_groups is None:
+            self.client_groups = self.get_client_groups_from_cat(token)
 
-	# 1. query dbs to get lists of tasks and jobs
+        # 1. query dbs to get lists of tasks and jobs
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
 
         exec_apps = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
 
-	ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
-	ujs_jobs = self.convert_isodate_to_millis(ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
+        ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
+        ujs_jobs = self.convert_isodate_to_millis(ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
         return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs)}
 
 
     def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs):
-	"""
-	combine/join the apps, tasks and jobs lists to get the final return data
-	"""
-	# 1) combine/join the apps and tasks to get the app_task_list
-	app_task_list = []
-	for t in exec_tasks:
-	    ta = copy.deepcopy(t)
-	    for a in exec_apps:
-		if (('app_job_id' in t and a['app_job_id'] == t['app_job_id']) or
-		    ('ujs_job_id' in t and a['app_job_id'] == t['ujs_job_id'])):
-		    ta['job_state'] = a['app_job_state']
-	    app_task_list.append(ta)
+        """
+        combine/join the apps, tasks and jobs lists to get the final return data
+        """
+        # 1) combine/join the apps and tasks to get the app_task_list
+        app_task_list = []
+        for t in exec_tasks:
+            ta = copy.deepcopy(t)
+            for a in exec_apps:
+                if (('app_job_id' in t and a['app_job_id'] == t['app_job_id']) or
+                        ('ujs_job_id' in t and a['app_job_id'] == t['ujs_job_id'])):
+                    ta['job_state'] = a['app_job_state']
+            app_task_list.append(ta)
 
-	# 2) combine/join app_task_list with ujs_jobs list to get the final return data
-	ujs_ret = []
-	for j in ujs_jobs:
-	    u_j_s = copy.deepcopy(j)
-	    u_j_s['job_id'] = str(u_j_s['_id'])
- 	    del u_j_s['_id']	    
-	    u_j_s['creation_time'] = j['created']
-	    if 'started' in j:
-		u_j_s['exec_start_time'] = j['started']
-	    u_j_s['modification_time'] = j['updated']
-	    u_j_s['estcompl'] = j.get('estcompl', None)
-	    u_j_s['time_info'] = [u_j_s['creation_time'], u_j_s['modification_time'], u_j_s['estcompl']]
-	    if not u_j_s.get('authstrat', None) is None:
-		if u_j_s.get('authstrat', None) == 'kbaseworkspace':
-		    u_j_s['wsid'] = u_j_s['authparam']
-	    if not u_j_s.get('desc', None) is None:
-		desc = u_j_s['desc'].split()[-1]
-		if '.' in desc:
-		    u_j_s['method'] = desc
+        # 2) combine/join app_task_list with ujs_jobs list to get the final return data
+        ujs_ret = []
+        for j in ujs_jobs:
+            u_j_s = copy.deepcopy(j)
+            u_j_s['job_id'] = str(u_j_s['_id'])
+            del u_j_s['_id']
+            u_j_s['creation_time'] = j['created']
+            if 'started' in j:
+                u_j_s['exec_start_time'] = j['started']
+            u_j_s['modification_time'] = j['updated']
+            u_j_s['estcompl'] = j.get('estcompl', None)
+            u_j_s['time_info'] = [u_j_s['creation_time'], u_j_s['modification_time'], u_j_s['estcompl']]
+            if not u_j_s.get('authstrat', None) is None:
+                if u_j_s.get('authstrat', None) == 'kbaseworkspace':
+                    u_j_s['wsid'] = u_j_s['authparam']
+            if not u_j_s.get('desc', None) is None:
+                desc = u_j_s['desc'].split()[-1]
+                if '.' in desc:
+                    u_j_s['method'] = desc
 
-	    # Assuming complete, error and status all exist in the records returned
-	    if j['complete'] == True:
-		if j['error'] == False:
-		    u_j_s['job_state'] = 'completed'
-		else: 
-		    u_j_s['job_state'] = 'suspend' 
-	    else:
-		if j['error'] == False:
-		    if j['status'] == "Initializing" or j['status'] == 'queued':
-		        u_j_s['job_state'] = j['status']
-		    elif 'canceled' in j['status'] or 'cancelled' in j['status']: 
-		        u_j_s['job_state'] = 'canceled' 
-		    elif 'started' in j: 
-		        u_j_s['job_state'] = 'in-progress' 
-		    elif j['created'] == j['updated']:
-			u_j_s['job_state'] = 'not-started' 
-		    elif j['created'] < j['updated'] and 'started' not in j:
-			u_j_s['job_state'] = 'queued'
-		    else:
-			u_j_s['job_state'] = 'unknown'
+            # Assuming complete, error and status all exist in the records returned
+            if j['complete'] == True:
+                if j['error'] == False:
+                    u_j_s['job_state'] = 'completed'
+                else:
+                    u_j_s['job_state'] = 'suspend'
+            else:
+                if j['error'] == False:
+                    if j['status'] == "Initializing" or j['status'] == 'queued':
+                        u_j_s['job_state'] = j['status']
+                    elif 'canceled' in j['status'] or 'cancelled' in j['status']:
+                        u_j_s['job_state'] = 'canceled'
+                    elif 'started' in j:
+                        u_j_s['job_state'] = 'in-progress'
+                    elif j['created'] == j['updated']:
+                        u_j_s['job_state'] = 'not-started'
+                    elif j['created'] < j['updated'] and 'started' not in j:
+                        u_j_s['job_state'] = 'queued'
+                    else:
+                        u_j_s['job_state'] = 'unknown'
 
-	    for lat in app_task_list:
-		if ObjectId(lat['ujs_job_id']) == j['_id']:
-		    if 'job_state' not in u_j_s:
-			u_j_s['job_state'] = lat['job_state']
+            for lat in app_task_list:
+                if ObjectId(lat['ujs_job_id']) == j['_id']:
+                    if 'job_state' not in u_j_s:
+                        u_j_s['job_state'] = lat['job_state']
 
-		    if 'job_input' in lat:
-			u_j_s['job_input'] = lat['job_input']
-			if u_j_s.get('app_id', None) is None:
-			    u_j_s['app_id'] = self.parse_app_id(lat)
+                    if 'job_input' in lat:
+                        u_j_s['job_input'] = lat['job_input']
+                        if u_j_s.get('app_id', None) is None:
+                            u_j_s['app_id'] = self.parse_app_id(lat)
 
-			if u_j_s.get('method', None) is None:
-			    u_j_s['method'] = self.parse_method(lat)
+                        if u_j_s.get('method', None) is None:
+                            u_j_s['method'] = self.parse_method(lat)
 
-			if u_j_s.get('wsid', None) is None:
-			    if 'wsid' in lat['job_input']:
-				u_j_s['wsid'] = lat['job_input']['wsid']
-			    elif 'params' in lat['job_input']:
-				if 'ws_id' in lat['job_input']['params']:
-				    u_j_s['wsid'] = lat['job_input']['params']['ws_id']
-				if 'workspace' in lat['job_input']['params']:
-				    u_j_s['workspace_name'] = lat['job_input']['params']['workspace']
-				elif 'workspace_name' in lat['job_input']['params']:
-				    u_j_s['workspace_name'] = lat['job_input']['params']['workspace_name']
+                        if u_j_s.get('wsid', None) is None:
+                            if 'wsid' in lat['job_input']:
+                                u_j_s['wsid'] = lat['job_input']['wsid']
+                            elif 'params' in lat['job_input']:
+                                if 'ws_id' in lat['job_input']['params']:
+                                    u_j_s['wsid'] = lat['job_input']['params']['ws_id']
+                                if 'workspace' in lat['job_input']['params']:
+                                    u_j_s['workspace_name'] = lat['job_input']['params']['workspace']
+                                elif 'workspace_name' in lat['job_input']['params']:
+                                    u_j_s['workspace_name'] = lat['job_input']['params']['workspace_name']
 
-		    if 'job_output' in lat:
-			u_j_s['job_output'] = lat['job_output']
+                    if 'job_output' in lat:
+                        u_j_s['job_output'] = lat['job_output']
 
-	    if (u_j_s.get('app_id', None) is None and
-		not u_j_s.get('method', None) is None):
-		    u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
+            if (u_j_s.get('app_id', None) is None and
+                    not u_j_s.get('method', None) is None):
+                u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
 
-	    #get the narrative name and version if any
-	    if not u_j_s.get('wsid', None) is None:
-		n_nm, n_obj = self.map_narrative(u_j_s['wsid'], self.ws_narratives) 
-		if n_nm != "" and n_obj != 0:
-		    u_j_s['narrative_name'] = n_nm
-		    u_j_s['narrative_objNo'] = n_obj  
+            #get the narrative name and version if any
+            if not u_j_s.get('wsid', None) is None:
+                n_nm, n_obj = self.map_narrative(u_j_s['wsid'], self.ws_narratives)
+                if n_nm != "" and n_obj != 0:
+                    u_j_s['narrative_name'] = n_nm
+                    u_j_s['narrative_objNo'] = n_obj
 
-	    #get some info from the client groups
-	    u_j_s['client_groups'] = ['njs']#default client groups to 'njs'
-	    for clnt in self.client_groups:
-		clnt_app_id = clnt['app_id']
-		if ('app_id' in u_j_s and 
-			str(clnt_app_id).lower() == str(u_j_s['app_id']).lower()):
-		    u_j_s['client_groups'] = clnt['client_groups']
-		    break
+            #get some info from the client groups
+            u_j_s['client_groups'] = ['njs']#default client groups to 'njs'
+            for clnt in self.client_groups:
+                clnt_app_id = clnt['app_id']
+                if ('app_id' in u_j_s and
+                    str(clnt_app_id).lower() == str(u_j_s['app_id']).lower()):
+                    u_j_s['client_groups'] = clnt['client_groups']
+                    break
 
-	    #set the run/running/in_queue time
-	    if u_j_s['job_state'] == 'completed' or u_j_s['job_state'] == 'suspend':
-		u_j_s['finish_time'] = u_j_s['modification_time']
-		u_j_s['run_time'] = u_j_s['finish_time'] - u_j_s['exec_start_time']
-	    elif u_j_s['job_state'] == 'in-progress': 
-		u_j_s['running_time'] = u_j_s['modification_time'] - u_j_s['exec_start_time']
-	    elif u_j_s['job_state'] == 'queued': 
-		u_j_s['time_in_queue'] = u_j_s['modification_time'] - u_j_s['creation_time']
+            #set the run/running/in_queue time
+            if u_j_s['job_state'] == 'completed' or u_j_s['job_state'] == 'suspend':
+                u_j_s['finish_time'] = u_j_s['modification_time']
+                u_j_s['run_time'] = u_j_s['finish_time'] - u_j_s['exec_start_time']
+            elif u_j_s['job_state'] == 'in-progress':
+                u_j_s['running_time'] = u_j_s['modification_time'] - u_j_s['exec_start_time']
+            elif u_j_s['job_state'] == 'queued':
+                u_j_s['time_in_queue'] = u_j_s['modification_time'] - u_j_s['creation_time']
 
-	    ujs_ret.append(u_j_s)
-	return ujs_ret
+            ujs_ret.append(u_j_s)
+        return ujs_ret
 
     def parse_app_id(self, lat):
-	app_id = ''
-	if 'app_id' in lat['job_input']:
-	    if '/' in lat['job_input']['app_id']:
-		app_id = lat['job_input']['app_id']
-	    elif '.' in lat['job_input']['app_id']:
-		app_id = lat['job_input']['app_id'].replace('.', '/')
-	    else:
-		app_id = lat['job_input']['app_id']
+        app_id = ''
+        if 'app_id' in lat['job_input']:
+            if '/' in lat['job_input']['app_id']:
+                app_id = lat['job_input']['app_id']
+            elif '.' in lat['job_input']['app_id']:
+                app_id = lat['job_input']['app_id'].replace('.', '/')
+            else:
+                app_id = lat['job_input']['app_id']
 
-	return app_id
+        return app_id
 
     def parse_method(self, lat):
-	method_id = ''
-	if 'method' in lat['job_input']:
-	    if '.' in lat['job_input']['method']:
-		method_id = lat['job_input']['method']
-	    elif '/' in lat['job_input']['method']:
-		method_id = lat['job_input']['method'].replace('/', '.')
-	    else:
-		method_id = lat['job_input']['method']
+        method_id = ''
+        if 'method' in lat['job_input']:
+            if '.' in lat['job_input']['method']:
+                method_id = lat['job_input']['method']
+            elif '/' in lat['job_input']['method']:
+                method_id = lat['job_input']['method'].replace('/', '.')
+            else:
+                method_id = lat['job_input']['method']
 
-	return method_id
+        return method_id
 
     def map_narrative(self, wsid, ws_narratives):
-	"""
-	get the narrative name and version
-	"""
-	n_name = ''
-	n_obj = 0
-	ws_name = ''
-	ws_owner = ''
-	for ws in ws_narratives:
-	    if str(ws['workspace_id']) == str(wsid):
-		ws_name = ws['name']
-		ws_owner = ws['username']
-		n_name = ws_name
-		if not ws.get('meta', None) is None:
-		    w_meta = ws['meta']
-		    for w_m in w_meta:
-			if w_m['k'] == 'narrative':
-			    n_obj = w_m['v']
-			elif w_m['k'] == 'narrative_nice_name':
-			    n_name = w_m['v']
-			else:
-			    pass
-		break
-	return (n_name, n_obj)
+        """
+        get the narrative name and version
+        """
+        n_name = ''
+        n_obj = 0
+        ws_name = ''
+        ws_owner = ''
+        for ws in ws_narratives:
+            if str(ws['workspace_id']) == str(wsid):
+                ws_name = ws['name']
+                ws_owner = ws['username']
+                n_name = ws_name
+                if not ws.get('meta', None) is None:
+                    w_meta = ws['meta']
+                    for w_m in w_meta:
+                        if w_m['k'] == 'narrative':
+                            n_obj = w_m['v']
+                        elif w_m['k'] == 'narrative_nice_name':
+                            n_name = w_m['v']
+                        else:
+                            pass
+                break
+        return (n_name, n_obj)
 
     def get_ujs_results(self, requesting_user, params, token):
-	params = self.process_parameters(params)
+        params = self.process_parameters(params)
         if not self.is_admin(requesting_user):
-	    #print(requesting_user + ': You have permission to view ONLY your jobs.')
-	    params['user_ids'] = [requesting_user]
-	
-	db_ret = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
-	for dr in db_ret:
-	    dr['_id'] = str(dr['_id'])
-	db_ret = self.convert_isodate_to_millis(db_ret, ['created', 'started', 'updated', 'estcompl'])
-	
+            #print(requesting_user + ': You have permission to view ONLY your jobs.')
+            params['user_ids'] = [requesting_user]
+
+        db_ret = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
+        for dr in db_ret:
+            dr['_id'] = str(dr['_id'])
+        db_ret = self.convert_isodate_to_millis(db_ret, ['created', 'started', 'updated', 'estcompl'])
+
         return {'metrics_result': db_ret}
 
     def get_exec_apps(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
+        params = self.process_parameters(params)
 
         db_ret = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
 
@@ -717,7 +714,7 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
+        params = self.process_parameters(params)
 
         db_ret = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
 
@@ -727,13 +724,13 @@ class MetricsMongoDBController:
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-	params = self.process_parameters(params)
+        params = self.process_parameters(params)
 
         db_ret = self.metrics_dbi.aggr_user_details(params['user_ids'], params['minTime'], params['maxTime'])
-	if len(db_ret) == 0:
-	    print("No records returned!")
-	else:
-	    db_ret = self.convert_isodate_to_millis(db_ret, ['signup_at', 'last_signin_at'])
+        if len(db_ret) == 0:
+            print("No records returned!")
+        else:
+            db_ret = self.convert_isodate_to_millis(db_ret, ['signup_at', 'last_signin_at'])
         return {'metrics_result': db_ret}
 
     def process_parameters(self, params):
@@ -742,26 +739,26 @@ class MetricsMongoDBController:
         else:
             if not isinstance(params['user_ids'], list):
                 raise ValueError('Variable user_ids' + ' must be a list.')
-	if 'kbasetest' in params['user_ids']:
-		params['user_ids'].remove('kbasetest')
+        if 'kbasetest' in params['user_ids']:
+            params['user_ids'].remove('kbasetest')
 
         if not params.get('epoch_range', None) is None:
             start_time, end_time = params['epoch_range']
-	    if (not start_time is None and not end_time is None):
-		start_time = _convert_to_datetime(start_time)
-		end_time = _convert_to_datetime(end_time)
-		params['minTime'] = _unix_time_millis_from_datetime(start_time)
-		params['maxTime'] = _unix_time_millis_from_datetime(end_time)
-	    elif (not start_time is None and end_time is None):
-		start_time = _convert_to_datetime(start_time)
-		end_time = start_time + datetime.timedelta(hours=48)
-		params['minTime'] = _unix_time_millis_from_datetime(start_time)
-		params['maxTime'] = _unix_time_millis_from_datetime(end_time)
-	    elif (start_time is None and not end_time is None):
-		end_time = _convert_to_datetime(end_time)
-		start_time = end_time - datetime.timedelta(hours=48)
-		params['minTime'] = _unix_time_millis_from_datetime(start_time)
-		params['maxTime'] = _unix_time_millis_from_datetime(end_time)
+            if (not start_time is None and not end_time is None):
+                start_time = _convert_to_datetime(start_time)
+                end_time = _convert_to_datetime(end_time)
+                params['minTime'] = _unix_time_millis_from_datetime(start_time)
+                params['maxTime'] = _unix_time_millis_from_datetime(end_time)
+            elif (not start_time is None and end_time is None):
+                start_time = _convert_to_datetime(start_time)
+                end_time = start_time + datetime.timedelta(hours=48)
+                params['minTime'] = _unix_time_millis_from_datetime(start_time)
+                params['maxTime'] = _unix_time_millis_from_datetime(end_time)
+            elif (start_time is None and not end_time is None):
+                end_time = _convert_to_datetime(end_time)
+                start_time = end_time - datetime.timedelta(hours=48)
+                params['minTime'] = _unix_time_millis_from_datetime(start_time)
+                params['maxTime'] = _unix_time_millis_from_datetime(end_time)
         else: #set the most recent 48 hours range
             end_time = datetime.datetime.utcnow()
             start_time = end_time - datetime.timedelta(hours=48)
@@ -781,7 +778,7 @@ class MetricsMongoDBController:
             u'module_name': u'AssemblyRAST'},
         }
         """
-	#initialize client(s) for accessing other services
+        #initialize client(s) for accessing other services
         self.cat_client = Catalog(self.catalog_url,
 				auth_svc=self.auth_service_url, token=token)
         # Pull the data
@@ -806,11 +803,11 @@ class MetricsMongoDBController:
         return False
 
     def convert_isodate_to_millis(self, src_list, dt_list):
-	for dr in src_list:
-	    for dt in dt_list:
-		if (dt in dr and isinstance(dr[dt], datetime.datetime)):
-        	    dr[dt] = _unix_time_millis_from_datetime(dr[dt])#dr[dt].__str__()
-	return src_list
+        for dr in src_list:
+            for dt in dt_list:
+                if (dt in dr and isinstance(dr[dt], datetime.datetime)):
+                    dr[dt] = _unix_time_millis_from_datetime(dr[dt])#dr[dt].__str__()
+        return src_list
 
 ## utility functions
 
