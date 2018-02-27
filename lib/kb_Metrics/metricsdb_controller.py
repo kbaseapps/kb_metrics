@@ -336,10 +336,10 @@ class MetricsMongoDBController:
                 wn[u'nice_name'] = ''
                 if not wn.get('meta', None) is None:
                     w_meta = wn['meta']
-                for w_m in w_meta:
-                    if w_m['k'] == 'narrative_nice_name':
-                        wn[u'nice_name'] = w_m['v']
-                        del wn['meta']
+                    for w_m in w_meta:
+                        if w_m['k'] == 'narrative_nice_name':
+                            wn[u'nice_name'] = w_m['v']
+                    del wn['meta']
             ws_narrs1.append(wn)
 
         return {'metrics_result': ws_narrs1}
