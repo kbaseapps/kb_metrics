@@ -322,11 +322,11 @@ class MetricsMongoDBController:
                     elif ':' in wn['name']:
                         wts = wn['name'].split(':')[1]
                         p = re.compile(wts, re.IGNORECASE)
-                    if p.search(obj['object_name']):
-                        wn[u'object_id'] = obj['object_id']
-                        wn[u'object_version'] = obj['object_version']
-                        wn[u'latest'] = obj['latest']
-                        break
+                        if p.search(obj['object_name']):
+                            wn[u'object_id'] = obj['object_id']
+                            wn[u'object_version'] = obj['object_version']
+                            wn[u'latest'] = obj['latest']
+                            break
 
         for wn in ws_narrs:
             if not wn.get('object_id', None) is None:
