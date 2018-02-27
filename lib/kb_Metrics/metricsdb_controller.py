@@ -75,11 +75,20 @@ class MetricsMongoDBController:
 	self.auth_service_url = config['auth-service-url']
 	self.catalog_url = config['kbase-endpoint'] + '/catalog'
 
+	# commonly used data
+	self.ws_narratives = None
+	self.client_groups = None
 
     ## function(s) to update the metrics db
     def update_metrics(self, requesting_user, params, token):
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
+
+	# 0. get the ws_narrative and client_groups data for lookups
+	if self.ws_narratives is None:
+	    self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+	if self.client_groups is None:
+	    self.client_groups = self.get_client_groups_from_cat(token)
 
 	# 1. update users
 	action_result1 = self.update_user_info(requesting_user, params, token)
@@ -302,7 +311,8 @@ class MetricsMongoDBController:
 	params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
 	params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-	ws_narrs = self.metrics_dbi.list_ws_narratives()
+	#ws_narrs = self.metrics_dbi.list_ws_narratives()
+	ws_narrs = copy.deepcopy(self.ws_narratives)
 	wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(params['minTime'], params['maxTime'])
 
 	ws_narrs1 = []
@@ -442,12 +452,6 @@ class MetricsMongoDBController:
 
     def get_user_job_states(self, requesting_user, params, token):
 	'''
-	To get the job's 'status', 'complete'=true/false, etc., we can do joining as follows
-	--userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
-	To join exec_engine.exec_apps with exec_engine.exec_tasks:
-	--exec_apps['app_job_id']==exec_tasks['app_job_id']
-	To join exec_engine.exec_apps with ujs.jobstate:
-	--ObjectId(exec_apps.app_job_state['job_id'])==jobstate['_id']
 	return a list of the following structure:
         [
 	 {'app_id': u'kb_Metrics/refseq_genome_counts',
@@ -480,23 +484,50 @@ class MetricsMongoDBController:
             #print(requesting_user + ': You have permission to view ONLY your jobs.')
 	    params['user_ids'] = [requesting_user]
 
-	#get the ws_narrative data for lookups
-	ws_narratives = self.metrics_dbi.list_ws_narratives()
+	return self.get_jobdata_from_ws_exec_ujs(params, token)
 
-	# query dbs to get lists of tasks and jobs
+
+    def get_jobdata_from_metrics(self, params, token):
+	"""
+	get_jobdata_from_metrics--The implementation to get data for appcatalog
+	from querying the designated mongodb 'metrics'
+	"""
+
+	#get the ws_narrative data for lookups
+	#ws_narratives = self.metrics_dbi.list_ws_narratives()
+	ws_narrs = copy.deepcopy(self.ws_narratives)
+
+
+    def get_jobdata_from_ws_exec_ujs(self, params, token):
+	"""
+	get_jobdata_from_ws_exec_ujs--The original implementation to get data for appcatalog
+	from querying execution_engine, catalog, workspace and userjobstate
+	----------------------
+	To get the job's 'status', 'complete'=true/false, etc., we can do joining as follows
+	--userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
+	To join exec_engine.exec_apps with exec_engine.exec_tasks:
+	--exec_apps['app_job_id']==exec_tasks['app_job_id']
+	To join exec_engine.exec_apps with ujs.jobstate:
+	--ObjectId(exec_apps.app_job_state['job_id'])==jobstate['_id']
+	"""
+
+	# 0. get the ws_narrative and client_groups data for lookups
+	if self.ws_narratives is None:
+	    self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+	if self.client_groups is None:
+	    self.client_groups = self.get_client_groups_from_cat(token)
+
+	# 1. query dbs to get lists of tasks and jobs
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
 
         exec_apps = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
 
 	ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
 	ujs_jobs = self.convert_isodate_to_millis(ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
-	clnt_groups = self.get_client_groups_from_cat(token)
-
-        return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs, 
-							clnt_groups,ws_narratives)}
+        return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs)}
 
 
-    def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs, c_groups, ws_narratives):
+    def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs):
 	"""
 	combine/join the apps, tasks and jobs lists to get the final return data
 	"""
@@ -584,21 +615,19 @@ class MetricsMongoDBController:
 
 	    #get the narrative name and version if any
 	    if not u_j_s.get('wsid', None) is None:
-		n_nm, n_obj = self.map_narrative(u_j_s['wsid'], ws_narratives) 
+		n_nm, n_obj = self.map_narrative(u_j_s['wsid'], self.ws_narratives) 
 		if n_nm != "" and n_obj != 0:
 		    u_j_s['narrative_name'] = n_nm
 		    u_j_s['narrative_objNo'] = n_obj  
 
 	    #get some info from the client groups
-	    for clnt in c_groups:
+	    u_j_s['client_groups'] = ['njs']#default client groups to 'njs'
+	    for clnt in self.client_groups:
 		clnt_app_id = clnt['app_id']
 		if ('app_id' in u_j_s and 
 			str(clnt_app_id).lower() == str(u_j_s['app_id']).lower()):
 		    u_j_s['client_groups'] = clnt['client_groups']
 		    break
-	    #default client groups to 'njs'
-	    if u_j_s.get('client_groups', None) is None:
-		u_j_s['client_groups'] = ['njs']
 
 	    #set the run/running/in_queue time
 	    if u_j_s['job_state'] == 'completed' or u_j_s['job_state'] == 'suspend':
