@@ -1,23 +1,18 @@
 import warnings
-import threading
 import time
 import datetime
 import copy
-import os
-import random
 import re
-import uuid
-import codecs
 from bson.objectid import ObjectId
 
-from pprint import pprint, pformat
 from kb_Metrics.metricsDBs import MongoMetricsDBI
 from Catalog.CatalogClient import Catalog
+
 
 class MetricsMongoDBController:
 
     def __init__(self, config):
-        #print("initializing mdb......")
+        # print("initializing mdb......")
         # first grab the admin/kbstaff lists
         self.adminList = []
         if 'admin-users' in config:
@@ -45,10 +40,12 @@ class MetricsMongoDBController:
                     self.kbstaffList.append(k_id.strip())
 
         # make sure the minimal mongo settings are in place
-        if 'mongodb-host' not in config: # pragma: no cover
-            raise ValueError('"mongodb-host" config variable must be defined to start a MetricsMongoDBController!')
-        if 'mongodb-databases' not in config: # pragma: no cover
-            raise ValueError('"mongodb-databases" config variable must be defined to start a MetricsMongoDBController!')
+        if 'mongodb-host' not in config:  # pragma: no cover
+            raise ValueError(
+                '"mongodb-host" config variable must be defined to start a MetricsMongoDBController!')
+        if 'mongodb-databases' not in config:  # pragma: no cover
+            raise ValueError(
+                '"mongodb-databases" config variable must be defined to start a MetricsMongoDBController!')
         self.mongodb_dbList = []
         if 'mongodb-databases' in config:
             db_ids = config['mongodb-databases'].split(',')
@@ -58,19 +55,19 @@ class MetricsMongoDBController:
         if not self.mongodb_dbList:  # pragma: no cover
             warnings.warn('no "mongodb-databases" are set in config of MetricsMongoDBController.')
         # give warnings if no mongo user information is set
-        if 'mongodb-user' not in config: # pragma: no cover
+        if 'mongodb-user' not in config:  # pragma: no cover
             warnings.warn('"mongodb-user" is not set in config of MetricsMongoDBController.')
-            config['mongodb-user']=''
-            config['mongodb-pwd']=''
-        if 'mongodb-pwd' not in config: # pragma: no cover
+            config['mongodb-user'] = ''
+            config['mongodb-pwd'] = ''
+        if 'mongodb-pwd' not in config:  # pragma: no cover
             warnings.warn('"mongodb-pwd" is not set in config of MetricsMongoDBController.')
-            config['mongodb-pwd']=''
+            config['mongodb-pwd'] = ''
         # instantiate the mongo client
         self.metrics_dbi = MongoMetricsDBI(
-                config['mongodb-host'],
-                self.mongodb_dbList,
-                config['mongodb-user'],
-                config['mongodb-pwd'])
+            config['mongodb-host'],
+            self.mongodb_dbList,
+            config['mongodb-user'],
+            config['mongodb-pwd'])
         # for access to the Catalog API
         self.auth_service_url = config['auth-service-url']
         self.catalog_url = config['kbase-endpoint'] + '/catalog'
@@ -79,8 +76,7 @@ class MetricsMongoDBController:
         self.ws_narratives = None
         self.client_groups = None
 
-
-    ## function(s) to update the metrics db
+    # function(s) to update the metrics db
     def update_metrics(self, requesting_user, params, token):
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
@@ -100,9 +96,9 @@ class MetricsMongoDBController:
         # 3. update narratives
         action_result3 = self.update_narratives(requesting_user, params, token)
 
-        return {'metrics_result':{'user_updates': action_result1,
-                'activity_updates': action_result2,
-                'narrative_updates': action_result3}}
+        return {'metrics_result': {'user_updates': action_result1,
+                                   'activity_updates': action_result2,
+                                   'narrative_updates': action_result3}}
 
     def update_user_info(self, requesting_user, params, token):
         """
@@ -110,12 +106,13 @@ class MetricsMongoDBController:
         If match not found, insert that record as new.
         """
         if not self.is_metrics_admin(requesting_user):
-                raise ValueError('You do not have permission to invoke this action.')
+            raise ValueError('You do not have permission to invoke this action.')
 
         params = self.process_parameters(params)
-        ##TODO: set the param['minTime'] and param['maxTime'] to a given time window,
-        ##such as most current 24 hours instead of 48 hours as for others.
-        auth2_ret = self.metrics_dbi.aggr_user_details(params['user_ids'], params['minTime'], params['maxTime'])
+        # TODO: set the param['minTime'] and param['maxTime'] to a given time window,
+        # such as most current 24 hours instead of 48 hours as for others.
+        auth2_ret = self.metrics_dbi.aggr_user_details(
+            params['user_ids'], params['minTime'], params['maxTime'])
         updData = 0
         if len(auth2_ret) == 0:
             print("No user records returned for update!")
@@ -133,7 +130,6 @@ class MetricsMongoDBController:
         updData += update_ret.raw_result['nModified']
 
         return updData
-
 
     def update_daily_activities(self, requesting_user, params, token):
         """
@@ -178,7 +174,7 @@ class MetricsMongoDBController:
 
         print('Retrieved activities of {} record(s)'.format(len(act_list)))
 
-        for al in act_list:#set default for inserting records at the first time
+        for al in act_list:  # set default for inserting records at the first time
             al['recordLastUpdated'] = datetime.datetime.utcnow()
 
         try:
@@ -188,7 +184,6 @@ class MetricsMongoDBController:
             return {'metrics_result': e}
         else:
             return {'metrics_result': insert_ret}
-
 
     def insert_narratives(self, requesting_user, params, token):
         """
@@ -206,7 +201,7 @@ class MetricsMongoDBController:
             return {'metrics_result': []}
 
         print('Retrieved narratives of {} record(s)'.format(len(narr_list)))
-        for wn in narr_list:#set default for inserting records at the first time
+        for wn in narr_list:  # set default for inserting records at the first time
             wn['recordLastUpdated'] = datetime.datetime.utcnow()
             if wn.get('first_access', None) is None:
                 wn[u'first_access'] = wn['last_saved_at']
@@ -237,7 +232,8 @@ class MetricsMongoDBController:
 
         print('Retrieved {} narratives record(s)'.format(len(narr_list)))
         idKeys = ['object_id', 'workspace_id']
-        otherKeys = ['name','last_saved_at','last_saved_by','numObj','deleted','object_version','nice_name','latest','desc']
+        otherKeys = ['name', 'last_saved_at', 'last_saved_by', 'numObj',
+                     'deleted', 'object_version', 'nice_name', 'latest', 'desc']
         for n_data in narr_list:
             filterByKey = lambda keys: {x: n_data[x] for x in keys}
             idData = filterByKey(idKeys)
@@ -247,10 +243,9 @@ class MetricsMongoDBController:
 
         return updData
 
-    ## End functions to write to the metrics database
+    # End functions to write to the metrics database
 
-
-    ## functions to get the requested records from metrics db...
+    # functions to get the requested records from metrics db...
     def get_active_users_counts(self, requesting_user, params, token, exclude_kbstaff=True):
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
@@ -258,16 +253,17 @@ class MetricsMongoDBController:
         params = self.process_parameters(params)
 
         if exclude_kbstaff:
-            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'],
-								self.kbstaffList)
+            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'],
+                                                                params['maxTime'],
+                                                                self.kbstaffList)
         else:
-            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'], params['maxTime'], [])
+            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(
+                params['minTime'], params['maxTime'], [])
 
         if len(mt_ret) == 0:
             print("No records returned!")
 
         return {'metrics_result': mt_ret}
-
 
     def get_user_details(self, requesting_user, params, token, exclude_kbstaff=False):
         if not self.is_metrics_admin(requesting_user):
@@ -275,31 +271,28 @@ class MetricsMongoDBController:
 
         params = self.process_parameters(params)
         mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'],
-						params['maxTime'], exclude_kbstaff)
+                                                params['maxTime'], exclude_kbstaff)
         if len(mt_ret) == 0:
             print("No records returned!")
         else:
             mt_ret = self.convert_isodate_to_millis(mt_ret, ['signup_at', 'last_signin_at'])
         return {'metrics_result': mt_ret}
 
-
     def get_activities(self, requesting_user, params, token):
-        ##TODO not yet pointing to the metrics db yet
+        # TODO not yet pointing to the metrics db yet
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
         return self.get_activities_from_wsobjs(requesting_user, params, token)
 
-
     def get_narratives(self, requesting_user, params, token):
-        ##TODO not yet pointing to the metrics db yet
+        # TODO not yet pointing to the metrics db yet
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
         return self.get_narratives_from_wsobjs(requesting_user, params, token)
 
-    ## End functions to get the requested records from metrics db
+    # End functions to get the requested records from metrics db
 
-
-    ## functions to get the requested records from other dbs...
+    # functions to get the requested records from other dbs...
     def get_narratives_from_wsobjs(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
@@ -308,9 +301,10 @@ class MetricsMongoDBController:
         params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
         params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        #ws_narrs = self.metrics_dbi.list_ws_narratives()
+        # ws_narrs = self.metrics_dbi.list_ws_narratives()
         ws_narrs = copy.deepcopy(self.ws_narratives)
-        wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(params['minTime'], params['maxTime'])
+        wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(
+            params['minTime'], params['maxTime'])
 
         ws_narrs1 = []
         for wn in ws_narrs:
@@ -353,7 +347,8 @@ class MetricsMongoDBController:
         params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
         params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        wsobjs_act = self.metrics_dbi.aggr_activities_from_wsobjs(params['minTime'], params['maxTime'])
+        wsobjs_act = self.metrics_dbi.aggr_activities_from_wsobjs(
+            params['minTime'], params['maxTime'])
         ws_owners = self.metrics_dbi.list_ws_owners()
 
         for wo in ws_owners:
@@ -361,7 +356,6 @@ class MetricsMongoDBController:
                 if wo['ws_id'] == obj['_id']['ws_id']:
                     obj['_id'][u'username'] = wo['username']
         return {'metrics_result': wsobjs_act}
-
 
     def get_activities_from_ws(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
@@ -431,7 +425,8 @@ class MetricsMongoDBController:
         params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
         params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        db_ret = self.metrics_dbi.aggr_user_narratives_ws_wsobjs(params['minTime'], params['maxTime'])
+        db_ret = self.metrics_dbi.aggr_user_narratives_ws_wsobjs(
+            params['minTime'], params['maxTime'])
 
         return {'metrics_result': db_ret}
 
@@ -477,23 +472,21 @@ class MetricsMongoDBController:
         '''
         params = self.process_parameters(params)
         if not self.is_admin(requesting_user):
-            #raise ValueError('You do not have permission to view this data.')
-            #print(requesting_user + ': You have permission to view ONLY your jobs.')
+            # raise ValueError('You do not have permission to view this data.')
+            # print(requesting_user + ': You have permission to view ONLY your jobs.')
             params['user_ids'] = [requesting_user]
 
         return self.get_jobdata_from_ws_exec_ujs(params, token)
 
+    # def get_jobdata_from_metrics(self, params, token):
+    #     """
+    #     get_jobdata_from_metrics--The implementation to get data for appcatalog
+    #     from querying the designated mongodb 'metrics'
+    #     """
 
-    def get_jobdata_from_metrics(self, params, token):
-        """
-        get_jobdata_from_metrics--The implementation to get data for appcatalog
-        from querying the designated mongodb 'metrics'
-        """
-
-        #get the ws_narrative data for lookups
-        #ws_narratives = self.metrics_dbi.list_ws_narratives()
-        ws_narrs = copy.deepcopy(self.ws_narratives)
-
+    #     # get the ws_narrative data for lookups
+    #     # ws_narratives = self.metrics_dbi.list_ws_narratives()
+    #     ws_narrs = copy.deepcopy(self.ws_narratives)
 
     def get_jobdata_from_ws_exec_ujs(self, params, token):
         """
@@ -519,10 +512,11 @@ class MetricsMongoDBController:
 
         exec_apps = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
 
-        ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
-        ujs_jobs = self.convert_isodate_to_millis(ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
+        ujs_jobs = self.metrics_dbi.list_ujs_results(
+            params['user_ids'], params['minTime'], params['maxTime'])
+        ujs_jobs = self.convert_isodate_to_millis(
+            ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
         return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs)}
-
 
     def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs):
         """
@@ -549,7 +543,8 @@ class MetricsMongoDBController:
                 u_j_s['exec_start_time'] = j['started']
             u_j_s['modification_time'] = j['updated']
             u_j_s['estcompl'] = j.get('estcompl', None)
-            u_j_s['time_info'] = [u_j_s['creation_time'], u_j_s['modification_time'], u_j_s['estcompl']]
+            u_j_s['time_info'] = [u_j_s['creation_time'],
+                                  u_j_s['modification_time'], u_j_s['estcompl']]
             if not u_j_s.get('authstrat', None) is None:
                 if u_j_s.get('authstrat', None) == 'kbaseworkspace':
                     u_j_s['wsid'] = u_j_s['authparam']
@@ -559,13 +554,13 @@ class MetricsMongoDBController:
                     u_j_s['method'] = desc
 
             # Assuming complete, error and status all exist in the records returned
-            if j['complete'] == True:
-                if j['error'] == False:
+            if j['complete']:
+                if not j['error']:
                     u_j_s['job_state'] = 'completed'
                 else:
                     u_j_s['job_state'] = 'suspend'
             else:
-                if j['error'] == False:
+                if not j['error']:
                     if j['status'] == "Initializing" or j['status'] == 'queued':
                         u_j_s['job_state'] = j['status']
                     elif 'canceled' in j['status'] or 'cancelled' in j['status']:
@@ -599,9 +594,11 @@ class MetricsMongoDBController:
                                 if 'ws_id' in lat['job_input']['params']:
                                     u_j_s['wsid'] = lat['job_input']['params']['ws_id']
                                 if 'workspace' in lat['job_input']['params']:
-                                    u_j_s['workspace_name'] = lat['job_input']['params']['workspace']
+                                    u_j_s['workspace_name'] = lat[
+                                        'job_input']['params']['workspace']
                                 elif 'workspace_name' in lat['job_input']['params']:
-                                    u_j_s['workspace_name'] = lat['job_input']['params']['workspace_name']
+                                    u_j_s['workspace_name'] = lat['job_input'][
+                                        'params']['workspace_name']
 
                     if 'job_output' in lat:
                         u_j_s['job_output'] = lat['job_output']
@@ -610,23 +607,23 @@ class MetricsMongoDBController:
                     not u_j_s.get('method', None) is None):
                 u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
 
-            #get the narrative name and version if any
+            # get the narrative name and version if any
             if not u_j_s.get('wsid', None) is None:
                 n_nm, n_obj = self.map_narrative(u_j_s['wsid'], self.ws_narratives)
                 if n_nm != "" and n_obj != 0:
                     u_j_s['narrative_name'] = n_nm
                     u_j_s['narrative_objNo'] = n_obj
 
-            #get some info from the client groups
-            u_j_s['client_groups'] = ['njs']#default client groups to 'njs'
+            # get some info from the client groups
+            u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
             for clnt in self.client_groups:
                 clnt_app_id = clnt['app_id']
                 if ('app_id' in u_j_s and
-                    str(clnt_app_id).lower() == str(u_j_s['app_id']).lower()):
+                        str(clnt_app_id).lower() == str(u_j_s['app_id']).lower()):
                     u_j_s['client_groups'] = clnt['client_groups']
                     break
 
-            #set the run/running/in_queue time
+            # set the run/running/in_queue time
             if u_j_s['job_state'] == 'completed' or u_j_s['job_state'] == 'suspend':
                 u_j_s['finish_time'] = u_j_s['modification_time']
                 u_j_s['run_time'] = u_j_s['finish_time'] - u_j_s['exec_start_time']
@@ -669,11 +666,11 @@ class MetricsMongoDBController:
         n_name = ''
         n_obj = 0
         ws_name = ''
-        ws_owner = ''
+        # ws_owner = ''
         for ws in ws_narratives:
             if str(ws['workspace_id']) == str(wsid):
                 ws_name = ws['name']
-                ws_owner = ws['username']
+                # ws_owner = ws['username']
                 n_name = ws_name
                 if not ws.get('meta', None) is None:
                     w_meta = ws['meta']
@@ -690,13 +687,15 @@ class MetricsMongoDBController:
     def get_ujs_results(self, requesting_user, params, token):
         params = self.process_parameters(params)
         if not self.is_admin(requesting_user):
-            #print(requesting_user + ': You have permission to view ONLY your jobs.')
+            # print(requesting_user + ': You have permission to view ONLY your jobs.')
             params['user_ids'] = [requesting_user]
 
-        db_ret = self.metrics_dbi.list_ujs_results(params['user_ids'], params['minTime'], params['maxTime'])
+        db_ret = self.metrics_dbi.list_ujs_results(
+            params['user_ids'], params['minTime'], params['maxTime'])
         for dr in db_ret:
             dr['_id'] = str(dr['_id'])
-        db_ret = self.convert_isodate_to_millis(db_ret, ['created', 'started', 'updated', 'estcompl'])
+        db_ret = self.convert_isodate_to_millis(
+            db_ret, ['created', 'started', 'updated', 'estcompl'])
 
         return {'metrics_result': db_ret}
 
@@ -726,7 +725,8 @@ class MetricsMongoDBController:
 
         params = self.process_parameters(params)
 
-        db_ret = self.metrics_dbi.aggr_user_details(params['user_ids'], params['minTime'], params['maxTime'])
+        db_ret = self.metrics_dbi.aggr_user_details(
+            params['user_ids'], params['minTime'], params['maxTime'])
         if len(db_ret) == 0:
             print("No records returned!")
         else:
@@ -759,13 +759,12 @@ class MetricsMongoDBController:
                 start_time = end_time - datetime.timedelta(hours=48)
                 params['minTime'] = _unix_time_millis_from_datetime(start_time)
                 params['maxTime'] = _unix_time_millis_from_datetime(end_time)
-        else: #set the most recent 48 hours range
+        else:  # set the most recent 48 hours range
             end_time = datetime.datetime.utcnow()
             start_time = end_time - datetime.timedelta(hours=48)
             params['minTime'] = _unix_time_millis_from_datetime(start_time)
             params['maxTime'] = _unix_time_millis_from_datetime(end_time)
         return params
-
 
     def get_client_groups_from_cat(self, token):
         """
@@ -778,12 +777,12 @@ class MetricsMongoDBController:
             u'module_name': u'AssemblyRAST'},
         }
         """
-        #initialize client(s) for accessing other services
+        # initialize client(s) for accessing other services
         self.cat_client = Catalog(self.catalog_url,
-				auth_svc=self.auth_service_url, token=token)
+                                  auth_svc=self.auth_service_url, token=token)
         # Pull the data
         client_groups = self.cat_client.get_client_groups({})
-        #log("\nClient group example:\n{}".format(pformat(client_groups[0])))
+        # log("\nClient group example:\n{}".format(pformat(client_groups[0])))
 
         return client_groups
 
@@ -806,25 +805,29 @@ class MetricsMongoDBController:
         for dr in src_list:
             for dt in dt_list:
                 if (dt in dr and isinstance(dr[dt], datetime.datetime)):
-                    dr[dt] = _unix_time_millis_from_datetime(dr[dt])#dr[dt].__str__()
+                    dr[dt] = _unix_time_millis_from_datetime(dr[dt])  # dr[dt].__str__()
         return src_list
 
-## utility functions
+# utility functions
+
 
 def _timestamp_from_utc(date_utc_str):
     dt = _datetime_from_utc(date_utc_str)
-    return int(time.mktime(dt.timetuple())) #in miliseconds
+    return int(time.mktime(dt.timetuple()))  # in miliseconds
+
 
 def _datetime_from_utc(date_utc_str):
-    try:#for u'2017-08-27T17:29:37+0000'
-        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S+0000')
-    except ValueError as v_er:#for ISO-formatted date & time, e.g., u'2015-02-15T22:31:47.763Z'
-        dt = datetime.datetime.strptime(date_utc_str,'%Y-%m-%dT%H:%M:%S.%fZ')
+    try:  # for u'2017-08-27T17:29:37+0000'
+        dt = datetime.datetime.strptime(date_utc_str, '%Y-%m-%dT%H:%M:%S+0000')
+    except ValueError:  # for ISO-formatted date & time, e.g., u'2015-02-15T22:31:47.763Z'
+        dt = datetime.datetime.strptime(date_utc_str, '%Y-%m-%dT%H:%M:%S.%fZ')
     return dt
+
 
 def _unix_time_millis_from_datetime(dt):
     epoch = datetime.datetime.utcfromtimestamp(0)
-    return int((dt - epoch).total_seconds()*1000)
+    return int((dt - epoch).total_seconds() * 1000)
+
 
 def _convert_to_datetime(dt):
     new_dt = dt
@@ -834,4 +837,3 @@ def _convert_to_datetime(dt):
         else:
             new_dt = _datetime_from_utc(dt)
     return new_dt
-
