@@ -98,8 +98,6 @@ class kb_MetricsTest(unittest.TestCase):
 
     def test_MetricsMongoDBController_process_parameters(self):
 
-        # 'user_ids': [],  # ['rhizorick'],#'user_ids': [],
-        # 'epoch_range': (u'2018-02-23T00:00:00+0000', u'2018-02-28T17:29:42+0000')
         # testing 'user_ids'
         user_list = ['user_1', 'user_2']
         params = {'user_ids': user_list}
