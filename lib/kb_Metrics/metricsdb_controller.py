@@ -4,70 +4,57 @@ import datetime
 import copy
 import re
 from bson.objectid import ObjectId
+from dateutil.parser import parse
 
 from kb_Metrics.metricsDBs import MongoMetricsDBI
 from Catalog.CatalogClient import Catalog
 
 
+def log(message, prefix_newline=False):
+    """Logging function, provides a hook to suppress or redirect log messages."""
+    print(('\n' if prefix_newline else '') + '{0:.2f}'.format(time.time()) + ': ' + str(message))
+
+
 class MetricsMongoDBController:
 
+    def _config_str_to_list(self, list_str):
+
+        user_list = list()
+        if list_str:
+            user_list = [x.strip() for x in list_str.split(',') if x.strip()]
+        else:
+            warnings.warn('no {} are set in config of MetricsMongoDBController'.format(list_str))
+
+        return user_list
+
     def __init__(self, config):
-        # print("initializing mdb......")
-        # first grab the admin/kbstaff lists
-        self.adminList = []
-        if 'admin-users' in config:
-            adm_ids = config['admin-users'].split(',')
-            for a_id in adm_ids:
-                if a_id.strip():
-                    self.adminList.append(a_id.strip())
-        if not self.adminList:  # pragma: no cover
-            warnings.warn('no "admin-users" are set in config of MetricsMongoDBController.')
 
-        self.metricsAdmins = []
-        if 'metrics-admins' in config:
-            madm_ids = config['metrics-admins'].split(',')
-            for m_id in madm_ids:
-                if m_id.strip():
-                    self.metricsAdmins.append(m_id.strip())
-        if not self.metricsAdmins:  # pragma: no cover
-            warnings.warn('no "metrics-admins" are set in config of MetricsMongoDBController.')
+        log("initializing mdb......")
 
-        self.kbstaffList = []
-        if 'kbase-staff' in config:
-            kb_staff_ids = config['kbase-staff'].split(',')
-            for k_id in kb_staff_ids:
-                if k_id.strip():
-                    self.kbstaffList.append(k_id.strip())
+        # grab config lists
+        self.adminList = self._config_str_to_list(config.get('admin-users'))
+        self.metricsAdmins = self._config_str_to_list(config.get('metrics-admins'))
+        self.kbstaffList = self._config_str_to_list(config.get('kbase-staff'))
+        self.mongodb_dbList = self._config_str_to_list(config.get('mongodb-databases'))
 
-        # make sure the minimal mongo settings are in place
-        if 'mongodb-host' not in config:  # pragma: no cover
-            raise ValueError(
-                '"mongodb-host" config variable must be defined to start a MetricsMongoDBController!')
-        if 'mongodb-databases' not in config:  # pragma: no cover
-            raise ValueError(
-                '"mongodb-databases" config variable must be defined to start a MetricsMongoDBController!')
-        self.mongodb_dbList = []
-        if 'mongodb-databases' in config:
-            db_ids = config['mongodb-databases'].split(',')
-            for d_id in db_ids:
-                if d_id.strip():
-                    self.mongodb_dbList.append(d_id.strip())
-        if not self.mongodb_dbList:  # pragma: no cover
-            warnings.warn('no "mongodb-databases" are set in config of MetricsMongoDBController.')
-        # give warnings if no mongo user information is set
-        if 'mongodb-user' not in config:  # pragma: no cover
-            warnings.warn('"mongodb-user" is not set in config of MetricsMongoDBController.')
-            config['mongodb-user'] = ''
-            config['mongodb-pwd'] = ''
-        if 'mongodb-pwd' not in config:  # pragma: no cover
-            warnings.warn('"mongodb-pwd" is not set in config of MetricsMongoDBController.')
-            config['mongodb-pwd'] = ''
+        # check for required parameters
+        for p in ['mongodb-host', 'mongodb-databases']:
+            if p not in config:
+                error_msg = '"{}" config variable must be defined '.format(p)
+                error_msg += 'to start a MetricsMongoDBController!'
+                raise ValueError(error_msg)
+
+        # give warnings if no mongo user/pw information is set
+        for p in ['mongodb-user', 'mongodb-pwd']:
+            if p not in config:
+                warning_msg = '"{}" is not set in config of MetricsMongoDBController.'.format(p)
+                warnings.warn(warning_msg)
+
         # instantiate the mongo client
-        self.metrics_dbi = MongoMetricsDBI(
-            config['mongodb-host'],
-            self.mongodb_dbList,
-            config['mongodb-user'],
-            config['mongodb-pwd'])
+        self.metrics_dbi = MongoMetricsDBI(config.get('mongodb-host'), self.mongodb_dbList,
+                                           config.get('mongodb-user', ''),
+                                           config.get('mongodb-pwd', ''))
+
         # for access to the Catalog API
         self.auth_service_url = config['auth-service-url']
         self.catalog_url = config['kbase-endpoint'] + '/catalog'
@@ -734,36 +721,39 @@ class MetricsMongoDBController:
         return {'metrics_result': db_ret}
 
     def process_parameters(self, params):
-        if params.get('user_ids', None) is None:
-            params['user_ids'] = []
-        else:
-            if not isinstance(params['user_ids'], list):
-                raise ValueError('Variable user_ids' + ' must be a list.')
+
+        params['user_ids'] = params.get('user_ids', [])
+
+        if not isinstance(params['user_ids'], list):
+            raise ValueError('Variable user_ids must be a list.')
+
         if 'kbasetest' in params['user_ids']:
             params['user_ids'].remove('kbasetest')
 
-        if not params.get('epoch_range', None) is None:
-            start_time, end_time = params['epoch_range']
-            if (not start_time is None and not end_time is None):
+        epoch_range = params.get('epoch_range')
+        if epoch_range:
+            if len(epoch_range) != 2:
+                raise ValueError('Invalide epoch_range. Size must be 2.')
+            start_time, end_time = epoch_range
+            if (start_time and end_time):
                 start_time = _convert_to_datetime(start_time)
                 end_time = _convert_to_datetime(end_time)
-                params['minTime'] = _unix_time_millis_from_datetime(start_time)
-                params['maxTime'] = _unix_time_millis_from_datetime(end_time)
-            elif (not start_time is None and end_time is None):
+            elif (start_time and not end_time):
                 start_time = _convert_to_datetime(start_time)
                 end_time = start_time + datetime.timedelta(hours=48)
-                params['minTime'] = _unix_time_millis_from_datetime(start_time)
-                params['maxTime'] = _unix_time_millis_from_datetime(end_time)
-            elif (start_time is None and not end_time is None):
+            elif (not start_time and end_time):
                 end_time = _convert_to_datetime(end_time)
                 start_time = end_time - datetime.timedelta(hours=48)
-                params['minTime'] = _unix_time_millis_from_datetime(start_time)
-                params['maxTime'] = _unix_time_millis_from_datetime(end_time)
+            else:
+                end_time = datetime.datetime.utcnow()
+                start_time = end_time - datetime.timedelta(hours=48)
         else:  # set the most recent 48 hours range
             end_time = datetime.datetime.utcnow()
             start_time = end_time - datetime.timedelta(hours=48)
-            params['minTime'] = _unix_time_millis_from_datetime(start_time)
-            params['maxTime'] = _unix_time_millis_from_datetime(end_time)
+
+        params['minTime'] = _unix_time_millis_from_datetime(start_time)
+        params['maxTime'] = _unix_time_millis_from_datetime(end_time)
+
         return params
 
     def get_client_groups_from_cat(self, token):
@@ -787,19 +777,13 @@ class MetricsMongoDBController:
         return client_groups
 
     def is_admin(self, username):
-        if username in self.adminList:
-            return True
-        return False
+        return self.adminList.get(username)
 
     def is_metrics_admin(self, username):
-        if username in self.metricsAdmins:
-            return True
-        return False
+        return self.metricsAdmins.get(username)
 
     def is_kbstaff(self, username):
-        if username in self.kbstaffList:
-            return True
-        return False
+        return self.kbstaffList.get(username)
 
     def convert_isodate_to_millis(self, src_list, dt_list):
         for dr in src_list:
@@ -811,29 +795,32 @@ class MetricsMongoDBController:
 # utility functions
 
 
-def _timestamp_from_utc(date_utc_str):
-    dt = _datetime_from_utc(date_utc_str)
-    return int(time.mktime(dt.timetuple()))  # in miliseconds
+# def _timestamp_from_utc(date_utc_str):
+#     dt = _datetime_from_utc(date_utc_str)
+#     return int(time.mktime(dt.timetuple()))  # in miliseconds
 
 
 def _datetime_from_utc(date_utc_str):
-    try:  # for u'2017-08-27T17:29:37+0000'
-        dt = datetime.datetime.strptime(date_utc_str, '%Y-%m-%dT%H:%M:%S+0000')
-    except ValueError:  # for ISO-formatted date & time, e.g., u'2015-02-15T22:31:47.763Z'
-        dt = datetime.datetime.strptime(date_utc_str, '%Y-%m-%dT%H:%M:%S.%fZ')
-    return dt
+    return parse(date_utc_str)
 
 
 def _unix_time_millis_from_datetime(dt):
+    if type(dt) not in [datetime.date, datetime.datetime]:
+        raise ValueError('Accepting only datetime.date or datetime.datetime')
+
     epoch = datetime.datetime.utcfromtimestamp(0)
+    if isinstance(dt, datetime.date):
+        dt = datetime.datetime.combine(dt, datetime.time())
     return int((dt - epoch).total_seconds() * 1000)
 
 
 def _convert_to_datetime(dt):
-    new_dt = dt
-    if (not isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime)):
-        if isinstance(dt, int):
-            new_dt = datetime.datetime.utcfromtimestamp(dt / 1000)
-        else:
-            new_dt = _datetime_from_utc(dt)
-    return new_dt
+    if type(dt) in [datetime.date, datetime.datetime]:
+        return dt
+    elif isinstance(dt, int):
+        # TODO WRONG LOGIC if timestamp is not in million seconds
+        return datetime.datetime.utcfromtimestamp(dt / 1000)
+    elif isinstance(dt, str):
+        return _datetime_from_utc(dt)
+    else:
+        raise ValueError('Cannot convert {} to datetime'.format(dt))

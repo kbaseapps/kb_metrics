@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 #BEGIN_HEADER
 # The header block is where all import statments should live
-import os
-from Bio import SeqIO
-from pprint import pprint, pformat
-from KBaseReport.KBaseReportClient import KBaseReport
 from kb_Metrics.metricsdb_controller import MetricsMongoDBController
 #END_HEADER
 
@@ -46,7 +42,6 @@ This KBase SDK module implements methods for generating various KBase metrics.
         self.mdb_controller = MetricsMongoDBController(self.config)
         #END_CONSTRUCTOR
         pass
-
 
     def get_app_metrics(self, ctx, params):
         """

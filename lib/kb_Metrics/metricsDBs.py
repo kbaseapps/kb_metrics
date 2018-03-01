@@ -3,6 +3,7 @@ import datetime
 from pymongo import MongoClient
 from pymongo import ASCENDING
 from pymongo.errors import BulkWriteError
+from dateutil.parser import parse
 
 
 class MongoMetricsDBI:
@@ -510,8 +511,8 @@ class MongoMetricsDBI:
         ]
 
         # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
-        self.kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
-        u_cursor = self.kbusers.aggregate(pipeline)
+        kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
+        u_cursor = kbusers.aggregate(pipeline)
         return list(u_cursor)
 
     def list_user_details(self, userIds, minTime, maxTime):
@@ -546,7 +547,7 @@ class MongoMetricsDBI:
         }
 
         # grab handle(s) to the database collections needed
-        self.kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
+        kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
 
         '''
         # Make sure we have an index on user, created and updated
@@ -556,7 +557,7 @@ class MongoMetricsDBI:
             ('login', ASCENDING)],
             unique=True, sparse=False)
         '''
-        return list(self.kbusers.find(
+        return list(kbusers.find(
             filter, projection))  # ,
         # sort=[['create', ASCENDING]]))
 
@@ -605,8 +606,8 @@ class MongoMetricsDBI:
         }
 
         # grab handle(s) to the database collections needed
-        self.userstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._USERSTATE]
-        self.jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
+        # self.userstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._USERSTATE]
+        jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
 
         '''
         # Make sure we have an index on user, created and updated
@@ -619,7 +620,7 @@ class MongoMetricsDBI:
         '''
 
         # return list(self.jobstate.find(filter, projection))
-        return list(self.jobstate.find(
+        return list(jobstate.find(
             filter, projection  # ,
         ))  # sort=[['created', ASCENDING]]))
 
@@ -628,21 +629,18 @@ class MongoMetricsDBI:
 
 # utility functions
 
+# TODO: duplicate from metricsdb_controller, should move to a util module
 def _datetime_from_utc(date_utc_str):
-    time_format_one = '%Y-%m-%dT%H:%M:%S+0000'
-    time_format_two = '%Y-%m-%dT%H:%M:%S.%fZ'
-    try:  # for u'2017-08-27T17:29:37+0000'
-        dt = datetime.datetime.strptime(date_utc_str, time_format_one)
-    except ValueError:  # for ISO-formatted date & time, e.g., u'2015-02-15T22:31:47.763Z'
-        dt = datetime.datetime.strptime(date_utc_str, time_format_two)
-    return dt
+    return parse(date_utc_str)
 
 
 def _convert_to_datetime(dt):
-    new_dt = dt
-    if (not isinstance(dt, datetime.date) and not isinstance(dt, datetime.datetime)):
-        if isinstance(dt, int):  # miliseconds
-            new_dt = datetime.datetime.utcfromtimestamp(dt / 1000)
-        else:
-            new_dt = _datetime_from_utc(dt)
-    return new_dt
+    if type(dt) in [datetime.date, datetime.datetime]:
+        return dt
+    elif isinstance(dt, int):
+        # TODO WRONG LOGIC if timestamp is not in million seconds
+        return datetime.datetime.utcfromtimestamp(dt / 1000)
+    elif isinstance(dt, str):
+        return _datetime_from_utc(dt)
+    else:
+        raise ValueError('Cannot convert {} to datetime'.format(dt))
