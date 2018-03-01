@@ -4,9 +4,9 @@ import datetime
 import copy
 import re
 from bson.objectid import ObjectId
-from dateutil.parser import parse
 
 from kb_Metrics.metricsDBs import MongoMetricsDBI
+from kb_Metrics.Util import _unix_time_millis_from_datetime, _convert_to_datetime
 from Catalog.CatalogClient import Catalog
 
 
@@ -742,6 +742,7 @@ class MetricsMongoDBController:
                 start_time = _convert_to_datetime(start_time)
                 end_time = start_time + datetime.timedelta(hours=48)
             elif (not start_time and end_time):
+                print 'fasfdasf'
                 end_time = _convert_to_datetime(end_time)
                 start_time = end_time - datetime.timedelta(hours=48)
             else:
@@ -777,13 +778,13 @@ class MetricsMongoDBController:
         return client_groups
 
     def is_admin(self, username):
-        return self.adminList.get(username)
+        return username in self.adminList
 
     def is_metrics_admin(self, username):
-        return self.metricsAdmins.get(username)
+        return username in self.metricsAdmins
 
     def is_kbstaff(self, username):
-        return self.kbstaffList.get(username)
+        return username in self.kbstaffList
 
     def convert_isodate_to_millis(self, src_list, dt_list):
         for dr in src_list:
@@ -791,36 +792,3 @@ class MetricsMongoDBController:
                 if (dt in dr and isinstance(dr[dt], datetime.datetime)):
                     dr[dt] = _unix_time_millis_from_datetime(dr[dt])  # dr[dt].__str__()
         return src_list
-
-# utility functions
-
-
-# def _timestamp_from_utc(date_utc_str):
-#     dt = _datetime_from_utc(date_utc_str)
-#     return int(time.mktime(dt.timetuple()))  # in miliseconds
-
-
-def _datetime_from_utc(date_utc_str):
-    return parse(date_utc_str)
-
-
-def _unix_time_millis_from_datetime(dt):
-    if type(dt) not in [datetime.date, datetime.datetime]:
-        raise ValueError('Accepting only datetime.date or datetime.datetime')
-
-    epoch = datetime.datetime.utcfromtimestamp(0)
-    if isinstance(dt, datetime.date):
-        dt = datetime.datetime.combine(dt, datetime.time())
-    return int((dt - epoch).total_seconds() * 1000)
-
-
-def _convert_to_datetime(dt):
-    if type(dt) in [datetime.date, datetime.datetime]:
-        return dt
-    elif isinstance(dt, int):
-        # TODO WRONG LOGIC if timestamp is not in million seconds
-        return datetime.datetime.utcfromtimestamp(dt / 1000)
-    elif isinstance(dt, str):
-        return _datetime_from_utc(dt)
-    else:
-        raise ValueError('Cannot convert {} to datetime'.format(dt))

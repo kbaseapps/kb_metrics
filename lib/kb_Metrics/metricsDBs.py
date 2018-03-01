@@ -1,9 +1,8 @@
 
-import datetime
 from pymongo import MongoClient
 from pymongo import ASCENDING
 from pymongo.errors import BulkWriteError
-from dateutil.parser import parse
+from kb_Metrics.Util import _convert_to_datetime
 
 
 class MongoMetricsDBI:
@@ -625,22 +624,3 @@ class MongoMetricsDBI:
         ))  # sort=[['created', ASCENDING]]))
 
     # End functions to query the other dbs...
-
-
-# utility functions
-
-# TODO: duplicate from metricsdb_controller, should move to a util module
-def _datetime_from_utc(date_utc_str):
-    return parse(date_utc_str)
-
-
-def _convert_to_datetime(dt):
-    if type(dt) in [datetime.date, datetime.datetime]:
-        return dt
-    elif isinstance(dt, int):
-        # TODO WRONG LOGIC if timestamp is not in million seconds
-        return datetime.datetime.utcfromtimestamp(dt / 1000)
-    elif isinstance(dt, str):
-        return _datetime_from_utc(dt)
-    else:
-        raise ValueError('Cannot convert {} to datetime'.format(dt))
