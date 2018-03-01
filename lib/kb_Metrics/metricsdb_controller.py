@@ -742,7 +742,6 @@ class MetricsMongoDBController:
                 start_time = _convert_to_datetime(start_time)
                 end_time = start_time + datetime.timedelta(hours=48)
             elif (not start_time and end_time):
-                print 'fasfdasf'
                 end_time = _convert_to_datetime(end_time)
                 start_time = end_time - datetime.timedelta(hours=48)
             else:

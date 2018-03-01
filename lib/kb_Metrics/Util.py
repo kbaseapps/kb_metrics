@@ -1,13 +1,9 @@
 
 from dateutil.parser import parse
 import datetime
+
+
 # utility functions
-
-
-# def _timestamp_from_utc(date_utc_str):
-#     dt = _datetime_from_utc(date_utc_str)
-#     return int(time.mktime(dt.timetuple()))  # in miliseconds
-
 
 def _datetime_from_utc(date_utc_str):
     return parse(date_utc_str)
