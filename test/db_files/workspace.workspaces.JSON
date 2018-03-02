@@ -1,0 +1,248 @@
+[
+    {
+        "owner": "wstester4", 
+        "moddate": 1477413090479, 
+        "meta": [
+            {
+                "k": "data_palette_id", 
+                "v": "1"
+            }
+        ], 
+        "ws": 12934, 
+        "name": "test_DataPaletteService_1477412556141", 
+        "numObj": 1, 
+        "del": false, 
+        "desc": null
+    }, 
+    {
+        "owner": "wjriehl", 
+        "moddate": 1479337043136, 
+        "meta": [
+            {
+                "k": "is_temporary", 
+                "v": "false"
+            }, 
+            {
+                "k": "narrative_nice_name", 
+                "v": "Paramvir's Narrative Data"
+            }, 
+            {
+                "k": "data_palette_id", 
+                "v": "1"
+            }, 
+            {
+                "k": "narrative", 
+                "v": "2"
+            }
+        ], 
+        "ws": 13922, 
+        "name": "wjriehl:1478821127445", 
+        "numObj": 6, 
+        "del": false, 
+        "desc": null
+    }, 
+    {
+        "owner": "rsutormin", 
+        "moddate": 1479344753228, 
+        "meta": [
+            {
+                "k": "data_palette_id", 
+                "v": "1"
+            }
+        ], 
+        "ws": 14279, 
+        "name": "test_DataPaletteService_1479344751438", 
+        "numObj": 1, 
+        "del": false, 
+        "desc": null
+    }, 
+    {
+        "owner": "kbasetest", 
+        "moddate": 1480987013249, 
+        "meta": [
+            {
+                "k": "is_temporary", 
+                "v": "false"
+            }, 
+            {
+                "k": "narrative_nice_name", 
+                "v": "NarrativeCopyTest - Copy"
+            }, 
+            {
+                "k": "data_palette_id", 
+                "v": "1"
+            }, 
+            {
+                "k": "narrative", 
+                "v": "2"
+            }
+        ], 
+        "ws": 14974, 
+        "name": "kbasetest:narrative_1480987010173", 
+        "numObj": 2, 
+        "del": false, 
+        "desc": null
+    }, 
+    {
+        "owner": "sunita", 
+        "moddate": 1481316010097, 
+        "meta": [
+            {
+                "k": "is_temporary", 
+                "v": "false"
+            }, 
+            {
+                "k": "narrative_nice_name", 
+                "v": "DEMO 2016Q4S4 Blue Team - Copy"
+            }, 
+            {
+                "k": "data_palette_id", 
+                "v": "1"
+            }, 
+            {
+                "k": "narrative", 
+                "v": "2"
+            }
+        ], 
+        "ws": 15252, 
+        "name": "sunita:narrative_1481313653168", 
+        "numObj": 2, 
+        "del": false, 
+        "desc": null
+    }, 
+    {
+        "owner": "eaptest30", 
+        "moddate": 1502821743369, 
+        "meta": [
+            {
+                "k": "narrative_nice_name", 
+                "v": "Read-Only Configure - Copy"
+            }, 
+            {
+                "k": "is_temporary", 
+                "v": "false"
+            }, 
+            {
+                "k": "data_palette_id", 
+                "v": "1"
+            }, 
+            {
+                "k": "narrative", 
+                "v": "2"
+            }
+        ], 
+        "ws": 25363, 
+        "name": "eaptest30:narrative_1502821741939", 
+        "numObj": 2, 
+        "del": false, 
+        "desc": null
+    }, 
+    {
+        "owner": "psdehal", 
+        "moddate": 1481139226790, 
+        "meta": [
+            {
+                "k": "is_temporary", 
+                "v": "false"
+            }, 
+            {
+                "k": "narrative", 
+                "v": "1"
+            }, 
+            {
+                "k": "narrative_nice_name", 
+                "v": "testing jira bug"
+            }, 
+            {
+                "k": "data_palette_id", 
+                "v": "10"
+            }
+        ], 
+        "ws": 13423, 
+        "name": "psdehal:1478021736031", 
+        "numObj": 10, 
+        "del": false, 
+        "desc": ""
+    }, 
+    {
+        "owner": "kkeller", 
+        "moddate": 1519256307451, 
+        "meta": [
+            {
+                "k": "is_temporary", 
+                "v": "false"
+            }, 
+            {
+                "k": "narrative", 
+                "v": "1"
+            }, 
+            {
+                "k": "narrative_nice_name", 
+                "v": "quast"
+            }, 
+            {
+                "k": "data_palette_id", 
+                "v": "11"
+            }
+        ], 
+        "ws": 10459, 
+        "name": "kkeller:1472591722972", 
+        "numObj": 32, 
+        "del": false, 
+        "desc": ""
+    }, 
+    {
+        "owner": "eapearson", 
+        "moddate": 1484984166631, 
+        "meta": [
+            {
+                "k": "is_temporary", 
+                "v": "false"
+            }, 
+            {
+                "k": "narrative", 
+                "v": "1"
+            }, 
+            {
+                "k": "narrative_nice_name", 
+                "v": "KBASE-4791 - Report too much white space"
+            }, 
+            {
+                "k": "data_palette_id", 
+                "v": "11"
+            }
+        ], 
+        "ws": 15959, 
+        "name": "eapearson:narrative_1484334609546", 
+        "numObj": 28, 
+        "del": false, 
+        "desc": ""
+    }, 
+    {
+        "owner": "psnovichkov", 
+        "moddate": 1492575918192, 
+        "meta": [
+            {
+                "k": "is_temporary", 
+                "v": "false"
+            }, 
+            {
+                "k": "narrative", 
+                "v": "1"
+            }, 
+            {
+                "k": "narrative_nice_name", 
+                "v": "Generic Plot Test"
+            }, 
+            {
+                "k": "data_palette_id", 
+                "v": "11"
+            }
+        ], 
+        "ws": 18628, 
+        "name": "psnovichkov:narrative_1490750782741", 
+        "numObj": 11, 
+        "del": false, 
+        "desc": ""
+    }
+]

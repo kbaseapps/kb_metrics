@@ -437,7 +437,7 @@ class MongoMetricsDBI:
             'finish_time': 1
         }
         # grab handle(s) to the database collections needed
-        self.kbtasks = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_TASKS]
+        kbtasks = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_TASKS]
 
         '''
         # Make sure we have an index on user, created and updated
@@ -446,7 +446,7 @@ class MongoMetricsDBI:
             ('creation_time', ASCENDING)],
             unique=True, sparse=False)
         '''
-        return list(self.kbtasks.find(
+        return list(kbtasks.find(
             filter, projection,
             sort=[['creation_time', ASCENDING]]))
 
@@ -471,7 +471,7 @@ class MongoMetricsDBI:
         }
 
         # grab handle(s) to the database collections needed
-        self.kbapps = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_APPS]
+        kbapps = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_APPS]
 
         '''
         # Make sure we have an index on user, created and updated
@@ -482,7 +482,7 @@ class MongoMetricsDBI:
             ('modification_time', ASCENDING)],
             unique=True, sparse=False)
         '''
-        return list(self.kbapps.find(
+        return list(kbapps.find(
             filter, projection,
             sort=[['creation_time', ASCENDING]]))
 
@@ -573,9 +573,9 @@ class MongoMetricsDBI:
 
         createdFilter = {}
         if minTime is not None:
-            createdFilter['$gte'] = _convert_to_datetime(minTime)
+            createdFilter['$gte'] = minTime
         if maxTime is not None:
-            createdFilter['$lte'] = _convert_to_datetime(maxTime)
+            createdFilter['$lte'] = maxTime
         if len(createdFilter) > 0:
             filter['created'] = createdFilter
         filter['desc'] = {'$exists': True}
