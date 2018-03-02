@@ -299,7 +299,7 @@ class kb_MetricsTest(unittest.TestCase):
             #'epoch_range':(1420083768000,1435677602000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2015,6,30)
             #'epoch_range':(1420083768000,1451606549000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2016,1,1)
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
-            'epoch_range': (u'2015-02-23T00:00:00+0000', u'2018-02-28T17:29:42+0000')
+            'epoch_range': (u'2018-02-23T00:00:00+0000', u'2018-02-28T17:29:42+0000')
         }
         # Second, call your implementation
         ret = self.getImpl().get_app_metrics(self.getContext(), m_params)
