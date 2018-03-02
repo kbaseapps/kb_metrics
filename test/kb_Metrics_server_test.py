@@ -75,6 +75,14 @@ class kb_MetricsTest(unittest.TestCase):
         # cls._insert_data(client, 'exec_engine', 'exec_apps')
         cls._insert_data(client, 'userjobstate', 'jobstate')
 
+        # updating created to timstamp field for userjobstate.jobstate
+        for record in client.userjobstate.jobstate.find():
+            created_str = record.get('created')
+            client.userjobstate.jobstate.update_many(
+                {"created": created_str},
+                {"$set": {"created": datetime.datetime.utcfromtimestamp(int(created_str) / 1000)}}
+            )
+
         for db in client.database_names():
             if db != 'local':
                 client[db].command("createUser", "admin", pwd="password", roles=["readWrite"])
