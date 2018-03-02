@@ -27,9 +27,9 @@ RUN apt-get install ca-certificates
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 \
     && echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list  \
     && apt-get update \
-    && apt-get install -y mongodb
+    && apt-get install -y mongodb \
+    && apt-get install -y mongodb-org
 
-RUN apt-get install -y mongodb-org
 # Fix Python SSL warnings for python < 2.7.9 (system python on Trusty is 2.7.6)
 # https://github.com/pypa/pip/issues/4098
 RUN pip install pip==8.1.2
