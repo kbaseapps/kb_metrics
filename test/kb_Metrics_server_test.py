@@ -4,6 +4,7 @@ import os  # noqa: F401
 import json  # noqa: F401
 import time
 import datetime
+from pymongo import MongoClient
 
 from os import environ
 try:
@@ -53,11 +54,51 @@ class kb_MetricsTest(unittest.TestCase):
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
         cls.db_controller = MetricsMongoDBController(cls.cfg)
 
+        cls.init_mongodb()
+
     @classmethod
     def tearDownClass(cls):
         if hasattr(cls, 'wsName'):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print('Test workspace was deleted')
+
+    @classmethod
+    def init_mongodb(cls):
+        print ('starting to build local mongoDB')
+
+        os.system("sudo service mongodb start")
+        os.system("mongod --version")
+
+        client = MongoClient(port=27017)
+
+        cls._insert_data(client, 'workspace', 'workspaces')
+        cls._insert_data(client, 'exec_engine', 'exec_tasks')
+        # cls._insert_data(client, 'exec_engine', 'exec_apps')
+        cls._insert_data(client, 'userjobstate', 'jobstate')
+
+        # updating created to timstamp field for userjobstate.jobstate
+        for record in client.userjobstate.jobstate.find():
+            created_str = record.get('created')
+            client.userjobstate.jobstate.update_many(
+                {"created": created_str},
+                {"$set": {"created": datetime.datetime.utcfromtimestamp(int(created_str) / 1000)}}
+            )
+
+        for db in client.database_names():
+            if db != 'local':
+                client[db].command("createUser", "admin", pwd="password", roles=["readWrite"])
+
+    @classmethod
+    def _insert_data(cls, client, db_name, table):
+
+        db = client[db_name]
+
+        record_file = os.path.join('db_files', '{}.{}.JSON'.format(db_name, table))
+        json_data = open(record_file).read()
+        records = json.loads(json_data)
+
+        db[table].insert_many(records)
+        print ('Inserted records for {}.{}'.format(db_name, table))
 
     def getWsClient(self):
         return self.__class__.wsClient
@@ -128,27 +169,27 @@ class kb_MetricsTest(unittest.TestCase):
             self.db_controller.process_parameters(params)
 
         # testing epoch_range
-        # params = {'epoch_range': ('2018-02-23T00:00:00+0000', '2018-02-25T00:00:00+0000')}
-        # ret_params = self.db_controller.process_parameters(params)
-        # self.assertEqual(ret_params.get('minTime'), 1519344000000)
-        # self.assertEqual(ret_params.get('maxTime'), 1519516800000)
-        # self.assertFalse(ret_params['user_ids'])
+        params = {'epoch_range': ('2018-02-23T00:00:00+0000', '2018-02-25T00:00:00+0000')}
+        ret_params = self.db_controller.process_parameters(params)
+        self.assertEqual(ret_params.get('minTime'), 1519344000000)
+        self.assertEqual(ret_params.get('maxTime'), 1519516800000)
+        self.assertFalse(ret_params['user_ids'])
 
-        # date_time = datetime.datetime.strptime('2018-02-23T00:00:00+0000',
-        #                                        '%Y-%m-%dT%H:%M:%S+0000')
-        # date = datetime.datetime.strptime('2018-02-25T00:00:00+0000',
-        #                                   '%Y-%m-%dT%H:%M:%S+0000').date()
-        # params = {'epoch_range': (date_time, date)}
-        # ret_params = self.db_controller.process_parameters(params)
-        # self.assertEqual(ret_params.get('minTime'), 1519344000000)
-        # self.assertEqual(ret_params.get('maxTime'), 1519516800000)
-        # self.assertFalse(ret_params['user_ids'])
+        date_time = datetime.datetime.strptime('2018-02-23T00:00:00+0000',
+                                               '%Y-%m-%dT%H:%M:%S+0000')
+        date = datetime.datetime.strptime('2018-02-25T00:00:00+0000',
+                                          '%Y-%m-%dT%H:%M:%S+0000').date()
+        params = {'epoch_range': (date_time, date)}
+        ret_params = self.db_controller.process_parameters(params)
+        self.assertEqual(ret_params.get('minTime'), 1519344000000)
+        self.assertEqual(ret_params.get('maxTime'), 1519516800000)
+        self.assertFalse(ret_params['user_ids'])
 
-        # params = {'epoch_range': ('2018-02-23T00:00:00+0000', '')}
-        # ret_params = self.db_controller.process_parameters(params)
-        # self.assertEqual(ret_params.get('minTime'), 1519344000000)
-        # self.assertEqual(ret_params.get('maxTime'), 1519516800000)
-        # self.assertFalse(ret_params['user_ids'])
+        params = {'epoch_range': ('2018-02-23T00:00:00+0000', '')}
+        ret_params = self.db_controller.process_parameters(params)
+        self.assertEqual(ret_params.get('minTime'), 1519344000000)
+        self.assertEqual(ret_params.get('maxTime'), 1519516800000)
+        self.assertFalse(ret_params['user_ids'])
 
         params = {'epoch_range': (None, '2018-02-25T00:00:00+0000')}
         ret_params = self.db_controller.process_parameters(params)
