@@ -5,7 +5,6 @@ import json  # noqa: F401
 import time
 import datetime
 from pymongo import MongoClient
-import pymongo
 
 from os import environ
 try:
@@ -67,9 +66,8 @@ class kb_MetricsTest(unittest.TestCase):
     def init_mongodb(cls):
         print ('starting to build local mongoDB')
 
-        print ('MongoDB version: {}'.format(pymongo.version))
-
         os.system("sudo service mongodb start")
+        os.system("mongod --version")
 
         client = MongoClient(port=27017)
 
