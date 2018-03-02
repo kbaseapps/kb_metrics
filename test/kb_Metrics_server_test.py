@@ -181,7 +181,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson', 'nlharris', 'dylan',
                                'chenry', 'ciservices', 'wjriehl', 'sychan', 'jjeffryes',
-                               'thomasoniii', 'eapearson', 'qzhang', 'tgu2','eapearson']
+                               'thomasoniii', 'eapearson', 'qzhang', 'tgu2']
         self.assertItemsEqual(self.db_controller.adminList, expected_admin_list)
 
         expected_metrics_admin_list = ['scanon', 'psdehal', 'dolson', 'chenry', 'wjriehl',
