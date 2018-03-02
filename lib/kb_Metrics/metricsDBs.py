@@ -573,9 +573,9 @@ class MongoMetricsDBI:
 
         createdFilter = {}
         if minTime is not None:
-            createdFilter['$gte'] = minTime
+            createdFilter['$gte'] = _convert_to_datetime(minTime)
         if maxTime is not None:
-            createdFilter['$lte'] = maxTime
+            createdFilter['$lte'] = _convert_to_datetime(maxTime)
         if len(createdFilter) > 0:
             filter['created'] = createdFilter
         filter['desc'] = {'$exists': True}
