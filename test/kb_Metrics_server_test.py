@@ -17,6 +17,7 @@ from biokbase.workspace.client import Workspace as workspaceService
 from kb_Metrics.kb_MetricsImpl import kb_Metrics
 from kb_Metrics.kb_MetricsServer import MethodContext
 from kb_Metrics.authclient import KBaseAuth as _KBaseAuth
+from kb_Metrics.metricsdb_controller import MetricsMongoDBController
 
 
 class kb_MetricsTest(unittest.TestCase):
@@ -50,6 +51,7 @@ class kb_MetricsTest(unittest.TestCase):
         cls.serviceImpl = kb_Metrics(cls.cfg)
         cls.scratch = cls.cfg['scratch']
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
+        cls.db_controller = MetricsMongoDBController(cls.cfg)
 
     @classmethod
     def tearDownClass(cls):
@@ -74,6 +76,120 @@ class kb_MetricsTest(unittest.TestCase):
 
     def getContext(self):
         return self.__class__.ctx
+
+    def test_MetricsMongoDBController_config_str_to_list(self):
+        # testing None config input
+        user_list_str = None
+        user_list = self.db_controller._config_str_to_list(user_list_str)
+        self.assertFalse(len(user_list))
+
+        # testing normal list
+        user_list_str = 'user_1, user_2'
+        user_list = self.db_controller._config_str_to_list(user_list_str)
+        expected_list = ['user_1', 'user_2']
+        self.assertEqual(len(user_list), 2)
+        self.assertItemsEqual(user_list, expected_list)
+
+        # testing list with spaces
+        user_list_str = '  user_1, user_2    ,   , '
+        user_list = self.db_controller._config_str_to_list(user_list_str)
+        self.assertEqual(len(user_list), 2)
+        self.assertItemsEqual(user_list, expected_list)
+
+    def test_MetricsMongoDBController_process_parameters(self):
+
+        # testing 'user_ids'
+        user_list = ['user_1', 'user_2']
+        params = {'user_ids': user_list}
+        ret_params = self.db_controller.process_parameters(params)
+        self.assertItemsEqual(ret_params.get('user_ids'), user_list)
+
+        # no given 'user_ids'
+        params = {}
+        ret_params = self.db_controller.process_parameters(params)
+        self.assertFalse(ret_params['user_ids'])
+
+        # 'user_ids' is not a list
+        params = {'user_ids': 'not_a_list_object'}
+        with self.assertRaisesRegexp(ValueError,
+                                     'Variable user_ids must be a list.'):
+            self.db_controller.process_parameters(params)
+
+        # testing removing 'kbasetest'
+        user_list_kbasetest = ['user_1', 'user_2', 'kbasetest']
+        params = {'user_ids': user_list_kbasetest}
+        ret_params = self.db_controller.process_parameters(params)
+        self.assertItemsEqual(ret_params.get('user_ids'), user_list)
+
+        # testing epoch_range size 3
+        params = {'epoch_range': (1, 2, 3)}
+        with self.assertRaisesRegexp(ValueError,
+                                     'Invalide epoch_range. Size must be 2.'):
+            self.db_controller.process_parameters(params)
+
+        # testing epoch_range
+        # params = {'epoch_range': ('2018-02-23T00:00:00+0000', '2018-02-25T00:00:00+0000')}
+        # ret_params = self.db_controller.process_parameters(params)
+        # self.assertEqual(ret_params.get('minTime'), 1519344000000)
+        # self.assertEqual(ret_params.get('maxTime'), 1519516800000)
+        # self.assertFalse(ret_params['user_ids'])
+
+        # date_time = datetime.datetime.strptime('2018-02-23T00:00:00+0000',
+        #                                        '%Y-%m-%dT%H:%M:%S+0000')
+        # date = datetime.datetime.strptime('2018-02-25T00:00:00+0000',
+        #                                   '%Y-%m-%dT%H:%M:%S+0000').date()
+        # params = {'epoch_range': (date_time, date)}
+        # ret_params = self.db_controller.process_parameters(params)
+        # self.assertEqual(ret_params.get('minTime'), 1519344000000)
+        # self.assertEqual(ret_params.get('maxTime'), 1519516800000)
+        # self.assertFalse(ret_params['user_ids'])
+
+        # params = {'epoch_range': ('2018-02-23T00:00:00+0000', '')}
+        # ret_params = self.db_controller.process_parameters(params)
+        # self.assertEqual(ret_params.get('minTime'), 1519344000000)
+        # self.assertEqual(ret_params.get('maxTime'), 1519516800000)
+        # self.assertFalse(ret_params['user_ids'])
+
+        params = {'epoch_range': (None, '2018-02-25T00:00:00+0000')}
+        ret_params = self.db_controller.process_parameters(params)
+        self.assertEqual(ret_params.get('minTime'), 1519344000000)
+        self.assertEqual(ret_params.get('maxTime'), 1519516800000)
+        self.assertFalse(ret_params['user_ids'])
+
+        # testing empty epoch_range
+        params = {'epoch_range': (None, None)}
+        ret_params = self.db_controller.process_parameters(params)
+        today = datetime.date.today()
+        minTime = ret_params.get('minTime')
+        maxTime = ret_params.get('maxTime')
+        minTime_from_today = (datetime.date(*time.localtime(minTime/1000)[:3]) - today).days
+        maxTime_from_today = (datetime.date(*time.localtime(maxTime/1000)[:3]) - today).days
+        self.assertEqual(minTime_from_today, -2)
+        self.assertEqual(maxTime_from_today, 0)
+
+        params = {}
+        ret_params = self.db_controller.process_parameters(params)
+        today = datetime.date.today()
+        minTime = ret_params.get('minTime')
+        maxTime = ret_params.get('maxTime')
+        minTime_from_today = (datetime.date(*time.localtime(minTime/1000)[:3]) - today).days
+        maxTime_from_today = (datetime.date(*time.localtime(maxTime/1000)[:3]) - today).days
+        self.assertEqual(minTime_from_today, -2)
+        self.assertEqual(maxTime_from_today, 0)
+
+    def test_db_controller_contrusctor(self):
+
+        expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson', 'nlharris', 'dylan',
+                               'chenry', 'ciservices', 'wjriehl', 'sychan', 'jjeffryes',
+                               'thomasoniii', 'eapearson', 'qzhang', 'tgu2']
+        self.assertItemsEqual(self.db_controller.adminList, expected_admin_list)
+
+        expected_metrics_admin_list = ['scanon', 'psdehal', 'dolson', 'chenry', 'wjriehl',
+                                       'sychan', 'qzhang', 'tgu2']
+        self.assertItemsEqual(self.db_controller.metricsAdmins, expected_metrics_admin_list)
+
+        expected_db_list = ['metrics', 'userjobstate', 'workspace', 'exec_engine', 'auth2']
+        self.assertItemsEqual(self.db_controller.mongodb_dbList, expected_db_list)
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
@@ -144,7 +260,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    #@unittest.skip("skipped test_run_get_app_metrics")
+    # @unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
         m_params = {
             'user_ids': [],  # ['rhizorick'],#'user_ids': [],
