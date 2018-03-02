@@ -181,11 +181,11 @@ class kb_MetricsTest(unittest.TestCase):
 
         expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson', 'nlharris', 'dylan',
                                'chenry', 'ciservices', 'wjriehl', 'sychan', 'jjeffryes',
-                               'thomasoniii', 'eapearson', 'qzhang', 'tgu2']
+                               'thomasoniii', 'eapearson', 'qzhang', 'tgu2','eapearson']
         self.assertItemsEqual(self.db_controller.adminList, expected_admin_list)
 
         expected_metrics_admin_list = ['scanon', 'psdehal', 'dolson', 'chenry', 'wjriehl',
-                                       'sychan', 'qzhang', 'tgu2']
+                                       'sychan', 'qzhang', 'tgu2', 'eapearson']
         self.assertItemsEqual(self.db_controller.metricsAdmins, expected_metrics_admin_list)
 
         expected_db_list = ['metrics', 'userjobstate', 'workspace', 'exec_engine', 'auth2']
