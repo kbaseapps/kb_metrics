@@ -471,9 +471,6 @@ class MetricsMongoDBController:
     #     from querying the designated mongodb 'metrics'
     #     """
 
-    #     # get the ws_narrative data for lookups
-    #     # ws_narratives = self.metrics_dbi.list_ws_narratives()
-    #     ws_narrs = copy.deepcopy(self.ws_narratives)
 
     def get_jobdata_from_ws_exec_ujs(self, params, token):
         """
