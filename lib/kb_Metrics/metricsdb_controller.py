@@ -145,63 +145,6 @@ class MetricsMongoDBController:
 
         return updData
 
-    def insert_daily_activities(self, requesting_user, params, token):
-        """
-        insert user activities reported from Workspace.
-        If duplicated ids found, skip that record.
-        """
-        if not self.is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to invoke this action.')
-
-        ws_ret = self.get_activities_from_wsobjs(requesting_user, params, token)
-        act_list = ws_ret['metrics_result']
-        if len(act_list) == 0:
-            print("No activity records returned for insertion!")
-            return {'metrics_result': []}
-
-        print('Retrieved activities of {} record(s)'.format(len(act_list)))
-
-        for al in act_list:  # set default for inserting records at the first time
-            al['recordLastUpdated'] = datetime.datetime.utcnow()
-
-        try:
-            insert_ret = self.metrics_dbi.insert_activity_records(act_list)
-        except Exception as e:
-            print(e)
-            return {'metrics_result': e}
-        else:
-            return {'metrics_result': insert_ret}
-
-    def insert_narratives(self, requesting_user, params, token):
-        """
-        insert narratives reported from Workspaces and workspaceObjects.
-        If duplicated ids found, skip that record.
-        """
-        if not self.is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to invoke this action.')
-
-        ws_ret = self.get_narratives_from_wsobjs(requesting_user, params, token)
-        narr_list = ws_ret['metrics_result']
-
-        if len(narr_list) == 0:
-            print("No narrative records returned for insertion!")
-            return {'metrics_result': []}
-
-        print('Retrieved narratives of {} record(s)'.format(len(narr_list)))
-        for wn in narr_list:  # set default for inserting records at the first time
-            wn['recordLastUpdated'] = datetime.datetime.utcnow()
-            if wn.get('first_access', None) is None:
-                wn[u'first_access'] = wn['last_saved_at']
-                wn['access_count'] = 1
-
-        try:
-            insert_ret = self.metrics_dbi.insert_narrative_records(narr_list)
-        except Exception as e:
-            print(e)
-            return {'metrics_result': e}
-        else:
-            return {'metrics_result': insert_ret}
-
     def update_narratives(self, requesting_user, params, token):
         """
         update user narratives reported from Workspace.
@@ -465,13 +408,6 @@ class MetricsMongoDBController:
 
         return self.get_jobdata_from_ws_exec_ujs(params, token)
 
-    # def get_jobdata_from_metrics(self, params, token):
-    #     """
-    #     get_jobdata_from_metrics--The implementation to get data for appcatalog
-    #     from querying the designated mongodb 'metrics'
-    #     """
-
-
     def get_jobdata_from_ws_exec_ujs(self, params, token):
         """
         get_jobdata_from_ws_exec_ujs--The original implementation to get data for appcatalog
@@ -496,67 +432,79 @@ class MetricsMongoDBController:
 
         exec_apps = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
 
+        # subfunc only needs 'app_job_id' and 'app_job_state'
+        exec_apps = [{'app_job_id': exec_app.get('app_job_id'),
+                      'app_job_state': exec_app.get('app_job_state')} for exec_app in exec_apps]
+
         ujs_jobs = self.metrics_dbi.list_ujs_results(
             params['user_ids'], params['minTime'], params['maxTime'])
         ujs_jobs = self.convert_isodate_to_millis(
             ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
         return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs)}
 
+    def _get_apptask_list(self, exec_tasks, exec_apps):
+        """
+        combine/join the apps and tasks to get the app_task_list
+        """
+
+        app_task_list = []
+        for t in exec_tasks:
+            ta = copy.deepcopy(t)
+            matched_exec_app = [exec_app for exec_app in exec_apps if
+                                exec_app.get('app_job_id') in [ta.get('app_job_id'),
+                                                               ta.get('ujs_job_id')]]
+            if matched_exec_app:
+                ta['job_state'] = matched_exec_app[-1].get('app_job_state')
+            app_task_list.append(ta)
+
+        return app_task_list
+
     def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs):
         """
         combine/join the apps, tasks and jobs lists to get the final return data
         """
         # 1) combine/join the apps and tasks to get the app_task_list
-        app_task_list = []
-        for t in exec_tasks:
-            ta = copy.deepcopy(t)
-            for a in exec_apps:
-                if (('app_job_id' in t and a['app_job_id'] == t['app_job_id']) or
-                        ('ujs_job_id' in t and a['app_job_id'] == t['ujs_job_id'])):
-                    ta['job_state'] = a['app_job_state']
-            app_task_list.append(ta)
+        app_task_list = self._get_apptask_list(exec_tasks, exec_apps)
 
         # 2) combine/join app_task_list with ujs_jobs list to get the final return data
         ujs_ret = []
         for j in ujs_jobs:
             u_j_s = copy.deepcopy(j)
-            u_j_s['job_id'] = str(u_j_s['_id'])
-            del u_j_s['_id']
-            u_j_s['creation_time'] = j['created']
-            if 'started' in j:
-                u_j_s['exec_start_time'] = j['started']
-            u_j_s['modification_time'] = j['updated']
-            u_j_s['estcompl'] = j.get('estcompl', None)
-            u_j_s['time_info'] = [u_j_s['creation_time'],
-                                  u_j_s['modification_time'], u_j_s['estcompl']]
-            if not u_j_s.get('authstrat', None) is None:
-                if u_j_s.get('authstrat', None) == 'kbaseworkspace':
-                    u_j_s['wsid'] = u_j_s['authparam']
-            if not u_j_s.get('desc', None) is None:
+            u_j_s['job_id'] = u_j_s.pop('_id')
+            u_j_s['exec_start_time'] = u_j_s.pop('started')
+            u_j_s['creation_time'] = u_j_s.pop('created')
+            u_j_s['modification_time'] = u_j_s.pop('updated')
+
+            u_j_s['time_info'] = [u_j_s.get('creation_time'),
+                                  u_j_s.get('modification_time'),
+                                  u_j_s.get('estcompl')]
+
+            if u_j_s.get('authstrat') == 'kbaseworkspace':
+                u_j_s['wsid'] = u_j_s.get('authparam')
+
+            if u_j_s.get('desc'):
                 desc = u_j_s['desc'].split()[-1]
                 if '.' in desc:
                     u_j_s['method'] = desc
 
             # Assuming complete, error and status all exist in the records returned
-            if j['complete']:
-                if not j['error']:
+            if not j.get('error'):
+                if j.get('complete'):
                     u_j_s['job_state'] = 'completed'
+                elif j.get('status') in ["Initializing", 'queued']:
+                    u_j_s['job_state'] = j['status']
+                elif j.get('status') in ['canceled', 'cancelled']:
+                    u_j_s['job_state'] = 'canceled'
+                elif j.get('started'):
+                    u_j_s['job_state'] = 'in-progress'
+                elif j['created'] == j['updated']:
+                    u_j_s['job_state'] = 'not-started'
+                elif j['created'] < j['updated'] and not j.get('started'):
+                    u_j_s['job_state'] = 'queued'
                 else:
-                    u_j_s['job_state'] = 'suspend'
+                    u_j_s['job_state'] = 'unknown'
             else:
-                if not j['error']:
-                    if j['status'] == "Initializing" or j['status'] == 'queued':
-                        u_j_s['job_state'] = j['status']
-                    elif 'canceled' in j['status'] or 'cancelled' in j['status']:
-                        u_j_s['job_state'] = 'canceled'
-                    elif 'started' in j:
-                        u_j_s['job_state'] = 'in-progress'
-                    elif j['created'] == j['updated']:
-                        u_j_s['job_state'] = 'not-started'
-                    elif j['created'] < j['updated'] and 'started' not in j:
-                        u_j_s['job_state'] = 'queued'
-                    else:
-                        u_j_s['job_state'] = 'unknown'
+                u_j_s['job_state'] = 'suspended'
 
             for lat in app_task_list:
                 if ObjectId(lat['ujs_job_id']) == j['_id']:
@@ -565,13 +513,13 @@ class MetricsMongoDBController:
 
                     if 'job_input' in lat:
                         u_j_s['job_input'] = lat['job_input']
-                        if u_j_s.get('app_id', None) is None:
+                        if not u_j_s.get('app_id'):
                             u_j_s['app_id'] = self.parse_app_id(lat)
 
-                        if u_j_s.get('method', None) is None:
+                        if not u_j_s.get('method'):
                             u_j_s['method'] = self.parse_method(lat)
 
-                        if u_j_s.get('wsid', None) is None:
+                        if not u_j_s.get('wsid'):
                             if 'wsid' in lat['job_input']:
                                 u_j_s['wsid'] = lat['job_input']['wsid']
                             elif 'params' in lat['job_input']:
@@ -584,15 +532,14 @@ class MetricsMongoDBController:
                                     u_j_s['workspace_name'] = lat['job_input'][
                                         'params']['workspace_name']
 
-                    if 'job_output' in lat:
-                        u_j_s['job_output'] = lat['job_output']
+                    u_j_s['job_output'] = lat.get('job_output')
+                    break
 
-            if (u_j_s.get('app_id', None) is None and
-                    not u_j_s.get('method', None) is None):
+            if not u_j_s.get('app_id') and u_j_s.get('method'):
                 u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
 
             # get the narrative name and version if any
-            if not u_j_s.get('wsid', None) is None:
+            if u_j_s.get('wsid'):
                 n_nm, n_obj = self.map_narrative(u_j_s['wsid'], self.ws_narratives)
                 if n_nm != "" and n_obj != 0:
                     u_j_s['narrative_name'] = n_nm
@@ -602,8 +549,7 @@ class MetricsMongoDBController:
             u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
             for clnt in self.client_groups:
                 clnt_app_id = clnt['app_id']
-                if ('app_id' in u_j_s and
-                        str(clnt_app_id).lower() == str(u_j_s['app_id']).lower()):
+                if (str(clnt_app_id).lower() == str(u_j_s.get('app_id')).lower()):
                     u_j_s['client_groups'] = clnt['client_groups']
                     break
 
