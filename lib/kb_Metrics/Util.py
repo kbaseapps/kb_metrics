@@ -40,4 +40,3 @@ def _partition_by_keys(src_list, idKeys, dataKeys):
             idList.append({id_k: src[id_k]})
         if data_k in dataKeys:
             dataList.append({data_k: src[data_k]})
-    return (idList, dataList)
