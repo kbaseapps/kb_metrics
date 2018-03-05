@@ -11,8 +11,11 @@ from Catalog.CatalogClient import Catalog
 
 
 def log(message, prefix_newline=False):
-    """Logging function, provides a hook to suppress or redirect log messages."""
-    print(('\n' if prefix_newline else '') + '{0:.2f}'.format(time.time()) + ': ' + str(message))
+    """
+    Logging function, provides a hook to suppress or redirect log messages.
+    """
+    print(('\n' if prefix_newline else '') + 
+          '{0:.2f}'.format(time.time()) + ': ' + str(message))
 
 
 class MetricsMongoDBController:
@@ -113,7 +116,8 @@ class MetricsMongoDBController:
             idData = filterByKey(idKeys)
             userData = filterByKey(dataKeys)
             isKbstaff = 1 if idData['username'] in self.kbstaffList else 0
-            update_ret = self.metrics_dbi.update_user_records(idData, userData, isKbstaff)
+            update_ret = self.metrics_dbi.update_user_records(
+                idData, userData, isKbstaff)
         updData += update_ret.raw_result['nModified']
 
         return updData
@@ -140,7 +144,8 @@ class MetricsMongoDBController:
             filterByKey = lambda keys: {x: a_data[x] for x in keys}
             idData = filterByKey(idKeys)
             countData = filterByKey(countKeys)
-            update_ret = self.metrics_dbi.update_activity_records(idData, countData)
+            update_ret = self.metrics_dbi.update_activity_records(
+                idData, countData)
             updData += update_ret.raw_result['nModified']
 
         return updData
@@ -153,7 +158,8 @@ class MetricsMongoDBController:
         if not self.is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-        ws_ret = self.get_activities_from_wsobjs(requesting_user, params, token)
+        ws_ret = self.get_activities_from_wsobjs(
+            requesting_user, params, token)
         act_list = ws_ret['metrics_result']
         if len(act_list) == 0:
             print("No activity records returned for insertion!")
@@ -262,7 +268,8 @@ class MetricsMongoDBController:
         if len(mt_ret) == 0:
             print("No records returned!")
         else:
-            mt_ret = self.convert_isodate_to_millis(mt_ret, ['signup_at', 'last_signin_at'])
+            mt_ret = self.convert_isodate_to_millis(mt_ret,
+                                                    ['signup_at', 'last_signin_at'])
         return {'metrics_result': mt_ret}
 
     def get_activities(self, requesting_user, params, token):
@@ -376,7 +383,8 @@ class MetricsMongoDBController:
         params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
         params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        db_ret = self.metrics_dbi.aggr_user_logins_from_ws(params['minTime'], params['maxTime'])
+        db_ret = self.metrics_dbi.aggr_user_logins_from_ws(
+            params['minTime'], params['maxTime'])
 
         return {'metrics_result': db_ret}
 
@@ -400,7 +408,8 @@ class MetricsMongoDBController:
         params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
         params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        db_ret = self.metrics_dbi.aggr_user_narratives(params['minTime'], params['maxTime'])
+        db_ret = self.metrics_dbi.aggr_user_narratives(
+            params['minTime'], params['maxTime'])
 
         return {'metrics_result': db_ret}
 
@@ -425,52 +434,26 @@ class MetricsMongoDBController:
         params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
         params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        db_ret = self.metrics_dbi.aggr_user_numObjs(params['minTime'], params['maxTime'])
+        db_ret = self.metrics_dbi.aggr_user_numObjs(
+            params['minTime'], params['maxTime'])
 
         return {'metrics_result': db_ret}
 
     def get_user_job_states(self, requesting_user, params, token):
-        '''
-        return a list of the following structure:
-        [
-         {'app_id': u'kb_Metrics/refseq_genome_counts',
-          'canceled': 0,
-          'creation_time': 1510159439977,
-          'error': 0,
-          'exec_start_time': 1510159441720,
-          'finish_time': 1510159449612,
-          'finished': 1,
-          'job_desc': u'Execution engine job for kb_Metrics.refseq_genome_counts',
-          'job_id': u'5a03344fe4b088e4b0e0e370',
-          'job_state': u'completed',
-          'method': u'refseq_genome_counts',
-          'module': u'kb_Metrics',
-          'result': [{u'report_name': u'kb_Metrics_report_f97f0567-fee5-48ea-8fc5-1f5e361ee2bd',
-                      u'report_ref': u'25735/121/1'}],
-          'run_time': '0:00:08',
-          'stage': u'complete',
-          'status': u'done',
-          'time_info': [1510159439977,
-                        1510159449612,
-                        None],
-          'user_id': u'qzhang',
-          'wsid': 25735},
-        }
-        '''
         params = self.process_parameters(params)
         if not self.is_admin(requesting_user):
-            # raise ValueError('You do not have permission to view this data.')
-            # print(requesting_user + ': You have permission to view ONLY your jobs.')
             params['user_ids'] = [requesting_user]
 
         return self.get_jobdata_from_ws_exec_ujs(params, token)
 
     def get_jobdata_from_ws_exec_ujs(self, params, token):
         """
-        get_jobdata_from_ws_exec_ujs--The original implementation to get data for appcatalog
-        from querying execution_engine, catalog, workspace and userjobstate
+        get_jobdata_from_ws_exec_ujs--The original implementation to 
+        get data for appcatalog from querying execution_engine,
+        catalog, workspace and userjobstate
         ----------------------
-        To get the job's 'status', 'complete'=true/false, etc., we can do joining as follows
+        To get the job's 'status', 'complete'=true/false, etc.,
+        we can do joining as follows
         --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
         To join exec_engine.exec_apps with exec_engine.exec_tasks:
         --exec_apps['app_job_id']==exec_tasks['app_job_id']
@@ -528,15 +511,15 @@ class MetricsMongoDBController:
         for j in ujs_jobs:
             u_j_s = copy.deepcopy(j)
             u_j_s['job_id'] = u_j_s.pop('_id')
-            u_j_s['exec_start_time'] = u_j_s.pop('started')
+            u_j_s['exec_start_time'] = u_j_s.pop('started', None)
             u_j_s['creation_time'] = u_j_s.pop('created')
             u_j_s['modification_time'] = u_j_s.pop('updated')
-
+            u_j_s['estcompl'] = j.get('estcompl', None)
             u_j_s['time_info'] = [u_j_s.get('creation_time'),
                                   u_j_s.get('modification_time'),
-                                  u_j_s.get('estcompl')]
+                                  u_j_s['estcompl']]
 
-            if u_j_s.get('authstrat') == 'kbaseworkspace':
+            if u_j_s.get('authstrat', None) == 'kbaseworkspace':
                 u_j_s['wsid'] = u_j_s.get('authparam')
 
             if u_j_s.get('desc'):
