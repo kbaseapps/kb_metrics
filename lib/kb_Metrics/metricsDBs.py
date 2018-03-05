@@ -56,7 +56,7 @@ class MongoMetricsDBI:
             # return an instance of UpdateResult(raw_result, acknowledged)
             update_ret = self.mt_users.update_one(upd_filter, upd_op, upsert=True)
         except BulkWriteError as bwe:
-            #print("mt_users.update errored\n:")
+            # print("mt_users.update errored\n:")
             # pprint(bwe.details['writeErrors'])
             panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
             if len(panic) > 0:
@@ -192,11 +192,12 @@ class MongoMetricsDBI:
             {"$match": match_filter},
             {"$project": {"year_mod": "$_id.year_mod", "month_mod": "$_id.month_mod",
                           "day_mod": "$_id.day_mod", "username": "$_id.username", "_id": 0}},
-            {"$group": {"_id": {"year_mod": "$year_mod", "month_mod": "$month_mod", "day_mod": "$day_mod",
-                                "username": "$username"}}},
+            {"$group": {"_id": {"year_mod": "$year_mod", "month_mod": "$month_mod",
+                                "day_mod": "$day_mod", "username": "$username"}}},
             {"$group": {"_id": {"year_mod": "$_id.year_mod", "month_mod": "$_id.month_mod",
                                 "day_mod": "$_id.day_mod"}, "numOfUsers": {"$sum": 1}}},
-            {"$sort": {"_id.year_mod": ASCENDING, "_id.month_mod": ASCENDING, "_id.day_mod": ASCENDING}},
+            {"$sort": {"_id.year_mod": ASCENDING, "_id.month_mod": ASCENDING,
+                       "_id.day_mod": ASCENDING}},
             {"$project": {"yyyy-mm-dd": {"$concat": [{"$substr": ["$_id.year_mod", 0, -1]}, '-',
                                                      {"$substr": [
                                                          "$_id.month_mod", 0, -1]}, '-',
