@@ -14,9 +14,10 @@ def _unix_time_millis_from_datetime(dt):
         raise ValueError('Accepting only datetime.date or datetime.datetime')
 
     epoch = datetime.datetime.utcfromtimestamp(0)
-    if isinstance(dt, datetime.date):
+    if not isinstance(dt, datetime.datetime):
         dt = datetime.datetime.combine(dt, datetime.time())
-    return int((dt - epoch).total_seconds() * 1000)
+
+    return int((dt.replace(tzinfo=None) - epoch).total_seconds() * 1000)
 
 
 def _convert_to_datetime(dt):
