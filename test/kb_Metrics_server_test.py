@@ -232,6 +232,45 @@ class kb_MetricsTest(unittest.TestCase):
         expected_db_list = ['metrics', 'userjobstate', 'workspace', 'exec_engine', 'auth2']
         self.assertItemsEqual(self.db_controller.mongodb_dbList, expected_db_list)
 
+    def test_MetricsMongoDBController_get_apptask_list(self):
+
+        # testing '_get_apptask_list'
+        exec_tasks = [{'app_job_id': 3, 'ujs_job_id': 1, 'job_state': 'accepted'}]
+        exec_apps = [{'app_job_id': 1, 'app_job_state': 'finished_1'},
+                     {'app_job_id': 1, 'app_job_state': 'unfinished_1'},
+                     {'app_job_id': 2, 'app_job_state': 'finished_2'},
+                     {'app_job_id': 2, 'app_job_state': 'unfinished_2'}]
+        ret_params = self.db_controller._get_apptask_list(exec_tasks, exec_apps)
+        self.assertEqual(len(ret_params), 1)
+        self.assertEqual(len(ret_params[0].keys()), 3)
+        self.assertEqual(ret_params[0].get('app_job_id'), 3)
+        self.assertEqual(ret_params[0].get('ujs_job_id'), 1)
+        self.assertEqual(ret_params[0].get('job_state'), 'unfinished_1')
+
+        exec_tasks = [{'app_job_id': 2, 'ujs_job_id': 1, 'job_state': 'accepted'}]
+        exec_apps = [{'app_job_id': 1, 'app_job_state': 'finished_1'},
+                     {'app_job_id': 1, 'app_job_state': 'unfinished_1'},
+                     {'app_job_id': 2, 'app_job_state': 'finished_2'},
+                     {'app_job_id': 2, 'app_job_state': 'unfinished_2'}]
+        ret_params = self.db_controller._get_apptask_list(exec_tasks, exec_apps)
+        self.assertEqual(len(ret_params), 1)
+        self.assertEqual(len(ret_params[0].keys()), 3)
+        self.assertEqual(ret_params[0].get('app_job_id'), 2)
+        self.assertEqual(ret_params[0].get('ujs_job_id'), 1)
+        self.assertEqual(ret_params[0].get('job_state'), 'unfinished_2')
+
+        exec_tasks = [{'app_job_id': 3, 'ujs_job_id': 4, 'job_state': 'accepted'}]
+        exec_apps = [{'app_job_id': 1, 'app_job_state': 'finished_1'},
+                     {'app_job_id': 1, 'app_job_state': 'unfinished_1'},
+                     {'app_job_id': 2, 'app_job_state': 'finished_2'},
+                     {'app_job_id': 2, 'app_job_state': 'unfinished_2'}]
+        ret_params = self.db_controller._get_apptask_list(exec_tasks, exec_apps)
+        self.assertEqual(len(ret_params), 1)
+        self.assertEqual(len(ret_params[0].keys()), 3)
+        self.assertEqual(ret_params[0].get('app_job_id'), 3)
+        self.assertEqual(ret_params[0].get('ujs_job_id'), 4)
+        self.assertEqual(ret_params[0].get('job_state'), 'accepted')
+
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_total_logins")
