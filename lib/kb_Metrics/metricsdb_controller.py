@@ -145,6 +145,63 @@ class MetricsMongoDBController:
 
         return updData
 
+    def insert_daily_activities(self, requesting_user, params, token):
+        """
+        insert user activities reported from Workspace.
+        If duplicated ids found, skip that record.
+        """
+        if not self.is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to invoke this action.')
+
+        ws_ret = self.get_activities_from_wsobjs(requesting_user, params, token)
+        act_list = ws_ret['metrics_result']
+        if len(act_list) == 0:
+            print("No activity records returned for insertion!")
+            return {'metrics_result': []}
+
+        print('Retrieved activities of {} record(s)'.format(len(act_list)))
+
+        for al in act_list:  # set default for inserting records at the first time
+            al['recordLastUpdated'] = datetime.datetime.utcnow()
+
+        try:
+            insert_ret = self.metrics_dbi.insert_activity_records(act_list)
+        except Exception as e:
+            print(e)
+            return {'metrics_result': e}
+        else:
+            return {'metrics_result': insert_ret}
+
+    def insert_narratives(self, requesting_user, params, token):
+        """
+        insert narratives reported from Workspaces and workspaceObjects.
+        If duplicated ids found, skip that record.
+        """
+        if not self.is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to invoke this action.')
+
+        ws_ret = self.get_narratives_from_wsobjs(requesting_user, params, token)
+        narr_list = ws_ret['metrics_result']
+
+        if len(narr_list) == 0:
+            print("No narrative records returned for insertion!")
+            return {'metrics_result': []}
+
+        print('Retrieved narratives of {} record(s)'.format(len(narr_list)))
+        for wn in narr_list:  # set default for inserting records at the first time
+            wn['recordLastUpdated'] = datetime.datetime.utcnow()
+            if wn.get('first_access', None) is None:
+                wn[u'first_access'] = wn['last_saved_at']
+                wn['access_count'] = 1
+
+        try:
+            insert_ret = self.metrics_dbi.insert_narrative_records(narr_list)
+        except Exception as e:
+            print(e)
+            return {'metrics_result': e}
+        else:
+            return {'metrics_result': insert_ret}
+
     def update_narratives(self, requesting_user, params, token):
         """
         update user narratives reported from Workspace.
