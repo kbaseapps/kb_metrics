@@ -469,6 +469,7 @@ class MetricsMongoDBController:
 
         ujs_jobs = self.metrics_dbi.list_ujs_results(
             params['user_ids'], params['minTime'], params['maxTime'])
+
         ujs_jobs = self.convert_isodate_to_millis(
             ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
         return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs)}
@@ -533,7 +534,7 @@ class MetricsMongoDBController:
                 else:
                     u_j_s['job_state'] = 'unknown'
             else:
-                u_j_s['job_state'] = 'suspended'
+                u_j_s['job_state'] = 'suspend'
 
             for lat in app_task_list:
                 if ObjectId(lat['ujs_job_id']) == j['_id']:
@@ -581,7 +582,7 @@ class MetricsMongoDBController:
                     break
 
             # set the run/running/in_queue time
-            if u_j_s['job_state'] == 'completed' or u_j_s['job_state'] == 'suspended':
+            if u_j_s['job_state'] == 'completed' or u_j_s['job_state'] == 'suspend':
                 u_j_s['finish_time'] = u_j_s['modification_time']
                 u_j_s['run_time'] = u_j_s['finish_time'] - u_j_s['exec_start_time']
             elif u_j_s['job_state'] == 'in-progress':
