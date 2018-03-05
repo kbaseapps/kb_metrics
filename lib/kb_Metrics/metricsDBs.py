@@ -470,15 +470,11 @@ class MongoMetricsDBI:
         projection = {
             '_id': 0,
             'app_job_id': 1,
-            'awe_job_id': 1,
             'ujs_job_id': 1,
-            'job_input': 1,
-            'job_output': 1,
-            'input_shock_id': 1,
-            'output_shock_id': 1,
-            'exec_start_time': 1,  # 1449160731753L--miliseconds
-            'creation_time': 1,  # 1449160731753L
-            'finish_time': 1
+            'job_input': 1
+            # 'exec_start_time': 1,  # 1449160731753L--miliseconds
+            # 'creation_time': 1,  # 1449160731753L
+            # 'finish_time': 1
         }
         # grab handle(s) to the database collections needed
         kbtasks = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_TASKS]
@@ -508,10 +504,9 @@ class MongoMetricsDBI:
         projection = {
             '_id': 0,
             'app_job_id': 1,
-            'app_job_state': 1,  # 'completed', 'suspend', 'in-progress','queued'
-            'app_state_data': 1,
-            'creation_time': 1,
-            'modification_time': 1
+            'app_job_state': 1  # 'completed', 'suspend', 'in-progress','queued'
+            # 'creation_time': 1,
+            # 'modification_time': 1
         }
 
         # grab handle(s) to the database collections needed
@@ -550,7 +545,7 @@ class MongoMetricsDBI:
             {"$project": {"username": "$user", "email": "$email",
                           "full_name": "$display",
                           "signup_at": "$create",
-                          "last_signin_at": "$login", 
+                          "last_signin_at": "$login",
                           "roles": 1, "_id": 0}},
             {"$sort": {"signup_at": 1}}
         ]
@@ -633,20 +628,12 @@ class MongoMetricsDBI:
             'started': 1,
             'updated': 1,
             'status': 1,
-            'progtype': 1,
             'authparam': 1,  # "DEFAULT" or workspace_id
             'authstrat': 1,  # "DEFAULT" or "kbaseworkspace"
             'complete': 1,
-            'shared': 1,
             'desc': 1,
             'error': 1,
-            'errormsg': 1,
-            'estcompl': 1,  # e.g.,x ISODate("9999-04-03T08:56:32Z")
-            'maxprog': 1,
-            'meta': 1,
-            'prog': 1,
-            'results': 1,
-            'service': 1  # e.g., "bulkio" or "qzhang"
+            'estcompl': 1  # e.g.,x ISODate("9999-04-03T08:56:32Z")
         }
 
         # grab handle(s) to the database collections needed

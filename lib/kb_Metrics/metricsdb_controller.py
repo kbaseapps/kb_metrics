@@ -6,7 +6,7 @@ import re
 from bson.objectid import ObjectId
 
 from kb_Metrics.metricsDBs import MongoMetricsDBI
-from kb_Metrics.Util import _unix_time_millis_from_datetime, _convert_to_datetime
+from kb_Metrics.Util import _unix_time_millis_from_datetime, _convert_to_datetime, _partition_by_keys
 from Catalog.CatalogClient import Catalog
 
 
@@ -14,7 +14,7 @@ def log(message, prefix_newline=False):
     """
     Logging function, provides a hook to suppress or redirect log messages.
     """
-    print(('\n' if prefix_newline else '') + 
+    print(('\n' if prefix_newline else '') +
           '{0:.2f}'.format(time.time()) + ': ' + str(message))
 
 
@@ -112,8 +112,7 @@ class MetricsMongoDBController:
         idKeys = ['username', 'email']
         dataKeys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
         for u_data in auth2_ret:
-            filterByKey = lambda keys: {x: u_data[x] for x in keys}
-            idData = filterByKey(idKeys)
+            (idData, userData) = _partition_by_keys(u_data, idKeys, dataKeys)
             userData = filterByKey(dataKeys)
             isKbstaff = 1 if idData['username'] in self.kbstaffList else 0
             update_ret = self.metrics_dbi.update_user_records(
@@ -141,9 +140,7 @@ class MetricsMongoDBController:
         idKeys = ['_id']
         countKeys = ['obj_numModified']
         for a_data in act_list:
-            filterByKey = lambda keys: {x: a_data[x] for x in keys}
-            idData = filterByKey(idKeys)
-            countData = filterByKey(countKeys)
+            (idData, countData) = _partition_by_keys(a_data, idKeys, countKeys)
             update_ret = self.metrics_dbi.update_activity_records(
                 idData, countData)
             updData += update_ret.raw_result['nModified']
@@ -228,9 +225,7 @@ class MetricsMongoDBController:
         otherKeys = ['name', 'last_saved_at', 'last_saved_by', 'numObj',
                      'deleted', 'object_version', 'nice_name', 'latest', 'desc']
         for n_data in narr_list:
-            filterByKey = lambda keys: {x: n_data[x] for x in keys}
-            idData = filterByKey(idKeys)
-            otherData = filterByKey(otherKeys)
+            (idData, otherData) = _partition_by_keys(n_data, idKeys, otherKeys)
             update_ret = self.metrics_dbi.update_narrative_records(idData, otherData)
             updData += update_ret.raw_result['nModified']
 
@@ -448,7 +443,7 @@ class MetricsMongoDBController:
 
     def get_jobdata_from_ws_exec_ujs(self, params, token):
         """
-        get_jobdata_from_ws_exec_ujs--The original implementation to 
+        get_jobdata_from_ws_exec_ujs--The original implementation to
         get data for appcatalog from querying execution_engine,
         catalog, workspace and userjobstate
         ----------------------
@@ -471,10 +466,6 @@ class MetricsMongoDBController:
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
 
         exec_apps = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
-
-        # subfunc only needs 'app_job_id' and 'app_job_state'
-        exec_apps = [{'app_job_id': exec_app.get('app_job_id'),
-                      'app_job_state': exec_app.get('app_job_state')} for exec_app in exec_apps]
 
         ujs_jobs = self.metrics_dbi.list_ujs_results(
             params['user_ids'], params['minTime'], params['maxTime'])
@@ -515,15 +506,13 @@ class MetricsMongoDBController:
             u_j_s['creation_time'] = u_j_s.pop('created')
             u_j_s['modification_time'] = u_j_s.pop('updated')
             u_j_s['estcompl'] = j.get('estcompl', None)
-            u_j_s['time_info'] = [u_j_s.get('creation_time'),
-                                  u_j_s.get('modification_time'),
-                                  u_j_s['estcompl']]
 
             if u_j_s.get('authstrat', None) == 'kbaseworkspace':
-                u_j_s['wsid'] = u_j_s.get('authparam')
+                u_j_s['wsid'] = u_j_s.pop('authparam')
+                u_j_s.pop('authstrat')
 
             if u_j_s.get('desc'):
-                desc = u_j_s['desc'].split()[-1]
+                desc = u_j_s.pop('desc').split()[-1]
                 if '.' in desc:
                     u_j_s['method'] = desc
 
@@ -552,7 +541,7 @@ class MetricsMongoDBController:
                         u_j_s['job_state'] = lat['job_state']
 
                     if 'job_input' in lat:
-                        u_j_s['job_input'] = lat['job_input']
+                        #u_j_s['job_input'] = lat['job_input']
                         if not u_j_s.get('app_id'):
                             u_j_s['app_id'] = self.parse_app_id(lat)
 
@@ -571,8 +560,6 @@ class MetricsMongoDBController:
                                 elif 'workspace_name' in lat['job_input']['params']:
                                     u_j_s['workspace_name'] = lat['job_input'][
                                         'params']['workspace_name']
-
-                    u_j_s['job_output'] = lat.get('job_output')
                     break
 
             if not u_j_s.get('app_id') and u_j_s.get('method'):
@@ -594,7 +581,7 @@ class MetricsMongoDBController:
                     break
 
             # set the run/running/in_queue time
-            if u_j_s['job_state'] == 'completed' or u_j_s['job_state'] == 'suspend':
+            if u_j_s['job_state'] == 'completed' or u_j_s['job_state'] == 'suspended':
                 u_j_s['finish_time'] = u_j_s['modification_time']
                 u_j_s['run_time'] = u_j_s['finish_time'] - u_j_s['exec_start_time']
             elif u_j_s['job_state'] == 'in-progress':
@@ -636,11 +623,9 @@ class MetricsMongoDBController:
         n_name = ''
         n_obj = 0
         ws_name = ''
-        # ws_owner = ''
         for ws in ws_narratives:
             if str(ws['workspace_id']) == str(wsid):
                 ws_name = ws['name']
-                # ws_owner = ws['username']
                 n_name = ws_name
                 if not ws.get('meta', None) is None:
                     w_meta = ws['meta']
