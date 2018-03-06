@@ -14,7 +14,7 @@ def log(message, prefix_newline=False):
     """
     Logging function, provides a hook to suppress or redirect log messages.
     """
-    print(('\n' if prefix_newline else '') + 
+    print(('\n' if prefix_newline else '') +
           '{0:.2f}'.format(time.time()) + ': ' + str(message))
 
 
@@ -448,7 +448,7 @@ class MetricsMongoDBController:
 
     def get_jobdata_from_ws_exec_ujs(self, params, token):
         """
-        get_jobdata_from_ws_exec_ujs--The original implementation to 
+        get_jobdata_from_ws_exec_ujs--The original implementation to
         get data for appcatalog from querying execution_engine,
         catalog, workspace and userjobstate
         ----------------------
@@ -472,14 +472,11 @@ class MetricsMongoDBController:
 
         exec_apps = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
 
-        # subfunc only needs 'app_job_id' and 'app_job_state'
-        exec_apps = [{'app_job_id': exec_app.get('app_job_id'),
-                      'app_job_state': exec_app.get('app_job_state')} for exec_app in exec_apps]
-
         ujs_jobs = self.metrics_dbi.list_ujs_results(
             params['user_ids'], params['minTime'], params['maxTime'])
         ujs_jobs = self.convert_isodate_to_millis(
             ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
+
         return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs)}
 
     def _get_apptask_list(self, exec_tasks, exec_apps):
@@ -515,44 +512,43 @@ class MetricsMongoDBController:
             u_j_s['creation_time'] = u_j_s.pop('created')
             u_j_s['modification_time'] = u_j_s.pop('updated')
             u_j_s['estcompl'] = j.get('estcompl', None)
-            u_j_s['time_info'] = [u_j_s.get('creation_time'),
-                                  u_j_s.get('modification_time'),
-                                  u_j_s['estcompl']]
 
-            if u_j_s.get('authstrat', None) == 'kbaseworkspace':
-                u_j_s['wsid'] = u_j_s.get('authparam')
+            authparam = u_j_s.pop('authparam')
+            authstrat = u_j_s.pop('authstrat')
+            if authstrat == 'kbaseworkspace':
+                u_j_s['wsid'] = authparam
 
             if u_j_s.get('desc'):
-                desc = u_j_s['desc'].split()[-1]
+                desc = u_j_s.pop('desc').split()[-1]
                 if '.' in desc:
                     u_j_s['method'] = desc
 
             # Assuming complete, error and status all exist in the records returned
-            if not j.get('error'):
-                if j.get('complete'):
+            if not u_j_s.get('error'):
+                if u_j_s.get('complete'):
                     u_j_s['job_state'] = 'completed'
-                elif j.get('status') in ["Initializing", 'queued']:
-                    u_j_s['job_state'] = j['status']
-                elif j.get('status') in ['canceled', 'cancelled']:
+                elif u_j_s.get('status') in ["Initializing", 'queued']:
+                    u_j_s['job_state'] = u_j_s['status']
+                elif u_j_s.get('status') in ['canceled', 'cancelled']:
                     u_j_s['job_state'] = 'canceled'
-                elif j.get('started'):
+                elif u_j_s.get('exec_start_time'):
                     u_j_s['job_state'] = 'in-progress'
-                elif j['created'] == j['updated']:
+                elif u_j_s['creation_time'] == u_j_s['modification_time']:
                     u_j_s['job_state'] = 'not-started'
-                elif j['created'] < j['updated'] and not j.get('started'):
+                elif (u_j_s['creation_time'] < u_j_s['modification_time'] and
+                        not u_j_s.get('exec_start_time')):
                     u_j_s['job_state'] = 'queued'
                 else:
                     u_j_s['job_state'] = 'unknown'
             else:
-                u_j_s['job_state'] = 'suspended'
+                u_j_s['job_state'] = 'suspend'
 
             for lat in app_task_list:
-                if ObjectId(lat['ujs_job_id']) == j['_id']:
+                if ObjectId(lat['ujs_job_id']) == u_j_s['job_id']:
                     if 'job_state' not in u_j_s:
                         u_j_s['job_state'] = lat['job_state']
 
                     if 'job_input' in lat:
-                        u_j_s['job_input'] = lat['job_input']
                         if not u_j_s.get('app_id'):
                             u_j_s['app_id'] = self.parse_app_id(lat)
 
@@ -571,8 +567,6 @@ class MetricsMongoDBController:
                                 elif 'workspace_name' in lat['job_input']['params']:
                                     u_j_s['workspace_name'] = lat['job_input'][
                                         'params']['workspace_name']
-
-                    u_j_s['job_output'] = lat.get('job_output')
                     break
 
             if not u_j_s.get('app_id') and u_j_s.get('method'):
@@ -594,7 +588,8 @@ class MetricsMongoDBController:
                     break
 
             # set the run/running/in_queue time
-            if u_j_s['job_state'] == 'completed' or u_j_s['job_state'] == 'suspend':
+            if (u_j_s['job_state'] == 'completed' or
+                    u_j_s['job_state'] == 'suspend'):
                 u_j_s['finish_time'] = u_j_s['modification_time']
                 u_j_s['run_time'] = u_j_s['finish_time'] - u_j_s['exec_start_time']
             elif u_j_s['job_state'] == 'in-progress':
@@ -636,11 +631,9 @@ class MetricsMongoDBController:
         n_name = ''
         n_obj = 0
         ws_name = ''
-        # ws_owner = ''
         for ws in ws_narratives:
             if str(ws['workspace_id']) == str(wsid):
                 ws_name = ws['name']
-                # ws_owner = ws['username']
                 n_name = ws_name
                 if not ws.get('meta', None) is None:
                     w_meta = ws['meta']
@@ -772,5 +765,5 @@ class MetricsMongoDBController:
         for dr in src_list:
             for dt in dt_list:
                 if (dt in dr and isinstance(dr[dt], datetime.datetime)):
-                    dr[dt] = _unix_time_millis_from_datetime(dr[dt])  # dr[dt].__str__()
+                    dr[dt] = _unix_time_millis_from_datetime(dr[dt])
         return src_list
