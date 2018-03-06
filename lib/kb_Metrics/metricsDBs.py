@@ -1,4 +1,3 @@
-import datetime
 from pymongo import MongoClient
 from pymongo import ASCENDING
 from pymongo.errors import BulkWriteError
@@ -106,7 +105,7 @@ class MongoMetricsDBI:
         Insert an iterable of user activity documents
         """
         if not isinstance(mt_docs, list):
-            raise ValueError('The variable mt_docs must be a list of mutable mapping type data.')
+            raise ValueError('Variable mt_docs must be a list of mutable mapping type data.')
 
         # grab handle(s) to the database collection(s) targeted
         self.mt_act = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
@@ -131,7 +130,8 @@ class MongoMetricsDBI:
         """
         upd_op = {'$currentDate': {'recordLastUpdated': True},
                   '$set': upd_data,
-                  '$setOnInsert': {'access_count': 1, 'first_access': upd_data['last_saved_at']},
+                  '$setOnInsert': {'access_count': 1,
+                                   'first_access': upd_data['last_saved_at']},
                   '$inc': {'access_count': 1}}
 
         # grab handle(s) to the database collection(s) targeted
@@ -630,8 +630,7 @@ class MongoMetricsDBI:
             'authstrat': 1,  # "DEFAULT" or "kbaseworkspace"
             'complete': 1,
             'desc': 1,
-            'error': 1,
-            'estcompl': 1  # e.g.,x ISODate("9999-04-03T08:56:32Z")
+            'error': 1
         }
 
         # grab handle(s) to the database collections needed

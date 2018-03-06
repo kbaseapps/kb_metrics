@@ -469,59 +469,9 @@ class MetricsMongoDBController:
         ujs_jobs = self.metrics_dbi.list_ujs_results(
             params['user_ids'], params['minTime'], params['maxTime'])
         ujs_jobs = self.convert_isodate_to_millis(
-            ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
+            ujs_jobs, ['created', 'started', 'updated'])
 
         return {'job_states': self.join_app_task_ujs(exec_tasks, ujs_jobs)}
-
-    def _get_apptask_list(self, exec_tasks, exec_apps):
-        """
-        combine/join the apps and tasks to get the exec_tasks
-        """
-        app_task_list = []
-        for t in exec_tasks:
-            ta = copy.deepcopy(t)
-            matched_exec_app = [exec_app for exec_app in exec_apps if
-                                exec_app.get('app_job_id') in [ta.get('app_job_id'),
-                                                               ta.get('ujs_job_id')]]
-            if matched_exec_app:
-                ta['job_state'] = matched_exec_app[-1].get('app_job_state')
-            app_task_list.append(ta)
-
-        return app_task_list
-
-    def _fill_job_state(self, u_j_s):
-        # Assuming complete, error and status all exist in the records returned
-        if not u_j_s.get('error'):
-            if u_j_s.get('complete'):
-                u_j_s['job_state'] = 'completed'
-            elif u_j_s.get('status') in ["Initializing", 'queued']:
-                u_j_s['job_state'] = u_j_s['status']
-            elif u_j_s.get('status') in ['canceled', 'cancelled']:
-                u_j_s['job_state'] = 'canceled'
-            elif u_j_s.get('exec_start_time'):
-                u_j_s['job_state'] = 'in-progress'
-            elif u_j_s['creation_time'] == u_j_s['modification_time']:
-                u_j_s['job_state'] = 'not-started'
-            elif (u_j_s['creation_time'] < u_j_s['modification_time'] and
-                    not u_j_s.get('exec_start_time')):
-                u_j_s['job_state'] = 'queued'
-            else:
-                u_j_s['job_state'] = 'unknown'
-        else:
-            u_j_s['job_state'] = 'suspend'
-
-        # set the run/running/in_queue time
-        if (u_j_s['job_state'] == 'completed' or
-                u_j_s['job_state'] == 'suspend'):
-            u_j_s['finish_time'] = u_j_s['modification_time']
-            u_j_s['run_time'] = u_j_s['finish_time'] - u_j_s['exec_start_time']
-        elif u_j_s['job_state'] == 'in-progress':
-            u_j_s['running_time'] = u_j_s['modification_time'] - u_j_s['exec_start_time']
-        elif u_j_s['job_state'] == 'queued':
-            u_j_s['time_in_queue'] = u_j_s['modification_time'] - u_j_s['creation_time']
-
-        return u_j_s
-
 
     def join_app_task_ujs(self, exec_tasks, ujs_jobs):
         """
@@ -534,6 +484,10 @@ class MetricsMongoDBController:
             u_j_s['exec_start_time'] = u_j_s.pop('started', None)
             u_j_s['creation_time'] = u_j_s.pop('created')
             u_j_s['modification_time'] = u_j_s.pop('updated')
+
+            if (not u_j_s.get('error') and
+                    u_j_s.get('complete')):
+                u_j_s['finish_time'] = u_j_s.pop('modification_time')
 
             authparam = u_j_s.pop('authparam')
             authstrat = u_j_s.pop('authstrat')
@@ -570,10 +524,6 @@ class MetricsMongoDBController:
 
             if not u_j_s.get('app_id') and u_j_s.get('method'):
                 u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
-
-            if (not u_j_s.get('error') and
-                    u_j_s.get('complete')):
-                u_j_s['finish_time'] = u_j_s.pop('modification_time')
 
             # get the narrative name and version if any
             if u_j_s.get('wsid'):
@@ -651,7 +601,7 @@ class MetricsMongoDBController:
         for dr in db_ret:
             dr['_id'] = str(dr['_id'])
         db_ret = self.convert_isodate_to_millis(
-            db_ret, ['created', 'started', 'updated', 'estcompl'])
+            db_ret, ['created', 'started', 'updated'])
 
         return {'metrics_result': db_ret}
 
@@ -742,10 +692,8 @@ class MetricsMongoDBController:
         # Pull the data
         client_groups = self.cat_client.get_client_groups({})
 
-        client_groups = [{'app_id': client_group.get('app_id'),
-                          'client_groups': client_group.get('client_groups')}
-                          for client_group in client_groups]
-        return client_groups
+        return [{'app_id': client_group.get('app_id'),
+            'client_groups': client_group.get('client_groups')} for client_group in client_groups]
 
     def is_admin(self, username):
         return username in self.adminList
