@@ -6,7 +6,7 @@ import re
 from bson.objectid import ObjectId
 
 from kb_Metrics.metricsDBs import MongoMetricsDBI
-from kb_Metrics.Util import _unix_time_millis_from_datetime, _convert_to_datetime, _partition_by_keys
+from kb_Metrics.Util import _unix_time_millis_from_datetime, _convert_to_datetime
 from Catalog.CatalogClient import Catalog
 
 
@@ -112,7 +112,8 @@ class MetricsMongoDBController:
         idKeys = ['username', 'email']
         dataKeys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
         for u_data in auth2_ret:
-            (idData, userData) = _partition_by_keys(u_data, idKeys, dataKeys)
+            filterByKey = lambda keys: {x: u_data[x] for x in keys}
+            idData = filterByKey(idKeys)
             userData = filterByKey(dataKeys)
             isKbstaff = 1 if idData['username'] in self.kbstaffList else 0
             update_ret = self.metrics_dbi.update_user_records(
@@ -140,7 +141,9 @@ class MetricsMongoDBController:
         idKeys = ['_id']
         countKeys = ['obj_numModified']
         for a_data in act_list:
-            (idData, countData) = _partition_by_keys(a_data, idKeys, countKeys)
+            filterByKey = lambda keys: {x: a_data[x] for x in keys}
+            idData = filterByKey(idKeys)
+            countData = filterByKey(countKeys)
             update_ret = self.metrics_dbi.update_activity_records(
                 idData, countData)
             updData += update_ret.raw_result['nModified']
@@ -225,7 +228,9 @@ class MetricsMongoDBController:
         otherKeys = ['name', 'last_saved_at', 'last_saved_by', 'numObj',
                      'deleted', 'object_version', 'nice_name', 'latest', 'desc']
         for n_data in narr_list:
-            (idData, otherData) = _partition_by_keys(n_data, idKeys, otherKeys)
+            filterByKey = lambda keys: {x: n_data[x] for x in keys}
+            idData = filterByKey(idKeys)
+            otherData = filterByKey(otherKeys)
             update_ret = self.metrics_dbi.update_narrative_records(idData, otherData)
             updData += update_ret.raw_result['nModified']
 
