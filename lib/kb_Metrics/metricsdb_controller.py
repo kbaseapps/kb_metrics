@@ -571,6 +571,10 @@ class MetricsMongoDBController:
             if not u_j_s.get('app_id') and u_j_s.get('method'):
                 u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
 
+            if (not u_j_s.get('error') and
+                    u_j_s.get('complete')):
+                u_j_s['finish_time'] = u_j_s.pop('modification_time')
+
             # get the narrative name and version if any
             if u_j_s.get('wsid'):
                 n_nm, n_obj = self.map_narrative(u_j_s['wsid'], self.ws_narratives)
