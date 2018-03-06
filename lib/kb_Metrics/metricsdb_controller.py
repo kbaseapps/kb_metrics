@@ -455,35 +455,28 @@ class MetricsMongoDBController:
         To get the job's 'status', 'complete'=true/false, etc.,
         we can do joining as follows
         --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
-        To join exec_engine.exec_apps with exec_engine.exec_tasks:
-        --exec_apps['app_job_id']==exec_tasks['app_job_id']
-        To join exec_engine.exec_apps with ujs.jobstate:
-        --ObjectId(exec_apps.app_job_state['job_id'])==jobstate['_id']
         """
 
-        # 0. get the ws_narrative and client_groups data for lookups
+        # 1. get the ws_narrative and client_groups data for lookups
         if self.ws_narratives is None:
             self.ws_narratives = self.metrics_dbi.list_ws_narratives()
         if self.client_groups is None:
             self.client_groups = self.get_client_groups_from_cat(token)
 
-        # 1. query dbs to get lists of tasks and jobs
+        # 2. query dbs to get lists of tasks and jobs
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
-
-        exec_apps = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
 
         ujs_jobs = self.metrics_dbi.list_ujs_results(
             params['user_ids'], params['minTime'], params['maxTime'])
         ujs_jobs = self.convert_isodate_to_millis(
             ujs_jobs, ['created', 'started', 'updated', 'estcompl'])
 
-        return {'job_states': self.join_app_task_ujs(exec_tasks, exec_apps, ujs_jobs)}
+        return {'job_states': self.join_app_task_ujs(exec_tasks, ujs_jobs)}
 
     def _get_apptask_list(self, exec_tasks, exec_apps):
         """
-        combine/join the apps and tasks to get the app_task_list
+        combine/join the apps and tasks to get the exec_tasks
         """
-
         app_task_list = []
         for t in exec_tasks:
             ta = copy.deepcopy(t)
@@ -496,14 +489,44 @@ class MetricsMongoDBController:
 
         return app_task_list
 
-    def join_app_task_ujs(self, exec_tasks, exec_apps, ujs_jobs):
-        """
-        combine/join the apps, tasks and jobs lists to get the final return data
-        """
-        # 1) combine/join the apps and tasks to get the app_task_list
-        app_task_list = self._get_apptask_list(exec_tasks, exec_apps)
+    def _fill_job_state(self, u_j_s):
+        # Assuming complete, error and status all exist in the records returned
+        if not u_j_s.get('error'):
+            if u_j_s.get('complete'):
+                u_j_s['job_state'] = 'completed'
+            elif u_j_s.get('status') in ["Initializing", 'queued']:
+                u_j_s['job_state'] = u_j_s['status']
+            elif u_j_s.get('status') in ['canceled', 'cancelled']:
+                u_j_s['job_state'] = 'canceled'
+            elif u_j_s.get('exec_start_time'):
+                u_j_s['job_state'] = 'in-progress'
+            elif u_j_s['creation_time'] == u_j_s['modification_time']:
+                u_j_s['job_state'] = 'not-started'
+            elif (u_j_s['creation_time'] < u_j_s['modification_time'] and
+                    not u_j_s.get('exec_start_time')):
+                u_j_s['job_state'] = 'queued'
+            else:
+                u_j_s['job_state'] = 'unknown'
+        else:
+            u_j_s['job_state'] = 'suspend'
 
-        # 2) combine/join app_task_list with ujs_jobs list to get the final return data
+        # set the run/running/in_queue time
+        if (u_j_s['job_state'] == 'completed' or
+                u_j_s['job_state'] == 'suspend'):
+            u_j_s['finish_time'] = u_j_s['modification_time']
+            u_j_s['run_time'] = u_j_s['finish_time'] - u_j_s['exec_start_time']
+        elif u_j_s['job_state'] == 'in-progress':
+            u_j_s['running_time'] = u_j_s['modification_time'] - u_j_s['exec_start_time']
+        elif u_j_s['job_state'] == 'queued':
+            u_j_s['time_in_queue'] = u_j_s['modification_time'] - u_j_s['creation_time']
+
+        return u_j_s
+
+
+    def join_app_task_ujs(self, exec_tasks, ujs_jobs):
+        """
+        combine/join exec_tasks with ujs_jobs list to get the final return data
+        """
         ujs_ret = []
         for j in ujs_jobs:
             u_j_s = copy.deepcopy(j)
@@ -511,7 +534,6 @@ class MetricsMongoDBController:
             u_j_s['exec_start_time'] = u_j_s.pop('started', None)
             u_j_s['creation_time'] = u_j_s.pop('created')
             u_j_s['modification_time'] = u_j_s.pop('updated')
-            u_j_s['estcompl'] = j.get('estcompl', None)
 
             authparam = u_j_s.pop('authparam')
             authstrat = u_j_s.pop('authstrat')
@@ -523,49 +545,26 @@ class MetricsMongoDBController:
                 if '.' in desc:
                     u_j_s['method'] = desc
 
-            # Assuming complete, error and status all exist in the records returned
-            if not u_j_s.get('error'):
-                if u_j_s.get('complete'):
-                    u_j_s['job_state'] = 'completed'
-                elif u_j_s.get('status') in ["Initializing", 'queued']:
-                    u_j_s['job_state'] = u_j_s['status']
-                elif u_j_s.get('status') in ['canceled', 'cancelled']:
-                    u_j_s['job_state'] = 'canceled'
-                elif u_j_s.get('exec_start_time'):
-                    u_j_s['job_state'] = 'in-progress'
-                elif u_j_s['creation_time'] == u_j_s['modification_time']:
-                    u_j_s['job_state'] = 'not-started'
-                elif (u_j_s['creation_time'] < u_j_s['modification_time'] and
-                        not u_j_s.get('exec_start_time')):
-                    u_j_s['job_state'] = 'queued'
-                else:
-                    u_j_s['job_state'] = 'unknown'
-            else:
-                u_j_s['job_state'] = 'suspend'
-
-            for lat in app_task_list:
-                if ObjectId(lat['ujs_job_id']) == u_j_s['job_id']:
-                    if 'job_state' not in u_j_s:
-                        u_j_s['job_state'] = lat['job_state']
-
-                    if 'job_input' in lat:
+            for exec_task in exec_tasks:
+                if ObjectId(exec_task['ujs_job_id']) == u_j_s['job_id']:
+                    if 'job_input' in exec_task:
                         if not u_j_s.get('app_id'):
-                            u_j_s['app_id'] = self.parse_app_id(lat)
+                            u_j_s['app_id'] = self.parse_app_id(exec_task)
 
                         if not u_j_s.get('method'):
-                            u_j_s['method'] = self.parse_method(lat)
+                            u_j_s['method'] = self.parse_method(exec_task)
 
                         if not u_j_s.get('wsid'):
-                            if 'wsid' in lat['job_input']:
-                                u_j_s['wsid'] = lat['job_input']['wsid']
-                            elif 'params' in lat['job_input']:
-                                if 'ws_id' in lat['job_input']['params']:
-                                    u_j_s['wsid'] = lat['job_input']['params']['ws_id']
-                                if 'workspace' in lat['job_input']['params']:
-                                    u_j_s['workspace_name'] = lat[
+                            if 'wsid' in exec_task['job_input']:
+                                u_j_s['wsid'] = exec_task['job_input']['wsid']
+                            elif 'params' in exec_task['job_input']:
+                                if 'ws_id' in exec_task['job_input']['params']:
+                                    u_j_s['wsid'] = exec_task['job_input']['params']['ws_id']
+                                if 'workspace' in exec_task['job_input']['params']:
+                                    u_j_s['workspace_name'] = exec_task[
                                         'job_input']['params']['workspace']
-                                elif 'workspace_name' in lat['job_input']['params']:
-                                    u_j_s['workspace_name'] = lat['job_input'][
+                                elif 'workspace_name' in exec_task['job_input']['params']:
+                                    u_j_s['workspace_name'] = exec_task['job_input'][
                                         'params']['workspace_name']
                     break
 
@@ -579,7 +578,7 @@ class MetricsMongoDBController:
                     u_j_s['narrative_name'] = n_nm
                     u_j_s['narrative_objNo'] = n_obj
 
-            # get some info from the client groups
+            # get the client groups
             u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
             for clnt in self.client_groups:
                 clnt_app_id = clnt['app_id']
@@ -587,40 +586,30 @@ class MetricsMongoDBController:
                     u_j_s['client_groups'] = clnt['client_groups']
                     break
 
-            # set the run/running/in_queue time
-            if (u_j_s['job_state'] == 'completed' or
-                    u_j_s['job_state'] == 'suspend'):
-                u_j_s['finish_time'] = u_j_s['modification_time']
-                u_j_s['run_time'] = u_j_s['finish_time'] - u_j_s['exec_start_time']
-            elif u_j_s['job_state'] == 'in-progress':
-                u_j_s['running_time'] = u_j_s['modification_time'] - u_j_s['exec_start_time']
-            elif u_j_s['job_state'] == 'queued':
-                u_j_s['time_in_queue'] = u_j_s['modification_time'] - u_j_s['creation_time']
-
             ujs_ret.append(u_j_s)
         return ujs_ret
 
-    def parse_app_id(self, lat):
+    def parse_app_id(self, exec_task):
         app_id = ''
-        if 'app_id' in lat['job_input']:
-            if '/' in lat['job_input']['app_id']:
-                app_id = lat['job_input']['app_id']
-            elif '.' in lat['job_input']['app_id']:
-                app_id = lat['job_input']['app_id'].replace('.', '/')
+        if 'app_id' in exec_task['job_input']:
+            if '/' in exec_task['job_input']['app_id']:
+                app_id = exec_task['job_input']['app_id']
+            elif '.' in exec_task['job_input']['app_id']:
+                app_id = exec_task['job_input']['app_id'].replace('.', '/')
             else:
-                app_id = lat['job_input']['app_id']
+                app_id = exec_task['job_input']['app_id']
 
         return app_id
 
-    def parse_method(self, lat):
+    def parse_method(self, exec_task):
         method_id = ''
-        if 'method' in lat['job_input']:
-            if '.' in lat['job_input']['method']:
-                method_id = lat['job_input']['method']
-            elif '/' in lat['job_input']['method']:
-                method_id = lat['job_input']['method'].replace('/', '.')
+        if 'method' in exec_task['job_input']:
+            if '.' in exec_task['job_input']['method']:
+                method_id = exec_task['job_input']['method']
+            elif '/' in exec_task['job_input']['method']:
+                method_id = exec_task['job_input']['method'].replace('/', '.')
             else:
-                method_id = lat['job_input']['method']
+                method_id = exec_task['job_input']['method']
 
         return method_id
 
@@ -748,8 +737,10 @@ class MetricsMongoDBController:
                                   auth_svc=self.auth_service_url, token=token)
         # Pull the data
         client_groups = self.cat_client.get_client_groups({})
-        # log("\nClient group example:\n{}".format(pformat(client_groups[0])))
 
+        client_groups = [{'app_id': client_group.get('app_id'),
+                          'client_groups': client_group.get('client_groups')}
+                          for client_group in client_groups]
         return client_groups
 
     def is_admin(self, username):

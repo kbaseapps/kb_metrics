@@ -30,16 +30,3 @@ def _convert_to_datetime(dt):
         return _datetime_from_utc(dt)
     else:
         raise ValueError('Cannot convert {} to datetime'.format(dt))
-
-
-def _partition_by_keys(src_list, idKeys, dataKeys):
-    idList = []
-    dataList = []
-
-    for src in src_list:
-        for id_k in idKeys:
-            idList.append({id_k: src[id_k]})
-        for data_k in dataKeys:
-            dataList.append({data_k: src[data_k]})
-    return (idList, dataList)
-
