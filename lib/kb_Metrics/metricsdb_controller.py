@@ -513,9 +513,10 @@ class MetricsMongoDBController:
             u_j_s['modification_time'] = u_j_s.pop('updated')
             u_j_s['estcompl'] = j.get('estcompl', None)
 
-            if u_j_s.get('authstrat', None) == 'kbaseworkspace':
-                u_j_s['wsid'] = u_j_s.pop('authparam')
-                u_j_s.pop('authstrat')
+            authparam = u_j_s.pop('authparam')
+            authstrat = u_j_s.pop('authstrat')
+            if authstrat == 'kbaseworkspace':
+                u_j_s['wsid'] = authparam
 
             if u_j_s.get('desc'):
                 desc = u_j_s.pop('desc').split()[-1]
