@@ -1,4 +1,4 @@
-
+import datetime
 from pymongo import MongoClient
 from pymongo import ASCENDING
 from pymongo.errors import BulkWriteError
@@ -597,9 +597,7 @@ class MongoMetricsDBI:
             ('login', ASCENDING)],
             unique=True, sparse=False)
         '''
-        return list(kbusers.find(
-            filter, projection))  # ,
-        # sort=[['create', ASCENDING]]))
+        return list(kbusers.find(filter, projection))
 
     def list_ujs_results(self, userIds, minTime, maxTime):
         filter = {}
@@ -637,22 +635,8 @@ class MongoMetricsDBI:
         }
 
         # grab handle(s) to the database collections needed
-        # self.userstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._USERSTATE]
         jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
 
-        '''
-        # Make sure we have an index on user, created and updated
-        self.userstate.ensure_index(('created', ASCENDING), sparse=False)
-        self.jobstate.ensure_index([
-            ('user', ASCENDING),
-            ('created', ASCENDING),
-            ('updated', ASCENDING)],
-            unique=True, sparse=False)
-        '''
-
-        # return list(self.jobstate.find(filter, projection))
-        return list(jobstate.find(
-            filter, projection  # ,
-        ))  # sort=[['created', ASCENDING]]))
+        return list(jobstate.find(filter, projection))
 
     # End functions to query the other dbs...
