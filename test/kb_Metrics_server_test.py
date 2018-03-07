@@ -240,30 +240,7 @@ class kb_MetricsTest(unittest.TestCase):
             "ujs_job_id" : "5968cd75e4b08b65f9ff5d7c",
             "creation_time" : 1500040565805,
             "job_input" : {
-                "service_ver" : "ab6b07be3a1c13e9ad5d54593bda97dfa46590e8",
                 "method" : "kb_rnaseq_donwloader.export_rna_seq_expression_as_zip",
-                "params" : [
-                    {
-                        "input_ref" : "arfath:narrative_1498151834637/extracted_hy5_rep2_tophat_cufflinks_expression"
-                    }
-                ],
-                "requested_release" : "release"
-            },
-            "exec_start_time" : 1500040575589,
-            "finish_time" : 1500040661062
-        },
-        {
-            "ujs_job_id" : "5968cd75e4b08b65f9ff5d7c",
-            "creation_time" : 1500040565805,
-            "job_input" : {
-                "service_ver" : "ab6b07be3a1c13e9ad5d54593bda97dfa46590e8",
-                "method" : "kb_rnaseq_donwloader.export_rna_seq_expression_as_zip",
-                "params" : [
-                    {
-                        "input_ref" : "arfath:narrative_1498151834637/extracted_hy5_rep2_tophat_cufflinks_expression"
-                    }
-                ],
-                "requested_release" : "release"
             },
             "exec_start_time" : 1500040575589,
             "finish_time" : 1500040661062
@@ -272,10 +249,6 @@ class kb_MetricsTest(unittest.TestCase):
             "ujs_job_id" : "596832a4e4b08b65f9ff5d6f",
             "creation_time" : 1500000932952,
             "job_input" : {
-                "service_ver" : "63bd07ebfbdfddd9729809a462ec80bbde18ca3c",
-                "source_ws_objects" : [
-                    "15206/242/1"
-                ],
                 "app_id" : "kb_deseq/run_DESeq2",
                 "method" : "kb_deseq.run_deseq2_app",
                 "params" : [
@@ -302,10 +275,6 @@ class kb_MetricsTest(unittest.TestCase):
             "ujs_job_id" : "5968e5fde4b08b65f9ff5d7d",
             "creation_time" : 1500046845591,
             "job_input" : {
-                "service_ver" : "a50583a4ca929eb0ff94a985a1d2db0c7c8997aa",
-                "source_ws_objects" : [
-                    "23165/2/1"
-                ],
                 "app_id" : "kb_cufflinks/run_Cuffdiff",
                 "method" : "kb_cufflinks.run_Cuffdiff",
                 "params" : [
@@ -320,7 +289,6 @@ class kb_MetricsTest(unittest.TestCase):
                     }
                 ],
                 "wsid" : 23165,
-                "requested_release" : None
             },
             "exec_start_time" : 1500046850814,
             "finish_time" : 1500047709771
@@ -374,12 +342,22 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_results[0]['app_id'], 'kb_deseq/run_DESeq2')
         self.assertEqual(joined_results[0]['method'], 'kb_deseq.run_deseq2_app')
         self.assertEqual(joined_results[0]['finish_time'], 1500001203182)
-        self.assertTrue(joined_results[0]['client_groups'])
+        self.assertIn('client_groups', joined_results[0])
+        self.assertEqual(joined_results[0]['workspace_name'], 'tgu2:1481170361822')
+
+        self.assertNotIn('wsid', joined_results[1])
+        self.assertEqual(joined_results[1]['app_id'], 'kb_rnaseq_donwloader/export_rna_seq_expression_as_zip')
+        self.assertEqual(joined_results[1]['method'], 'kb_rnaseq_donwloader.export_rna_seq_expression_as_zip')
+        self.assertEqual(joined_results[1]['finish_time'], 1500040661079)
+        self.assertIn('client_groups', joined_results[1])
+        self.assertNotIn('workspace_name', joined_results[1])
+
         self.assertEqual(joined_results[2]['wsid'], '23165')
         self.assertEqual(joined_results[2]['app_id'], 'kb_cufflinks/run_Cuffdiff')
         self.assertEqual(joined_results[2]['method'], 'kb_cufflinks.run_Cuffdiff')
         self.assertEqual(joined_results[2]['workspace_name'], 'umaganapathyswork:narrative_1498130853194')
         self.assertEqual(joined_results[2]['finish_time'], 1500047709785)
+        self.assertIn('client_groups', joined_results[2])
 
     '''
     def test_MetricsMongoDBController_get_apptask_list(self):
