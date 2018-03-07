@@ -19,6 +19,7 @@ from kb_Metrics.kb_MetricsImpl import kb_Metrics
 from kb_Metrics.kb_MetricsServer import MethodContext
 from kb_Metrics.authclient import KBaseAuth as _KBaseAuth
 from kb_Metrics.metricsdb_controller import MetricsMongoDBController
+from kb_Metrics.metricsDBs import MongoMetricsDBI
 
 
 class kb_MetricsTest(unittest.TestCase):
@@ -77,7 +78,7 @@ class kb_MetricsTest(unittest.TestCase):
         cls._insert_data(client, 'workspace', 'workspaceObjects')
         cls._insert_data(client, 'metrics', 'daily_activities')
 
-        print(client.database_names())
+        cls.db_names = client.database_names()
         # updating created to timstamp field for userjobstate.jobstate
         for record in client.userjobstate.jobstate.find():
             created_str = record.get('created')
@@ -89,6 +90,8 @@ class kb_MetricsTest(unittest.TestCase):
         for db in client.database_names():
             if db != 'local':
                 client[db].command("createUser", "admin", pwd="password", roles=["readWrite"])
+
+        cls.dbi =  MongoMetricsDBI('', client.database_names(), 'admin', 'password')
 
     @classmethod
     def _insert_data(cls, client, db_name, table):
@@ -119,6 +122,54 @@ class kb_MetricsTest(unittest.TestCase):
 
     def getContext(self):
         return self.__class__.ctx
+
+    def test_dbi_contructor(self):
+        # testing if the db is connected and handshakes cab be made
+        exec_cur = self.dbi.metricsDBs['exec_engine']['exec_tasks'].find()
+        self.assertEqual(len(list(exec_cur)), 83)
+        ws_cur = self.dbi.metricsDBs['workspace']['workspaces'].find()
+        self.assertEqual(len(list(ws_cur)), 26)
+        wsobj_cur = self.dbi.metricsDBs['workspace']['workspaceObjects'].find()
+        self.assertEqual(len(list(wsobj_cur)), 826)
+        ujs_cur = self.dbi.metricsDBs['userjobstate']['jobstate'].find()
+        self.assertEqual(len(list(ujs_cur)), 35)
+        act_cur = self.dbi.metricsDBs['metrics']['daily_activities'].find()
+        self.assertEqual(len(list(act_cur)), 75)
+
+    def test_MetricsMongoDBs_list_exec_tasks(self):
+        minTime = 1500000932952
+        maxTime = 1500046845591
+
+        # testing list_exec_tasks return data
+        exec_tasks = self.dbi.list_exec_tasks(minTime, maxTime)
+        self.assertEqual(len(exec_tasks), 3)
+
+    def test_MetricsMongoDBs_list_ujs_results(self):
+        minTime = 1500000932952
+        maxTime = 1500046845591
+        user_list1 = ['tgu2', 'umaganapathyswork', 'arfath']
+        user_list2 = ['umaganapathyswork', 'arfath']
+
+        epoch = datetime.datetime.utcfromtimestamp(0)
+        # testing list_ujs_results return data, with userIds
+        ujs = self.dbi.list_ujs_results(user_list1, minTime, maxTime)
+        self.assertEqual(len(ujs), 15)
+        ujs = self.dbi.list_ujs_results(user_list2, minTime, maxTime)
+        self.assertEqual(len(ujs), 3)
+        for uj in ujs:
+            self.assertIn(uj.get('user'), user_list2)
+            uj_creation_time = int((uj.get('created') - epoch).total_seconds() * 1000)
+            self.assertTrue(minTime <= uj_creation_time <= maxTime)
+
+        # testing list_ujs_results return data, without userIds
+        ujs = self.dbi.list_ujs_results([], minTime, maxTime)
+        self.assertEqual(len(ujs), 15)
+
+        # testing list_ujs_results return data, with different userIds and times
+        ujs = self.dbi.list_ujs_results(['wjriehl'], 1500052541065, 1500074641912)
+        self.assertEqual(len(ujs), 8)
+        ujs = self.dbi.list_ujs_results([], 1500052541065, 1500074641912)
+        self.assertEqual(len(ujs), 14)
 
     def test_MetricsMongoDBController_config_str_to_list(self):
         # testing None config input
@@ -238,16 +289,12 @@ class kb_MetricsTest(unittest.TestCase):
         # testing data sets
         exec_tasks =[{
             "ujs_job_id" : "5968cd75e4b08b65f9ff5d7c",
-            "creation_time" : 1500040565805,
             "job_input" : {
                 "method" : "kb_rnaseq_donwloader.export_rna_seq_expression_as_zip",
             },
-            "exec_start_time" : 1500040575589,
-            "finish_time" : 1500040661062
         },
         {
             "ujs_job_id" : "596832a4e4b08b65f9ff5d6f",
-            "creation_time" : 1500000932952,
             "job_input" : {
                 "app_id" : "kb_deseq/run_DESeq2",
                 "method" : "kb_deseq.run_deseq2_app",
@@ -268,12 +315,9 @@ class kb_MetricsTest(unittest.TestCase):
                 ],
                 "wsid" : 15206,
             },
-            "exec_start_time" : 1500000937699,
-            "finish_time" : 1500001203168
         },
         {
             "ujs_job_id" : "5968e5fde4b08b65f9ff5d7d",
-            "creation_time" : 1500046845591,
             "job_input" : {
                 "app_id" : "kb_cufflinks/run_Cuffdiff",
                 "method" : "kb_cufflinks.run_Cuffdiff",
@@ -290,8 +334,6 @@ class kb_MetricsTest(unittest.TestCase):
                 ],
                 "wsid" : 23165,
             },
-            "exec_start_time" : 1500046850814,
-            "finish_time" : 1500047709771
         }]
         ujs_jobs =[{
             "_id" : "596832a4e4b08b65f9ff5d6f",
@@ -335,7 +377,7 @@ class kb_MetricsTest(unittest.TestCase):
             "complete" : True,
             "error" : False
         }]
-        # testing the joining result
+        # testing the correct data items appear in the joined result
         joined_results = self.db_controller.join_task_ujs(exec_tasks, ujs_jobs)
         self.assertEqual(len(joined_results), 3)
         self.assertEqual(joined_results[0]['wsid'], '15206')
@@ -359,46 +401,22 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_results[2]['finish_time'], 1500047709785)
         self.assertIn('client_groups', joined_results[2])
 
-    '''
-    def test_MetricsMongoDBController_get_apptask_list(self):
+    def test_MetricsMongoDBController_get_jobdata_from_ws_exec_ujs(self):
+        # testing if the data has expected structure and values
+        user_list = ['tgu2', 'umaganapathyswork', 'arfath']
+        params = {'user_ids': user_list}
+        start_datetime = datetime.datetime.strptime('2018-02-14T00:00:00+0000',
+                                               '%Y-%m-%dT%H:%M:%S+0000')
+        end_datetime = datetime.datetime.strptime('2018-02-18T00:00:00+0000',
+                                          '%Y-%m-%dT%H:%M:%S+0000')
+        params['minTime'] = 1500000932952
+        params['maxTime'] = 1500046845591
 
-        # testing '_get_apptask_list'
-        exec_tasks = [{'app_job_id': 3, 'ujs_job_id': 1, 'job_state': 'accepted'}]
-        exec_apps = [{'app_job_id': 1, 'app_job_state': 'finished_1'},
-                     {'app_job_id': 1, 'app_job_state': 'unfinished_1'},
-                     {'app_job_id': 2, 'app_job_state': 'finished_2'},
-                     {'app_job_id': 2, 'app_job_state': 'unfinished_2'}]
-        ret_params = self.db_controller._get_apptask_list(exec_tasks, exec_apps)
-        self.assertEqual(len(ret_params), 1)
-        self.assertEqual(len(ret_params[0].keys()), 3)
-        self.assertEqual(ret_params[0].get('app_job_id'), 3)
-        self.assertEqual(ret_params[0].get('ujs_job_id'), 1)
-        self.assertEqual(ret_params[0].get('job_state'), 'unfinished_1')
+        input_params = self.db_controller.process_parameters(params)
+        ujs_ret = self.db_controller.get_jobdata_from_ws_exec_ujs(input_params, self.getContext()['token'])
+        ujs = ujs_ret['job_states']
+        print(ujs)
 
-        exec_tasks = [{'app_job_id': 2, 'ujs_job_id': 1, 'job_state': 'accepted'}]
-        exec_apps = [{'app_job_id': 1, 'app_job_state': 'finished_1'},
-                     {'app_job_id': 1, 'app_job_state': 'unfinished_1'},
-                     {'app_job_id': 2, 'app_job_state': 'finished_2'},
-                     {'app_job_id': 2, 'app_job_state': 'unfinished_2'}]
-        ret_params = self.db_controller._get_apptask_list(exec_tasks, exec_apps)
-        self.assertEqual(len(ret_params), 1)
-        self.assertEqual(len(ret_params[0].keys()), 3)
-        self.assertEqual(ret_params[0].get('app_job_id'), 2)
-        self.assertEqual(ret_params[0].get('ujs_job_id'), 1)
-        self.assertEqual(ret_params[0].get('job_state'), 'unfinished_2')
-
-        exec_tasks = [{'app_job_id': 3, 'ujs_job_id': 4, 'job_state': 'accepted'}]
-        exec_apps = [{'app_job_id': 1, 'app_job_state': 'finished_1'},
-                     {'app_job_id': 1, 'app_job_state': 'unfinished_1'},
-                     {'app_job_id': 2, 'app_job_state': 'finished_2'},
-                     {'app_job_id': 2, 'app_job_state': 'unfinished_2'}]
-        ret_params = self.db_controller._get_apptask_list(exec_tasks, exec_apps)
-        self.assertEqual(len(ret_params), 1)
-        self.assertEqual(len(ret_params[0].keys()), 3)
-        self.assertEqual(ret_params[0].get('app_job_id'), 3)
-        self.assertEqual(ret_params[0].get('ujs_job_id'), 4)
-        self.assertEqual(ret_params[0].get('job_state'), 'accepted')
-    '''
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test

@@ -33,11 +33,15 @@ class MongoMetricsDBI:
         self.metricsDBs = dict()
         for m_db in mongo_dbs:
             # create the client and authenticate
-            self.mongo_clients[m_db] = MongoClient(
-                "mongodb://" + mongo_user + ":" + mongo_psswd +
-                "@" + mongo_host + "/" + m_db)
+            if mongo_host:
+                self.mongo_clients[m_db] = MongoClient(
+                    "mongodb://" + mongo_user + ":" + mongo_psswd +
+                    "@" + mongo_host + "/" + m_db)
+            else: # default to localhost:27017
+                self.mongo_clients[m_db] = MongoClient()
             # grab a handle to the database
             self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
+
 
     # Begin functions to write to the metrics database...
     def update_user_records(self, upd_filter, upd_data, kbstaff):
@@ -471,9 +475,9 @@ class MongoMetricsDBI:
             '_id': 0,
             'app_job_id': 1,
             'ujs_job_id': 1,
+            'creation_time': 1,  # 1449160731753L
             'job_input': 1
             # 'exec_start_time': 1,  # 1449160731753L--miliseconds
-            # 'creation_time': 1,  # 1449160731753L
             # 'finish_time': 1
         }
         # grab handle(s) to the database collections needed

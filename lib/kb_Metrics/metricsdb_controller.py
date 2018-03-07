@@ -465,7 +465,6 @@ class MetricsMongoDBController:
 
         # 2. query dbs to get lists of tasks and jobs
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
-
         ujs_jobs = self.metrics_dbi.list_ujs_results(
             params['user_ids'], params['minTime'], params['maxTime'])
         ujs_jobs = self.convert_isodate_to_millis(
