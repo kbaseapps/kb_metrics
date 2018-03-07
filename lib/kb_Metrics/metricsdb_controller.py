@@ -471,9 +471,9 @@ class MetricsMongoDBController:
         ujs_jobs = self.convert_isodate_to_millis(
             ujs_jobs, ['created', 'started', 'updated'])
 
-        return {'job_states': self.join_app_task_ujs(exec_tasks, ujs_jobs)}
+        return {'job_states': self.join_task_ujs(exec_tasks, ujs_jobs)}
 
-    def join_app_task_ujs(self, exec_tasks, ujs_jobs):
+    def join_task_ujs(self, exec_tasks, ujs_jobs):
         """
         combine/join exec_tasks with ujs_jobs list to get the final return data
         """
@@ -484,10 +484,6 @@ class MetricsMongoDBController:
             u_j_s['exec_start_time'] = u_j_s.pop('started', None)
             u_j_s['creation_time'] = u_j_s.pop('created')
             u_j_s['modification_time'] = u_j_s.pop('updated')
-
-            if (not u_j_s.get('error') and
-                    u_j_s.get('complete')):
-                u_j_s['finish_time'] = u_j_s.pop('modification_time')
 
             authparam = u_j_s.pop('authparam')
             authstrat = u_j_s.pop('authstrat')
@@ -500,11 +496,9 @@ class MetricsMongoDBController:
                     u_j_s['method'] = desc
 
             for exec_task in exec_tasks:
-                if ObjectId(exec_task['ujs_job_id']) == u_j_s['job_id']:
+                if exec_task['ujs_job_id'] == u_j_s['job_id']:
                     if 'job_input' in exec_task:
-                        if not u_j_s.get('app_id'):
-                            u_j_s['app_id'] = self.parse_app_id(exec_task)
-
+                        u_j_s['app_id'] = self.parse_app_id(exec_task)
                         if not u_j_s.get('method'):
                             u_j_s['method'] = self.parse_method(exec_task)
 
@@ -512,21 +506,27 @@ class MetricsMongoDBController:
                             if 'wsid' in exec_task['job_input']:
                                 u_j_s['wsid'] = exec_task['job_input']['wsid']
                             elif 'params' in exec_task['job_input']:
-                                if 'ws_id' in exec_task['job_input']['params']:
-                                    u_j_s['wsid'] = exec_task['job_input']['params']['ws_id']
-                                if 'workspace' in exec_task['job_input']['params']:
-                                    u_j_s['workspace_name'] = exec_task[
-                                        'job_input']['params']['workspace']
-                                elif 'workspace_name' in exec_task['job_input']['params']:
-                                    u_j_s['workspace_name'] = exec_task['job_input'][
-                                        'params']['workspace_name']
+                                if 'ws_id' in exec_task['job_input']['params'][0]:
+                                    u_j_s['wsid'] = exec_task['job_input']['params'][0]['ws_id']
+
+                        if 'params' in exec_task['job_input']:
+                            if 'workspace' in exec_task['job_input']['params'][0]:
+                                u_j_s['workspace_name'] = exec_task[
+                                            'job_input']['params'][0]['workspace']
+                            elif 'workspace_name' in exec_task['job_input']['params'][0]:
+                                u_j_s['workspace_name'] = exec_task['job_input'][
+                                            'params'][0]['workspace_name']
                     break
 
-            if not u_j_s.get('app_id') and u_j_s.get('method'):
+            if (not u_j_s.get('app_id') and u_j_s.get('method')):
                 u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
 
+            if (not u_j_s.get('finish_time') and
+                        not u_j_s.get('error') and u_j_s.get('complete')):
+                u_j_s['finish_time'] = u_j_s.pop('modification_time')
+
             # get the narrative name and version if any
-            if u_j_s.get('wsid'):
+            if (u_j_s.get('wsid') and self.ws_narratives):
                 n_nm, n_obj = self.map_narrative(u_j_s['wsid'], self.ws_narratives)
                 if n_nm != "" and n_obj != 0:
                     u_j_s['narrative_name'] = n_nm
@@ -534,11 +534,12 @@ class MetricsMongoDBController:
 
             # get the client groups
             u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
-            for clnt in self.client_groups:
-                clnt_app_id = clnt['app_id']
-                if (str(clnt_app_id).lower() == str(u_j_s.get('app_id')).lower()):
-                    u_j_s['client_groups'] = clnt['client_groups']
-                    break
+            if self.client_groups:
+                for clnt in self.client_groups:
+                    clnt_app_id = clnt['app_id']
+                    if (str(clnt_app_id).lower() == str(u_j_s.get('app_id')).lower()):
+                        u_j_s['client_groups'] = clnt['client_groups']
+                        break
 
             ujs_ret.append(u_j_s)
         return ujs_ret
@@ -546,35 +547,28 @@ class MetricsMongoDBController:
     def parse_app_id(self, exec_task):
         app_id = ''
         if 'app_id' in exec_task['job_input']:
-            if '/' in exec_task['job_input']['app_id']:
-                app_id = exec_task['job_input']['app_id']
-            elif '.' in exec_task['job_input']['app_id']:
-                app_id = exec_task['job_input']['app_id'].replace('.', '/')
-            else:
-                app_id = exec_task['job_input']['app_id']
+            app_id = exec_task['job_input']['app_id']
+            if '.' in app_id:
+                app_id = app_id.replace('.', '/')
 
         return app_id
 
     def parse_method(self, exec_task):
         method_id = ''
         if 'method' in exec_task['job_input']:
-            if '.' in exec_task['job_input']['method']:
-                method_id = exec_task['job_input']['method']
-            elif '/' in exec_task['job_input']['method']:
-                method_id = exec_task['job_input']['method'].replace('/', '.')
-            else:
-                method_id = exec_task['job_input']['method']
+            method_id = exec_task['job_input']['method']
+            if '/' in method_id:
+                method_id = method_id.replace('/', '.')
 
         return method_id
 
-    def map_narrative(self, wsid, ws_narratives):
+    def map_narrative(self, wsid, ws_narrs):
         """
         get the narrative name and version
         """
         n_name = ''
         n_obj = 0
-        ws_name = ''
-        for ws in ws_narratives:
+        for ws in ws_narrs:
             if str(ws['workspace_id']) == str(wsid):
                 ws_name = ws['name']
                 n_name = ws_name

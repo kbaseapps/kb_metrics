@@ -68,14 +68,16 @@ class kb_MetricsTest(unittest.TestCase):
 
         os.system("sudo service mongodb start")
         os.system("mongod --version")
+        os.system("cat /var/log/mongodb/mongodb.log | grep 'waiting for connections on port 27017'")
 
         client = MongoClient(port=27017)
-
         cls._insert_data(client, 'workspace', 'workspaces')
         cls._insert_data(client, 'exec_engine', 'exec_tasks')
-        # cls._insert_data(client, 'exec_engine', 'exec_apps')
         cls._insert_data(client, 'userjobstate', 'jobstate')
+        cls._insert_data(client, 'workspace', 'workspaceObjects')
+        cls._insert_data(client, 'metrics', 'daily_activities')
 
+        print(client.database_names())
         # updating created to timstamp field for userjobstate.jobstate
         for record in client.userjobstate.jobstate.find():
             created_str = record.get('created')
@@ -93,12 +95,12 @@ class kb_MetricsTest(unittest.TestCase):
 
         db = client[db_name]
 
-        record_file = os.path.join('db_files', '{}.{}.JSON'.format(db_name, table))
+        record_file = os.path.join('db_files', 'ci_{}.{}.json'.format(db_name, table))
         json_data = open(record_file).read()
         records = json.loads(json_data)
 
         db[table].insert_many(records)
-        print ('Inserted records for {}.{}'.format(db_name, table))
+        print ('Inserted {} records for {}.{}'.format(len(records), db_name, table))
 
     def getWsClient(self):
         return self.__class__.wsClient
@@ -218,7 +220,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(minTime_from_today, -2)
         self.assertEqual(maxTime_from_today, 0)
 
-    def test_db_controller_contrusctor(self):
+    def test_db_controller_contructor(self):
 
         expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson', 'nlharris', 'dylan',
                                'chenry', 'ciservices', 'wjriehl', 'sychan', 'jjeffryes',
@@ -232,6 +234,154 @@ class kb_MetricsTest(unittest.TestCase):
         expected_db_list = ['metrics', 'userjobstate', 'workspace', 'exec_engine', 'auth2']
         self.assertItemsEqual(self.db_controller.mongodb_dbList, expected_db_list)
 
+    def test_MetricsMongoDBController_join_task_ujs(self):
+        # testing data sets
+        exec_tasks =[{
+            "ujs_job_id" : "5968cd75e4b08b65f9ff5d7c",
+            "creation_time" : 1500040565805,
+            "job_input" : {
+                "service_ver" : "ab6b07be3a1c13e9ad5d54593bda97dfa46590e8",
+                "method" : "kb_rnaseq_donwloader.export_rna_seq_expression_as_zip",
+                "params" : [
+                    {
+                        "input_ref" : "arfath:narrative_1498151834637/extracted_hy5_rep2_tophat_cufflinks_expression"
+                    }
+                ],
+                "requested_release" : "release"
+            },
+            "exec_start_time" : 1500040575589,
+            "finish_time" : 1500040661062
+        },
+        {
+            "ujs_job_id" : "5968cd75e4b08b65f9ff5d7c",
+            "creation_time" : 1500040565805,
+            "job_input" : {
+                "service_ver" : "ab6b07be3a1c13e9ad5d54593bda97dfa46590e8",
+                "method" : "kb_rnaseq_donwloader.export_rna_seq_expression_as_zip",
+                "params" : [
+                    {
+                        "input_ref" : "arfath:narrative_1498151834637/extracted_hy5_rep2_tophat_cufflinks_expression"
+                    }
+                ],
+                "requested_release" : "release"
+            },
+            "exec_start_time" : 1500040575589,
+            "finish_time" : 1500040661062
+        },
+        {
+            "ujs_job_id" : "596832a4e4b08b65f9ff5d6f",
+            "creation_time" : 1500000932952,
+            "job_input" : {
+                "service_ver" : "63bd07ebfbdfddd9729809a462ec80bbde18ca3c",
+                "source_ws_objects" : [
+                    "15206/242/1"
+                ],
+                "app_id" : "kb_deseq/run_DESeq2",
+                "method" : "kb_deseq.run_deseq2_app",
+                "params" : [
+                    {
+                        "fold_change_cutoff" : 1.5,
+                        "condition_labels" : [
+                            "WT",
+                            "hy5"
+                        ],
+                        "expressionset_ref" : "15206/242/1",
+                        "diff_expression_obj_name" : "differential_expr_sample",
+                        "fold_scale_type" : "log2",
+                        "workspace_name" : "tgu2:1481170361822",
+                        "alpha_cutoff" : 1,
+                        "num_threads" : 4
+                    }
+                ],
+                "wsid" : 15206,
+            },
+            "exec_start_time" : 1500000937699,
+            "finish_time" : 1500001203168
+        },
+        {
+            "ujs_job_id" : "5968e5fde4b08b65f9ff5d7d",
+            "creation_time" : 1500046845591,
+            "job_input" : {
+                "service_ver" : "a50583a4ca929eb0ff94a985a1d2db0c7c8997aa",
+                "source_ws_objects" : [
+                    "23165/2/1"
+                ],
+                "app_id" : "kb_cufflinks/run_Cuffdiff",
+                "method" : "kb_cufflinks.run_Cuffdiff",
+                "params" : [
+                    {
+                        "time_series" : 0,
+                        "multi_read_correct" : 0,
+                        "expressionset_ref" : "23165/2/1",
+                        "output_obj_name" : "hisat2_stringtie_cuffdiff_output",
+                        "library_norm_method" : "classic-fpkm",
+                        "min_alignment_count" : 10,
+                        "workspace_name" : "umaganapathyswork:narrative_1498130853194"
+                    }
+                ],
+                "wsid" : 23165,
+                "requested_release" : None
+            },
+            "exec_start_time" : 1500046850814,
+            "finish_time" : 1500047709771
+        }]
+        ujs_jobs =[{
+            "_id" : "596832a4e4b08b65f9ff5d6f",
+            "user" : "tgu2",
+            "authstrat" : "kbaseworkspace",
+            "authparam" : "15206",
+            "created" : 1500000932849,
+            "updated" : 1500001203182,
+            "estcompl" : None,
+            "status" : "done",
+            "desc" : "Execution engine job for kb_deseq.run_deseq2_app",
+            "started" : 1500000937695,
+            "complete" : True,
+            "error" : False
+        },
+        {
+            "_id" : "5968cd75e4b08b65f9ff5d7c",
+            "user" : "arfath",
+            "authstrat" : "DEFAULT",
+            "authparam" : "DEFAULT",
+            "created" : 1500040565733,
+            "updated" : 1500040661079,
+            "estcompl" : None,
+            "status" : "done",
+            "desc" : "Execution engine job for kb_rnaseq_donwloader.export_rna_seq_expression_as_zip",
+            "started" : 1500040575585,
+            "complete" : True,
+            "error" : False
+        },
+        {
+            "_id" : "5968e5fde4b08b65f9ff5d7d",
+            "user" : "umaganapathyswork",
+            "authstrat" : "kbaseworkspace",
+            "authparam" : "23165",
+            "created" : 1500046845485,
+            "updated" : 1500047709785,
+            "estcompl" : None,
+            "status" : "done",
+            "desc" : "Execution engine job for kb_cufflinks.run_Cuffdiff",
+            "started" : 1500046850810,
+            "complete" : True,
+            "error" : False
+        }]
+        # testing the joining result
+        joined_results = self.db_controller.join_task_ujs(exec_tasks, ujs_jobs)
+        self.assertEqual(len(joined_results), 3)
+        self.assertEqual(joined_results[0]['wsid'], '15206')
+        self.assertEqual(joined_results[0]['app_id'], 'kb_deseq/run_DESeq2')
+        self.assertEqual(joined_results[0]['method'], 'kb_deseq.run_deseq2_app')
+        self.assertEqual(joined_results[0]['finish_time'], 1500001203182)
+        self.assertTrue(joined_results[0]['client_groups'])
+        self.assertEqual(joined_results[2]['wsid'], '23165')
+        self.assertEqual(joined_results[2]['app_id'], 'kb_cufflinks/run_Cuffdiff')
+        self.assertEqual(joined_results[2]['method'], 'kb_cufflinks.run_Cuffdiff')
+        self.assertEqual(joined_results[2]['workspace_name'], 'umaganapathyswork:narrative_1498130853194')
+        self.assertEqual(joined_results[2]['finish_time'], 1500047709785)
+
+    '''
     def test_MetricsMongoDBController_get_apptask_list(self):
 
         # testing '_get_apptask_list'
@@ -270,6 +420,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(ret_params[0].get('app_job_id'), 3)
         self.assertEqual(ret_params[0].get('ujs_job_id'), 4)
         self.assertEqual(ret_params[0].get('job_state'), 'accepted')
+    '''
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
@@ -340,20 +491,18 @@ class kb_MetricsTest(unittest.TestCase):
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_get_app_metrics")
+    @unittest.skip("skipped test_run_get_app_metrics")
     def test_run_get_app_metrics(self):
         m_params = {
-            'user_ids': [],  # ['rhizorick'],#'user_ids': [],
+            'user_ids': [], # ['rhizorick'],#'user_ids': [],
             #'epoch_range':(1420083768000,1435677602000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2015,6,30)
-            #'epoch_range':(1420083768000,1451606549000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2016,1,1)
-            #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20)
-            'epoch_range': (u'2018-02-23T00:00:00+0000', u'2018-02-28T17:29:42+0000')
+            'epoch_range': (u'2017-07-14T00:00:00+0000', u'2017-07-17T17:00:00+0000')
         }
         # Second, call your implementation
         ret = self.getImpl().get_app_metrics(self.getContext(), m_params)
-        prnt_count = len(ret[0]['job_states']) - 20
+        prnt_count = len(ret[0]['job_states'])
         print("Total number of records returned=" + str(len(ret[0]['job_states'])))
-        print(pformat(ret[0]['job_states'][prnt_count:len(ret[0]['job_states']) - 10]))
+        print(pformat(ret[0]['job_states'][:10]))
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_run_get_exec_apps")
@@ -414,9 +563,9 @@ class kb_MetricsTest(unittest.TestCase):
     @unittest.skip("skipped test_run_update_metrics")
     def test_run_update_metrics(self):
         m_params = {
-            'user_ids': [],  # ['qzhang'],#'user_ids': [],
+            'user_ids': ['qzhang'],#'user_ids': [],
             #'epoch_range':(1420083768000, 1505876263000)#(datetime.datetime(2015, 1, 1), datetime.datetime(2017,9,20))
-            'epoch_range': (datetime.datetime(2018, 2, 24), datetime.datetime(2018, 2, 28))
+            'epoch_range': (datetime.datetime(2018, 2, 27), datetime.datetime(2018, 2, 28))
         }
         # Second, call your implementation
         ret = self.getImpl().update_metrics(self.getContext(), m_params)
