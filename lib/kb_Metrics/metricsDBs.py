@@ -187,7 +187,7 @@ class MongoMetricsDBI:
     # End functions to write to the metrics database
 
     # Begin functions to query the other dbs...
-    def aggr_unique_users_per_day(self, minTime, maxTime, kbstaff=[]):
+    def aggr_unique_users_per_day(self, minTime, maxTime, excludeUsers=[]):
         # Define the pipeline operations
         minDate = _convert_to_datetime(minTime)
         maxDate = _convert_to_datetime(maxTime)
@@ -196,8 +196,8 @@ class MongoMetricsDBI:
                         "_id.month_mod": {"$gte": minDate.month, "$lte": maxDate.month},
                         "_id.day_mod": {"$gte": minDate.day, "$lte": maxDate.day},
                         "obj_numModified": {"$gt": 0}}
-        if kbstaff:
-            match_filter['_id.username'] = {"$nin": kbstaff}
+        if excludeUsers:
+            match_filter['_id.username'] = {"$nin": excludeUsers}
 
         pipeline = [
             {"$match": match_filter},
