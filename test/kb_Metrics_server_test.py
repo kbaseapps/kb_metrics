@@ -150,6 +150,14 @@ class kb_MetricsTest(unittest.TestCase):
         # testing list_exec_tasks return data
         exec_tasks = self.dbi.list_exec_tasks(minTime, maxTime)
         self.assertEqual(len(exec_tasks), 3)
+        for tsk in exec_tasks:
+            self.assertTrue(minTime <= tsk['creation_time'] <= maxTime)
+        self.assertEqual(exec_tasks[0]['ujs_job_id'], '596832a4e4b08b65f9ff5d6f')
+        self.assertEqual(exec_tasks[0]['job_input']['wsid'], 15206)
+        self.assertEqual(exec_tasks[1]['ujs_job_id'], '5968cd75e4b08b65f9ff5d7c')
+        self.assertNotIn('wsid', exec_tasks[1]['job_input'])
+        self.assertEqual(exec_tasks[2]['ujs_job_id'], '5968e5fde4b08b65f9ff5d7d')
+        self.assertEqual(exec_tasks[2]['job_input']['wsid'], 23165)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_user_objects_from_wsobjs")
@@ -787,7 +795,6 @@ class kb_MetricsTest(unittest.TestCase):
         users = self.db_controller.get_active_users_counts(
                 self.getContext()['user_id'], params,
                 self.getContext()['token'], False)['metrics_result']
-        #print(pformat(users))
         self.assertEqual(len(users), 57)
         self.assertIn('numOfUsers', users[0])
         self.assertIn('yyyy-mm-dd', users[0])
@@ -827,9 +834,6 @@ class kb_MetricsTest(unittest.TestCase):
         ret = self.getImpl().get_app_metrics(self.getContext(), m_params)
         app_metrics_ret = ret[0]['job_states']
         self.assertEqual(len(app_metrics_ret), 5)
-        # prnt_count = len(app_metrics_ret)
-        # print("Total number of records returned=" + str(prnt_count))
-        # print(pformat(app_metrics_ret[:10]))
 
         # call implementation with only one user
         user_list = ['psdehal']
