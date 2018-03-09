@@ -82,8 +82,8 @@ class kb_MetricsTest(unittest.TestCase):
 
         cls.db_names = client.database_names()
         # updating created to timstamp field for userjobstate.jobstate
-        for record in client.userjobstate.jobstate.find():
-            created_str = record.get('created')
+        for jrecord in client.userjobstate.jobstate.find():
+            created_str = jrecord.get('created')
             client.userjobstate.jobstate.update_many(
                 {"created": created_str},
                 {"$set": {"created": datetime.datetime.utcfromtimestamp(int(created_str) / 1000)}}
@@ -104,6 +104,7 @@ class kb_MetricsTest(unittest.TestCase):
         json_data = open(record_file).read()
         records = json.loads(json_data)
 
+        db[table].drop()
         db[table].insert_many(records)
         print ('Inserted {} records for {}.{}'.format(len(records), db_name, table))
 
@@ -153,6 +154,15 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_user_objects_from_wsobjs")
     def test_MetricsMongoDBs_list_user_objects_from_wsobjs(self):
+        db_coll1 = self.dbi.metricsDBs['workspace']['workspaceObjects']
+        for wrecord in db_coll1.find():
+            moddate_str = wrecord.get('moddate')
+            if type(moddate_str) not in [datetime.date, datetime.datetime]:
+                db_coll1.update_many(
+                    {"moddate": moddate_str},
+                    {"$set": {"moddate": datetime.datetime.utcfromtimestamp(int(moddate_str) / 1000)}}
+                )
+
         minTime = 1519668635550
         maxTime = 1519768865840
 
@@ -178,16 +188,26 @@ class kb_MetricsTest(unittest.TestCase):
         #print(pformat(ws_owners[0]))
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_MetricsMongoDBs_aggr_user_details")
+    # @unittest.skip("skipped test_MetricsMongoDBs_aggr_user_details")
     def test_MetricsMongoDBs_aggr_user_details(self):
+        db_coll2 = self.dbi.metricsDBs['auth2']['users']
+        for urecord in db_coll2.find():
+            create_str = urecord.get('create')
+            login_str = urecord.get('login')
+            if type(create_str) not in [datetime.date, datetime.datetime]:
+                db_coll2.update_many(
+                    {"create": create_str, "login": login_str},
+                    {"$set": {"create": datetime.datetime.utcfromtimestamp(int(create_str) / 1000),
+                              "login": datetime.datetime.utcfromtimestamp(int(login_str) / 1000)}}
+                )
+
         minTime = 1516307704700
         maxTime = 1520549345000
         user_list0 = []
         user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'boris']
 
         # testing list_user_objects_from_wsobjs return data
-        users = self.dbi.aggr_user_details(user_list0, minTime, maxTime)
-        self.assertEqual(len(users), 37)
+        # expect it to fail due to time format milis vs isodate 
         users = self.dbi.aggr_user_details(user_list, minTime, maxTime)
         self.assertEqual(len(users), 4)
         self.assertIn('username', users[0])
@@ -196,6 +216,8 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('signup_at', users[0])
         self.assertIn('last_signin_at', users[0])
         self.assertIn('roles', users[0])
+        users = self.dbi.aggr_user_details(user_list0, minTime, maxTime)
+        self.assertEqual(len(users), 37)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_aggr_unique_users_per_day")
@@ -235,14 +257,23 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('roles', users[0])
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_MetricsMongoDBs_aggr_activities_from_wsobjs")
+    # @unittest.skip("skipped test_MetricsMongoDBs_aggr_activities_from_wsobjs")
     def test_MetricsMongoDBs_aggr_activities_from_wsobjs(self):
+        db_coll1 = self.dbi.metricsDBs['workspace']['workspaceObjects']
+        for wrecord in db_coll1.find():
+            moddate_str = wrecord.get('moddate')
+            if type(moddate_str) not in [datetime.date, datetime.datetime]:
+                db_coll1.update_many(
+                    {"moddate": moddate_str},
+                    {"$set": {"moddate": datetime.datetime.utcfromtimestamp(int(moddate_str) / 1000)}}
+                )
+
+        # testing aggr_activities_from_wsobjs return data
         minTime = 1519668635550
         maxTime = 1519768865840
 
-        # testing aggr_activities_from_wsobjs return data
         user_acts = self.dbi.aggr_activities_from_wsobjs(minTime, maxTime)
-        self.assertEqual(len(user_acts), 7)
+        self.assertTrue(len(user_acts) == 7)
         self.assertIn('ws_id', user_acts[0]['_id'])
         self.assertIn('year_mod', user_acts[0]['_id'])
         self.assertIn('month_mod', user_acts[0]['_id'])

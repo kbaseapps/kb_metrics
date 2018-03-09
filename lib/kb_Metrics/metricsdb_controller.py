@@ -280,8 +280,6 @@ class MetricsMongoDBController:
             raise ValueError('You do not have permission to view this data.')
 
         params = self.process_parameters(params)
-        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
         # ws_narrs = self.metrics_dbi.list_ws_narratives()
         ws_narrs = copy.deepcopy(self.ws_narratives)

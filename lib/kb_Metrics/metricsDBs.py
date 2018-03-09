@@ -272,9 +272,6 @@ class MongoMetricsDBI:
     # Begin functions to query the other dbs...
     def aggr_activities_from_wsobjs(self, minTime, maxTime):
         # Define the pipeline operations
-        epoch = datetime.datetime.utcfromtimestamp(0)
-        datetime_moddate = {"$project": {"moddate": {"$add": [ epoch, "$moddate"]},
-                            "name": 1, "id": 1, "numver": 1, "ws": 1, "_id": 0}},
         pipeline = [
             {"$match": {"moddate": {"$gte": _convert_to_datetime(minTime),
                                     "$lte": _convert_to_datetime(maxTime)}}},
@@ -324,6 +321,9 @@ class MongoMetricsDBI:
 
     def list_user_objects_from_wsobjs(self, minTime, maxTime):
         # Define the pipeline operations
+        minTime = datetime.datetime.fromtimestamp(minTime / 1000)
+        maxTime = datetime.datetime.fromtimestamp(maxTime / 1000)
+
         pipeline = [
             {"$match": {"del": False, "moddate": {"$gte": minTime, "$lte": maxTime}}},
             {"$project": {"moddate": 1, "workspace_id": "$ws",
