@@ -181,42 +181,9 @@ public class KbMetricsClient {
     }
 
     /**
-     * <p>Original spec-file function name: get_exec_apps</p>
-     * <pre>
-     * </pre>
-     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
-     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
-     * @throws IOException if an IO exception occurs
-     * @throws JsonClientException if a JSON RPC exception occurs
-     */
-    public MetricsOutput getExecApps(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
-        List<Object> args = new ArrayList<Object>();
-        args.add(params);
-        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
-        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_exec_apps", args, retType, true, true, jsonRpcContext, this.serviceVersion);
-        return res.get(0);
-    }
-
-    /**
-     * <p>Original spec-file function name: get_exec_tasks</p>
-     * <pre>
-     * </pre>
-     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
-     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
-     * @throws IOException if an IO exception occurs
-     * @throws JsonClientException if a JSON RPC exception occurs
-     */
-    public MetricsOutput getExecTasks(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
-        List<Object> args = new ArrayList<Object>();
-        args.add(params);
-        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
-        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_exec_tasks", args, retType, true, true, jsonRpcContext, this.serviceVersion);
-        return res.get(0);
-    }
-
-    /**
      * <p>Original spec-file function name: get_user_details</p>
      * <pre>
+     * * For retrieving from mongodb metrics *
      * </pre>
      * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
      * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
@@ -232,7 +199,7 @@ public class KbMetricsClient {
     }
 
     /**
-     * <p>Original spec-file function name: get_total_logins</p>
+     * <p>Original spec-file function name: get_user_counts_per_day</p>
      * <pre>
      * </pre>
      * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
@@ -240,130 +207,11 @@ public class KbMetricsClient {
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public MetricsOutput getTotalLogins(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+    public MetricsOutput getUserCountsPerDay(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(params);
         TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
-        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_total_logins", args, retType, true, true, jsonRpcContext, this.serviceVersion);
-        return res.get(0);
-    }
-
-    /**
-     * <p>Original spec-file function name: get_user_ws</p>
-     * <pre>
-     * </pre>
-     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
-     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
-     * @throws IOException if an IO exception occurs
-     * @throws JsonClientException if a JSON RPC exception occurs
-     */
-    public MetricsOutput getUserWs(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
-        List<Object> args = new ArrayList<Object>();
-        args.add(params);
-        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
-        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_user_ws", args, retType, true, true, jsonRpcContext, this.serviceVersion);
-        return res.get(0);
-    }
-
-    /**
-     * <p>Original spec-file function name: get_user_narrative_stats</p>
-     * <pre>
-     * </pre>
-     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
-     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
-     * @throws IOException if an IO exception occurs
-     * @throws JsonClientException if a JSON RPC exception occurs
-     */
-    public MetricsOutput getUserNarrativeStats(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
-        List<Object> args = new ArrayList<Object>();
-        args.add(params);
-        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
-        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_user_narrative_stats", args, retType, true, true, jsonRpcContext, this.serviceVersion);
-        return res.get(0);
-    }
-
-    /**
-     * <p>Original spec-file function name: get_user_numObjs</p>
-     * <pre>
-     * </pre>
-     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
-     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
-     * @throws IOException if an IO exception occurs
-     * @throws JsonClientException if a JSON RPC exception occurs
-     */
-    public MetricsOutput getUserNumObjs(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
-        List<Object> args = new ArrayList<Object>();
-        args.add(params);
-        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
-        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_user_numObjs", args, retType, true, true, jsonRpcContext, this.serviceVersion);
-        return res.get(0);
-    }
-
-    /**
-     * <p>Original spec-file function name: get_user_logins</p>
-     * <pre>
-     * </pre>
-     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
-     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
-     * @throws IOException if an IO exception occurs
-     * @throws JsonClientException if a JSON RPC exception occurs
-     */
-    public MetricsOutput getUserLogins(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
-        List<Object> args = new ArrayList<Object>();
-        args.add(params);
-        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
-        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_user_logins", args, retType, true, true, jsonRpcContext, this.serviceVersion);
-        return res.get(0);
-    }
-
-    /**
-     * <p>Original spec-file function name: get_user_ujs_results</p>
-     * <pre>
-     * </pre>
-     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
-     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
-     * @throws IOException if an IO exception occurs
-     * @throws JsonClientException if a JSON RPC exception occurs
-     */
-    public MetricsOutput getUserUjsResults(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
-        List<Object> args = new ArrayList<Object>();
-        args.add(params);
-        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
-        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_user_ujs_results", args, retType, true, true, jsonRpcContext, this.serviceVersion);
-        return res.get(0);
-    }
-
-    /**
-     * <p>Original spec-file function name: get_user_job_states</p>
-     * <pre>
-     * </pre>
-     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
-     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
-     * @throws IOException if an IO exception occurs
-     * @throws JsonClientException if a JSON RPC exception occurs
-     */
-    public MetricsOutput getUserJobStates(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
-        List<Object> args = new ArrayList<Object>();
-        args.add(params);
-        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
-        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_user_job_states", args, retType, true, true, jsonRpcContext, this.serviceVersion);
-        return res.get(0);
-    }
-
-    /**
-     * <p>Original spec-file function name: get_user_narratives</p>
-     * <pre>
-     * </pre>
-     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
-     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
-     * @throws IOException if an IO exception occurs
-     * @throws JsonClientException if a JSON RPC exception occurs
-     */
-    public MetricsOutput getUserNarratives(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
-        List<Object> args = new ArrayList<Object>();
-        args.add(params);
-        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
-        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_user_narratives", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_user_counts_per_day", args, retType, true, true, jsonRpcContext, this.serviceVersion);
         return res.get(0);
     }
 
@@ -382,41 +230,6 @@ public class KbMetricsClient {
         args.add(params);
         TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
         List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.update_metrics", args, retType, true, true, jsonRpcContext, this.serviceVersion);
-        return res.get(0);
-    }
-
-    /**
-     * <p>Original spec-file function name: get_user_activities</p>
-     * <pre>
-     * * For retrieving from mongodb metrics *
-     * </pre>
-     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
-     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
-     * @throws IOException if an IO exception occurs
-     * @throws JsonClientException if a JSON RPC exception occurs
-     */
-    public MetricsOutput getUserActivities(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
-        List<Object> args = new ArrayList<Object>();
-        args.add(params);
-        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
-        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_user_activities", args, retType, true, true, jsonRpcContext, this.serviceVersion);
-        return res.get(0);
-    }
-
-    /**
-     * <p>Original spec-file function name: get_user_counts_per_day</p>
-     * <pre>
-     * </pre>
-     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
-     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
-     * @throws IOException if an IO exception occurs
-     * @throws JsonClientException if a JSON RPC exception occurs
-     */
-    public MetricsOutput getUserCountsPerDay(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
-        List<Object> args = new ArrayList<Object>();
-        args.add(params);
-        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
-        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_user_counts_per_day", args, retType, true, true, jsonRpcContext, this.serviceVersion);
         return res.get(0);
     }
 

@@ -32,7 +32,7 @@ class MetricsMongoDBController:
 
     def __init__(self, config):
 
-        log("initializing mdb......")
+        # log("initializing mdb......")
 
         # grab config lists
         self.adminList = self._config_str_to_list(config.get('admin-users'))
@@ -226,7 +226,7 @@ class MetricsMongoDBController:
         print('Retrieved {} narratives record(s)'.format(len(narr_list)))
         idKeys = ['object_id', 'workspace_id']
         otherKeys = ['name', 'last_saved_at', 'last_saved_by', 'numObj',
-                     'deleted', 'object_version', 'nice_name', 'latest', 'desc']
+                     'deleted', 'object_version', 'nice_name', 'desc']
         for n_data in narr_list:
             filterByKey = lambda keys: {x: n_data[x] for x in keys}
             idData = filterByKey(idKeys)
@@ -272,18 +272,6 @@ class MetricsMongoDBController:
                                                     ['signup_at', 'last_signin_at'])
         return {'metrics_result': mt_ret}
 
-    def get_activities(self, requesting_user, params, token):
-        # TODO not yet pointing to the metrics db yet
-        if not self.is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-        return self.get_activities_from_wsobjs(requesting_user, params, token)
-
-    def get_narratives(self, requesting_user, params, token):
-        # TODO not yet pointing to the metrics db yet
-        if not self.is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-        return self.get_narratives_from_wsobjs(requesting_user, params, token)
-
     # End functions to get the requested records from metrics db
 
     # functions to get the requested records from other dbs...
@@ -307,7 +295,6 @@ class MetricsMongoDBController:
                     if wn['name'] == obj['object_name']:
                         wn[u'object_id'] = obj['object_id']
                         wn[u'object_version'] = obj['object_version']
-                        wn[u'latest'] = obj['latest']
                         break
                 elif ':' in wn['name']:
                     wts = wn['name'].split(':')[1]
@@ -315,7 +302,6 @@ class MetricsMongoDBController:
                     if p.search(obj['object_name']):
                         wn[u'object_id'] = obj['object_id']
                         wn[u'object_version'] = obj['object_version']
-                        wn[u'latest'] = obj['latest']
                         break
 
         for wn in ws_narrs:
@@ -351,68 +337,6 @@ class MetricsMongoDBController:
                     obj['_id'][u'username'] = wo['username']
         return {'metrics_result': wsobjs_act}
 
-    def get_activities_from_ws(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
-        params = self.process_parameters(params)
-        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
-
-        db_ret = self.metrics_dbi.aggr_activities_from_ws(params['minTime'], params['maxTime'])
-
-        return {'metrics_result': db_ret}
-
-    def get_total_logins_from_ws(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
-        params = self.process_parameters(params)
-        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
-
-        db_ret = self.metrics_dbi.aggr_total_logins(params['minTime'], params['maxTime'])
-
-        return {'metrics_result': db_ret}
-
-    def get_user_login_stats_from_ws(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
-        params = self.process_parameters(params)
-        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
-
-        db_ret = self.metrics_dbi.aggr_user_logins_from_ws(
-            params['minTime'], params['maxTime'])
-
-        return {'metrics_result': db_ret}
-
-    def get_user_ws_stats_from_ws(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
-        params = self.process_parameters(params)
-        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
-
-        db_ret = self.metrics_dbi.aggr_user_ws(params['minTime'], params['maxTime'])
-
-        return {'metrics_result': db_ret}
-
-    def get_user_narrative_stats_from_ws(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
-        params = self.process_parameters(params)
-        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
-
-        db_ret = self.metrics_dbi.aggr_user_narratives(
-            params['minTime'], params['maxTime'])
-
-        return {'metrics_result': db_ret}
-
     def get_user_narratives_ws_wsobjs(self, requesting_user, params, token):
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
@@ -426,27 +350,7 @@ class MetricsMongoDBController:
 
         return {'metrics_result': db_ret}
 
-    def get_user_numObjs_from_ws(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
-        params = self.process_parameters(params)
-        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
-
-        db_ret = self.metrics_dbi.aggr_user_numObjs(
-            params['minTime'], params['maxTime'])
-
-        return {'metrics_result': db_ret}
-
     def get_user_job_states(self, requesting_user, params, token):
-        params = self.process_parameters(params)
-        if not self.is_admin(requesting_user):
-            params['user_ids'] = [requesting_user]
-
-        return self.get_jobdata_from_ws_exec_ujs(params, token)
-
-    def get_jobdata_from_ws_exec_ujs(self, params, token):
         """
         get_jobdata_from_ws_exec_ujs--The original implementation to
         get data for appcatalog from querying execution_engine,
@@ -456,6 +360,9 @@ class MetricsMongoDBController:
         we can do joining as follows
         --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
         """
+        params = self.process_parameters(params)
+        if not self.is_admin(requesting_user):
+            params['user_ids'] = [requesting_user]
 
         # 1. get the ws_narrative and client_groups data for lookups
         if self.ws_narratives is None:
@@ -464,11 +371,12 @@ class MetricsMongoDBController:
             self.client_groups = self.get_client_groups_from_cat(token)
 
         # 2. query dbs to get lists of tasks and jobs
-        exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
+        exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'],
+                params['maxTime'])
         ujs_jobs = self.metrics_dbi.list_ujs_results(
-            params['user_ids'], params['minTime'], params['maxTime'])
+                params['user_ids'], params['minTime'], params['maxTime'])
         ujs_jobs = self.convert_isodate_to_millis(
-            ujs_jobs, ['created', 'started', 'updated'])
+                ujs_jobs, ['created', 'started', 'updated'])
 
         return {'job_states': self.join_task_ujs(exec_tasks, ujs_jobs)}
 
@@ -510,11 +418,11 @@ class MetricsMongoDBController:
 
                         if 'params' in exec_task['job_input']:
                             if 'workspace' in exec_task['job_input']['params'][0]:
-                                u_j_s['workspace_name'] = exec_task[
-                                            'job_input']['params'][0]['workspace']
+                                ws_nm = exec_task['job_input']['params'][0]['workspace']
+                                u_j_s['workspace_name'] = ws_nm
                             elif 'workspace_name' in exec_task['job_input']['params'][0]:
-                                u_j_s['workspace_name'] = exec_task['job_input'][
-                                            'params'][0]['workspace_name']
+                                ws_nm = exec_task['job_input']['params'][0]['workspace_name']
+                                u_j_s['workspace_name'] = ws_nm
                     break
 
             if (not u_j_s.get('app_id') and u_j_s.get('method')):
@@ -566,7 +474,7 @@ class MetricsMongoDBController:
         get the narrative name and version
         """
         n_name = ''
-        n_obj = 0
+        n_obj = '0'
         for ws in ws_narrs:
             if str(ws['workspace_id']) == str(wsid):
                 ws_name = ws['name']
@@ -582,55 +490,6 @@ class MetricsMongoDBController:
                             pass
                 break
         return (n_name, n_obj)
-
-    def get_ujs_results(self, requesting_user, params, token):
-        params = self.process_parameters(params)
-        if not self.is_admin(requesting_user):
-            # print(requesting_user + ': You have permission to view ONLY your jobs.')
-            params['user_ids'] = [requesting_user]
-
-        db_ret = self.metrics_dbi.list_ujs_results(
-            params['user_ids'], params['minTime'], params['maxTime'])
-        for dr in db_ret:
-            dr['_id'] = str(dr['_id'])
-        db_ret = self.convert_isodate_to_millis(
-            db_ret, ['created', 'started', 'updated'])
-
-        return {'metrics_result': db_ret}
-
-    def get_exec_apps(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
-        params = self.process_parameters(params)
-
-        db_ret = self.metrics_dbi.list_exec_apps(params['minTime'], params['maxTime'])
-
-        return {'metrics_result': db_ret}
-
-    def get_exec_tasks(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
-        params = self.process_parameters(params)
-
-        db_ret = self.metrics_dbi.list_exec_tasks(params['minTime'], params['maxTime'])
-
-        return {'metrics_result': db_ret}
-
-    def get_users_from_auth2(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
-        params = self.process_parameters(params)
-
-        db_ret = self.metrics_dbi.aggr_user_details(
-            params['user_ids'], params['minTime'], params['maxTime'])
-        if len(db_ret) == 0:
-            print("No records returned!")
-        else:
-            db_ret = self.convert_isodate_to_millis(db_ret, ['signup_at', 'last_signin_at'])
-        return {'metrics_result': db_ret}
 
     def process_parameters(self, params):
 

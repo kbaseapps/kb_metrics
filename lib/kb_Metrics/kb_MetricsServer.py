@@ -337,62 +337,18 @@ class Application(object):
                              name='kb_Metrics.get_app_metrics',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_app_metrics'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.get_exec_apps,
-                             name='kb_Metrics.get_exec_apps',
-                             types=[dict])
-        self.method_authentication['kb_Metrics.get_exec_apps'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.get_exec_tasks,
-                             name='kb_Metrics.get_exec_tasks',
-                             types=[dict])
-        self.method_authentication['kb_Metrics.get_exec_tasks'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.get_user_details,
                              name='kb_Metrics.get_user_details',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_user_details'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.get_total_logins,
-                             name='kb_Metrics.get_total_logins',
-                             types=[dict])
-        self.method_authentication['kb_Metrics.get_total_logins'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.get_user_ws,
-                             name='kb_Metrics.get_user_ws',
-                             types=[dict])
-        self.method_authentication['kb_Metrics.get_user_ws'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.get_user_narrative_stats,
-                             name='kb_Metrics.get_user_narrative_stats',
-                             types=[dict])
-        self.method_authentication['kb_Metrics.get_user_narrative_stats'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.get_user_numObjs,
-                             name='kb_Metrics.get_user_numObjs',
-                             types=[dict])
-        self.method_authentication['kb_Metrics.get_user_numObjs'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.get_user_logins,
-                             name='kb_Metrics.get_user_logins',
-                             types=[dict])
-        self.method_authentication['kb_Metrics.get_user_logins'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.get_user_ujs_results,
-                             name='kb_Metrics.get_user_ujs_results',
-                             types=[dict])
-        self.method_authentication['kb_Metrics.get_user_ujs_results'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.get_user_job_states,
-                             name='kb_Metrics.get_user_job_states',
-                             types=[dict])
-        self.method_authentication['kb_Metrics.get_user_job_states'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.get_user_narratives,
-                             name='kb_Metrics.get_user_narratives',
-                             types=[dict])
-        self.method_authentication['kb_Metrics.get_user_narratives'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.update_metrics,
-                             name='kb_Metrics.update_metrics',
-                             types=[dict])
-        self.method_authentication['kb_Metrics.update_metrics'] = 'required'  # noqa
-        self.rpc_service.add(impl_kb_Metrics.get_user_activities,
-                             name='kb_Metrics.get_user_activities',
-                             types=[dict])
-        self.method_authentication['kb_Metrics.get_user_activities'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.get_user_counts_per_day,
                              name='kb_Metrics.get_user_counts_per_day',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_user_counts_per_day'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.update_metrics,
+                             name='kb_Metrics.update_metrics',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.update_metrics'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.status,
                              name='kb_Metrics.status',
                              types=[dict])
