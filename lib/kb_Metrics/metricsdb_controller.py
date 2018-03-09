@@ -30,6 +30,43 @@ class MetricsMongoDBController:
 
         return user_list
 
+    def _parse_app_id(self, exec_task):
+        app_id = ''
+        if 'app_id' in exec_task['job_input']:
+            app_id = exec_task['job_input']['app_id']
+            app_id = app_id.replace('.', '/')
+
+        return app_id
+
+    def _parse_method(self, exec_task):
+        method_id = ''
+        if 'method' in exec_task['job_input']:
+            method_id = exec_task['job_input']['method']
+            method_id = method_id.replace('/', '.')
+
+        return method_id
+
+    def _map_narrative(self, wsid, ws_narrs):
+        """
+        get the narrative name and version
+        """
+        n_name = ''
+        n_obj = '0'
+        for ws in ws_narrs:
+            if str(ws['workspace_id']) == str(wsid):
+                ws_name = ws['name']
+                n_name = ws_name
+                if not ws.get('meta', None) is None:
+                    w_meta = ws['meta']
+                    for w_m in w_meta:
+                        if w_m['k'] == 'narrative':
+                            n_obj = w_m['v']
+                        elif w_m['k'] == 'narrative_nice_name':
+                            n_name = w_m['v']
+                        else:
+                            pass
+                break
+        return (n_name, n_obj)
     def __init__(self, config):
 
         # log("initializing mdb......")
@@ -41,20 +78,15 @@ class MetricsMongoDBController:
         self.mongodb_dbList = self._config_str_to_list(config.get('mongodb-databases'))
 
         # check for required parameters
-        for p in ['mongodb-host', 'mongodb-databases']:
+        for p in ['mongodb-host', 'mongodb-databases', 'mongodb-user', 'mongodb-pwd']:
             if p not in config:
                 error_msg = '"{}" config variable must be defined '.format(p)
                 error_msg += 'to start a MetricsMongoDBController!'
                 raise ValueError(error_msg)
 
-        # give warnings if no mongo user/pw information is set
-        for p in ['mongodb-user', 'mongodb-pwd']:
-            if p not in config:
-                warning_msg = '"{}" is not set in config of MetricsMongoDBController.'.format(p)
-                warnings.warn(warning_msg)
-
         # instantiate the mongo client
-        self.metrics_dbi = MongoMetricsDBI(config.get('mongodb-host'), self.mongodb_dbList,
+        self.metrics_dbi = MongoMetricsDBI(config.get('mongodb-host'),
+                                           self.mongodb_dbList,
                                            config.get('mongodb-user', ''),
                                            config.get('mongodb-pwd', ''))
 
@@ -370,9 +402,10 @@ class MetricsMongoDBController:
 
         # 2. query dbs to get lists of tasks and jobs
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'],
-                params['maxTime'])
-        ujs_jobs = self.metrics_dbi.list_ujs_results(
-                params['user_ids'], params['minTime'], params['maxTime'])
+                                                      params['maxTime'])
+        ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'],
+                                                     params['minTime'],
+                                                     params['maxTime'])
         ujs_jobs = self.convert_isodate_to_millis(
                 ujs_jobs, ['created', 'started', 'updated'])
 
@@ -403,9 +436,9 @@ class MetricsMongoDBController:
             for exec_task in exec_tasks:
                 if exec_task['ujs_job_id'] == u_j_s['job_id']:
                     if 'job_input' in exec_task:
-                        u_j_s['app_id'] = self.parse_app_id(exec_task)
+                        u_j_s['app_id'] = self._parse_app_id(exec_task)
                         if not u_j_s.get('method'):
-                            u_j_s['method'] = self.parse_method(exec_task)
+                            u_j_s['method'] = self._parse_method(exec_task)
 
                         if not u_j_s.get('wsid'):
                             if 'wsid' in exec_task['job_input']:
@@ -427,12 +460,13 @@ class MetricsMongoDBController:
                 u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
 
             if (not u_j_s.get('finish_time') and
-                        not u_j_s.get('error') and u_j_s.get('complete')):
+                    not u_j_s.get('error') and
+                    u_j_s.get('complete')):
                 u_j_s['finish_time'] = u_j_s.pop('modification_time')
 
             # get the narrative name and version if any
             if (u_j_s.get('wsid') and self.ws_narratives):
-                n_nm, n_obj = self.map_narrative(u_j_s['wsid'], self.ws_narratives)
+                n_nm, n_obj = self._map_narrative(u_j_s['wsid'], self.ws_narratives)
                 if n_nm != "" and n_obj != 0:
                     u_j_s['narrative_name'] = n_nm
                     u_j_s['narrative_objNo'] = n_obj
@@ -448,46 +482,6 @@ class MetricsMongoDBController:
 
             ujs_ret.append(u_j_s)
         return ujs_ret
-
-    def parse_app_id(self, exec_task):
-        app_id = ''
-        if 'app_id' in exec_task['job_input']:
-            app_id = exec_task['job_input']['app_id']
-            if '.' in app_id:
-                app_id = app_id.replace('.', '/')
-
-        return app_id
-
-    def parse_method(self, exec_task):
-        method_id = ''
-        if 'method' in exec_task['job_input']:
-            method_id = exec_task['job_input']['method']
-            if '/' in method_id:
-                method_id = method_id.replace('/', '.')
-
-        return method_id
-
-    def map_narrative(self, wsid, ws_narrs):
-        """
-        get the narrative name and version
-        """
-        n_name = ''
-        n_obj = '0'
-        for ws in ws_narrs:
-            if str(ws['workspace_id']) == str(wsid):
-                ws_name = ws['name']
-                n_name = ws_name
-                if not ws.get('meta', None) is None:
-                    w_meta = ws['meta']
-                    for w_m in w_meta:
-                        if w_m['k'] == 'narrative':
-                            n_obj = w_m['v']
-                        elif w_m['k'] == 'narrative_nice_name':
-                            n_name = w_m['v']
-                        else:
-                            pass
-                break
-        return (n_name, n_obj)
 
     def process_parameters(self, params):
 
@@ -543,7 +537,8 @@ class MetricsMongoDBController:
         client_groups = self.cat_client.get_client_groups({})
 
         return [{'app_id': client_group.get('app_id'),
-            'client_groups': client_group.get('client_groups')} for client_group in client_groups]
+                'client_groups': client_group.get('client_groups')}
+                for client_group in client_groups]
 
     def is_admin(self, username):
         return username in self.adminList

@@ -38,11 +38,10 @@ class MongoMetricsDBI:
                 self.mongo_clients[m_db] = MongoClient(
                     "mongodb://" + mongo_user + ":" + mongo_psswd +
                     "@" + mongo_host + "/" + m_db)
-            else: # default to localhost:27017
+            else:  # default to localhost:27017
                 self.mongo_clients[m_db] = MongoClient()
             # grab a handle to the database
             self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
-
 
     # Begin functions to write to the metrics database...
     def update_user_records(self, upd_filter, upd_data, kbstaff):
@@ -110,7 +109,8 @@ class MongoMetricsDBI:
         Insert an iterable of user activity documents
         """
         if not isinstance(mt_docs, list):
-            raise ValueError('Variable mt_docs must be a list of mutable mapping type data.')
+            raise ValueError('Variable mt_docs must be' +
+                             ' a list of mutable mapping type data.')
 
         # grab handle(s) to the database collection(s) targeted
         self.mt_act = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
@@ -237,9 +237,9 @@ class MongoMetricsDBI:
 
         signupTimeFilter = {}
         if minTime is not None:
-            signupTimeFilter['$gte'] = minTime #_convert_to_datetime(minTime)
+            signupTimeFilter['$gte'] = minTime
         if maxTime is not None:
-            signupTimeFilter['$lte'] = maxTime #_convert_to_datetime(maxTime)
+            signupTimeFilter['$lte'] = maxTime
         if len(signupTimeFilter) > 0:
             filter['signup_at'] = signupTimeFilter
 
@@ -328,7 +328,7 @@ class MongoMetricsDBI:
             {"$match": {"del": False, "moddate": {"$gte": minTime, "$lte": maxTime}}},
             {"$project": {"moddate": 1, "workspace_id": "$ws",
                           "object_id": "$id", "object_name": "$name",
-                          "object_version": "$numver", "deleted": "$del","_id": 0}}
+                          "object_version": "$numver", "deleted": "$del", "_id": 0}}
         ]
         # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
         kbwsobjs = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WSOBJECTS]
@@ -398,7 +398,6 @@ class MongoMetricsDBI:
         kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
         u_cursor = kbusers.aggregate(pipeline)
         return list(u_cursor)
-
 
     def list_ujs_results(self, userIds, minTime, maxTime):
         filter = {}

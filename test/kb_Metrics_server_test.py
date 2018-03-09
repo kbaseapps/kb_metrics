@@ -169,12 +169,22 @@ class kb_MetricsTest(unittest.TestCase):
         # testing list_user_objects_from_wsobjs return data
         user_objs = self.dbi.list_user_objects_from_wsobjs(minTime, maxTime)
         self.assertEqual(len(user_objs), 15)
+
         self.assertIn('workspace_id', user_objs[0])
         self.assertIn('object_id', user_objs[0])
         self.assertIn('object_name', user_objs[0])
         self.assertIn('object_version', user_objs[0])
         self.assertIn('moddate', user_objs[0])
         self.assertIn('deleted', user_objs[0])
+
+        self.assertEqual(user_objs[1]['workspace_id'], 29624)
+        self.assertEqual(user_objs[1]['object_id'], 2)
+        self.assertEqual(user_objs[1]['object_name'],
+                'rhodobacter_CACIA14H1.reference')
+        self.assertEqual(user_objs[1]['object_version'], 8)
+        self.assertEqual(user_objs[1]['moddate'],
+                datetime.datetime(2018, 2, 26, 22, 42, 20))
+        self.assertFalse(user_objs[1]['deleted'])
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ws_owners")
@@ -185,7 +195,10 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('ws_id', ws_owners[0])
         self.assertIn('username', ws_owners[0])
         self.assertIn('name', ws_owners[0])
-        #print(pformat(ws_owners[0]))
+
+        self.assertEqual(ws_owners[1]['ws_id'], 7645)
+        self.assertIn(ws_owners[1]['username'], 'jplfaria')
+        self.assertIn(ws_owners[1]['name'], 'jplfaria:1464632279763')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_aggr_user_details")
@@ -206,8 +219,7 @@ class kb_MetricsTest(unittest.TestCase):
         user_list0 = []
         user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'boris']
 
-        # testing list_user_objects_from_wsobjs return data
-        # expect it to fail due to time format milis vs isodate 
+        # testing aggr_user_details_returneddata structure
         users = self.dbi.aggr_user_details(user_list, minTime, maxTime)
         self.assertEqual(len(users), 4)
         self.assertIn('username', users[0])
@@ -216,6 +228,16 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('signup_at', users[0])
         self.assertIn('last_signin_at', users[0])
         self.assertIn('roles', users[0])
+        # testing the expected values
+        self.assertEqual(users[1]['username'], 'laramyenders')
+        self.assertEqual(users[1]['email'], 'laramy.enders@gmail.com')
+        self.assertEqual(users[1]['full_name'], 'Laramy Enders')
+        self.assertEqual(users[1]['signup_at'],
+						datetime.datetime(2018, 2, 16, 15, 19, 55))
+        self.assertEqual(users[1]['last_signin_at'],
+						datetime.datetime(2018, 2, 16, 15, 19, 56))
+        self.assertEqual(users[1]['roles'], [])
+
         users = self.dbi.aggr_user_details(user_list0, minTime, maxTime)
         self.assertEqual(len(users), 37)
 
@@ -459,25 +481,45 @@ class kb_MetricsTest(unittest.TestCase):
         },
         {
             "job_input" : {
-                "app_id" : "kb_cufflinks/run_Cuffdiff",
-                "method" : "kb_cufflinks.run_Cuffdiff",
+                "app_id" : "kb_cufflinks.run_Cuffdiff",
+                "method" : "kb_cufflinks/run_Cuffdiff",
+            }
+        },
+        {
+            "job_input" : {
+                "app_id" : "kb_deseq/run_DESeq2",
+                "method" : "kb_deseq/run_deseq2_app",
+            }
+        },
+        {
+            "job_input" : {
+                "app_id" : "kb_deseq.run_DESeq2",
+                "method" : "kb_deseq.run_deseq2_app",
             }
         }]
 
         # testing parse_app_id
-        self.assertEqual(self.db_controller.parse_app_id(exec_tasks[0]), '')
-        self.assertEqual(self.db_controller.parse_app_id(exec_tasks[1]),
+        self.assertEqual(self.db_controller._parse_app_id(exec_tasks[0]), '')
+        self.assertEqual(self.db_controller._parse_app_id(exec_tasks[1]),
                         'kb_deseq/run_DESeq2')
-        self.assertEqual(self.db_controller.parse_app_id(exec_tasks[2]),
+        self.assertEqual(self.db_controller._parse_app_id(exec_tasks[2]),
                         'kb_cufflinks/run_Cuffdiff')
+        self.assertEqual(self.db_controller._parse_app_id(exec_tasks[3]),
+                        'kb_deseq/run_DESeq2')
+        self.assertEqual(self.db_controller._parse_app_id(exec_tasks[4]),
+                        'kb_deseq/run_DESeq2')
 
         # testing parse_method
-        self.assertEqual(self.db_controller.parse_method(exec_tasks[0]),
+        self.assertEqual(self.db_controller._parse_method(exec_tasks[0]),
                         'kb_rnaseq_donwloader.export_rna_seq_expression_as_zip')
-        self.assertEqual(self.db_controller.parse_method(exec_tasks[1]),
+        self.assertEqual(self.db_controller._parse_method(exec_tasks[1]),
                         'kb_deseq.run_deseq2_app')
-        self.assertEqual(self.db_controller.parse_method(exec_tasks[2]),
+        self.assertEqual(self.db_controller._parse_method(exec_tasks[2]),
                         'kb_cufflinks.run_Cuffdiff')
+        self.assertEqual(self.db_controller._parse_method(exec_tasks[3]),
+                        'kb_deseq.run_deseq2_app')
+        self.assertEqual(self.db_controller._parse_method(exec_tasks[4]),
+                        'kb_deseq.run_deseq2_app')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_db_controller_map_narrative")
@@ -485,11 +527,11 @@ class kb_MetricsTest(unittest.TestCase):
         wsids = ['15206', '23165', '27834']
         ws_narrs = self.dbi.list_ws_narratives()
 
-        self.assertItemsEqual(self.db_controller.map_narrative(
+        self.assertItemsEqual(self.db_controller._map_narrative(
             wsids[0], ws_narrs), ('', '0'))
-        self.assertItemsEqual(self.db_controller.map_narrative(
+        self.assertItemsEqual(self.db_controller._map_narrative(
             wsids[1], ws_narrs), ('', '0'))
-        self.assertItemsEqual(self.db_controller.map_narrative(
+        self.assertItemsEqual(self.db_controller._map_narrative(
             wsids[2], ws_narrs), ('Staging Test', '1'))
 
     # Uncomment to skip this test
@@ -718,6 +760,7 @@ class kb_MetricsTest(unittest.TestCase):
         users = self.db_controller.get_user_details(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])['metrics_result']
+
         self.assertEqual(len(users), 4)
         self.assertIn('username', users[0])
         self.assertIn('email', users[0])
@@ -725,6 +768,13 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('signup_at', users[0])
         self.assertIn('last_signin_at', users[0])
         self.assertIn('roles', users[0])
+
+        self.assertEqual(users[1]['username'], 'xiaoli')
+        self.assertEqual(users[1]['email'], 'csmbl2016@gmail.com')
+        self.assertEqual(users[1]['full_name'], 'Xiaoli Sun')
+        self.assertEqual(users[1]['signup_at'], 1518794641935)
+        self.assertEqual(users[1]['last_signin_at'], 1518794641938)
+        self.assertEqual(users[1]['roles'], [])
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_get_active_users_counts")
@@ -747,7 +797,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(users[2]['numOfUsers'], 6)
         self.assertEqual(users[3]['numOfUsers'], 8)
 
-        # testing excluding kbstaff, by default
+        # testing excluding kbstaff (by default) with reduced counts
         users = self.db_controller.get_active_users_counts(
                 self.getContext()['user_id'], params,
                 self.getContext()['token'])['metrics_result']
