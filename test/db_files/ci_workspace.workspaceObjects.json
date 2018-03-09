@@ -1,0 +1,122 @@
+	[
+		{
+			"ws" : 29666,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"del" : false,
+			"moddate" : 1519673975939
+		},
+		{
+			"ws" : 29624,
+			"id" : 2,
+			"numver" : 8,
+			"name" : "rhodobacter_CACIA14H1.reference",
+			"del" : false,
+			"moddate" : 1519684940770
+		},
+		{
+			"ws" : 29624,
+			"id" : 3,
+			"numver" : 2,
+			"name" : "data_palette",
+			"del" : false,
+			"moddate" : 1519684944506
+		},
+		{
+			"ws" : 29624,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Rhodobacter_sphaeroides_2.4.1",
+			"del" : false,
+			"moddate" : 1519684963568
+		},
+		{
+			"ws" : 29624,
+			"id" : 1,
+			"numver" : 7,
+			"name" : "Narrative.1518803256498",
+			"del" : false,
+			"moddate" : 1519685178195
+		},
+		{
+			"ws" : 29624,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "a",
+			"del" : false,
+			"moddate" : 1519685257910
+		},
+		{
+			"ws" : 29824,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"del" : false,
+			"moddate" : 1519692160796
+		},
+		{
+			"ws" : 29825,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"del" : false,
+			"moddate" : 1519692366332
+		},
+		{
+			"ws" : 29826,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"del" : false,
+			"moddate" : 1519692879067
+		},
+		{
+			"ws" : 29831,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"del" : false,
+			"moddate" : 1519696584840
+		},
+		{
+			"ws" : 27772,
+			"id" : 1,
+			"numver" : 41,
+			"name" : "Narrative.1513189142746",
+			"del" : false,
+			"moddate" : 1519768788974
+		},
+		{
+			"ws" : 27772,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_000166115.1_ASM16611v1_genomic.gbff_genome_assembly",
+			"del" : false,
+			"moddate" : 1519768824481
+		},
+		{
+			"ws" : 27772,
+			"id" : 19,
+			"numver" : 3,
+			"name" : "Wican1_FilteredModels1_deflines.gff_genome.assembly",
+			"del" : false,
+			"moddate" : 1519768827474
+		},
+		{
+			"ws" : 27772,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000166115.1_ASM16611v1_genomic.gbff_genome",
+			"del" : false,
+			"moddate" : 1519768845275
+		},
+		{
+			"ws" : 27772,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "kb_genome_upload_report_976fa48d-70c4-4f25-8429-454d15fb37ff",
+			"del" : false,
+			"moddate" : 1519768865838
+		}
+	]
