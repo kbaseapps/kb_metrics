@@ -308,7 +308,8 @@ class MongoMetricsDBI:
     def list_ws_narratives(self):
         # Define the pipeline operations
         pipeline = [
-            {"$match": {"del": False, "meta": {"$exists": True, "$not": {"$size": 0}}}},
+            {"$match": {"del": False,
+                        "meta": {"$elemMatch": {"k": "narrative_nice_name"}}}},
             {"$project": {"username": "$owner", "workspace_id": "$ws",
                           "name": 1, "meta": 1,
                           "deleted": "$del", "desc": 1, "numObj": 1,
@@ -319,13 +320,18 @@ class MongoMetricsDBI:
         m_cursor = self.kbworkspaces.aggregate(pipeline)
         return list(m_cursor)
 
-    def list_user_objects_from_wsobjs(self, minTime, maxTime):
+    def list_user_objects_from_wsobjs(self, minTime, maxTime, ws_list=[]):
         # Define the pipeline operations
         minTime = datetime.datetime.fromtimestamp(minTime / 1000)
         maxTime = datetime.datetime.fromtimestamp(maxTime / 1000)
 
+        match_filter = {"del": False,
+                        "moddate": {"$gte": minTime, "$lte": maxTime}}
+        if ws_list:
+            match_filter["ws"] = {"$in": ws_list}
+
         pipeline = [
-            {"$match": {"del": False, "moddate": {"$gte": minTime, "$lte": maxTime}}},
+            {"$match": match_filter},
             {"$project": {"moddate": 1, "workspace_id": "$ws",
                           "object_id": "$id", "object_name": "$name",
                           "object_version": "$numver", "deleted": "$del", "_id": 0}}

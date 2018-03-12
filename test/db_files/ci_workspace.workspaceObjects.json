@@ -1,5 +1,205 @@
 	[
 		{
+			"ws" : 8768,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "Align_Reads_using_Bowtie2_0x242ac110001L",
+			"del" : false,
+			"moddate" : 1468592344915
+		},
+		{
+			"ws" : 8768,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "Assemble_Transcripts_Using_Cufflinks_0x242ac110001L",
+			"del" : false,
+			"moddate" : 1468592345027
+		},
+		{
+			"ws" : 8768,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "Assemble_Transcripts_Using_Stringtie_0x242ac110001L",
+			"del" : false,
+			"moddate" : 1468592345041
+		},
+		{
+			"ws" : 8768,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "Build_Bowtie2_Index_0x242ac11038dL",
+			"del" : false,
+			"moddate" : 1468592344887
+		},
+		{
+			"ws" : 8768,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Ecoli_Genome_Annotation",
+			"del" : false,
+			"moddate" : 1468592344877
+		},
+		{
+			"ws" : 8768,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "Ecoli_Genome_Annotation_GTF_Annotation",
+			"del" : false,
+			"moddate" : 1468592344896
+		},
+		{
+			"ws" : 8768,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "Ecoli_SingleEnd_SRR228083_16000.fastq",
+			"del" : false,
+			"moddate" : 1468592344867
+		},
+		{
+			"ws" : 8768,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "Ecoli_SingleEnd_SRR228083_16000_bowtie2_alignment",
+			"del" : false,
+			"moddate" : 1468592344901
+		},
+		{
+			"ws" : 8768,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "Ecoli_SingleEnd_SRR228083_16000_bowtie2_cufflinks_expression",
+			"del" : false,
+			"moddate" : 1468592344954
+		},
+		{
+			"ws" : 8768,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Ecoli_SingleEnd_SRR228086_16000.fastq",
+			"del" : false,
+			"moddate" : 1468592344871
+		},
+		{
+			"ws" : 8768,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "Ecoli_SingleEnd_SRR228086_16000_bowtie2_alignment",
+			"del" : false,
+			"moddate" : 1468592344906
+		},
+		{
+			"ws" : 8768,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "Ecoli_SingleEnd_SRR228086_16000_bowtie2_cufflinks_expression",
+			"del" : false,
+			"moddate" : 1468592344960
+		},
+		{
+			"ws" : 8768,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "Ecoli_SingleEnd_SRR228086_16000_bowtie2_stringtie_expression",
+			"del" : false,
+			"moddate" : 1468592345037
+		},
+		{
+			"ws" : 8768,
+			"id" : 22,
+			"numver" : 2,
+			"name" : "Narrative.1467843992307",
+			"del" : false,
+			"moddate" : 1468594042278
+		},
+		{
+			"ws" : 8768,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "e_Bw_index",
+			"del" : false,
+			"moddate" : 1468592344882
+		},
+		{
+			"ws" : 8768,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "e_sample_cuffdiff",
+			"del" : false,
+			"moddate" : 1468592345032
+		},
+		{
+			"ws" : 8768,
+			"id" : 21,
+			"numver" : 3,
+			"name" : "e_sample_cuffdiff_matrix",
+			"del" : false,
+			"moddate" : 1468592345044
+		},
+		{
+			"ws" : 8768,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "e_sample_set",
+			"del" : false,
+			"moddate" : 1468592344891
+		},
+		{
+			"ws" : 8768,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "e_sample_set_bowtie2_AlignmentSet",
+			"del" : false,
+			"moddate" : 1468592344911
+		},
+		{
+			"ws" : 8768,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "e_sample_set_bowtie2_AlignmentSet_ExpressionSet",
+			"del" : false,
+			"moddate" : 1468592345021
+		},
+		{
+			"ws" : 8768,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "test-sample-2",
+			"del" : false,
+			"moddate" : 1468594212142
+		},
+		{
+		"ws" : 27834,
+			"id" : 1,
+			"numver" : 11,
+			"name" : "Narrative.1513709108341",
+			"del" : false,
+			"moddate" : 1516822529999
+		},
+		{
+			"ws" : 27834,
+			"id" : 2,
+			"numver" : 2,
+			"name" : "data_palette",
+			"del" : false,
+			"moddate" : 1513881707052
+		},
+		{
+			"ws" : 27834,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "kb_trimmomatic_report_0e5bb756-da9b-4ca3-89f7-91d76a98c674",
+			"del" : false,
+			"moddate" : 1513898793398
+		},
+		{
+			"ws" : 27834,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "trim",
+			"del" : false,
+			"moddate" : 1513898752524
+		},
+		{
 			"ws" : 29666,
 			"id" : 4,
 			"numver" : 1,

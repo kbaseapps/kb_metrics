@@ -56,17 +56,15 @@ class MetricsMongoDBController:
             if str(ws['workspace_id']) == str(wsid):
                 ws_name = ws['name']
                 n_name = ws_name
-                if not ws.get('meta', None) is None:
-                    w_meta = ws['meta']
-                    for w_m in w_meta:
-                        if w_m['k'] == 'narrative':
-                            n_obj = w_m['v']
-                        elif w_m['k'] == 'narrative_nice_name':
-                            n_name = w_m['v']
-                        else:
-                            pass
+                w_meta = ws['meta']
+                for w_m in w_meta:
+                    if w_m['k'] == 'narrative':
+                        n_obj = w_m['v']
+                    elif w_m['k'] == 'narrative_nice_name':
+                        n_name = w_m['v']
                 break
         return (n_name, n_obj)
+
     def __init__(self, config):
 
         # log("initializing mdb......")
@@ -169,7 +167,7 @@ class MetricsMongoDBController:
             print("No activity records returned for update!")
             return updData
 
-        print('Retrieved activities of {} record(s)'.format(len(act_list)))
+        print('Retrieved {} activity record(s)'.format(len(act_list)))
         idKeys = ['_id']
         countKeys = ['obj_numModified']
         for a_data in act_list:
@@ -313,10 +311,10 @@ class MetricsMongoDBController:
 
         params = self.process_parameters(params)
 
-        # ws_narrs = self.metrics_dbi.list_ws_narratives()
         ws_narrs = copy.deepcopy(self.ws_narratives)
+        ws_ids = [wnarr['workspace_id'] for wnarr in ws_narrs]
         wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(
-            params['minTime'], params['maxTime'])
+            params['minTime'], params['maxTime'], ws_ids)
 
         ws_narrs1 = []
         for wn in ws_narrs:
@@ -340,12 +338,11 @@ class MetricsMongoDBController:
                 del wn['username']
 
                 wn[u'nice_name'] = ''
-                if not wn.get('meta', None) is None:
-                    w_meta = wn['meta']
-                    for w_m in w_meta:
-                        if w_m['k'] == 'narrative_nice_name':
-                            wn[u'nice_name'] = w_m['v']
-                    del wn['meta']
+                w_meta = wn['meta']
+                for w_m in w_meta:
+                    if w_m['k'] == 'narrative_nice_name':
+                        wn[u'nice_name'] = w_m['v']
+                del wn['meta']
                 ws_narrs1.append(wn)
         return {'metrics_result': ws_narrs1}
 
@@ -354,8 +351,6 @@ class MetricsMongoDBController:
             raise ValueError('You do not have permission to view this data.')
 
         params = self.process_parameters(params)
-        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
         wsobjs_act = self.metrics_dbi.aggr_activities_from_wsobjs(
             params['minTime'], params['maxTime'])
@@ -365,20 +360,8 @@ class MetricsMongoDBController:
             for obj in wsobjs_act:
                 if wo['ws_id'] == obj['_id']['ws_id']:
                     obj['_id'][u'username'] = wo['username']
+
         return {'metrics_result': wsobjs_act}
-
-    def get_user_narratives_ws_wsobjs(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
-        params = self.process_parameters(params)
-        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
-
-        db_ret = self.metrics_dbi.aggr_user_narratives_ws_wsobjs(
-            params['minTime'], params['maxTime'])
-
-        return {'metrics_result': db_ret}
 
     def get_user_job_states(self, requesting_user, params, token):
         """
