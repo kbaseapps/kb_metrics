@@ -153,9 +153,9 @@ class MongoMetricsDBI:
                 raise
         else:
             # re-touch the newly inserted records
-            self.mt_narrs.update({'access_count':{'$exists': False}},
-                                        {'$set': {'access_count': 1}},
-                                        upsert=True, multi=True)
+            self.mt_narrs.update({'access_count': {'$exists': False}},
+                                 {'$set': {'access_count': 1}},
+                                 upsert=True, multi=True)
             # pprint(update_ret.raw_result)
             # if update_ret.upserted_id:
             # print(update_ret.upserted_id)
