@@ -127,6 +127,18 @@ class kb_MetricsTest(unittest.TestCase):
                     upsert=False
                 )
 
+        db_coll_au = cls.client.auth2.users
+        for urecord in db_coll_au.find():
+            create_str = urecord.get('create')
+            login_str = urecord.get('login')
+            if type(create_str) not in [datetime.date, datetime.datetime]:
+                db_coll_au.update_many(
+                    {"create": create_str, "login": login_str},
+                    {"$set": {"create": datetime.datetime.utcfromtimestamp(int(create_str) / 1000.0),
+                              "login": datetime.datetime.utcfromtimestamp(int(login_str) / 1000.0)}},
+                    upsert=False
+                )
+
         db_names = cls.client.database_names()
         for db in db_names:
             if db != 'local':
@@ -351,9 +363,9 @@ class kb_MetricsTest(unittest.TestCase):
 
         # testing get_user_info return data
         users = self.dbi.get_user_info(user_list0, minTime, maxTime)
-        self.assertEqual(len(users), 33)
+        self.assertEqual(len(users), 37)
         users = self.dbi.get_user_info(user_list, minTime, maxTime)
-        self.assertEqual(len(users), 3)
+        self.assertEqual(len(users), 4)
         self.assertIn('username', users[0])
         self.assertIn('email', users[0])
         self.assertIn('full_name', users[0])
@@ -364,17 +376,6 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_aggr_activities_from_wsobjs")
     def test_MetricsMongoDBs_aggr_activities_from_wsobjs(self):
-        db_coll_au = self.dbi.metricsDBs['auth2']['users']
-        for urecord in db_coll_au.find():
-            create_str = urecord.get('create')
-            login_str = urecord.get('login')
-            if type(create_str) not in [datetime.date, datetime.datetime]:
-                db_coll_au.update_many(
-                    {"create": create_str, "login": login_str},
-                    {"$set": {"create": datetime.datetime.utcfromtimestamp(int(create_str) / 1000.0),
-                              "login": datetime.datetime.utcfromtimestamp(int(login_str) / 1000.0)}},
-                    upsert=False
-                )
         # testing aggr_activities_from_wsobjs return data
         minTime = 1468540813000
         maxTime = 1519768865840
@@ -824,50 +825,51 @@ class kb_MetricsTest(unittest.TestCase):
         end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
                                           '%Y-%m-%dT%H:%M:%S.%fZ')
 
-        # testing get_user_details return data with given user_ids
+        # testing update_user_info with given user_ids
         params = {'user_ids': user_list}
         params['epoch_range'] = (start_datetime, end_datetime)
-        # testing if the data has expected structure
         upd_ret = self.db_controller.update_user_info(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
-        self.assertTrue(upd_ret >= 0)
+        self.assertEqual(upd_ret, (4, 0))
+
+        # testing update_user_info without user_ids
+        params = {'user_ids': []}
+        params['epoch_range'] = (start_datetime, end_datetime)
+        upd_ret = self.db_controller.update_user_info(
+                self.getContext()['user_id'],
+                params, self.getContext()['token'])
+        self.assertEqual(upd_ret, (33, 4))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_update_daily_activities
     def test_MetricsMongoDBController_update_daily_activities(self):
-        user_list = ['sulbha', 'ytm123', 'xiaoli','andrew78', 'qzhang']
         start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
                                                '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
                                           '%Y-%m-%dT%H:%M:%S.%fZ')
 
-        # testing get_user_details return data with given user_ids
-        params = {'user_ids': user_list}
-        params['epoch_range'] = (start_datetime, end_datetime)
-        # testing if the data has expected structure
+        # testing update_daily_activities with given user_ids
+        params = {'epoch_range': (start_datetime, end_datetime)}
         upd_ret = self.db_controller.update_daily_activities(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
-        self.assertTrue(upd_ret >= 0)
+        self.assertEqual(upd_ret, (1, 7))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_update_narratives
     def test_MetricsMongoDBController_update_narratives(self):
-        user_list = ['sulbha', 'ytm123', 'xiaoli','andrew78', 'qzhang']
         start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
                                                '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
                                           '%Y-%m-%dT%H:%M:%S.%fZ')
 
-        # testing get_user_details return data with given user_ids
-        params = {'user_ids': user_list}
-        params['epoch_range'] = (start_datetime, end_datetime)
-        # testing if the data has expected structure
+        # testing update_narratives with given user_ids
+        params = {'epoch_range': (start_datetime, end_datetime)}
         upd_ret = self.db_controller.update_narratives(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
-        self.assertTrue(upd_ret >= 0)
+        self.assertEqual(upd_ret, (0, 1))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_get_user_job_states")
@@ -1036,7 +1038,7 @@ class kb_MetricsTest(unittest.TestCase):
         }
         ret = self.getImpl().get_user_details(self.getContext(), m_params)
         users = ret[0]['metrics_result']
-        self.assertEqual(len(users), 34)
+        self.assertEqual(len(users), 38)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_user_counts_per_day")
@@ -1061,13 +1063,11 @@ class kb_MetricsTest(unittest.TestCase):
     def test_run_MetricsImpl_update_metrics(self):
         m_params = {
             'user_ids': [],
-            'epoch_range': (datetime.datetime(2018, 2, 28), datetime.datetime(2018, 3, 31))
+            'epoch_range': (datetime.datetime(2018, 1, 1), datetime.datetime(2018, 3, 31))
         }
         ret = self.getImpl().update_metrics(self.getContext(), m_params)
         upds = ret[0]['metrics_result']
-        self.assertIn('user_updates', upds)
-        self.assertIn('activity_updates', upds)
-        self.assertIn('narrative_updates', upds)
-        self.assertTrue(upds['user_updates'] >= 0)
-        self.assertTrue(upds['activity_updates'] >= 0)
-        self.assertTrue(upds['narrative_updates'] >= 0)
+        self.assertEqual(upds['user_updates'], 37)
+        self.assertEqual(upds['activity_updates'], 8)
+        self.assertEqual(upds['narrative_updates'], 1)
+

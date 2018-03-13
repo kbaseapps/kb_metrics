@@ -9,6 +9,7 @@ from kb_Metrics.metricsDBs import MongoMetricsDBI
 from kb_Metrics.Util import _unix_time_millis_from_datetime, _convert_to_datetime
 from Catalog.CatalogClient import Catalog
 
+from pprint import pprint, pformat  # noqa: F401
 
 def log(message, prefix_newline=False):
     """
@@ -108,13 +109,16 @@ class MetricsMongoDBController:
             self.client_groups = self.get_client_groups_from_cat(token)
 
         # 1. update users
-        action_result1 = self.update_user_info(requesting_user, params, token)
+        (up_dated, u_serted) = self.update_user_info(requesting_user, params, token)
+        action_result1 = up_dated + u_serted
 
         # 2. update activities
-        action_result2 = self.update_daily_activities(requesting_user, params, token)
+        (up_dated, u_serted) = self.update_daily_activities(requesting_user, params, token)
+        action_result2 = up_dated + u_serted
 
         # 3. update narratives
-        action_result3 = self.update_narratives(requesting_user, params, token)
+        (up_dated, u_serted) = self.update_narratives(requesting_user, params, token)
+        action_result3 = up_dated + u_serted
 
         return {'metrics_result': {'user_updates': action_result1,
                                    'activity_updates': action_result2,
@@ -133,12 +137,13 @@ class MetricsMongoDBController:
         # such as most current 24 hours instead of 48 hours as for others.
         auth2_ret = self.metrics_dbi.aggr_user_details(
             params['user_ids'], params['minTime'], params['maxTime'])
-        updData = 0
+        upDated = 0
+        upSerted = 0
         if len(auth2_ret) == 0:
             print("No user records returned for update!")
-            return updData
+            return (0, 0)
 
-        print('Retrieved {} user record(s)'.format(len(auth2_ret)))
+        print('Retrieved {} user record(s) for update!'.format(len(auth2_ret)))
         idKeys = ['username', 'email']
         dataKeys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
         for u_data in auth2_ret:
@@ -148,9 +153,12 @@ class MetricsMongoDBController:
             isKbstaff = 1 if idData['username'] in self.kbstaffList else 0
             update_ret = self.metrics_dbi.update_user_records(
                 idData, userData, isKbstaff)
-        updData += update_ret.raw_result['nModified']
-
-        return updData
+            if update_ret.raw_result['updatedExisting']:
+                upDated += update_ret.raw_result['nModified']
+            elif update_ret.raw_result.get('upserted'):
+                upSerted += 1
+        print('updated {} and upserted {} users.'.format(upDated, upSerted))
+        return (upDated, upSerted)
 
     def update_daily_activities(self, requesting_user, params, token):
         """
@@ -162,12 +170,13 @@ class MetricsMongoDBController:
 
         ws_ret = self.get_activities_from_wsobjs(requesting_user, params, token)
         act_list = ws_ret['metrics_result']
-        updData = 0
+        upDated = 0
+        upSerted = 0
         if len(act_list) == 0:
             print("No activity records returned for update!")
-            return updData
+            return (0, 0)
 
-        print('Retrieved {} activity record(s)'.format(len(act_list)))
+        print('Retrieved {} activity record(s) for update!'.format(len(act_list)))
         idKeys = ['_id']
         countKeys = ['obj_numModified']
         for a_data in act_list:
@@ -176,9 +185,13 @@ class MetricsMongoDBController:
             countData = filterByKey(countKeys)
             update_ret = self.metrics_dbi.update_activity_records(
                 idData, countData)
-            updData += update_ret.raw_result['nModified']
+            if update_ret.raw_result['updatedExisting']:
+                upDated += update_ret.raw_result['nModified']
+            elif update_ret.raw_result.get('upserted'):
+                upSerted += 1
 
-        return updData
+        print('updated {} and upserted {} activities.'.format(upDated, upSerted))
+        return (upDated, upSerted)
 
     def insert_daily_activities(self, requesting_user, params, token):
         """
@@ -195,7 +208,7 @@ class MetricsMongoDBController:
             print("No activity records returned for insertion!")
             return {'metrics_result': []}
 
-        print('Retrieved activities of {} record(s)'.format(len(act_list)))
+        print('Retrieved {} activity record(s) for insertion!'.format(len(act_list)))
 
         for al in act_list:  # set default for inserting records at the first time
             al['recordLastUpdated'] = datetime.datetime.utcnow()
@@ -223,7 +236,8 @@ class MetricsMongoDBController:
             print("No narrative records returned for insertion!")
             return {'metrics_result': []}
 
-        print('Retrieved narratives of {} record(s)'.format(len(narr_list)))
+        print('Retrieved {} narrative record(s) for insertion!'.format(len(narr_list)))
+
         for wn in narr_list:  # set default for inserting records at the first time
             wn['recordLastUpdated'] = datetime.datetime.utcnow()
             if wn.get('first_access', None) is None:
@@ -248,12 +262,13 @@ class MetricsMongoDBController:
 
         ws_ret = self.get_narratives_from_wsobjs(requesting_user, params, token)
         narr_list = ws_ret['metrics_result']
-        updData = 0
+        upDated = 0
+        upSerted = 0
         if len(narr_list) == 0:
             print("No narrative records returned for update!")
-            return updData
+            return (0, 0)
 
-        print('Retrieved {} narratives record(s)'.format(len(narr_list)))
+        print('Retrieved {} narratives record(s) for update!'.format(len(narr_list)))
         idKeys = ['object_id', 'workspace_id']
         otherKeys = ['name', 'last_saved_at', 'last_saved_by', 'numObj',
                      'deleted', 'object_version', 'nice_name', 'desc']
@@ -262,9 +277,13 @@ class MetricsMongoDBController:
             idData = filterByKey(idKeys)
             otherData = filterByKey(otherKeys)
             update_ret = self.metrics_dbi.update_narrative_records(idData, otherData)
-            updData += update_ret.raw_result['nModified']
+            if update_ret.raw_result['updatedExisting']:
+                upDated += update_ret.raw_result['nModified']
+            elif update_ret.raw_result.get('upserted'):
+                upSerted += 1
 
-        return updData
+        print('updated {} and upserted {} narratives.'.format(upDated, upSerted))
+        return (upDated, upSerted)
 
     # End functions to write to the metrics database
 
