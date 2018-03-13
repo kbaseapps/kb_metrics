@@ -46,7 +46,7 @@ class MongoMetricsDBI:
     # Begin functions to write to the metrics database...
     def update_user_records(self, upd_filter, upd_data, kbstaff):
         """
-        update_user_records--
+        update_user_records--update the user info in metrics.users
         """
         upd_op = {'$currentDate': {'recordLastUpdated': True},
                   '$set': upd_data,
@@ -239,9 +239,9 @@ class MongoMetricsDBI:
 
         signupTimeFilter = {}
         if minTime is not None:
-            signupTimeFilter['$gte'] = minTime
+            signupTimeFilter['$gte'] = _convert_to_datetime(minTime)
         if maxTime is not None:
-            signupTimeFilter['$lte'] = maxTime
+            signupTimeFilter['$lte'] = _convert_to_datetime(maxTime)
         if len(signupTimeFilter) > 0:
             filter['signup_at'] = signupTimeFilter
 

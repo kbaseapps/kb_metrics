@@ -25,7 +25,7 @@ def _convert_to_datetime(dt):
         return dt
     elif isinstance(dt, int):
         # TODO WRONG LOGIC if timestamp is not in million seconds
-        return datetime.datetime.utcfromtimestamp(dt / 1000)
+        return datetime.datetime.utcfromtimestamp(dt / 1000.0)
     elif type(dt) in [unicode, str]:
         return _datetime_from_utc(dt)
     else:

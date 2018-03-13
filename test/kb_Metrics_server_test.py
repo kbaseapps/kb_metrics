@@ -55,6 +55,7 @@ class kb_MetricsTest(unittest.TestCase):
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
         cls.db_controller = MetricsMongoDBController(cls.cfg)
 
+        cls.client = MongoClient(port=27017)
         cls.init_mongodb()
 
     @classmethod
@@ -71,49 +72,67 @@ class kb_MetricsTest(unittest.TestCase):
         os.system("mongod --version")
         os.system("cat /var/log/mongodb/mongodb.log | grep 'waiting for connections on port 27017'")
 
-        client = MongoClient(port=27017)
-        cls._insert_data(client, 'workspace', 'workspaces')
-        cls._insert_data(client, 'exec_engine', 'exec_tasks')
-        cls._insert_data(client, 'userjobstate', 'jobstate')
-        cls._insert_data(client, 'workspace', 'workspaceObjects')
-        cls._insert_data(client, 'auth2', 'users')
-        cls._insert_data(client, 'metrics', 'users')
-        cls._insert_data(client, 'metrics', 'daily_activities')
-        cls.db_names = client.database_names()
+        cls._insert_data(cls.client, 'workspace', 'workspaces')
+        cls._insert_data(cls.client, 'exec_engine', 'exec_tasks')
+        cls._insert_data(cls.client, 'userjobstate', 'jobstate')
+        cls._insert_data(cls.client, 'workspace', 'workspaceObjects')
+        cls._insert_data(cls.client, 'auth2', 'users')
+        cls._insert_data(cls.client, 'metrics', 'users')
+        cls._insert_data(cls.client, 'metrics', 'daily_activities')
+        cls.db_names = cls.client.database_names()
 
         # updating created to timstamp field for userjobstate.jobstate
-        for jrecord in client.userjobstate.jobstate.find():
+        for jrecord in cls.client.userjobstate.jobstate.find():
             created_str = jrecord.get('created')
-            client.userjobstate.jobstate.update_many(
+            cls.client.userjobstate.jobstate.update_many(
                 {"created": created_str},
-                {"$set": {"created": datetime.datetime.utcfromtimestamp(int(created_str) / 1000)}}
+                {"$set": {"created": datetime.datetime.utcfromtimestamp(int(created_str) / 1000.0)}}
             )
-        db_coll1 = client.workspace.workspaceObjects
+        # updating data fields from timstamp to datetime.datetime format
+        db_coll1 = cls.client.workspace.workspaceObjects
         for wrecord in db_coll1.find():
             moddate_str = wrecord.get('moddate')
             if type(moddate_str) not in [datetime.date, datetime.datetime]:
-                moddate = datetime.datetime.utcfromtimestamp(int(moddate_str) / 1000)
+                moddate = datetime.datetime.utcfromtimestamp(int(moddate_str) / 1000.0)
                 db_coll1.update_many(
                     {"moddate": moddate_str},
                     {"$set": {"moddate": moddate}},
                     upsert=False
                 )
-        db_coll2 = client.workspace.workspaces
+
+        db_coll2 = cls.client.workspace.workspaces
         for wrecord in db_coll2.find():
             moddate_str = wrecord.get('moddate')
             if type(moddate_str) not in [datetime.date, datetime.datetime]:
-                moddate = datetime.datetime.utcfromtimestamp(int(moddate_str) / 1000)
+                moddate = datetime.datetime.utcfromtimestamp(int(moddate_str) / 1000.0)
                 db_coll2.update_many(
                     {"moddate": moddate_str},
                     {"$set": {"moddate": moddate}},
                     upsert=False
                 )
 
-        for db in client.database_names():
-            if db != 'local':
-                client[db].command("createUser", "admin", pwd="password", roles=["readWrite"])
+        db_coll3 = cls.client.metrics.users
+        for urecord in db_coll3.find():
+            signup_at_str = urecord.get('signup_at')
+            last_signin_at_str = urecord.get('last_signin_at')
+            if type(signup_at_str) not in [datetime.date, datetime.datetime]:
+                signup_date = datetime.datetime.utcfromtimestamp(
+                                    int(signup_at_str) / 1000.0)
+                signin_date = datetime.datetime.utcfromtimestamp(
+                                    int(last_signin_at_str) / 1000.0)
+                db_coll3.update_many(
+                    {"signup_at": signup_at_str, "last_signin_at": last_signin_at_str},
+                    {"$set": {"signup_at": signup_date,
+                              "last_signin_at": signin_date}},
+                    upsert=False
+                )
 
-        cls.dbi =  MongoMetricsDBI('', client.database_names(), 'admin', 'password')
+        db_names = cls.client.database_names()
+        for db in db_names:
+            if db != 'local':
+                cls.client[db].command("createUser", "admin", pwd="password", roles=["readWrite"])
+
+        cls.dbi =  MongoMetricsDBI('', db_names, 'admin', 'password')
 
     @classmethod
     def _insert_data(cls, client, db_name, table):
@@ -134,7 +153,7 @@ class kb_MetricsTest(unittest.TestCase):
     def getWsName(self):
         if hasattr(self.__class__, 'wsName'):
             return self.__class__.wsName
-        suffix = int(time.time() * 1000)
+        suffix = int(time.time() * 1000.0)
         wsName = "test_kb_Metrics_" + str(suffix)
         ret = self.getWsClient().create_workspace({'workspace': wsName})  # noqa
         self.__class__.wsName = wsName
@@ -192,7 +211,7 @@ class kb_MetricsTest(unittest.TestCase):
         # testing list_user_objects_from_wsobjs return count without wsid filter
         user_objs = self.dbi.list_user_objects_from_wsobjs(
                         minTime, maxTime)
-        self.assertEqual(len(user_objs), 41)
+        self.assertEqual(len(user_objs), 40)
 
         # testing list_user_objects_from_wsobjs return count and data with wsid filter
         user_objs = self.dbi.list_user_objects_from_wsobjs(
@@ -212,7 +231,7 @@ class kb_MetricsTest(unittest.TestCase):
                 'Align_Reads_using_Bowtie2_0x242ac110001L')
         self.assertEqual(user_objs[1]['object_version'], 1)
         self.assertEqual(user_objs[1]['moddate'],
-                datetime.datetime(2016, 7, 15, 14, 19, 4))
+                datetime.datetime(2016, 7, 15, 14, 19, 4, 915000))
         self.assertFalse(user_objs[1]['deleted'])
 
     # Uncomment to skip this test
@@ -237,7 +256,7 @@ class kb_MetricsTest(unittest.TestCase):
         user_list0 = []
         user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'boris']
 
-        # testing aggr_user_details_returneddata structure
+        # testing aggr_user_details_returned data structure
         users = self.dbi.aggr_user_details(user_list, minTime, maxTime)
         self.assertEqual(len(users), 4)
         self.assertIn('username', users[0])
@@ -251,9 +270,9 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(users[1]['email'], 'laramy.enders@gmail.com')
         self.assertEqual(users[1]['full_name'], 'Laramy Enders')
         self.assertEqual(users[1]['signup_at'],
-						datetime.datetime(2018, 2, 16, 15, 19, 55))
+						datetime.datetime(2018, 2, 16, 15, 19, 55, 973000))
         self.assertEqual(users[1]['last_signin_at'],
-						datetime.datetime(2018, 2, 16, 15, 19, 56))
+						datetime.datetime(2018, 2, 16, 15, 19, 56, 426000))
         self.assertEqual(users[1]['roles'], [])
 
         users = self.dbi.aggr_user_details(user_list0, minTime, maxTime)
@@ -275,6 +294,52 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(users[1]['numOfUsers'], 4)
         self.assertEqual(users[2]['numOfUsers'], 6)
         self.assertEqual(users[3]['numOfUsers'], 8)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_MetricsMongoDBs_update_user_records")
+    def test_MetricsMongoDBs_update_user_records(self):
+        dt1 = datetime.datetime(2018, 3, 12, 1, 13, 30)
+        dt2 = datetime.datetime(2018, 3, 12, 1, 35, 30)
+        upd_filter_set = {'username': 'test_u1', 'email': 'test_e1'}
+        upd_data_set = {'full_name': 'test_nm1', 'roles': [],
+                        'signup_at': dt1, 'last_signin_at': dt2}
+        isKBstaff = False
+
+        # testing freshly upserted result
+        upd_ret = self.dbi.update_user_records(upd_filter_set, upd_data_set, isKBstaff)
+
+        self.assertFalse(upd_ret.raw_result.get('upserted', None) is None)
+        self.assertFalse(upd_ret.raw_result.get('updatedExisting'))
+        self.assertTrue(upd_ret.raw_result.get('ok'))
+        self.assertEqual(upd_ret.raw_result.get('n'), 1)
+
+        db_mu = self.client.metrics.users
+        for murecord in db_mu.find({'username': 'test_u1', 'email': 'test_e1'}):
+            self.assertEqual(murecord['full_name'], 'test_nm1')
+            self.assertEqual(murecord['roles'], [])
+            self.assertEqual(murecord['signup_at'], dt1)
+            self.assertEqual(murecord['last_signin_at'], dt2)
+            self.assertEqual(murecord['kbase_staff'], isKBstaff)
+
+        # testing updating existing record
+        dt2 = datetime.datetime(2018, 3, 13, 1, 35, 30)
+        upd_data_set = {'full_name': 'test_nm1', 'roles': [],
+                        'signup_at': dt1, 'last_signin_at': dt2}
+
+        upd_ret = self.dbi.update_user_records(upd_filter_set, upd_data_set, isKBstaff)
+
+        self.assertTrue(upd_ret.raw_result.get('upserted', None) is None)
+        self.assertTrue(upd_ret.raw_result.get('updatedExisting'))
+        self.assertTrue(upd_ret.raw_result.get('ok'))
+        self.assertEqual(upd_ret.raw_result.get('n'), 1)
+
+        db_mu = self.client.metrics.users
+        for murecord in db_mu.find({'username': 'test_u1', 'email': 'test_e1'}):
+            self.assertEqual(murecord['full_name'], 'test_nm1')
+            self.assertEqual(murecord['roles'], [])
+            self.assertEqual(murecord['signup_at'], dt1)
+            self.assertEqual(murecord['last_signin_at'], dt2)
+            self.assertEqual(murecord['kbase_staff'], isKBstaff)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_get_user_info")
@@ -299,16 +364,15 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_aggr_activities_from_wsobjs")
     def test_MetricsMongoDBs_aggr_activities_from_wsobjs(self):
-        db_coll3 = self.dbi.metricsDBs['auth2']['users']
-        #db_coll3 = client.auth2.users
-        for urecord in db_coll3.find():
+        db_coll_au = self.dbi.metricsDBs['auth2']['users']
+        for urecord in db_coll_au.find():
             create_str = urecord.get('create')
             login_str = urecord.get('login')
             if type(create_str) not in [datetime.date, datetime.datetime]:
-                db_coll3.update_many(
+                db_coll_au.update_many(
                     {"create": create_str, "login": login_str},
-                    {"$set": {"create": datetime.datetime.utcfromtimestamp(int(create_str) / 1000),
-                              "login": datetime.datetime.utcfromtimestamp(int(login_str) / 1000)}},
+                    {"$set": {"create": datetime.datetime.utcfromtimestamp(int(create_str) / 1000.0),
+                              "login": datetime.datetime.utcfromtimestamp(int(login_str) / 1000.0)}},
                     upsert=False
                 )
         # testing aggr_activities_from_wsobjs return data
@@ -359,7 +423,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(ws_narrs[23]['desc'], '')
         self.assertEqual(ws_narrs[23]['numObj'], 4)
         self.assertEqual(ws_narrs[23]['last_saved_at'],
-                                datetime.datetime(2018, 1, 24, 19, 35, 30))
+                                datetime.datetime(2018, 1, 24, 19, 35, 30, 1000))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ujs_results")
@@ -372,17 +436,17 @@ class kb_MetricsTest(unittest.TestCase):
         epoch = datetime.datetime.utcfromtimestamp(0)
         # testing list_ujs_results return data, with userIds
         ujs = self.dbi.list_ujs_results(user_list1, minTime, maxTime)
-        self.assertEqual(len(ujs), 15)
+        self.assertEqual(len(ujs), 14)
         ujs = self.dbi.list_ujs_results(user_list2, minTime, maxTime)
         self.assertEqual(len(ujs), 3)
         for uj in ujs:
             self.assertIn(uj.get('user'), user_list2)
-            uj_creation_time = int((uj.get('created') - epoch).total_seconds() * 1000)
+            uj_creation_time = int((uj.get('created') - epoch).total_seconds() * 1000.0)
             self.assertTrue(minTime <= uj_creation_time <= maxTime)
 
         # testing list_ujs_results return data, without userIds
         ujs = self.dbi.list_ujs_results([], minTime, maxTime)
-        self.assertEqual(len(ujs), 15)
+        self.assertEqual(len(ujs), 14)
 
         # testing list_ujs_results return data, with different userIds and times
         ujs = self.dbi.list_ujs_results(['wjriehl'], 1500052541065, 1500074641912)
@@ -479,8 +543,8 @@ class kb_MetricsTest(unittest.TestCase):
         today = datetime.date.today()
         minTime = ret_params.get('minTime')
         maxTime = ret_params.get('maxTime')
-        minTime_from_today = (datetime.date(*time.localtime(minTime/1000)[:3]) - today).days
-        maxTime_from_today = (datetime.date(*time.localtime(maxTime/1000)[:3]) - today).days
+        minTime_from_today = (datetime.date(*time.localtime(minTime/1000.0)[:3]) - today).days
+        maxTime_from_today = (datetime.date(*time.localtime(maxTime/1000.0)[:3]) - today).days
         self.assertEqual(minTime_from_today, -2)
         self.assertEqual(maxTime_from_today, 0)
 
@@ -489,8 +553,8 @@ class kb_MetricsTest(unittest.TestCase):
         today = datetime.date.today()
         minTime = ret_params.get('minTime')
         maxTime = ret_params.get('maxTime')
-        minTime_from_today = (datetime.date(*time.localtime(minTime/1000)[:3]) - today).days
-        maxTime_from_today = (datetime.date(*time.localtime(maxTime/1000)[:3]) - today).days
+        minTime_from_today = (datetime.date(*time.localtime(minTime/1000.0)[:3]) - today).days
+        maxTime_from_today = (datetime.date(*time.localtime(maxTime/1000.0)[:3]) - today).days
         self.assertEqual(minTime_from_today, -2)
         self.assertEqual(maxTime_from_today, 0)
 
@@ -748,7 +812,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(narrs[1]['numObj'], 4)
         self.assertEqual(narrs[1]['last_saved_by'], 'psdehal')
         self.assertEqual(narrs[1]['last_saved_at'],
-                datetime.datetime(2018, 1, 24, 19, 35, 30))
+                datetime.datetime(2018, 1, 24, 19, 35, 30, 1000))
         self.assertFalse(narrs[1]['deleted'])
 
     # Uncomment to skip this test
@@ -972,7 +1036,7 @@ class kb_MetricsTest(unittest.TestCase):
         }
         ret = self.getImpl().get_user_details(self.getContext(), m_params)
         users = ret[0]['metrics_result']
-        self.assertEqual(len(users), 33)
+        self.assertEqual(len(users), 34)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_user_counts_per_day")
