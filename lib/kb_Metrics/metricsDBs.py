@@ -134,9 +134,8 @@ class MongoMetricsDBI:
         update_narrative_records--
         """
         upd_op = {'$currentDate': {'recordLastUpdated': True},
+                  '$setOnInsert': {'first_access': upd_data['last_saved_at']},
                   '$set': upd_data,
-                  '$setOnInsert': {'access_count': 1,
-                                   'first_access': upd_data['last_saved_at']},
                   '$inc': {'access_count': 1}}
 
         # grab handle(s) to the database collection(s) targeted
@@ -153,7 +152,10 @@ class MongoMetricsDBI:
                 print "really panic"
                 raise
         else:
-            pass
+            # re-touch the newly inserted records
+            self.mt_narrs.update({'access_count':{'$exists': False}},
+                                        {'$set': {'access_count': 1}},
+                                        upsert=True, multi=True)
             # pprint(update_ret.raw_result)
             # if update_ret.upserted_id:
             # print(update_ret.upserted_id)
@@ -305,11 +307,18 @@ class MongoMetricsDBI:
         m_cursor = kbworkspaces.aggregate(pipeline)
         return list(m_cursor)
 
-    def list_ws_narratives(self):
+    def list_ws_narratives(self, minTime=0, maxTime=0):
+        match_filter = {"del": False,
+                        "meta": {"$elemMatch": {"k": "narrative_nice_name"}}}
+
+        if minTime > 0 and maxTime > 0:
+            minTime = datetime.datetime.fromtimestamp(minTime / 1000)
+            maxTime = datetime.datetime.fromtimestamp(maxTime / 1000)
+            match_filter['moddate'] = {"$gte": minTime, "$lte": maxTime}
+
         # Define the pipeline operations
         pipeline = [
-            {"$match": {"del": False,
-                        "meta": {"$elemMatch": {"k": "narrative_nice_name"}}}},
+            {"$match": match_filter},
             {"$project": {"username": "$owner", "workspace_id": "$ws",
                           "name": 1, "meta": 1,
                           "deleted": "$del", "desc": 1, "numObj": 1,

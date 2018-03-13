@@ -306,8 +306,17 @@ class MetricsMongoDBController:
 
     # functions to get the requested records from other dbs...
     def get_narratives_from_wsobjs(self, requesting_user, params, token):
+        """
+        get_narratives_from_wsobjs--Given a time period, fetch the narrative
+        information from workspace.workspaces and workspace.workspaceObjects.
+        Based on the narratives in workspace.workspaceObjects, if additional info
+        available then add to existing data from workspace.workspaces.
+        """
         if not self.is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
+
+        if self.ws_narratives is None:
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
 
         params = self.process_parameters(params)
 
@@ -323,20 +332,21 @@ class MetricsMongoDBController:
                     if wn['name'] == obj['object_name']:
                         wn[u'object_id'] = obj['object_id']
                         wn[u'object_version'] = obj['object_version']
+                        wn[u'object_name'] = obj['object_name']
                         break
-                elif ':' in wn['name']:
-                    wts = wn['name'].split(':')[1]
-                    p = re.compile(wts, re.IGNORECASE)
-                    if p.search(obj['object_name']):
-                        wn[u'object_id'] = obj['object_id']
-                        wn[u'object_version'] = obj['object_version']
+                    elif ':' in wn['name']:
+                        wts = wn['name'].split(':')[1]
+                        if '_' in wts:
+                            wts = wts.split('_')[1]
+                        p = re.compile(wts, re.IGNORECASE)
+                        if p.search(obj['object_name']):
+                            wn[u'object_id'] = obj['object_id']
+                            wn[u'object_name'] = obj['object_name']
+                            wn[u'object_version'] = obj['object_version']
                         break
-
         for wn in ws_narrs:
-            if not wn.get('object_id', None) is None:
-                wn[u'last_saved_by'] = wn['username']
-                del wn['username']
-
+            if wn.get('object_id'):
+                wn[u'last_saved_by'] = wn.pop('username')
                 wn[u'nice_name'] = ''
                 w_meta = wn['meta']
                 for w_m in w_meta:

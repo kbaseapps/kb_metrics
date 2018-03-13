@@ -98,6 +98,16 @@ class kb_MetricsTest(unittest.TestCase):
                     {"$set": {"moddate": moddate}},
                     upsert=False
                 )
+        db_coll2 = client.workspace.workspaces
+        for wrecord in db_coll2.find():
+            moddate_str = wrecord.get('moddate')
+            if type(moddate_str) not in [datetime.date, datetime.datetime]:
+                moddate = datetime.datetime.utcfromtimestamp(int(moddate_str) / 1000)
+                db_coll2.update_many(
+                    {"moddate": moddate_str},
+                    {"$set": {"moddate": moddate}},
+                    upsert=False
+                )
 
         for db in client.database_names():
             if db != 'local':
@@ -145,7 +155,7 @@ class kb_MetricsTest(unittest.TestCase):
         ws_cur = self.dbi.metricsDBs['workspace']['workspaces'].find()
         self.assertEqual(len(list(ws_cur)), 27)
         wsobj_cur = self.dbi.metricsDBs['workspace']['workspaceObjects'].find()
-        self.assertEqual(len(list(wsobj_cur)), 40)
+        self.assertEqual(len(list(wsobj_cur)), 41)
         ujs_cur = self.dbi.metricsDBs['userjobstate']['jobstate'].find()
         self.assertEqual(len(list(ujs_cur)), 36)
         users_cur = self.dbi.metricsDBs['auth2']['users'].find()
@@ -174,18 +184,6 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_user_objects_from_wsobjs")
     def test_MetricsMongoDBs_list_user_objects_from_wsobjs(self):
-        '''
-        db_coll1 = self.dbi.metricsDBs['workspace']['workspaceObjects']
-        for wrecord in db_coll1.find():
-            moddate_str = wrecord.get('moddate')
-            if type(moddate_str) not in [datetime.date, datetime.datetime]:
-                moddate = datetime.datetime.utcfromtimestamp(int(moddate_str) / 1000)
-                db_coll1.update_many(
-                    {"moddate": moddate_str},
-                    {"$set": {"moddate": moddate}},
-                    upsert=False
-                )
-        '''
         minTime = 1468592344887
         maxTime = 1519768865840
         ws_narrs = self.dbi.list_ws_narratives()
@@ -194,12 +192,12 @@ class kb_MetricsTest(unittest.TestCase):
         # testing list_user_objects_from_wsobjs return count without wsid filter
         user_objs = self.dbi.list_user_objects_from_wsobjs(
                         minTime, maxTime)
-        self.assertEqual(len(user_objs), 40)
+        self.assertEqual(len(user_objs), 41)
 
         # testing list_user_objects_from_wsobjs return count and data with wsid filter
         user_objs = self.dbi.list_user_objects_from_wsobjs(
                         minTime, maxTime, ws_list)
-        self.assertEqual(len(user_objs), 25)
+        self.assertEqual(len(user_objs), 26)
 
         self.assertIn('workspace_id', user_objs[0])
         self.assertIn('object_id', user_objs[0])
@@ -209,12 +207,12 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('deleted', user_objs[0])
 
         self.assertEqual(user_objs[1]['workspace_id'], 8768)
-        self.assertEqual(user_objs[1]['object_id'], 16)
+        self.assertEqual(user_objs[1]['object_id'], 12)
         self.assertEqual(user_objs[1]['object_name'],
-                'Assemble_Transcripts_Using_Cufflinks_0x242ac110001L')
+                'Align_Reads_using_Bowtie2_0x242ac110001L')
         self.assertEqual(user_objs[1]['object_version'], 1)
         self.assertEqual(user_objs[1]['moddate'],
-                datetime.datetime(2016, 7, 15, 14, 19, 5))
+                datetime.datetime(2016, 7, 15, 14, 19, 4))
         self.assertFalse(user_objs[1]['deleted'])
 
     # Uncomment to skip this test
@@ -301,13 +299,13 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_aggr_activities_from_wsobjs")
     def test_MetricsMongoDBs_aggr_activities_from_wsobjs(self):
-        db_coll2 = self.dbi.metricsDBs['auth2']['users']
-        #db_coll2 = client.auth2.users
-        for urecord in db_coll2.find():
+        db_coll3 = self.dbi.metricsDBs['auth2']['users']
+        #db_coll3 = client.auth2.users
+        for urecord in db_coll3.find():
             create_str = urecord.get('create')
             login_str = urecord.get('login')
             if type(create_str) not in [datetime.date, datetime.datetime]:
-                db_coll2.update_many(
+                db_coll3.update_many(
                     {"create": create_str, "login": login_str},
                     {"$set": {"create": datetime.datetime.utcfromtimestamp(int(create_str) / 1000),
                               "login": datetime.datetime.utcfromtimestamp(int(login_str) / 1000)}},
@@ -318,16 +316,24 @@ class kb_MetricsTest(unittest.TestCase):
         maxTime = 1519768865840
 
         user_acts = self.dbi.aggr_activities_from_wsobjs(minTime, maxTime)
-        self.assertTrue(len(user_acts) == 10)
-        self.assertEqual(user_acts[3]['_id']['ws_id'], 29624)
-        self.assertEqual( user_acts[3]['_id']['year_mod'], 2018)
-        self.assertEqual(user_acts[3]['_id']['month_mod'], 2)
-        self.assertEqual(user_acts[3]['_id']['day_mod'], 26)
-        self.assertEqual(user_acts[3]['obj_numModified'], 5)
+        self.assertEqual(len(user_acts), 11)
+        self.assertEqual(user_acts[4]['_id']['ws_id'], 29624)
+        self.assertEqual( user_acts[4]['_id']['year_mod'], 2018)
+        self.assertEqual(user_acts[4]['_id']['month_mod'], 2)
+        self.assertEqual(user_acts[4]['_id']['day_mod'], 26)
+        self.assertEqual(user_acts[4]['obj_numModified'], 5)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ws_narratives")
     def test_MetricsMongoDBs_list_ws_narratives(self):
+        minTime = 1468592344887
+        maxTime = 1519768865840
+
+        # Testing with time limit
+        ws_narrs = self.dbi.list_ws_narratives(minTime, maxTime)
+        self.assertEqual(len(ws_narrs), 10)
+
+        # Testing without given time limit
         ws_narrs = self.dbi.list_ws_narratives()
 
         # Ensure 'narrative_nice_name' exists in 'meta' as the query filter requires
@@ -352,7 +358,8 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertFalse(ws_narrs[23]['deleted'])
         self.assertEqual(ws_narrs[23]['desc'], '')
         self.assertEqual(ws_narrs[23]['numObj'], 4)
-        self.assertEqual(ws_narrs[23]['last_saved_at'], 1516822530001)
+        self.assertEqual(ws_narrs[23]['last_saved_at'],
+                                datetime.datetime(2018, 1, 24, 19, 35, 30))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ujs_results")
@@ -693,18 +700,6 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_get_activities_from_wsobjs
     def test_MetricsMongoDBController_get_activities_from_wsobjs(self):
-        '''
-        db_coll1 = self.dbi.metricsDBs['workspace']['workspaceObjects']
-        for wrecord in db_coll1.find():
-            moddate_str = wrecord.get('moddate')
-            if type(moddate_str) not in [datetime.date, datetime.datetime]:
-                moddate = datetime.datetime.utcfromtimestamp(int(moddate_str) / 1000)
-                db_coll1.update_many(
-                    {"moddate": moddate_str},
-                    {"$set": {"moddate": moddate}},
-                    upsert=False
-                )
-        '''
         start_datetime = datetime.datetime.strptime('2016-07-15T00:00:00+0000',
                                                '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
@@ -718,18 +713,43 @@ class kb_MetricsTest(unittest.TestCase):
                 params, self.getContext()['token'])
         user_acts = act_ret['metrics_result']
 
-        self.assertTrue(len(user_acts) == 10)
-        self.assertEqual(user_acts[0]['_id']['username'], 'vkumar')
-        self.assertEqual(user_acts[0]['_id']['ws_id'], 8768)
-        self.assertEqual( user_acts[0]['_id']['year_mod'], 2016)
-        self.assertEqual(user_acts[0]['_id']['month_mod'], 7)
-        self.assertEqual(user_acts[0]['_id']['day_mod'], 15)
-        self.assertEqual(user_acts[0]['obj_numModified'], 21)
+        self.assertTrue(len(user_acts) == 11)
+        self.assertEqual(user_acts[1]['_id']['username'], 'vkumar')
+        self.assertEqual(user_acts[1]['_id']['ws_id'], 8768)
+        self.assertEqual( user_acts[1]['_id']['year_mod'], 2016)
+        self.assertEqual(user_acts[1]['_id']['month_mod'], 7)
+        self.assertEqual(user_acts[1]['_id']['day_mod'], 15)
+        self.assertEqual(user_acts[1]['obj_numModified'], 21)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_get_narratives_from_wsobjs
     def test_MetricsMongoDBController_get_narratives_from_wsobjs(self):
-        pass
+        start_datetime = datetime.datetime.strptime('2016-07-15T00:00:00+0000',
+                                               '%Y-%m-%dT%H:%M:%S+0000')
+        end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
+                                          '%Y-%m-%dT%H:%M:%S.%fZ')
+
+        params = {'epoch_range': (start_datetime, end_datetime)}
+
+        # testing if the data has expected structure
+        narr_ret = self.db_controller.get_narratives_from_wsobjs(
+                self.getContext()['user_id'],
+                params, self.getContext()['token'])
+        narrs = narr_ret['metrics_result']
+        self.assertEqual(len(narrs), 2)
+
+        self.assertEqual(narrs[1]['workspace_id'], 27834)
+        self.assertEqual(narrs[1]['object_id'], 1)
+        self.assertEqual(narrs[1]['object_name'], 'Narrative.1513709108341')
+        self.assertEqual(narrs[1]['object_version'], 11)
+        self.assertEqual(narrs[1]['name'],
+                         'psdehal:narrative_1513709108341')
+        self.assertEqual(narrs[1]['nice_name'], 'Staging Test')
+        self.assertEqual(narrs[1]['numObj'], 4)
+        self.assertEqual(narrs[1]['last_saved_by'], 'psdehal')
+        self.assertEqual(narrs[1]['last_saved_at'],
+                datetime.datetime(2018, 1, 24, 19, 35, 30))
+        self.assertFalse(narrs[1]['deleted'])
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_update_user_info
