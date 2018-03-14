@@ -117,9 +117,9 @@ class MongoMetricsDBI:
         insert_ret = None
         try:
             # get an instance of InsertManyResult(inserted_ids, acknowledged)
-            insert_ret = self.mt_act.insert_many(mt_docs, ordered=True)
+            insert_ret = self.mt_act.insert_many(mt_docs, ordered=False)
         except BulkWriteError as bwe:
-            # skip uplicate key error (code=11000)
+            # skip duplicate key error (code=11000)
             panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
             if len(panic) > 0:
                 print "really panic"
