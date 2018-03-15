@@ -9,7 +9,7 @@ from pymongo import MongoClient
 from os import environ
 try:
     from ConfigParser import ConfigParser  # py2
-except:
+except ImportError:
     from configparser import ConfigParser  # py3
 
 from pprint import pprint, pformat  # noqa: F401
@@ -70,7 +70,8 @@ class kb_MetricsTest(unittest.TestCase):
 
         os.system("sudo service mongodb start")
         os.system("mongod --version")
-        os.system("cat /var/log/mongodb/mongodb.log | grep 'waiting for connections on port 27017'")
+        os.system("cat /var/log/mongodb/mongodb.log "
+                  "| grep 'waiting for connections on port 27017'")
 
         cls._insert_data(cls.client, 'workspace', 'workspaces')
         cls._insert_data(cls.client, 'exec_engine', 'exec_tasks')
@@ -86,14 +87,16 @@ class kb_MetricsTest(unittest.TestCase):
             created_str = jrecord.get('created')
             cls.client.userjobstate.jobstate.update_many(
                 {"created": created_str},
-                {"$set": {"created": datetime.datetime.utcfromtimestamp(int(created_str) / 1000.0)}}
+                {"$set": {"created": datetime.datetime.utcfromtimestamp(
+                                        int(created_str) / 1000.0)}}
             )
         # updating data fields from timstamp to datetime.datetime format
         db_coll1 = cls.client.workspace.workspaceObjects
         for wrecord in db_coll1.find():
             moddate_str = wrecord.get('moddate')
             if type(moddate_str) not in [datetime.date, datetime.datetime]:
-                moddate = datetime.datetime.utcfromtimestamp(int(moddate_str) / 1000.0)
+                moddate = datetime.datetime.utcfromtimestamp(
+                                        int(moddate_str) / 1000.0)
                 db_coll1.update_many(
                     {"moddate": moddate_str},
                     {"$set": {"moddate": moddate}},
@@ -104,7 +107,8 @@ class kb_MetricsTest(unittest.TestCase):
         for wrecord in db_coll2.find():
             moddate_str = wrecord.get('moddate')
             if type(moddate_str) not in [datetime.date, datetime.datetime]:
-                moddate = datetime.datetime.utcfromtimestamp(int(moddate_str) / 1000.0)
+                moddate = datetime.datetime.utcfromtimestamp(
+                                        int(moddate_str) / 1000.0)
                 db_coll2.update_many(
                     {"moddate": moddate_str},
                     {"$set": {"moddate": moddate}},
@@ -121,7 +125,8 @@ class kb_MetricsTest(unittest.TestCase):
                 signin_date = datetime.datetime.utcfromtimestamp(
                                     int(last_signin_at_str) / 1000.0)
                 db_coll3.update_many(
-                    {"signup_at": signup_at_str, "last_signin_at": last_signin_at_str},
+                    {"signup_at": signup_at_str,
+                     "last_signin_at": last_signin_at_str},
                     {"$set": {"signup_at": signup_date,
                               "last_signin_at": signin_date}},
                     upsert=False
@@ -134,15 +139,18 @@ class kb_MetricsTest(unittest.TestCase):
             if type(create_str) not in [datetime.date, datetime.datetime]:
                 db_coll_au.update_many(
                     {"create": create_str, "login": login_str},
-                    {"$set": {"create": datetime.datetime.utcfromtimestamp(int(create_str) / 1000.0),
-                              "login": datetime.datetime.utcfromtimestamp(int(login_str) / 1000.0)}},
+                    {"$set": {"create": datetime.datetime.utcfromtimestamp(
+                                            int(create_str) / 1000.0),
+                              "login": datetime.datetime.utcfromtimestamp(
+                                            int(login_str) / 1000.0)}},
                     upsert=False
                 )
 
         db_names = cls.client.database_names()
         for db in db_names:
             if db != 'local':
-                cls.client[db].command("createUser", "admin", pwd="password", roles=["readWrite"])
+                cls.client[db].command("createUser", "admin",
+                                       pwd="password", roles=["readWrite"])
 
         cls.dbi = MongoMetricsDBI('', db_names, 'admin', 'password')
 
@@ -151,13 +159,15 @@ class kb_MetricsTest(unittest.TestCase):
 
         db = client[db_name]
 
-        record_file = os.path.join('db_files', 'ci_{}.{}.json'.format(db_name, table))
+        record_file = os.path.join('db_files',
+                                   'ci_{}.{}.json'.format(db_name, table))
         json_data = open(record_file).read()
         records = json.loads(json_data)
 
         db[table].drop()
         db[table].insert_many(records)
-        print('Inserted {} records for {}.{}'.format(len(records), db_name, table))
+        print('Inserted {} records for {}.{}'.format(len(records),
+                                                     db_name, table))
 
     def getWsClient(self):
         return self.__class__.wsClient
@@ -205,27 +215,30 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(exec_tasks), 3)
         for tsk in exec_tasks:
             self.assertTrue(minTime <= tsk['creation_time'] <= maxTime)
-        self.assertEqual(exec_tasks[0]['ujs_job_id'], '596832a4e4b08b65f9ff5d6f')
+        self.assertEqual(exec_tasks[0]['ujs_job_id'],
+                         '596832a4e4b08b65f9ff5d6f')
         self.assertEqual(exec_tasks[0]['job_input']['wsid'], 15206)
-        self.assertEqual(exec_tasks[1]['ujs_job_id'], '5968cd75e4b08b65f9ff5d7c')
+        self.assertEqual(exec_tasks[1]['ujs_job_id'],
+                         '5968cd75e4b08b65f9ff5d7c')
         self.assertNotIn('wsid', exec_tasks[1]['job_input'])
-        self.assertEqual(exec_tasks[2]['ujs_job_id'], '5968e5fde4b08b65f9ff5d7d')
+        self.assertEqual(exec_tasks[2]['ujs_job_id'],
+                         '5968e5fde4b08b65f9ff5d7d')
         self.assertEqual(exec_tasks[2]['job_input']['wsid'], 23165)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBs_list_user_objects_from_wsobjs")
+    # @unittest.skip("skipped MetricsMongoDBs_list_user_objects_from_wsobjs")
     def test_MetricsMongoDBs_list_user_objects_from_wsobjs(self):
         minTime = 1468592344887
         maxTime = 1519768865840
         ws_narrs = self.dbi.list_ws_narratives()
         ws_list = [wn['workspace_id'] for wn in ws_narrs]
 
-        # testing list_user_objects_from_wsobjs return count without wsid filter
+        # test list_user_objects_from_wsobjs return count without wsid
         user_objs = self.dbi.list_user_objects_from_wsobjs(
                         minTime, maxTime)
         self.assertEqual(len(user_objs), 40)
 
-        # testing list_user_objects_from_wsobjs return count and data with wsid filter
+        # test list_user_objects_from_wsobjs returned values with wsid filter
         user_objs = self.dbi.list_user_objects_from_wsobjs(
                         minTime, maxTime, ws_list)
         self.assertEqual(len(user_objs), 26)
@@ -240,10 +253,10 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(user_objs[1]['workspace_id'], 8768)
         self.assertEqual(user_objs[1]['object_id'], 12)
         self.assertEqual(user_objs[1]['object_name'],
-                'Align_Reads_using_Bowtie2_0x242ac110001L')
+                         'Align_Reads_using_Bowtie2_0x242ac110001L')
         self.assertEqual(user_objs[1]['object_version'], 1)
         self.assertEqual(user_objs[1]['moddate'],
-                datetime.datetime(2016, 7, 15, 14, 19, 4, 915000))
+                         datetime.datetime(2016, 7, 15, 14, 19, 4, 915000))
         self.assertFalse(user_objs[1]['deleted'])
 
     # Uncomment to skip this test
@@ -282,9 +295,9 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(users[1]['email'], 'laramy.enders@gmail.com')
         self.assertEqual(users[1]['full_name'], 'Laramy Enders')
         self.assertEqual(users[1]['signup_at'],
-                        datetime.datetime(2018, 2, 16, 15, 19, 55, 973000))
+                         datetime.datetime(2018, 2, 16, 15, 19, 55, 973000))
         self.assertEqual(users[1]['last_signin_at'],
-                        datetime.datetime(2018, 2, 16, 15, 19, 56, 426000))
+                         datetime.datetime(2018, 2, 16, 15, 19, 56, 426000))
         self.assertEqual(users[1]['roles'], [])
 
         users = self.dbi.aggr_user_details(user_list0, minTime, maxTime)
@@ -318,7 +331,8 @@ class kb_MetricsTest(unittest.TestCase):
         isKBstaff = False
 
         # testing freshly upserted result
-        upd_ret = self.dbi.update_user_records(upd_filter_set, upd_data_set, isKBstaff)
+        upd_ret = self.dbi.update_user_records(upd_filter_set,
+                                               upd_data_set, isKBstaff)
 
         self.assertFalse(upd_ret.raw_result.get('upserted', None) is None)
         self.assertFalse(upd_ret.raw_result.get('updatedExisting'))
@@ -326,7 +340,8 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(upd_ret.raw_result.get('n'), 1)
 
         db_mu = self.client.metrics.users
-        for murecord in db_mu.find({'username': 'test_u1', 'email': 'test_e1'}):
+        for murecord in db_mu.find({'username': 'test_u1',
+                                    'email': 'test_e1'}):
             self.assertEqual(murecord['full_name'], 'test_nm1')
             self.assertEqual(murecord['roles'], [])
             self.assertEqual(murecord['signup_at'], dt1)
@@ -338,7 +353,8 @@ class kb_MetricsTest(unittest.TestCase):
         upd_data_set = {'full_name': 'test_nm1', 'roles': [],
                         'signup_at': dt1, 'last_signin_at': dt2}
 
-        upd_ret = self.dbi.update_user_records(upd_filter_set, upd_data_set, isKBstaff)
+        upd_ret = self.dbi.update_user_records(upd_filter_set,
+                                               upd_data_set, isKBstaff)
 
         self.assertTrue(upd_ret.raw_result.get('upserted', None) is None)
         self.assertTrue(upd_ret.raw_result.get('updatedExisting'))
@@ -346,7 +362,8 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(upd_ret.raw_result.get('n'), 1)
 
         db_mu = self.client.metrics.users
-        for murecord in db_mu.find({'username': 'test_u1', 'email': 'test_e1'}):
+        for murecord in db_mu.find({'username': 'test_u1',
+                                    'email': 'test_e1'}):
             self.assertEqual(murecord['full_name'], 'test_nm1')
             self.assertEqual(murecord['roles'], [])
             self.assertEqual(murecord['signup_at'], dt1)
@@ -368,18 +385,18 @@ class kb_MetricsTest(unittest.TestCase):
                             'month_mod': 1,
                             'day_mod': 2,
                             'ws_id': 20199995},
-                     'obj_numModified': 95}]
+                    'obj_numModified': 95}]
 
         filter_set1 = {'_id.username': 'qz',
-                          '_id.year_mod': 2019,
-                          '_id.month_mod': 1,
-                          '_id.day_mod': 1,
-                          '_id.ws_id': 20199994}
+                       '_id.year_mod': 2019,
+                       '_id.month_mod': 1,
+                       '_id.day_mod': 1,
+                       '_id.ws_id': 20199994}
         filter_set2 = {'_id.username': 'qz',
-                          '_id.year_mod': 2019,
-                          '_id.month_mod': 1,
-                          '_id.day_mod': 2,
-                          '_id.ws_id': 20199995}
+                       '_id.year_mod': 2019,
+                       '_id.month_mod': 1,
+                       '_id.day_mod': 2,
+                       '_id.ws_id': 20199995}
 
         db_mda = self.client.metrics.daily_activities
         # before insert
@@ -411,7 +428,8 @@ class kb_MetricsTest(unittest.TestCase):
         narr_set = [{'object_id': 1,
                      'workspace_id': 20199994,
                      'name': 'qz1:narrative_1548358542000',
-                     'last_saved_at': datetime.datetime(2019, 1, 24, 19, 35, 42),
+                     'last_saved_at': datetime.datetime(
+                                            2019, 1, 24, 19, 35, 42),
                      'last_saved_by': 'qz1',
                      'numObj': 3,
                      'object_version': 1,
@@ -421,7 +439,8 @@ class kb_MetricsTest(unittest.TestCase):
                     {'object_id': 1,
                      'workspace_id': 20199995,
                      'name': 'qz1:narrative_1548358542100',
-                     'last_saved_at': datetime.datetime(2019, 1, 24, 19, 35, 42, 1000),
+                     'last_saved_at': datetime.datetime(
+                                            2019, 1, 24, 19, 35, 42, 1000),
                      'last_saved_by': 'qz1',
                      'numObj': 6,
                      'object_version': 1,
@@ -453,17 +472,17 @@ class kb_MetricsTest(unittest.TestCase):
     def test_MetricsMongoDBs_update_activity_records(self):
         # Fake data
         upd_filter_set1 = {'_id.username': 'qz',
-                          '_id.year_mod': 2019,
-                          '_id.month_mod': 1,
-                          '_id.day_mod': 1,
-                          '_id.ws_id': 20199991}
+                           '_id.year_mod': 2019,
+                           '_id.month_mod': 1,
+                           '_id.day_mod': 1,
+                           '_id.ws_id': 20199991}
         upd_data_set1 = {'obj_numModified': 91}
 
         upd_filter_set2 = {'_id.username': 'qz',
-                          '_id.year_mod': 2019,
-                          '_id.month_mod': 1,
-                          '_id.day_mod': 2,
-                          '_id.ws_id': 20199992}
+                           '_id.year_mod': 2019,
+                           '_id.month_mod': 1,
+                           '_id.day_mod': 2,
+                           '_id.ws_id': 20199992}
         upd_data_set2 = {'obj_numModified': 92}
         upd_data_set3 = {'obj_numModified': 93}
 
@@ -472,14 +491,16 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(list(db_mda.find(upd_filter_set2))), 0)
         # testing freshly upserted result
 
-        upd_ret = self.dbi.update_activity_records(upd_filter_set1, upd_data_set1)
+        upd_ret = self.dbi.update_activity_records(upd_filter_set1,
+                                                   upd_data_set1)
         self.assertTrue(upd_ret.raw_result.get('upserted'))
         self.assertFalse(upd_ret.raw_result.get('updatedExisting'))
         self.assertTrue(upd_ret.raw_result.get('ok'))
         self.assertEqual(upd_ret.raw_result.get('n'), 1)
         self.assertEqual(len(list(db_mda.find(upd_filter_set1))), 1)
 
-        upd_ret = self.dbi.update_activity_records(upd_filter_set2, upd_data_set2)
+        upd_ret = self.dbi.update_activity_records(upd_filter_set2,
+                                                   upd_data_set2)
         self.assertEqual(len(list(db_mda.find(upd_filter_set2))), 1)
 
         for mdarecord in db_mda.find(upd_filter_set1):
@@ -488,7 +509,8 @@ class kb_MetricsTest(unittest.TestCase):
             self.assertEqual(mdarecord['obj_numModified'], 92)
 
         # testing updating existing record
-        upd_ret = self.dbi.update_activity_records(upd_filter_set2, upd_data_set3)
+        upd_ret = self.dbi.update_activity_records(upd_filter_set2,
+                                                   upd_data_set3)
         self.assertTrue(upd_ret.raw_result.get('upserted', None) is None)
         self.assertTrue(upd_ret.raw_result.get('updatedExisting'))
         self.assertTrue(upd_ret.raw_result.get('ok'))
@@ -501,9 +523,10 @@ class kb_MetricsTest(unittest.TestCase):
     def test_MetricsMongoDBs_update_narrative_records(self):
         # Fake data
         upd_filter_set1 = {'object_id': 1,
-                          'workspace_id': 20199991}
+                           'workspace_id': 20199991}
         upd_data_set1 = {'name': 'qz1:narrative_1548358542000',
-                         'last_saved_at': datetime.datetime(2019, 1, 24, 19, 35, 42),
+                         'last_saved_at': datetime.datetime(
+                                                2019, 1, 24, 19, 35, 42),
                          'last_saved_by': 'qz1',
                          'numObj': 3,
                          'object_version': 1,
@@ -512,9 +535,10 @@ class kb_MetricsTest(unittest.TestCase):
                          'deleted': False}
 
         upd_filter_set2 = {'object_id': 1,
-                          'workspace_id': 20199992}
+                           'workspace_id': 20199992}
         upd_data_set2 = {'name': 'qz1:narrative_1548358542100',
-                         'last_saved_at': datetime.datetime(2019, 1, 24, 19, 35, 42, 1000),
+                         'last_saved_at': datetime.datetime(
+                                                2019, 1, 24, 19, 35, 42, 1000),
                          'last_saved_by': 'qz1',
                          'numObj': 5,
                          'object_version': 1,
@@ -522,7 +546,8 @@ class kb_MetricsTest(unittest.TestCase):
                          'desc': 'temp_desc',
                          'deleted': False}
 
-        upd_data_set3 = {'last_saved_at': datetime.datetime(2019, 1, 24, 19, 35, 48, 1000),
+        upd_data_set3 = {'last_saved_at': datetime.datetime(
+                                                2019, 1, 24, 19, 35, 48, 1000),
                          'numObj': 7,
                          'object_version': 2}
 
@@ -531,14 +556,16 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(list(db_mn.find(upd_filter_set2))), 0)
 
         # testing freshly upserted result
-        upd_ret = self.dbi.update_narrative_records(upd_filter_set1, upd_data_set1)
+        upd_ret = self.dbi.update_narrative_records(upd_filter_set1,
+                                                    upd_data_set1)
         self.assertTrue(upd_ret.raw_result.get('upserted'))
         self.assertFalse(upd_ret.raw_result.get('updatedExisting'))
         self.assertTrue(upd_ret.raw_result.get('ok'))
         self.assertEqual(upd_ret.raw_result.get('n'), 1)
         self.assertEqual(len(list(db_mn.find(upd_filter_set1))), 1)
 
-        upd_ret = self.dbi.update_narrative_records(upd_filter_set2, upd_data_set2)
+        upd_ret = self.dbi.update_narrative_records(upd_filter_set2,
+                                                    upd_data_set2)
         self.assertEqual(len(list(db_mn.find(upd_filter_set2))), 1)
 
         for mnrecord in db_mn.find(upd_filter_set1):
@@ -549,14 +576,15 @@ class kb_MetricsTest(unittest.TestCase):
             self.assertEqual(mnrecord['numObj'], 5)
 
         # testing updating existing record
-        upd_ret = self.dbi.update_narrative_records(upd_filter_set2, upd_data_set3)
+        upd_ret = self.dbi.update_narrative_records(upd_filter_set2,
+                                                    upd_data_set3)
         self.assertFalse(upd_ret.raw_result.get('upserted'))
         self.assertTrue(upd_ret.raw_result.get('updatedExisting'))
         self.assertTrue(upd_ret.raw_result.get('ok'))
         self.assertEqual(upd_ret.raw_result.get('n'), 1)
         for mnrecord in db_mn.find(upd_filter_set2):
             self.assertEqual(mnrecord['last_saved_at'],
-                                datetime.datetime(2019, 1, 24, 19, 35, 48, 1000))
+                             datetime.datetime(2019, 1, 24, 19, 35, 48, 1000))
             self.assertEqual(mnrecord['numObj'], 7)
             self.assertEqual(mnrecord['object_version'], 2)
 
@@ -581,7 +609,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('roles', users[0])
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBs_aggr_activities_from_wsobjs")
+    # @unittest.skip("skipped MetricsMongoDBs_aggr_activities_from_wsobjs")
     def test_MetricsMongoDBs_aggr_activities_from_wsobjs(self):
         # testing aggr_activities_from_wsobjs return data
         minTime = 1468540813000
@@ -608,10 +636,11 @@ class kb_MetricsTest(unittest.TestCase):
         # Testing without given time limit
         ws_narrs = self.dbi.list_ws_narratives()
 
-        # Ensure 'narrative_nice_name' exists in 'meta' as the query filter requires
+        # Ensure 'narrative_nice_name' exists in 'meta'
         for wn in ws_narrs:
             self.assertIn('meta', wn)
-            self.assertTrue(any(d['k'] == 'narrative_nice_name' for d in wn['meta']))
+            self.assertTrue(any(d['k'] == 'narrative_nice_name'
+                                for d in wn['meta']))
 
         self.assertEqual(len(ws_narrs), 24)
         self.assertIn('username', ws_narrs[0])
@@ -624,14 +653,15 @@ class kb_MetricsTest(unittest.TestCase):
 
         self.assertEqual(ws_narrs[23]['username'], 'psdehal')
         self.assertEqual(ws_narrs[23]['workspace_id'], 27834)
-        self.assertEqual(ws_narrs[23]['name'], 'psdehal:narrative_1513709108341')
+        self.assertEqual(ws_narrs[23]['name'],
+                         'psdehal:narrative_1513709108341')
         self.assertEqual(ws_narrs[23]['meta'][2]['k'], 'narrative_nice_name')
         self.assertEqual(ws_narrs[23]['meta'][2]['v'], 'Staging Test')
         self.assertFalse(ws_narrs[23]['deleted'])
         self.assertEqual(ws_narrs[23]['desc'], '')
         self.assertEqual(ws_narrs[23]['numObj'], 4)
         self.assertEqual(ws_narrs[23]['last_saved_at'],
-                                datetime.datetime(2018, 1, 24, 19, 35, 30, 1000))
+                         datetime.datetime(2018, 1, 24, 19, 35, 30, 1000))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ujs_results")
@@ -649,15 +679,17 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(ujs), 3)
         for uj in ujs:
             self.assertIn(uj.get('user'), user_list2)
-            uj_creation_time = int((uj.get('created') - epoch).total_seconds() * 1000.0)
+            uj_creation_time = int((uj.get('created') -
+                                    epoch).total_seconds() * 1000.0)
             self.assertTrue(minTime <= uj_creation_time <= maxTime)
 
         # testing list_ujs_results return data, without userIds
         ujs = self.dbi.list_ujs_results([], minTime, maxTime)
         self.assertEqual(len(ujs), 14)
 
-        # testing list_ujs_results return data, with different userIds and times
-        ujs = self.dbi.list_ujs_results(['wjriehl'], 1500052541065, 1500074641912)
+        # testing list_ujs_results return data, different userIds and times
+        ujs = self.dbi.list_ujs_results(['wjriehl'],
+                                        1500052541065, 1500074641912)
         self.assertEqual(len(ujs), 8)
         ujs = self.dbi.list_ujs_results([], 1500052541065, 1500074641912)
         self.assertEqual(len(ujs), 14)
@@ -667,36 +699,37 @@ class kb_MetricsTest(unittest.TestCase):
     def test_MetricsMongoDBController_constructor(self):
         cfg_arr = self.cfg
         # testing if all the required parameters are given
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             try:
                 cfg_arr = self.cfg
                 db_ctr1 = MetricsMongoDBController(cfg_arr)
-            except:
+            except ValueError:
                 pass
             else:
-                raise Exception
-        # testing if all the required parameters are given, even with an empty value
-        with self.assertRaises(Exception):
+                raise ValueError
+        # testing if all the required parameters are given, with an empty value
+        with self.assertRaises(ValueError):
             try:
                 cfg_arr = self.cfg
                 cfg_arr['mongodb-host'] = ''
                 db_ctr1 = MetricsMongoDBController(cfg_arr)
-            except:
+            except ValueError:
                 pass
             else:
-                raise Exception
+                raise ValueError
         # testing if any of the required parameters are missing
-        for k in ['mongodb-host', 'mongodb-databases', 'mongodb-user', 'mongodb-pwd']:
+        for k in ['mongodb-host', 'mongodb-databases',
+                  'mongodb-user', 'mongodb-pwd']:
             cfg_arr = self.cfg
             with self.assertRaises(ValueError):
                 try:
                     cfg_arr.pop(k)
                     db_ctr2 = MetricsMongoDBController(cfg_arr)
-                except:
+                except ValueError:
                     raise ValueError
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBController_config_str_to_list")
+    # @unittest.skip("skipped MetricsMongoDBController_config_str_to_list")
     def test_MetricsMongoDBController_config_str_to_list(self):
         # testing None config input
         user_list_str = None
@@ -717,7 +750,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertItemsEqual(user_list, expected_list)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBController_process_parameters")
+    # @unittest.skip("skipped MetricsMongoDBController_process_parameters")
     def test_MetricsMongoDBController_process_parameters(self):
 
         # testing 'user_ids'
@@ -750,7 +783,8 @@ class kb_MetricsTest(unittest.TestCase):
             self.db_controller._process_parameters(params)
 
         # testing epoch_range
-        params = {'epoch_range': ('2018-02-23T00:00:00+0000', '2018-02-25T00:00:00+0000')}
+        params = {'epoch_range': ('2018-02-23T00:00:00+0000',
+                                  '2018-02-25T00:00:00+0000')}
         ret_params = self.db_controller._process_parameters(params)
         self.assertEqual(ret_params.get('minTime'), 1519344000000)
         self.assertEqual(ret_params.get('maxTime'), 1519516800000)
@@ -784,8 +818,10 @@ class kb_MetricsTest(unittest.TestCase):
         today = datetime.date.today()
         minTime = ret_params.get('minTime')
         maxTime = ret_params.get('maxTime')
-        minTime_from_today = (datetime.date(*time.localtime(minTime/1000.0)[:3]) - today).days
-        maxTime_from_today = (datetime.date(*time.localtime(maxTime/1000.0)[:3]) - today).days
+        minTime_from_today = (datetime.date(*time.localtime(minTime/1000.0)
+                                            [:3]) - today).days
+        maxTime_from_today = (datetime.date(*time.localtime(maxTime/1000.0)
+                                            [:3]) - today).days
         self.assertEqual(minTime_from_today, -2)
         self.assertEqual(maxTime_from_today, 0)
 
@@ -794,8 +830,10 @@ class kb_MetricsTest(unittest.TestCase):
         today = datetime.date.today()
         minTime = ret_params.get('minTime')
         maxTime = ret_params.get('maxTime')
-        minTime_from_today = (datetime.date(*time.localtime(minTime/1000.0)[:3]) - today).days
-        maxTime_from_today = (datetime.date(*time.localtime(maxTime/1000.0)[:3]) - today).days
+        minTime_from_today = (datetime.date(*time.localtime(minTime/1000.0)
+                                            [:3]) - today).days
+        maxTime_from_today = (datetime.date(*time.localtime(maxTime/1000.0)
+                                            [:3]) - today).days
         self.assertEqual(minTime_from_today, -2)
         self.assertEqual(maxTime_from_today, 0)
 
@@ -803,45 +841,48 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("test_db_controller_constructor")
     def test_db_controller_constructor(self):
 
-        expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson', 'nlharris', 'dylan',
-                               'chenry', 'ciservices', 'wjriehl', 'sychan', 'jjeffryes',
+        expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson',
+                               'nlharris', 'dylan', 'chenry', 'ciservices',
+                               'wjriehl', 'sychan', 'jjeffryes',
                                'thomasoniii', 'eapearson', 'qzhang', 'tgu2']
-        self.assertItemsEqual(self.db_controller.adminList, expected_admin_list)
+        self.assertItemsEqual(self.db_controller.adminList,
+                              expected_admin_list)
 
-        expected_metrics_admin_list = ['scanon', 'psdehal', 'dolson', 'chenry', 'wjriehl',
-                                       'sychan', 'qzhang', 'tgu2', 'eapearson']
-        self.assertItemsEqual(self.db_controller.metricsAdmins, expected_metrics_admin_list)
+        expected_metrics_admin_list = ['scanon', 'psdehal', 'dolson', 'chenry',
+                                       'wjriehl', 'sychan', 'qzhang', 'tgu2',
+                                       'eapearson']
+        self.assertItemsEqual(self.db_controller.metricsAdmins,
+                              expected_metrics_admin_list)
 
-        expected_db_list = ['metrics', 'userjobstate', 'workspace', 'exec_engine', 'auth2']
-        self.assertItemsEqual(self.db_controller.mongodb_dbList, expected_db_list)
+        expected_db_list = ['metrics', 'userjobstate', 'workspace',
+                            'exec_engine', 'auth2']
+        self.assertItemsEqual(self.db_controller.mongodb_dbList,
+                              expected_db_list)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_db_controller_parse_app_id_method")
     def test_db_controller_parse_app_id_method(self):
+        mthd = "kb_rnaseq_donwloader.export_rna_seq_expression_as_zip"
         exec_tasks = [{
             "job_input": {
-                "method": "kb_rnaseq_donwloader.export_rna_seq_expression_as_zip",
+                "method": mthd,
             }
-        },
-        {
+        }, {
             "job_input": {
                 "app_id": "kb_deseq/run_DESeq2",
                 "method": "kb_deseq.run_deseq2_app",
             }
-        },
-        {
+        }, {
             "job_input": {
                 "app_id": "kb_cufflinks.run_Cuffdiff",
                 "method": "kb_cufflinks/run_Cuffdiff",
             }
-        },
-        {
+        }, {
             "job_input": {
                 "app_id": "kb_deseq/run_DESeq2",
                 "method": "kb_deseq/run_deseq2_app",
             }
-        },
-        {
+        }, {
             "job_input": {
                 "app_id": "kb_deseq.run_DESeq2",
                 "method": "kb_deseq.run_deseq2_app",
@@ -851,25 +892,24 @@ class kb_MetricsTest(unittest.TestCase):
         # testing parse_app_id
         self.assertEqual(self.db_controller._parse_app_id(exec_tasks[0]), '')
         self.assertEqual(self.db_controller._parse_app_id(exec_tasks[1]),
-                        'kb_deseq/run_DESeq2')
+                         'kb_deseq/run_DESeq2')
         self.assertEqual(self.db_controller._parse_app_id(exec_tasks[2]),
-                        'kb_cufflinks/run_Cuffdiff')
+                         'kb_cufflinks/run_Cuffdiff')
         self.assertEqual(self.db_controller._parse_app_id(exec_tasks[3]),
-                        'kb_deseq/run_DESeq2')
+                         'kb_deseq/run_DESeq2')
         self.assertEqual(self.db_controller._parse_app_id(exec_tasks[4]),
-                        'kb_deseq/run_DESeq2')
+                         'kb_deseq/run_DESeq2')
 
         # testing parse_method
-        self.assertEqual(self.db_controller._parse_method(exec_tasks[0]),
-                        'kb_rnaseq_donwloader.export_rna_seq_expression_as_zip')
+        self.assertEqual(self.db_controller._parse_method(exec_tasks[0]), mthd)
         self.assertEqual(self.db_controller._parse_method(exec_tasks[1]),
-                        'kb_deseq.run_deseq2_app')
+                         'kb_deseq.run_deseq2_app')
         self.assertEqual(self.db_controller._parse_method(exec_tasks[2]),
-                        'kb_cufflinks.run_Cuffdiff')
+                         'kb_cufflinks.run_Cuffdiff')
         self.assertEqual(self.db_controller._parse_method(exec_tasks[3]),
-                        'kb_deseq.run_deseq2_app')
+                         'kb_deseq.run_deseq2_app')
         self.assertEqual(self.db_controller._parse_method(exec_tasks[4]),
-                        'kb_deseq.run_deseq2_app')
+                         'kb_deseq.run_deseq2_app')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_db_controller_map_narrative")
@@ -888,13 +928,13 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped test_MetricsMongoDBController_join_task_ujs")
     def test_MetricsMongoDBController_join_task_ujs(self):
         # testing data sets
+        mthd = "kb_rnaseq_donwloader.export_rna_seq_expression_as_zip"
         exec_tasks = [{
             "ujs_job_id": "5968cd75e4b08b65f9ff5d7c",
             "job_input": {
-                "method": "kb_rnaseq_donwloader.export_rna_seq_expression_as_zip",
+                "method": mthd,
             }
-        },
-        {
+        }, {
             "ujs_job_id": "596832a4e4b08b65f9ff5d6f",
             "job_input": {
                 "app_id": "kb_deseq/run_DESeq2",
@@ -906,15 +946,15 @@ class kb_MetricsTest(unittest.TestCase):
                 ],
                 "wsid": 15206,
             }
-        },
-        {
+        }, {
             "ujs_job_id": "5968e5fde4b08b65f9ff5d7d",
             "job_input": {
                 "app_id": "kb_cufflinks/run_Cuffdiff",
                 "method": "kb_cufflinks.run_Cuffdiff",
                 "params": [
                     {
-                        "workspace_name": "umaganapathyswork:narrative_1498130853194"
+                        "workspace_name": ("umaganapathyswork:"
+                                           "narrative_1498130853194")
                     }
                 ],
                 "wsid": 23165,
@@ -933,8 +973,7 @@ class kb_MetricsTest(unittest.TestCase):
             "started": 1500000937695,
             "complete": True,
             "error": False
-        },
-        {
+        }, {
             "_id": "5968cd75e4b08b65f9ff5d7c",
             "user": "arfath",
             "authstrat": "DEFAULT",
@@ -943,12 +982,11 @@ class kb_MetricsTest(unittest.TestCase):
             "updated": 1500040661079,
             "estcompl": None,
             "status": "done",
-            "desc": "Execution engine job for kb_rnaseq_donwloader.export_rna_seq_expression_as_zip",
+            "desc": "Execution engine job for " + mthd,
             "started": 1500040575585,
             "complete": True,
             "error": False
-        },
-        {
+        }, {
             "_id": "5968e5fde4b08b65f9ff5d7d",
             "user": "umaganapathyswork",
             "authstrat": "kbaseworkspace",
@@ -963,34 +1001,37 @@ class kb_MetricsTest(unittest.TestCase):
             "error": False
         }]
         # testing the correct data items appear in the joined result
-        joined_results = self.db_controller._join_task_ujs(exec_tasks, ujs_jobs)
+        joined_results = self.db_controller._join_task_ujs(exec_tasks,
+                                                           ujs_jobs)
         self.assertEqual(len(joined_results), 3)
         self.assertEqual(joined_results[0]['wsid'], '15206')
         self.assertEqual(joined_results[0]['app_id'], 'kb_deseq/run_DESeq2')
-        self.assertEqual(joined_results[0]['method'], 'kb_deseq.run_deseq2_app')
+        self.assertEqual(joined_results[0]['method'],
+                         'kb_deseq.run_deseq2_app')
         self.assertEqual(joined_results[0]['finish_time'], 1500001203182)
         self.assertIn('client_groups', joined_results[0])
-        self.assertEqual(joined_results[0]['workspace_name'], 'tgu2:1481170361822')
+        self.assertEqual(joined_results[0]['workspace_name'],
+                         'tgu2:1481170361822')
 
         self.assertNotIn('wsid', joined_results[1])
-        self.assertEqual(joined_results[1]['app_id'],
-                'kb_rnaseq_donwloader/export_rna_seq_expression_as_zip')
-        self.assertEqual(joined_results[1]['method'],
-                'kb_rnaseq_donwloader.export_rna_seq_expression_as_zip')
+        self.assertEqual(joined_results[1]['app_id'], mthd.replace('.', '/'))
+        self.assertEqual(joined_results[1]['method'], mthd)
         self.assertEqual(joined_results[1]['finish_time'], 1500040661079)
         self.assertIn('client_groups', joined_results[1])
         self.assertNotIn('workspace_name', joined_results[1])
 
         self.assertEqual(joined_results[2]['wsid'], '23165')
-        self.assertEqual(joined_results[2]['app_id'], 'kb_cufflinks/run_Cuffdiff')
-        self.assertEqual(joined_results[2]['method'], 'kb_cufflinks.run_Cuffdiff')
+        self.assertEqual(joined_results[2]['app_id'],
+                         'kb_cufflinks/run_Cuffdiff')
+        self.assertEqual(joined_results[2]['method'],
+                         'kb_cufflinks.run_Cuffdiff')
         self.assertEqual(joined_results[2]['workspace_name'],
-                'umaganapathyswork:narrative_1498130853194')
+                         'umaganapathyswork:narrative_1498130853194')
         self.assertEqual(joined_results[2]['finish_time'], 1500047709785)
         self.assertIn('client_groups', joined_results[2])
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBController_get_client_groups_from_cat")
+    # @unittest.skip("skipped_get_client_groups_from_cat")
     def test_MetricsMongoDBController_get_client_groups_from_cat(self):
         # testing if the data has expected structure
         clnt_ret = self.db_controller._get_client_groups_from_cat(
@@ -1003,12 +1044,12 @@ class kb_MetricsTest(unittest.TestCase):
                 self.assertIn(target_clnt, clnt['client_groups'])
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBController_get_activities_from_wsobjs")
+    # @unittest.skip("skipped_get_activities_from_wsobjs")
     def test_MetricsMongoDBController_get_activities_from_wsobjs(self):
         start_datetime = datetime.datetime.strptime('2016-07-15T00:00:00+0000',
-                                               '%Y-%m-%dT%H:%M:%S+0000')
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
-                                          '%Y-%m-%dT%H:%M:%S.%fZ')
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
 
         params = {'epoch_range': (start_datetime, end_datetime)}
 
@@ -1027,12 +1068,12 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(user_acts[1]['obj_numModified'], 21)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBController_get_narratives_from_wsobjs")
+    # @unittest.skip("skipped get_narratives_from_wsobjs")
     def test_MetricsMongoDBController_get_narratives_from_wsobjs(self):
         start_datetime = datetime.datetime.strptime('2016-07-15T00:00:00+0000',
-                                               '%Y-%m-%dT%H:%M:%S+0000')
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
-                                          '%Y-%m-%dT%H:%M:%S.%fZ')
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
 
         params = {'epoch_range': (start_datetime, end_datetime)}
 
@@ -1052,7 +1093,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(narrs[1]['numObj'], 4)
         self.assertEqual(narrs[1]['last_saved_by'], 'psdehal')
         self.assertEqual(narrs[1]['last_saved_at'],
-                datetime.datetime(2018, 1, 24, 19, 35, 30, 1000))
+                         datetime.datetime(2018, 1, 24, 19, 35, 30, 1000))
         self.assertFalse(narrs[1]['deleted'])
 
     # Uncomment to skip this test
@@ -1060,9 +1101,9 @@ class kb_MetricsTest(unittest.TestCase):
     def test_MetricsMongoDBController_update_user_info(self):
         user_list = ['sulbha', 'ytm123', 'xiaoli', 'andrew78', 'qzhang']
         start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
-                                               '%Y-%m-%dT%H:%M:%S+0000')
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
-                                          '%Y-%m-%dT%H:%M:%S.%fZ')
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
 
         # testing update_user_info with given user_ids
         params = {'user_ids': user_list}
@@ -1081,12 +1122,12 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(upd_ret, (33, 4))
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBController_update_daily_activities")
+    # @unittest.skip("skipped _update_daily_activities")
     def test_MetricsMongoDBController_update_daily_activities(self):
         start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
-                                               '%Y-%m-%dT%H:%M:%S+0000')
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
-                                          '%Y-%m-%dT%H:%M:%S.%fZ')
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
 
         # testing update_daily_activities with given user_ids
         params = {'epoch_range': (start_datetime, end_datetime)}
@@ -1099,9 +1140,9 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped test_MetricsMongoDBController_update_narratives")
     def test_MetricsMongoDBController_update_narratives(self):
         start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
-                                               '%Y-%m-%dT%H:%M:%S+0000')
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
-                                          '%Y-%m-%dT%H:%M:%S.%fZ')
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
 
         # testing update_narratives with given user_ids
         params = {'epoch_range': (start_datetime, end_datetime)}
@@ -1111,15 +1152,15 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(upd_ret, (0, 1))
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBController_get_user_job_states")
+    # @unittest.skip("skipped MetricsMongoDBController_get_user_job_states")
     def test_MetricsMongoDBController_get_user_job_states(self):
         # testing if the data has expected structure and values
         user_list = ['tgu2', 'umaganapathyswork', 'arfath']
         params = {'user_ids': user_list}
         start_datetime = datetime.datetime.strptime('2017-07-14T02:55:32+0000',
-                                               '%Y-%m-%dT%H:%M:%S+0000')
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2017-07-14T16:08:53.956Z',
-                                          '%Y-%m-%dT%H:%M:%S.%fZ')
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
         params['epoch_range'] = (start_datetime, end_datetime)
         input_params = self.db_controller._process_parameters(params)
         self.assertEqual(input_params.get('minTime'), 1500000932000)
@@ -1144,9 +1185,9 @@ class kb_MetricsTest(unittest.TestCase):
         user_list0 = []
         user_list = ['sulbha', 'ytm123', 'xiaoli', 'andrew78', 'qzhang']
         start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
-                                               '%Y-%m-%dT%H:%M:%S+0000')
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
-                                          '%Y-%m-%dT%H:%M:%S.%fZ')
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
 
         # testing get_user_details return data with empty user_ids
         params = {'user_ids': user_list0}
@@ -1181,7 +1222,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(users[1]['roles'], [])
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBController_get_active_users_counts")
+    # @unittest.skip("skipped get_active_users_counts")
     def test_MetricsMongoDBController_get_active_users_counts(self):
         # testing get_active_users_counts return data
         params = {'epoch_range': (datetime.datetime(2018, 1, 1),
@@ -1213,15 +1254,14 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(users[2]['numOfUsers'], 2)
         self.assertEqual(users[3]['numOfUsers'], 2)
 
-    # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_app_metrics")
     def test_run_MetricsImpl_get_app_metrics(self):
         user_list = ['psdehal', 'umaganapathyswork', 'arfath']
         start_datetime = datetime.datetime.strptime('2017-07-14T02:55:32+0000',
-                                               '%Y-%m-%dT%H:%M:%S+0000')
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-01-24T19:35:24.247Z',
-                                          '%Y-%m-%dT%H:%M:%S.%fZ')
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
         m_params = {
             'user_ids': user_list,
             'epoch_range': (start_datetime, end_datetime)
@@ -1248,14 +1288,16 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('client_groups', app_metrics_ret[0])
         self.assertIn('njs', app_metrics_ret[0]['client_groups'])
         self.assertEqual(app_metrics_ret[0]['narrative_name'], 'Staging Test')
-        self.assertEqual(app_metrics_ret[0]['workspace_name'], 'psdehal:narrative_1513709108341')
+        self.assertEqual(app_metrics_ret[0]['workspace_name'],
+                         'psdehal:narrative_1513709108341')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_user_details")
     def test_run_MetricsImpl_get_user_details(self):
         # testing get_user_details return data with specified user_ids
         user_list = ['sulbha', 'ytm123', 'xiaoli', 'andrew78', 'qzhang']
-        epoch_range = (datetime.datetime(2018, 1, 1), datetime.datetime(2018, 3, 31))
+        epoch_range = (datetime.datetime(2018, 1, 1),
+                       datetime.datetime(2018, 3, 31))
         m_params = {
             'user_ids': user_list,
             'epoch_range': epoch_range
@@ -1283,9 +1325,11 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped test_run_MetricsImpl_get_user_counts_per_day")
     def test_run_MetricsImpl_get_user_counts_per_day(self):
         m_params = {
-            'epoch_range': (datetime.datetime(2018, 1, 1), datetime.datetime(2018, 3, 31))
+            'epoch_range': (datetime.datetime(2018, 1, 1),
+                            datetime.datetime(2018, 3, 31))
         }
-        ret = self.getImpl().get_user_counts_per_day(self.getContext(), m_params)
+        ret = self.getImpl().get_user_counts_per_day(
+                                self.getContext(), m_params)
         # testing (excluding kbstaff by default)
         users = ret[0]['metrics_result']
         self.assertEqual(len(users), 58)
@@ -1302,7 +1346,8 @@ class kb_MetricsTest(unittest.TestCase):
     def test_run_MetricsImpl_update_metrics(self):
         m_params = {
             'user_ids': [],
-            'epoch_range': (datetime.datetime(2018, 1, 1), datetime.datetime(2018, 3, 31))
+            'epoch_range': (datetime.datetime(2018, 1, 1),
+                            datetime.datetime(2018, 3, 31))
         }
         ret = self.getImpl().update_metrics(self.getContext(), m_params)
         upds = ret[0]['metrics_result']

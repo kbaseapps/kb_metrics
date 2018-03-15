@@ -6,7 +6,8 @@ import re
 from bson.objectid import ObjectId
 
 from kb_Metrics.metricsDBs import MongoMetricsDBI
-from kb_Metrics.Util import _unix_time_millis_from_datetime, _convert_to_datetime
+from kb_Metrics.Util import (_unix_time_millis_from_datetime,
+                             _convert_to_datetime)
 from Catalog.CatalogClient import Catalog
 
 
@@ -26,7 +27,8 @@ class MetricsMongoDBController:
         if list_str:
             user_list = [x.strip() for x in list_str.split(',') if x.strip()]
         else:
-            warnings.warn('no {} are set in config of MetricsMongoDBController'.format(list_str))
+            warnings.warn('no {} are set in config of'
+                          ' MetricsMongoDBController'.format(list_str))
 
         return user_list
 
@@ -86,11 +88,10 @@ class MetricsMongoDBController:
         If match not found, insert that record as new.
         """
         if not self._is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to invoke this action.')
+            raise ValueError('You do not have permission to '
+                             'invoke this action.')
 
         params = self._process_parameters(params)
-        # TODO: set the param['minTime'] and param['maxTime'] to a given time window,
-        # such as most current 24 hours instead of 48 hours as for others.
         auth2_ret = self.metrics_dbi.aggr_user_details(
             params['user_ids'], params['minTime'], params['maxTime'])
         upDated = 0
@@ -103,9 +104,8 @@ class MetricsMongoDBController:
         idKeys = ['username', 'email']
         dataKeys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
         for u_data in auth2_ret:
-            filterByKey = lambda keys: {x: u_data[x] for x in keys}
-            idData = filterByKey(idKeys)
-            userData = filterByKey(dataKeys)
+            idData = {x: u_data[x] for x in idKeys}
+            userData = {x: u_data[x] for x in dataKeys}
             isKbstaff = 1 if idData['username'] in self.kbstaffList else 0
             update_ret = self.metrics_dbi.update_user_records(
                 idData, userData, isKbstaff)
@@ -122,9 +122,11 @@ class MetricsMongoDBController:
         If match not found, insert that record as new.
         """
         if not self._is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to invoke this action.')
+            raise ValueError('You do not have permission to '
+                             'invoke this action.')
 
-        ws_ret = self._get_activities_from_wsobjs(requesting_user, params, token)
+        ws_ret = self._get_activities_from_wsobjs(requesting_user,
+                                                  params, token)
         act_list = ws_ret['metrics_result']
         upDated = 0
         upSerted = 0
@@ -132,13 +134,13 @@ class MetricsMongoDBController:
             print("No activity records returned for update!")
             return (0, 0)
 
-        print('Retrieved {} activity record(s) for update!'.format(len(act_list)))
+        print('Retrieved {} activity record(s) for '
+              'update!'.format(len(act_list)))
         idKeys = ['_id']
         countKeys = ['obj_numModified']
         for a_data in act_list:
-            filterByKey = lambda keys: {x: a_data[x] for x in keys}
-            idData = filterByKey(idKeys)
-            countData = filterByKey(countKeys)
+            idData = {x: a_data[x] for x in idKeys}
+            countData = {x: a_data[x] for x in countKeys}
             update_ret = self.metrics_dbi.update_activity_records(
                 idData, countData)
             if update_ret.raw_result['updatedExisting']:
@@ -146,7 +148,8 @@ class MetricsMongoDBController:
             elif update_ret.raw_result.get('upserted'):
                 upSerted += 1
 
-        print('updated {} and upserted {} activities.'.format(upDated, upSerted))
+        print('updated {} and upserted {} '
+              'activities.'.format(upDated, upSerted))
         return (upDated, upSerted)
 
     def _update_narratives(self, requesting_user, params, token):
@@ -155,9 +158,11 @@ class MetricsMongoDBController:
         If match not found, insert that record as new.
         """
         if not self._is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to invoke this action.')
+            raise ValueError('You do not have permission to '
+                             'invoke this action.')
 
-        ws_ret = self._get_narratives_from_wsobjs(requesting_user, params, token)
+        ws_ret = self._get_narratives_from_wsobjs(requesting_user,
+                                                  params, token)
         narr_list = ws_ret['metrics_result']
         upDated = 0
         upSerted = 0
@@ -165,21 +170,23 @@ class MetricsMongoDBController:
             print("No narrative records returned for update!")
             return (0, 0)
 
-        print('Retrieved {} narratives record(s) for update!'.format(len(narr_list)))
+        print('Retrieved {} narratives record(s) for '
+              'update!'.format(len(narr_list)))
         idKeys = ['object_id', 'workspace_id']
         otherKeys = ['name', 'last_saved_at', 'last_saved_by', 'numObj',
                      'deleted', 'object_version', 'nice_name', 'desc']
         for n_data in narr_list:
-            filterByKey = lambda keys: {x: n_data[x] for x in keys}
-            idData = filterByKey(idKeys)
-            otherData = filterByKey(otherKeys)
-            update_ret = self.metrics_dbi.update_narrative_records(idData, otherData)
+            idData = {x: n_data[x] for x in idKeys}
+            otherData = {x: n_data[x] for x in otherKeys}
+            update_ret = self.metrics_dbi.update_narrative_records(
+                                            idData, otherData)
             if update_ret.raw_result['updatedExisting']:
                 upDated += update_ret.raw_result['nModified']
             elif update_ret.raw_result.get('upserted'):
                 upSerted += 1
 
-        print('updated {} and upserted {} narratives.'.format(upDated, upSerted))
+        print('updated {} and upserted {} '
+              'narratives.'.format(upDated, upSerted))
         return (upDated, upSerted)
 
     # End functions to write to the metrics database
@@ -189,8 +196,8 @@ class MetricsMongoDBController:
         """
         get_narratives_from_wsobjs--Given a time period, fetch the narrative
         information from workspace.workspaces and workspace.workspaceObjects.
-        Based on the narratives in workspace.workspaceObjects, if additional info
-        available then add to existing data from workspace.workspaces.
+        Based on the narratives in workspace.workspaceObjects, if additional
+        info available then add to existing data from workspace.workspaces.
         """
         if not self._is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
@@ -278,23 +285,24 @@ class MetricsMongoDBController:
             for exec_task in exec_tasks:
                 if exec_task['ujs_job_id'] == u_j_s['job_id']:
                     if 'job_input' in exec_task:
+                        et_job_in = exec_task['job_input']
                         u_j_s['app_id'] = self._parse_app_id(exec_task)
                         if not u_j_s.get('method'):
                             u_j_s['method'] = self._parse_method(exec_task)
 
                         if not u_j_s.get('wsid'):
-                            if 'wsid' in exec_task['job_input']:
-                                u_j_s['wsid'] = exec_task['job_input']['wsid']
-                            elif 'params' in exec_task['job_input']:
-                                if 'ws_id' in exec_task['job_input']['params'][0]:
-                                    u_j_s['wsid'] = exec_task['job_input']['params'][0]['ws_id']
+                            if 'wsid' in et_job_in:
+                                u_j_s['wsid'] = et_job_in['wsid']
+                            elif ('params' in et_job_in and
+                                  'ws_id' in et_job_in['params'][0]):
+                                u_j_s['wsid'] = et_job_in['params'][0]['ws_id']
 
-                        if 'params' in exec_task['job_input']:
-                            if 'workspace' in exec_task['job_input']['params'][0]:
-                                ws_nm = exec_task['job_input']['params'][0]['workspace']
-                                u_j_s['workspace_name'] = ws_nm
-                            elif 'workspace_name' in exec_task['job_input']['params'][0]:
-                                ws_nm = exec_task['job_input']['params'][0]['workspace_name']
+                        if 'params' in et_job_in:
+                            p_ws = et_job_in['params'][0]
+                            if 'workspace' in p_ws:
+                                u_j_s['workspace_name'] = p_ws['workspace']
+                            elif 'workspace_name' in p_ws:
+                                ws_nm = p_ws['workspace_name']
                                 u_j_s['workspace_name'] = ws_nm
                     break
 
@@ -308,7 +316,8 @@ class MetricsMongoDBController:
 
             # get the narrative name and version if any
             if (u_j_s.get('wsid') and self.ws_narratives):
-                n_nm, n_obj = self._map_narrative(u_j_s['wsid'], self.ws_narratives)
+                n_nm, n_obj = self._map_narrative(u_j_s['wsid'],
+                                                  self.ws_narratives)
                 if n_nm != "" and n_obj != 0:
                     u_j_s['narrative_name'] = n_nm
                     u_j_s['narrative_objNo'] = n_obj
@@ -317,8 +326,9 @@ class MetricsMongoDBController:
             u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
             if self.client_groups:
                 for clnt in self.client_groups:
-                    clnt_app_id = clnt['app_id']
-                    if (str(clnt_app_id).lower() == str(u_j_s.get('app_id')).lower()):
+                    clnt_id = clnt['app_id']
+                    ujs_a_id = str(u_j_s.get('app_id'))
+                    if (str(clnt_id).lower() == ujs_a_id.lower()):
                         u_j_s['client_groups'] = clnt['client_groups']
                         break
 
@@ -384,13 +394,18 @@ class MetricsMongoDBController:
 
     def __init__(self, config):
         # grab config lists
-        self.adminList = self._config_str_to_list(config.get('admin-users'))
-        self.metricsAdmins = self._config_str_to_list(config.get('metrics-admins'))
-        self.kbstaffList = self._config_str_to_list(config.get('kbase-staff'))
-        self.mongodb_dbList = self._config_str_to_list(config.get('mongodb-databases'))
+        self.adminList = self._config_str_to_list(
+                                        config.get('admin-users'))
+        self.metricsAdmins = self._config_str_to_list(
+                                        config.get('metrics-admins'))
+        self.kbstaffList = self._config_str_to_list(
+                                        config.get('kbase-staff'))
+        self.mongodb_dbList = self._config_str_to_list(
+                                        config.get('mongodb-databases'))
 
         # check for required parameters
-        for p in ['mongodb-host', 'mongodb-databases', 'mongodb-user', 'mongodb-pwd']:
+        for p in ['mongodb-host', 'mongodb-databases',
+                  'mongodb-user', 'mongodb-pwd']:
             if p not in config:
                 error_msg = '"{}" config variable must be defined '.format(p)
                 error_msg += 'to start a MetricsMongoDBController!'
@@ -444,7 +459,8 @@ class MetricsMongoDBController:
     # function(s) to update the metrics db
     def update_metrics(self, requesting_user, params, token):
         if not self._is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to invoke this action.')
+            raise ValueError('You do not have permission to '
+                             'invoke this action.')
 
         # 0. get the ws_narrative and client_groups data for lookups
         if self.ws_narratives is None:
@@ -453,15 +469,18 @@ class MetricsMongoDBController:
             self.client_groups = self._get_client_groups_from_cat(token)
 
         # 1. update users
-        (up_dated, u_serted) = self._update_user_info(requesting_user, params, token)
+        (up_dated, u_serted) = self._update_user_info(
+                                    requesting_user, params, token)
         action_result1 = up_dated + u_serted
 
         # 2. update activities
-        (up_dated, u_serted) = self._update_daily_activities(requesting_user, params, token)
+        (up_dated, u_serted) = self._update_daily_activities(
+                                    requesting_user, params, token)
         action_result2 = up_dated + u_serted
 
         # 3. update narratives
-        (up_dated, u_serted) = self._update_narratives(requesting_user, params, token)
+        (up_dated, u_serted) = self._update_narratives(
+                                    requesting_user, params, token)
         action_result3 = up_dated + u_serted
 
         return {'metrics_result': {'user_updates': action_result1,
@@ -469,16 +488,17 @@ class MetricsMongoDBController:
                                    'narrative_updates': action_result3}}
 
     # functions to get the requested records from metrics db...
-    def get_active_users_counts(self, requesting_user, params, token, exclude_kbstaff=True):
+    def get_active_users_counts(self, requesting_user,
+                                params, token, exclude_kbstaff=True):
         if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
         params = self._process_parameters(params)
 
         if exclude_kbstaff:
-            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'],
-                                                                params['maxTime'],
-                                                                self.kbstaffList)
+            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(
+                            params['minTime'], params['maxTime'],
+                            self.kbstaffList)
         else:
             mt_ret = self.metrics_dbi.aggr_unique_users_per_day(
                 params['minTime'], params['maxTime'], [])
@@ -488,18 +508,20 @@ class MetricsMongoDBController:
 
         return {'metrics_result': mt_ret}
 
-    def get_user_details(self, requesting_user, params, token, exclude_kbstaff=False):
+    def get_user_details(self, requesting_user, params, token,
+                         exclude_kbstaff=False):
         if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
         params = self._process_parameters(params)
-        mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'],
-                                                params['maxTime'], exclude_kbstaff)
+        mt_ret = self.metrics_dbi.get_user_info(
+                            params['user_ids'], params['minTime'],
+                            params['maxTime'], exclude_kbstaff)
         if len(mt_ret) == 0:
             print("No records returned!")
         else:
-            mt_ret = self._convert_isodate_to_millis(mt_ret,
-                                                    ['signup_at', 'last_signin_at'])
+            mt_ret = self._convert_isodate_to_millis(
+                            mt_ret, ['signup_at', 'last_signin_at'])
         return {'metrics_result': mt_ret}
 
     # End functions to get the requested records from metrics db
