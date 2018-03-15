@@ -66,7 +66,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     @classmethod
     def init_mongodb(cls):
-        print ('starting to build local mongoDB')
+        print('starting to build local mongoDB')
 
         os.system("sudo service mongodb start")
         os.system("mongod --version")
@@ -661,6 +661,39 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(ujs), 8)
         ujs = self.dbi.list_ujs_results([], 1500052541065, 1500074641912)
         self.assertEqual(len(ujs), 14)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_MetricsMongoDBController_constructor")
+    def test_MetricsMongoDBController_constructor(self):
+        cfg_arr = self.cfg
+        # testing if all the required parameters are given
+        with self.assertRaises(Exception):
+            try:
+                cfg_arr = self.cfg
+                db_ctr1 = MetricsMongoDBController(cfg_arr)
+            except:
+                pass
+            else:
+                raise Exception
+        # testing if all the required parameters are given, even with an empty value
+        with self.assertRaises(Exception):
+            try:
+                cfg_arr = self.cfg
+                cfg_arr['mongodb-host'] = ''
+                db_ctr1 = MetricsMongoDBController(cfg_arr)
+            except:
+                pass
+            else:
+                raise Exception
+        # testing if any of the required parameters are missing
+        for k in ['mongodb-host', 'mongodb-databases', 'mongodb-user', 'mongodb-pwd']:
+            cfg_arr = self.cfg
+            with self.assertRaises(ValueError):
+                try:
+                    cfg_arr.pop(k)
+                    db_ctr2 = MetricsMongoDBController(cfg_arr)
+                except:
+                    raise ValueError
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_config_str_to_list")

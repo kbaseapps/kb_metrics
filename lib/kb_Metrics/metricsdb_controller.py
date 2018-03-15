@@ -383,9 +383,6 @@ class MetricsMongoDBController:
                 for client_group in client_groups]
 
     def __init__(self, config):
-
-        # log("initializing mdb......")
-
         # grab config lists
         self.adminList = self._config_str_to_list(config.get('admin-users'))
         self.metricsAdmins = self._config_str_to_list(config.get('metrics-admins'))
