@@ -690,35 +690,35 @@ class kb_MetricsTest(unittest.TestCase):
         # testing 'user_ids'
         user_list = ['user_1', 'user_2']
         params = {'user_ids': user_list}
-        ret_params = self.db_controller.process_parameters(params)
+        ret_params = self.db_controller._process_parameters(params)
         self.assertItemsEqual(ret_params.get('user_ids'), user_list)
 
         # no given 'user_ids'
         params = {}
-        ret_params = self.db_controller.process_parameters(params)
+        ret_params = self.db_controller._process_parameters(params)
         self.assertFalse(ret_params['user_ids'])
 
         # 'user_ids' is not a list
         params = {'user_ids': 'not_a_list_object'}
         with self.assertRaisesRegexp(ValueError,
                                      'Variable user_ids must be a list.'):
-            self.db_controller.process_parameters(params)
+            self.db_controller._process_parameters(params)
 
         # testing removing 'kbasetest'
         user_list_kbasetest = ['user_1', 'user_2', 'kbasetest']
         params = {'user_ids': user_list_kbasetest}
-        ret_params = self.db_controller.process_parameters(params)
+        ret_params = self.db_controller._process_parameters(params)
         self.assertItemsEqual(ret_params.get('user_ids'), user_list)
 
         # testing epoch_range size 3
         params = {'epoch_range': (1, 2, 3)}
         with self.assertRaisesRegexp(ValueError,
                                      'Invalide epoch_range. Size must be 2.'):
-            self.db_controller.process_parameters(params)
+            self.db_controller._process_parameters(params)
 
         # testing epoch_range
         params = {'epoch_range': ('2018-02-23T00:00:00+0000', '2018-02-25T00:00:00+0000')}
-        ret_params = self.db_controller.process_parameters(params)
+        ret_params = self.db_controller._process_parameters(params)
         self.assertEqual(ret_params.get('minTime'), 1519344000000)
         self.assertEqual(ret_params.get('maxTime'), 1519516800000)
         self.assertFalse(ret_params['user_ids'])
@@ -728,26 +728,26 @@ class kb_MetricsTest(unittest.TestCase):
         date = datetime.datetime.strptime('2018-02-25T00:00:00+0000',
                                           '%Y-%m-%dT%H:%M:%S+0000').date()
         params = {'epoch_range': (date_time, date)}
-        ret_params = self.db_controller.process_parameters(params)
+        ret_params = self.db_controller._process_parameters(params)
         self.assertEqual(ret_params.get('minTime'), 1519344000000)
         self.assertEqual(ret_params.get('maxTime'), 1519516800000)
         self.assertFalse(ret_params['user_ids'])
 
         params = {'epoch_range': ('2018-02-23T00:00:00+0000', '')}
-        ret_params = self.db_controller.process_parameters(params)
+        ret_params = self.db_controller._process_parameters(params)
         self.assertEqual(ret_params.get('minTime'), 1519344000000)
         self.assertEqual(ret_params.get('maxTime'), 1519516800000)
         self.assertFalse(ret_params['user_ids'])
 
         params = {'epoch_range': (None, '2018-02-25T00:00:00+0000')}
-        ret_params = self.db_controller.process_parameters(params)
+        ret_params = self.db_controller._process_parameters(params)
         self.assertEqual(ret_params.get('minTime'), 1519344000000)
         self.assertEqual(ret_params.get('maxTime'), 1519516800000)
         self.assertFalse(ret_params['user_ids'])
 
         # testing empty epoch_range
         params = {'epoch_range': (None, None)}
-        ret_params = self.db_controller.process_parameters(params)
+        ret_params = self.db_controller._process_parameters(params)
         today = datetime.date.today()
         minTime = ret_params.get('minTime')
         maxTime = ret_params.get('maxTime')
@@ -757,7 +757,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(maxTime_from_today, 0)
 
         params = {}
-        ret_params = self.db_controller.process_parameters(params)
+        ret_params = self.db_controller._process_parameters(params)
         today = datetime.date.today()
         minTime = ret_params.get('minTime')
         maxTime = ret_params.get('maxTime')
@@ -930,7 +930,7 @@ class kb_MetricsTest(unittest.TestCase):
             "error": False
         }]
         # testing the correct data items appear in the joined result
-        joined_results = self.db_controller.join_task_ujs(exec_tasks, ujs_jobs)
+        joined_results = self.db_controller._join_task_ujs(exec_tasks, ujs_jobs)
         self.assertEqual(len(joined_results), 3)
         self.assertEqual(joined_results[0]['wsid'], '15206')
         self.assertEqual(joined_results[0]['app_id'], 'kb_deseq/run_DESeq2')
@@ -960,7 +960,7 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped test_MetricsMongoDBController_get_client_groups_from_cat")
     def test_MetricsMongoDBController_get_client_groups_from_cat(self):
         # testing if the data has expected structure
-        clnt_ret = self.db_controller.get_client_groups_from_cat(
+        clnt_ret = self.db_controller._get_client_groups_from_cat(
                 self.getContext()['token'])
         self.assertIn('app_id', clnt_ret[0])
         self.assertIn('client_groups', clnt_ret[0])
@@ -980,7 +980,7 @@ class kb_MetricsTest(unittest.TestCase):
         params = {'epoch_range': (start_datetime, end_datetime)}
 
         # testing if the data has expected structure
-        act_ret = self.db_controller.get_activities_from_wsobjs(
+        act_ret = self.db_controller._get_activities_from_wsobjs(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
         user_acts = act_ret['metrics_result']
@@ -1004,7 +1004,7 @@ class kb_MetricsTest(unittest.TestCase):
         params = {'epoch_range': (start_datetime, end_datetime)}
 
         # testing if the data has expected structure
-        narr_ret = self.db_controller.get_narratives_from_wsobjs(
+        narr_ret = self.db_controller._get_narratives_from_wsobjs(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
         narrs = narr_ret['metrics_result']
@@ -1034,7 +1034,7 @@ class kb_MetricsTest(unittest.TestCase):
         # testing update_user_info with given user_ids
         params = {'user_ids': user_list}
         params['epoch_range'] = (start_datetime, end_datetime)
-        upd_ret = self.db_controller.update_user_info(
+        upd_ret = self.db_controller._update_user_info(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret, (4, 0))
@@ -1042,7 +1042,7 @@ class kb_MetricsTest(unittest.TestCase):
         # testing update_user_info without user_ids
         params = {'user_ids': []}
         params['epoch_range'] = (start_datetime, end_datetime)
-        upd_ret = self.db_controller.update_user_info(
+        upd_ret = self.db_controller._update_user_info(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret, (33, 4))
@@ -1057,7 +1057,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         # testing update_daily_activities with given user_ids
         params = {'epoch_range': (start_datetime, end_datetime)}
-        upd_ret = self.db_controller.update_daily_activities(
+        upd_ret = self.db_controller._update_daily_activities(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret, (1, 7))
@@ -1072,7 +1072,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         # testing update_narratives with given user_ids
         params = {'epoch_range': (start_datetime, end_datetime)}
-        upd_ret = self.db_controller.update_narratives(
+        upd_ret = self.db_controller._update_narratives(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret, (0, 1))
@@ -1088,7 +1088,7 @@ class kb_MetricsTest(unittest.TestCase):
         end_datetime = datetime.datetime.strptime('2017-07-14T16:08:53.956Z',
                                           '%Y-%m-%dT%H:%M:%S.%fZ')
         params['epoch_range'] = (start_datetime, end_datetime)
-        input_params = self.db_controller.process_parameters(params)
+        input_params = self.db_controller._process_parameters(params)
         self.assertEqual(input_params.get('minTime'), 1500000932000)
         self.assertEqual(input_params.get('maxTime'), 1500048533956)
 

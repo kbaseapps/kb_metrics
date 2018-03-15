@@ -30,6 +30,22 @@ class MetricsMongoDBController:
 
         return user_list
 
+    def _is_admin(self, username):
+        return username in self.adminList
+
+    def _is_metrics_admin(self, username):
+        return username in self.metricsAdmins
+
+    def _is_kbstaff(self, username):
+        return username in self.kbstaffList
+
+    def _convert_isodate_to_millis(self, src_list, dt_list):
+        for dr in src_list:
+            for dt in dt_list:
+                if (dt in dr and isinstance(dr[dt], datetime.datetime)):
+                    dr[dt] = _unix_time_millis_from_datetime(dr[dt])
+        return src_list
+
     def _parse_app_id(self, exec_task):
         app_id = ''
         if 'app_id' in exec_task['job_input']:
@@ -54,8 +70,7 @@ class MetricsMongoDBController:
         n_obj = '0'
         for ws in ws_narrs:
             if str(ws['workspace_id']) == str(wsid):
-                ws_name = ws['name']
-                n_name = ws_name
+                n_name = ws['name']
                 w_meta = ws['meta']
                 for w_m in w_meta:
                     if w_m['k'] == 'narrative':
@@ -65,73 +80,15 @@ class MetricsMongoDBController:
                 break
         return (n_name, n_obj)
 
-    def __init__(self, config):
-
-        # log("initializing mdb......")
-
-        # grab config lists
-        self.adminList = self._config_str_to_list(config.get('admin-users'))
-        self.metricsAdmins = self._config_str_to_list(config.get('metrics-admins'))
-        self.kbstaffList = self._config_str_to_list(config.get('kbase-staff'))
-        self.mongodb_dbList = self._config_str_to_list(config.get('mongodb-databases'))
-
-        # check for required parameters
-        for p in ['mongodb-host', 'mongodb-databases', 'mongodb-user', 'mongodb-pwd']:
-            if p not in config:
-                error_msg = '"{}" config variable must be defined '.format(p)
-                error_msg += 'to start a MetricsMongoDBController!'
-                raise ValueError(error_msg)
-
-        # instantiate the mongo client
-        self.metrics_dbi = MongoMetricsDBI(config.get('mongodb-host'),
-                                           self.mongodb_dbList,
-                                           config.get('mongodb-user', ''),
-                                           config.get('mongodb-pwd', ''))
-
-        # for access to the Catalog API
-        self.auth_service_url = config['auth-service-url']
-        self.catalog_url = config['kbase-endpoint'] + '/catalog'
-
-        # commonly used data
-        self.ws_narratives = None
-        self.client_groups = None
-
-    # function(s) to update the metrics db
-    def update_metrics(self, requesting_user, params, token):
-        if not self.is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to invoke this action.')
-
-        # 0. get the ws_narrative and client_groups data for lookups
-        if self.ws_narratives is None:
-            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
-        if self.client_groups is None:
-            self.client_groups = self.get_client_groups_from_cat(token)
-
-        # 1. update users
-        (up_dated, u_serted) = self.update_user_info(requesting_user, params, token)
-        action_result1 = up_dated + u_serted
-
-        # 2. update activities
-        (up_dated, u_serted) = self.update_daily_activities(requesting_user, params, token)
-        action_result2 = up_dated + u_serted
-
-        # 3. update narratives
-        (up_dated, u_serted) = self.update_narratives(requesting_user, params, token)
-        action_result3 = up_dated + u_serted
-
-        return {'metrics_result': {'user_updates': action_result1,
-                                   'activity_updates': action_result2,
-                                   'narrative_updates': action_result3}}
-
-    def update_user_info(self, requesting_user, params, token):
+    def _update_user_info(self, requesting_user, params, token):
         """
         update user info
         If match not found, insert that record as new.
         """
-        if not self.is_metrics_admin(requesting_user):
+        if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-        params = self.process_parameters(params)
+        params = self._process_parameters(params)
         # TODO: set the param['minTime'] and param['maxTime'] to a given time window,
         # such as most current 24 hours instead of 48 hours as for others.
         auth2_ret = self.metrics_dbi.aggr_user_details(
@@ -159,15 +116,15 @@ class MetricsMongoDBController:
         print('updated {} and upserted {} users.'.format(upDated, upSerted))
         return (upDated, upSerted)
 
-    def update_daily_activities(self, requesting_user, params, token):
+    def _update_daily_activities(self, requesting_user, params, token):
         """
         update user activities reported from Workspace.
         If match not found, insert that record as new.
         """
-        if not self.is_metrics_admin(requesting_user):
+        if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-        ws_ret = self.get_activities_from_wsobjs(requesting_user, params, token)
+        ws_ret = self._get_activities_from_wsobjs(requesting_user, params, token)
         act_list = ws_ret['metrics_result']
         upDated = 0
         upSerted = 0
@@ -192,15 +149,15 @@ class MetricsMongoDBController:
         print('updated {} and upserted {} activities.'.format(upDated, upSerted))
         return (upDated, upSerted)
 
-    def update_narratives(self, requesting_user, params, token):
+    def _update_narratives(self, requesting_user, params, token):
         """
         update user narratives reported from Workspace.
         If match not found, insert that record as new.
         """
-        if not self.is_metrics_admin(requesting_user):
+        if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to invoke this action.')
 
-        ws_ret = self.get_narratives_from_wsobjs(requesting_user, params, token)
+        ws_ret = self._get_narratives_from_wsobjs(requesting_user, params, token)
         narr_list = ws_ret['metrics_result']
         upDated = 0
         upSerted = 0
@@ -227,57 +184,21 @@ class MetricsMongoDBController:
 
     # End functions to write to the metrics database
 
-    # functions to get the requested records from metrics db...
-    def get_active_users_counts(self, requesting_user, params, token, exclude_kbstaff=True):
-        if not self.is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
-        params = self.process_parameters(params)
-
-        if exclude_kbstaff:
-            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'],
-                                                                params['maxTime'],
-                                                                self.kbstaffList)
-        else:
-            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(
-                params['minTime'], params['maxTime'], [])
-
-        if len(mt_ret) == 0:
-            print("No records returned!")
-
-        return {'metrics_result': mt_ret}
-
-    def get_user_details(self, requesting_user, params, token, exclude_kbstaff=False):
-        if not self.is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
-        params = self.process_parameters(params)
-        mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'],
-                                                params['maxTime'], exclude_kbstaff)
-        if len(mt_ret) == 0:
-            print("No records returned!")
-        else:
-            mt_ret = self.convert_isodate_to_millis(mt_ret,
-                                                    ['signup_at', 'last_signin_at'])
-        return {'metrics_result': mt_ret}
-
-    # End functions to get the requested records from metrics db
-
     # functions to get the requested records from other dbs...
-    def get_narratives_from_wsobjs(self, requesting_user, params, token):
+    def _get_narratives_from_wsobjs(self, requesting_user, params, token):
         """
         get_narratives_from_wsobjs--Given a time period, fetch the narrative
         information from workspace.workspaces and workspace.workspaceObjects.
         Based on the narratives in workspace.workspaceObjects, if additional info
         available then add to existing data from workspace.workspaces.
         """
-        if not self.is_admin(requesting_user):
+        if not self._is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
         if self.ws_narratives is None:
             self.ws_narratives = self.metrics_dbi.list_ws_narratives()
 
-        params = self.process_parameters(params)
+        params = self._process_parameters(params)
 
         ws_narrs = copy.deepcopy(self.ws_narratives)
         ws_ids = [wnarr['workspace_id'] for wnarr in ws_narrs]
@@ -315,11 +236,11 @@ class MetricsMongoDBController:
                 ws_narrs1.append(wn)
         return {'metrics_result': ws_narrs1}
 
-    def get_activities_from_wsobjs(self, requesting_user, params, token):
-        if not self.is_admin(requesting_user):
+    def _get_activities_from_wsobjs(self, requesting_user, params, token):
+        if not self._is_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-        params = self.process_parameters(params)
+        params = self._process_parameters(params)
 
         wsobjs_act = self.metrics_dbi.aggr_activities_from_wsobjs(
             params['minTime'], params['maxTime'])
@@ -332,38 +253,7 @@ class MetricsMongoDBController:
 
         return {'metrics_result': wsobjs_act}
 
-    def get_user_job_states(self, requesting_user, params, token):
-        """
-        get_jobdata_from_ws_exec_ujs--The original implementation to
-        get data for appcatalog from querying execution_engine,
-        catalog, workspace and userjobstate
-        ----------------------
-        To get the job's 'status', 'complete'=true/false, etc.,
-        we can do joining as follows
-        --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
-        """
-        params = self.process_parameters(params)
-        if not self.is_admin(requesting_user):
-            params['user_ids'] = [requesting_user]
-
-        # 1. get the ws_narrative and client_groups data for lookups
-        if self.ws_narratives is None:
-            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
-        if self.client_groups is None:
-            self.client_groups = self.get_client_groups_from_cat(token)
-
-        # 2. query dbs to get lists of tasks and jobs
-        exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'],
-                                                      params['maxTime'])
-        ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'],
-                                                     params['minTime'],
-                                                     params['maxTime'])
-        ujs_jobs = self.convert_isodate_to_millis(
-                ujs_jobs, ['created', 'started', 'updated'])
-
-        return {'job_states': self.join_task_ujs(exec_tasks, ujs_jobs)}
-
-    def join_task_ujs(self, exec_tasks, ujs_jobs):
+    def _join_task_ujs(self, exec_tasks, ujs_jobs):
         """
         combine/join exec_tasks with ujs_jobs list to get the final return data
         """
@@ -435,7 +325,7 @@ class MetricsMongoDBController:
             ujs_ret.append(u_j_s)
         return ujs_ret
 
-    def process_parameters(self, params):
+    def _process_parameters(self, params):
 
         params['user_ids'] = params.get('user_ids', [])
 
@@ -471,7 +361,7 @@ class MetricsMongoDBController:
 
         return params
 
-    def get_client_groups_from_cat(self, token):
+    def _get_client_groups_from_cat(self, token):
         """
         get_client_groups_from_cat: Get the client_groups data from Catalog API
         return an array of the following structure (example with data):
@@ -492,18 +382,127 @@ class MetricsMongoDBController:
                 'client_groups': client_group.get('client_groups')}
                 for client_group in client_groups]
 
-    def is_admin(self, username):
-        return username in self.adminList
+    def __init__(self, config):
 
-    def is_metrics_admin(self, username):
-        return username in self.metricsAdmins
+        # log("initializing mdb......")
 
-    def is_kbstaff(self, username):
-        return username in self.kbstaffList
+        # grab config lists
+        self.adminList = self._config_str_to_list(config.get('admin-users'))
+        self.metricsAdmins = self._config_str_to_list(config.get('metrics-admins'))
+        self.kbstaffList = self._config_str_to_list(config.get('kbase-staff'))
+        self.mongodb_dbList = self._config_str_to_list(config.get('mongodb-databases'))
 
-    def convert_isodate_to_millis(self, src_list, dt_list):
-        for dr in src_list:
-            for dt in dt_list:
-                if (dt in dr and isinstance(dr[dt], datetime.datetime)):
-                    dr[dt] = _unix_time_millis_from_datetime(dr[dt])
-        return src_list
+        # check for required parameters
+        for p in ['mongodb-host', 'mongodb-databases', 'mongodb-user', 'mongodb-pwd']:
+            if p not in config:
+                error_msg = '"{}" config variable must be defined '.format(p)
+                error_msg += 'to start a MetricsMongoDBController!'
+                raise ValueError(error_msg)
+
+        # instantiate the mongo client
+        self.metrics_dbi = MongoMetricsDBI(config.get('mongodb-host'),
+                                           self.mongodb_dbList,
+                                           config.get('mongodb-user', ''),
+                                           config.get('mongodb-pwd', ''))
+
+        # for access to the Catalog API
+        self.auth_service_url = config['auth-service-url']
+        self.catalog_url = config['kbase-endpoint'] + '/catalog'
+
+        # commonly used data
+        self.ws_narratives = None
+        self.client_groups = None
+
+    def get_user_job_states(self, requesting_user, params, token):
+        """
+        get_jobdata_from_ws_exec_ujs--The original implementation to
+        get data for appcatalog from querying execution_engine,
+        catalog, workspace and userjobstate
+        ----------------------
+        To get the job's 'status', 'complete'=true/false, etc.,
+        we can do joining as follows
+        --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
+        """
+        params = self._process_parameters(params)
+        if not self._is_admin(requesting_user):
+            params['user_ids'] = [requesting_user]
+
+        # 1. get the ws_narrative and client_groups data for lookups
+        if self.ws_narratives is None:
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+        if self.client_groups is None:
+            self.client_groups = self._get_client_groups_from_cat(token)
+
+        # 2. query dbs to get lists of tasks and jobs
+        exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'],
+                                                      params['maxTime'])
+        ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'],
+                                                     params['minTime'],
+                                                     params['maxTime'])
+        ujs_jobs = self._convert_isodate_to_millis(
+                ujs_jobs, ['created', 'started', 'updated'])
+
+        return {'job_states': self._join_task_ujs(exec_tasks, ujs_jobs)}
+
+    # function(s) to update the metrics db
+    def update_metrics(self, requesting_user, params, token):
+        if not self._is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to invoke this action.')
+
+        # 0. get the ws_narrative and client_groups data for lookups
+        if self.ws_narratives is None:
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+        if self.client_groups is None:
+            self.client_groups = self._get_client_groups_from_cat(token)
+
+        # 1. update users
+        (up_dated, u_serted) = self._update_user_info(requesting_user, params, token)
+        action_result1 = up_dated + u_serted
+
+        # 2. update activities
+        (up_dated, u_serted) = self._update_daily_activities(requesting_user, params, token)
+        action_result2 = up_dated + u_serted
+
+        # 3. update narratives
+        (up_dated, u_serted) = self._update_narratives(requesting_user, params, token)
+        action_result3 = up_dated + u_serted
+
+        return {'metrics_result': {'user_updates': action_result1,
+                                   'activity_updates': action_result2,
+                                   'narrative_updates': action_result3}}
+
+    # functions to get the requested records from metrics db...
+    def get_active_users_counts(self, requesting_user, params, token, exclude_kbstaff=True):
+        if not self._is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+        params = self._process_parameters(params)
+
+        if exclude_kbstaff:
+            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(params['minTime'],
+                                                                params['maxTime'],
+                                                                self.kbstaffList)
+        else:
+            mt_ret = self.metrics_dbi.aggr_unique_users_per_day(
+                params['minTime'], params['maxTime'], [])
+
+        if len(mt_ret) == 0:
+            print("No records returned!")
+
+        return {'metrics_result': mt_ret}
+
+    def get_user_details(self, requesting_user, params, token, exclude_kbstaff=False):
+        if not self._is_metrics_admin(requesting_user):
+            raise ValueError('You do not have permission to view this data.')
+
+        params = self._process_parameters(params)
+        mt_ret = self.metrics_dbi.get_user_info(params['user_ids'], params['minTime'],
+                                                params['maxTime'], exclude_kbstaff)
+        if len(mt_ret) == 0:
+            print("No records returned!")
+        else:
+            mt_ret = self._convert_isodate_to_millis(mt_ret,
+                                                    ['signup_at', 'last_signin_at'])
+        return {'metrics_result': mt_ret}
+
+    # End functions to get the requested records from metrics db
