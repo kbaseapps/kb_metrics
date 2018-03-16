@@ -4,6 +4,7 @@ import os  # noqa: F401
 import json  # noqa: F401
 import time
 import datetime
+import copy
 from pymongo import MongoClient
 
 from os import environ
@@ -80,6 +81,7 @@ class kb_MetricsTest(unittest.TestCase):
         cls._insert_data(cls.client, 'auth2', 'users')
         cls._insert_data(cls.client, 'metrics', 'users')
         cls._insert_data(cls.client, 'metrics', 'daily_activities')
+        #cls._insert_data(cls.client, 'metrics', 'narratives')
         cls.db_names = cls.client.database_names()
 
         # updating created to timstamp field for userjobstate.jobstate
@@ -720,13 +722,14 @@ class kb_MetricsTest(unittest.TestCase):
         # testing if any of the required parameters are missing
         for k in ['mongodb-host', 'mongodb-databases',
                   'mongodb-user', 'mongodb-pwd']:
-            cfg_arr = self.cfg
-            with self.assertRaises(ValueError):
-                try:
-                    cfg_arr.pop(k)
-                    db_ctr2 = MetricsMongoDBController(cfg_arr)
-                except ValueError:
-                    raise ValueError
+
+            error_msg = '"{}" config variable must be defined '.format(k)
+            error_msg += 'to start a MetricsMongoDBController!'
+
+            cfg_arr = copy.deepcopy(self.cfg)
+            cfg_arr.pop(k)
+            with self.assertRaisesRegexp(ValueError, error_msg):
+                db_ctr2 = MetricsMongoDBController(cfg_arr)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBController_config_str_to_list")
@@ -1085,7 +1088,6 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(narrs), 2)
         self.assertEqual(narrs[1]['workspace_id'], 27834)
         self.assertEqual(narrs[1]['object_id'], 1)
-        self.assertEqual(narrs[1]['object_name'], 'Narrative.1513709108341')
         self.assertEqual(narrs[1]['object_version'], 11)
         self.assertEqual(narrs[1]['name'],
                          'psdehal:narrative_1513709108341')

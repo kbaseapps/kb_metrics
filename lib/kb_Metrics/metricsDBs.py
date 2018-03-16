@@ -60,10 +60,10 @@ class MongoMetricsDBI:
             # return an instance of UpdateResult(raw_result, acknowledged)
             update_ret = self.mt_users.update_one(upd_filter,
                                                   upd_op, upsert=True)
-        except BulkWriteError as bwe:
-            # pprint(bwe.details['writeErrors'])
+        except WriteError as we:
+            # pprint(we.details['writeErrors'])
             panic = filter(lambda x: x['code'] != 11000,
-                           bwe.details['writeErrors'])
+                           we.details['writeErrors'])
             if len(panic) > 0:
                 print "really panic"
                 raise
@@ -84,10 +84,10 @@ class MongoMetricsDBI:
             # return an instance of UpdateResult(raw_result, acknowledged)
             update_ret = self.mt_coll.update_one(upd_filter,
                                                  upd_op, upsert=True)
-        except BulkWriteError as bwe:
-            # pprint(bwe.details['writeErrors'])
+        except WriteError as we:
+            # pprint(we.details['writeErrors'])
             panic = filter(lambda x: x['code'] != 11000,
-                           bwe.details['writeErrors'])
+                           we.details['writeErrors'])
             if len(panic) > 0:
                 print "really panic"
                 raise
@@ -137,10 +137,10 @@ class MongoMetricsDBI:
             # return an instance of UpdateResult(raw_result, acknowledged)
             update_ret = self.mt_narrs.update_one(upd_filter,
                                                   upd_op, upsert=True)
-        except BulkWriteError as bwe:
-            # pprint(bwe.details['writeErrors'])
+        except WriteError as we:
+            # pprint(we.details['writeErrors'])
             panic = filter(lambda x: x['code'] != 11000,
-                           bwe.details['writeErrors'])
+                           we.details['writeErrors'])
             if len(panic) > 0:
                 print "really panic"
                 raise
