@@ -333,8 +333,8 @@ class MongoMetricsDBI:
                         "meta": {"$elemMatch": {"k": "narrative_nice_name"}}}
 
         if minTime > 0 and maxTime > 0:
-            minTime = datetime.datetime.fromtimestamp(minTime / 1000)
-            maxTime = datetime.datetime.fromtimestamp(maxTime / 1000)
+            minTime = datetime.datetime.fromtimestamp(minTime / 1000.0)
+            maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
             match_filter['moddate'] = {"$gte": minTime, "$lte": maxTime}
 
         # Define the pipeline operations
@@ -353,8 +353,8 @@ class MongoMetricsDBI:
 
     def list_user_objects_from_wsobjs(self, minTime, maxTime, ws_list=[]):
         # Define the pipeline operations
-        minTime = datetime.datetime.fromtimestamp(minTime / 1000)
-        maxTime = datetime.datetime.fromtimestamp(maxTime / 1000)
+        minTime = datetime.datetime.fromtimestamp(minTime / 1000.0)
+        maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
 
         match_filter = {"del": False,
                         "moddate": {"$gte": minTime, "$lte": maxTime}}

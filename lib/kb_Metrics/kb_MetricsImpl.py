@@ -36,10 +36,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # Any configuration parameters that are important should be parsed and
         # saved in the constructor.
-        self.ws_url = config['workspace-url']
-        self.shared_folder = config['scratch']
-        self.config = config
-        self.mdb_controller = MetricsMongoDBController(self.config)
+        self.mdb_controller = MetricsMongoDBController(config)
         #END_CONSTRUCTOR
         pass
 

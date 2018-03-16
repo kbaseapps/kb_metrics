@@ -175,7 +175,7 @@ class kb_MetricsTest(unittest.TestCase):
     def getWsName(self):
         if hasattr(self.__class__, 'wsName'):
             return self.__class__.wsName
-        suffix = int(time.time() * 1000.0)
+        suffix = int(time.time() * 1000)
         wsName = "test_kb_Metrics_" + str(suffix)
         ret = self.getWsClient().create_workspace({'workspace': wsName})  # noqa
         self.__class__.wsName = wsName
@@ -236,12 +236,12 @@ class kb_MetricsTest(unittest.TestCase):
         # test list_user_objects_from_wsobjs return count without wsid
         user_objs = self.dbi.list_user_objects_from_wsobjs(
                         minTime, maxTime)
-        self.assertEqual(len(user_objs), 40)
+        self.assertEqual(len(user_objs), 37)
 
         # test list_user_objects_from_wsobjs returned values with wsid filter
         user_objs = self.dbi.list_user_objects_from_wsobjs(
                         minTime, maxTime, ws_list)
-        self.assertEqual(len(user_objs), 26)
+        self.assertEqual(len(user_objs), 22)
 
         self.assertIn('workspace_id', user_objs[0])
         self.assertIn('object_id', user_objs[0])
@@ -1111,7 +1111,7 @@ class kb_MetricsTest(unittest.TestCase):
         upd_ret = self.db_controller._update_user_info(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
-        self.assertEqual(upd_ret, (4, 0))
+        self.assertEqual(upd_ret, 4)
 
         # testing update_user_info without user_ids
         params = {'user_ids': []}
@@ -1119,7 +1119,7 @@ class kb_MetricsTest(unittest.TestCase):
         upd_ret = self.db_controller._update_user_info(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
-        self.assertEqual(upd_ret, (33, 4))
+        self.assertEqual(upd_ret, 37)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped _update_daily_activities")
@@ -1134,7 +1134,7 @@ class kb_MetricsTest(unittest.TestCase):
         upd_ret = self.db_controller._update_daily_activities(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
-        self.assertEqual(upd_ret, (1, 7))
+        self.assertEqual(upd_ret, 8)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_update_narratives")
@@ -1149,7 +1149,7 @@ class kb_MetricsTest(unittest.TestCase):
         upd_ret = self.db_controller._update_narratives(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
-        self.assertEqual(upd_ret, (0, 1))
+        self.assertEqual(upd_ret, 1)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBController_get_user_job_states")
