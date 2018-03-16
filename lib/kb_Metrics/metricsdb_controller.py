@@ -172,6 +172,7 @@ class MetricsMongoDBController:
         idKeys = ['object_id', 'object_version', 'workspace_id']
         otherKeys = ['name', 'last_saved_at', 'last_saved_by', 'numObj',
                      'deleted', 'nice_name', 'desc']
+
         for n_data in narr_list:
             idData = {x: n_data[x] for x in idKeys}
             otherData = {x: n_data[x] for x in otherKeys}

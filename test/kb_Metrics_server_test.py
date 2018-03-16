@@ -81,7 +81,7 @@ class kb_MetricsTest(unittest.TestCase):
         cls._insert_data(cls.client, 'auth2', 'users')
         cls._insert_data(cls.client, 'metrics', 'users')
         cls._insert_data(cls.client, 'metrics', 'daily_activities')
-        #cls._insert_data(cls.client, 'metrics', 'narratives')
+        cls._insert_data(cls.client, 'metrics', 'narratives')
         cls.db_names = cls.client.database_names()
 
         # updating created to timstamp field for userjobstate.jobstate
@@ -131,6 +131,23 @@ class kb_MetricsTest(unittest.TestCase):
                      "last_signin_at": last_signin_at_str},
                     {"$set": {"signup_at": signup_date,
                               "last_signin_at": signin_date}},
+                    upsert=False
+                )
+
+        db_coll4 = cls.client.metrics.narratives
+        for urecord in db_coll4.find():
+            first_acc_str = urecord.get('first_access')
+            last_saved_at_str = urecord.get('last_saved_at')
+            if type(first_acc_str) not in [datetime.date, datetime.datetime]:
+                first_acc_date = datetime.datetime.utcfromtimestamp(
+                                    int(first_acc_str) / 1000.0)
+                last_saved_date = datetime.datetime.utcfromtimestamp(
+                                    int(last_saved_at_str) / 1000.0)
+                db_coll4.update_many(
+                    {"first_access": first_acc_str,
+                     "last_saved_at": last_saved_at_str},
+                    {"$set": {"first_access": first_acc_date,
+                              "last_saved_at": last_saved_date}},
                     upsert=False
                 )
 
@@ -201,10 +218,14 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(list(wsobj_cur)), 41)
         ujs_cur = self.dbi.metricsDBs['userjobstate']['jobstate'].find()
         self.assertEqual(len(list(ujs_cur)), 36)
-        users_cur = self.dbi.metricsDBs['auth2']['users'].find()
-        self.assertEqual(len(list(users_cur)), 37)
+        a_users_cur = self.dbi.metricsDBs['auth2']['users'].find()
+        self.assertEqual(len(list(a_users_cur)), 37)
+        m_users_cur = self.dbi.metricsDBs['metrics']['users'].find()
+        self.assertTrue(len(list(m_users_cur)), 37)
         act_cur = self.dbi.metricsDBs['metrics']['daily_activities'].find()
         self.assertTrue(len(list(act_cur)) >= 1603)
+        narrs_cur = self.dbi.metricsDBs['metrics']['narratives'].find()
+        self.assertTrue(len(list(narrs_cur)), 10)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_exec_tasks")
@@ -1137,6 +1158,44 @@ class kb_MetricsTest(unittest.TestCase):
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret, 8)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped _update_narratives")
+    def test_MetricsMongoDBController_update_narratives(self):
+        start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
+        end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
+
+        narr = [{u'object_version': 11, u'workspace_id': 27834, u'numObj': 4,
+                 u'deleted': False, u'object_id': 1,
+                 u'name': u'psdehal:narrative_1513709108341',
+                 u'last_saved_at': datetime.datetime(2018, 1, 24, 19, 35, 30, 1000),
+                 u'nice_name': u'Staging Test',
+                 u'last_saved_by': u'psdehal', u'desc': u''}]
+
+        # ensure this record does not exist in the db yet
+        n_cur = self.dbi.metricsDBs['metrics']['narratives'].find({
+                    'workspace_id': 27834, 'object_id': 1, 'object_version': 11})
+        self.assertEqual(len(list(n_cur)), 0)
+
+        # testing update_daily_activities with given user_ids
+        params = {'epoch_range': (start_datetime, end_datetime)}
+        upd_ret = self.db_controller._update_narratives(
+                self.getContext()['user_id'],
+                params, self.getContext()['token'])
+        self.assertEqual(upd_ret, 1)
+
+        # confirm this record is upserted into the db
+        n_cur = self.dbi.metricsDBs['metrics']['narratives'].find({
+                    'workspace_id': 27834, 'object_id': 1, 'object_version': 11})
+        self.assertEqual(len(list(n_cur)), 1)
+        self.assertEqual(n_cur['numObj'], 4)
+        self.assertEqual(n_cur['name'], 'psdehal:narrative_1513709108341')
+        self.assertEqual(n_cur['nice_name'], 'Staging Test')
+        self.assertEqual(n_cur['last_saved_by'], 'psdehal')
+        self.assertEqual(n_cur['last_saved_at'],
+                         datetime.datetime(2018, 1, 24, 19, 35, 30, 1000))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_update_narratives")
