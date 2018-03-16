@@ -68,11 +68,6 @@ class MongoMetricsDBI:
             if len(panic) > 0:
                 print "really panic"
                 raise
-        else:
-            pass
-            # pprint(update_ret.raw_result)
-            # if update_ret.upserted_id:
-            # print(update_ret.upserted_id)
         return update_ret
 
     def update_activity_records(self, upd_filter, upd_data):
@@ -97,11 +92,6 @@ class MongoMetricsDBI:
             if len(panic) > 0:
                 print "really panic"
                 raise
-        else:
-            pass
-            # pprint(update_ret.raw_result)
-            # if update_ret.upserted_id:
-            # print(update_ret.upserted_id)
         return update_ret
 
     def insert_activity_records(self, mt_docs):

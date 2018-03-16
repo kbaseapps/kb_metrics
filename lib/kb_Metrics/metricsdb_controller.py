@@ -3,7 +3,6 @@ import time
 import datetime
 import copy
 import re
-from bson.objectid import ObjectId
 
 from kb_Metrics.metricsDBs import MongoMetricsDBI
 from kb_Metrics.Util import (_unix_time_millis_from_datetime,
@@ -51,16 +50,14 @@ class MetricsMongoDBController:
     def _parse_app_id(self, exec_task):
         app_id = ''
         if 'app_id' in exec_task['job_input']:
-            app_id = exec_task['job_input']['app_id']
-            app_id = app_id.replace('.', '/')
+            app_id = exec_task['job_input']['app_id'].replace('.', '/')
 
         return app_id
 
     def _parse_method(self, exec_task):
         method_id = ''
         if 'method' in exec_task['job_input']:
-            method_id = exec_task['job_input']['method']
-            method_id = method_id.replace('/', '.')
+            method_id = exec_task['job_input']['method'].replace('/', '.')
 
         return method_id
 
@@ -77,7 +74,7 @@ class MetricsMongoDBController:
                 for w_m in w_meta:
                     if w_m['k'] == 'narrative':
                         n_obj = w_m['v']
-                    elif w_m['k'] == 'narrative_nice_name':
+                    if w_m['k'] == 'narrative_nice_name':
                         n_name = w_m['v']
                 break
         return (n_name, n_obj)
@@ -106,7 +103,7 @@ class MetricsMongoDBController:
         for u_data in auth2_ret:
             idData = {x: u_data[x] for x in idKeys}
             userData = {x: u_data[x] for x in dataKeys}
-            isKbstaff = 1 if idData['username'] in self.kbstaffList else 0
+            isKbstaff = 1 if self._is_kbstaff(idData['username']) else 0
             update_ret = self.metrics_dbi.update_user_records(
                 idData, userData, isKbstaff)
             if update_ret.raw_result['updatedExisting']:
@@ -114,7 +111,7 @@ class MetricsMongoDBController:
             elif update_ret.raw_result.get('upserted'):
                 upSerted += 1
         print('updated {} and upserted {} users.'.format(upDated, upSerted))
-        return (upDated, upSerted)
+        return upDated + upSerted
 
     def _update_daily_activities(self, requesting_user, params, token):
         """
@@ -150,7 +147,7 @@ class MetricsMongoDBController:
 
         print('updated {} and upserted {} '
               'activities.'.format(upDated, upSerted))
-        return (upDated, upSerted)
+        return upDated + upSerted
 
     def _update_narratives(self, requesting_user, params, token):
         """
@@ -187,7 +184,7 @@ class MetricsMongoDBController:
 
         print('updated {} and upserted {} '
               'narratives.'.format(upDated, upSerted))
-        return (upDated, upSerted)
+        return upDated + upSerted
 
     # End functions to write to the metrics database
 
@@ -199,7 +196,7 @@ class MetricsMongoDBController:
         Based on the narratives in workspace.workspaceObjects, if additional
         info available then add to existing data from workspace.workspaces.
         """
-        if not self._is_admin(requesting_user):
+        if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
         if self.ws_narratives is None:
@@ -244,7 +241,7 @@ class MetricsMongoDBController:
         return {'metrics_result': ws_narrs1}
 
     def _get_activities_from_wsobjs(self, requesting_user, params, token):
-        if not self._is_admin(requesting_user):
+        if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
         params = self._process_parameters(params)
@@ -257,7 +254,7 @@ class MetricsMongoDBController:
             for obj in wsobjs_act:
                 if wo['ws_id'] == obj['_id']['ws_id']:
                     obj['_id'][u'username'] = wo['username']
-
+                    break
         return {'metrics_result': wsobjs_act}
 
     def _join_task_ujs(self, exec_tasks, ujs_jobs):
@@ -469,19 +466,16 @@ class MetricsMongoDBController:
             self.client_groups = self._get_client_groups_from_cat(token)
 
         # 1. update users
-        (up_dated, u_serted) = self._update_user_info(
+        action_result1 = self._update_user_info(
                                     requesting_user, params, token)
-        action_result1 = up_dated + u_serted
 
         # 2. update activities
-        (up_dated, u_serted) = self._update_daily_activities(
+        action_result2 = self._update_daily_activities(
                                     requesting_user, params, token)
-        action_result2 = up_dated + u_serted
 
         # 3. update narratives
-        (up_dated, u_serted) = self._update_narratives(
+        action_result3 = self._update_narratives(
                                     requesting_user, params, token)
-        action_result3 = up_dated + u_serted
 
         return {'metrics_result': {'user_updates': action_result1,
                                    'activity_updates': action_result2,
