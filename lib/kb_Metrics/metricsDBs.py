@@ -61,7 +61,6 @@ class MongoMetricsDBI:
             update_ret = self.mt_users.update_one(upd_filter,
                                                   upd_op, upsert=True)
         except BulkWriteError as bwe:
-            # print("mt_users.update errored\n:")
             # pprint(bwe.details['writeErrors'])
             panic = filter(lambda x: x['code'] != 11000,
                            bwe.details['writeErrors'])
@@ -139,7 +138,6 @@ class MongoMetricsDBI:
             update_ret = self.mt_narrs.update_one(upd_filter,
                                                   upd_op, upsert=True)
         except BulkWriteError as bwe:
-            # print("mt_users.update errored\n:")
             # pprint(bwe.details['writeErrors'])
             panic = filter(lambda x: x['code'] != 11000,
                            bwe.details['writeErrors'])
@@ -151,9 +149,6 @@ class MongoMetricsDBI:
             self.mt_narrs.update({'access_count': {'$exists': False}},
                                  {'$set': {'access_count': 1}},
                                  upsert=True, multi=True)
-            # pprint(update_ret.raw_result)
-            # if update_ret.upserted_id:
-            # print(update_ret.upserted_id)
         return update_ret
 
     def insert_narrative_records(self, mt_docs):

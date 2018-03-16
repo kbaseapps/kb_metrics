@@ -216,7 +216,6 @@ class MetricsMongoDBController:
                     if wn['name'] == obj['object_name']:
                         wn[u'object_id'] = obj['object_id']
                         wn[u'object_version'] = obj['object_version']
-                        wn[u'object_name'] = obj['object_name']
                         break
                     elif ':' in wn['name']:
                         wts = wn['name'].split(':')[1]
@@ -225,7 +224,6 @@ class MetricsMongoDBController:
                         p = re.compile(wts, re.IGNORECASE)
                         if p.search(obj['object_name']):
                             wn[u'object_id'] = obj['object_id']
-                            wn[u'object_name'] = obj['object_name']
                             wn[u'object_version'] = obj['object_version']
                         break
         for wn in ws_narrs:
@@ -236,6 +234,7 @@ class MetricsMongoDBController:
                 for w_m in w_meta:
                     if w_m['k'] == 'narrative_nice_name':
                         wn[u'nice_name'] = w_m['v']
+                        break
                 del wn['meta']
                 ws_narrs1.append(wn)
         return {'metrics_result': ws_narrs1}
