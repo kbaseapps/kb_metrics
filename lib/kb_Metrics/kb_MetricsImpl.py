@@ -23,7 +23,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "0.1.1"
     GIT_URL = "https://github.com/qzzhang/kb_Metrics"
-    GIT_COMMIT_HASH = "db1e9720e2503ffa39cd16a43ff822a86f9c2d24"
+    GIT_COMMIT_HASH = "22cfa1eacda7665d206f677b5b878f1aa2e68ecd"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
