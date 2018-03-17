@@ -115,10 +115,13 @@ class MongoMetricsDBI:
             if len(panic) > 0:
                 print "really panic"
                 raise
+            else:
+                return bwe.details['nInserted']
         else:
             # insert_ret.inserted_ids is a list
-            print('Inserted {} records.'.format(len(insert_ret.inserted_ids)))
-        return insert_ret
+            print('Inserted {} activity records.'.format(
+                                len(insert_ret.inserted_ids)))
+        return len(insert_ret.inserted_ids)
 
     def update_narrative_records(self, upd_filter, upd_data):
         """
@@ -150,31 +153,6 @@ class MongoMetricsDBI:
                                  {'$set': {'access_count': 1}},
                                  upsert=True, multi=True)
         return update_ret
-
-    def insert_narrative_records(self, mt_docs):
-        """
-        Insert an iterable of narrative documents
-        """
-        if not isinstance(mt_docs, list):
-            raise ValueError('The variable mt_docs must be '
-                             'a list of mutable mapping type data.')
-
-        # grab handle(s) to the database collection(s) targeted
-        self.mt_act = self.metricsDBs['metrics'][
-                            MongoMetricsDBI._MT_NARRATIVES]
-        insert_ret = None
-        try:
-            # get an instance of InsertManyResult(inserted_ids, acknowledged)
-            insert_ret = self.mt_act.insert_many(mt_docs, ordered=True)
-        except BulkWriteError as bwe:
-            # skip uplicate key error (code=11000)
-            panic = filter(lambda x: x['code'] != 11000,
-                           bwe.details['writeErrors'])
-            if len(panic) > 0:
-                print "really panic"
-                raise
-        return insert_ret
-
     # End functions to write to the metrics database
 
     # Begin functions to query the other dbs...

@@ -428,7 +428,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         # testing freshly inserted result
         inst_ret = self.dbi.insert_activity_records(act_set)
-        self.assertEqual(len(inst_ret.inserted_ids), 2)
+        self.assertEqual(inst_ret, 2)
         self.assertEqual(len(list(db_mda.find(filter_set1))), 1)
         self.assertEqual(len(list(db_mda.find(filter_set2))), 1)
 
@@ -440,55 +440,75 @@ class kb_MetricsTest(unittest.TestCase):
             self.assertEqual(mdarecord['_id']['ws_id'], 20199995)
             self.assertEqual(mdarecord['obj_numModified'], 95)
 
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBs_insert_narrative_records")
-    def test_MetricsMongoDBs_insert_narrative_records(self):
-        # Fake data
-        filter_set1 = {'object_id': 1,
-                       'workspace_id': 20199994}
-        filter_set2 = {'object_id': 1,
-                       'workspace_id': 20199995}
-        narr_set = [{'object_id': 1,
-                     'workspace_id': 20199994,
-                     'name': 'qz1:narrative_1548358542000',
-                     'last_saved_at': datetime.datetime(
-                                            2019, 1, 24, 19, 35, 42),
-                     'last_saved_by': 'qz1',
-                     'numObj': 3,
-                     'object_version': 1,
-                     'nice_name': 'nice_name_1',
-                     'desc': '',
-                     'deleted': False},
-                    {'object_id': 1,
-                     'workspace_id': 20199995,
-                     'name': 'qz1:narrative_1548358542100',
-                     'last_saved_at': datetime.datetime(
-                                            2019, 1, 24, 19, 35, 42, 1000),
-                     'last_saved_by': 'qz1',
-                     'numObj': 6,
-                     'object_version': 1,
-                     'nice_name': 'nice_name_2',
-                     'desc': 'temp_desc',
-                     'deleted': False}]
+        # test inserting data set with duplicates already in db
+        act_set1 = [{'_id': {'username': 'qz',
+                            'year_mod': 2019,
+                            'month_mod': 1,
+                            'day_mod': 1,
+                            'ws_id': 20199994},
+                    'obj_numModified': 94},
+                   {'_id': {'username': 'qz1',
+                            'year_mod': 2019,
+                            'month_mod': 3,
+                            'day_mod': 1,
+                            'ws_id': 20199998},
+                    'obj_numModified': 99},
+                   {'_id': {'username': 'qz',
+                            'year_mod': 2019,
+                            'month_mod': 1,
+                            'day_mod': 2,
+                            'ws_id': 20199995},
+                    'obj_numModified': 95},
+                   {'_id': {'username': 'qz1',
+                            'year_mod': 2019,
+                            'month_mod': 3,
+                            'day_mod': 2,
+                            'ws_id': 20199999},
+                    'obj_numModified': 100}]
+
+        filter_set3 = {'_id.username': 'qz1',
+                       '_id.year_mod': 2019,
+                       '_id.month_mod': 3,
+                       '_id.day_mod': 1,
+                       '_id.ws_id': 20199998}
+        filter_set4 = {'_id.username': 'qz1',
+                       '_id.year_mod': 2019,
+                       '_id.month_mod': 3,
+                       '_id.day_mod': 2,
+                       '_id.ws_id': 20199999}
 
         # before insert
-        db_mn = self.client.metrics.narratives
-        self.assertEqual(len(list(db_mn.find(filter_set1))), 0)
-        self.assertEqual(len(list(db_mn.find(filter_set2))), 0)
+        self.assertEqual(len(list(db_mda.find(filter_set3))), 0)
+        self.assertEqual(len(list(db_mda.find(filter_set4))), 0)
 
         # testing freshly inserted result
-        inst_ret = self.dbi.insert_narrative_records(narr_set)
-        self.assertEqual(len(inst_ret.inserted_ids), 2)
-        self.assertEqual(len(list(db_mn.find(filter_set1))), 1)
-        self.assertEqual(len(list(db_mn.find(filter_set2))), 1)
+        inst_ret1 = self.dbi.insert_activity_records(act_set1)
+        self.assertEqual(inst_ret1, 2)
+        self.assertEqual(len(list(db_mda.find(filter_set1))), 1)
+        self.assertEqual(len(list(db_mda.find(filter_set2))), 1)
+        self.assertEqual(len(list(db_mda.find(filter_set3))), 1)
+        self.assertEqual(len(list(db_mda.find(filter_set4))), 1)
 
-        for mnrecord in db_mn.find(filter_set1):
-            self.assertEqual(mnrecord['nice_name'], 'nice_name_1')
-            self.assertEqual(mnrecord['numObj'], 3)
-        for mnrecord in db_mn.find(filter_set2):
-            self.assertEqual(mnrecord['nice_name'], 'nice_name_2')
-            self.assertEqual(mnrecord['numObj'], 6)
-            self.assertEqual(mnrecord['name'], 'qz1:narrative_1548358542100')
+        # existing records intact
+        for mdarecord in db_mda.find(filter_set1):
+            self.assertEqual(mdarecord['_id']['ws_id'], 20199994)
+            self.assertEqual(mdarecord['obj_numModified'], 94)
+        for mdarecord in db_mda.find(filter_set2):
+            self.assertEqual(mdarecord['_id']['year_mod'], 2019)
+            self.assertEqual(mdarecord['_id']['ws_id'], 20199995)
+            self.assertEqual(mdarecord['obj_numModified'], 95)
+
+        # two new records inserted
+        for mdarecord in db_mda.find(filter_set3):
+            self.assertEqual(mdarecord['_id']['username'], 'qz1')
+            self.assertEqual(mdarecord['_id']['month_mod'], 3)
+            self.assertEqual(mdarecord['_id']['ws_id'], 20199998)
+            self.assertEqual(mdarecord['obj_numModified'], 99)
+        for mdarecord in db_mda.find(filter_set4):
+            self.assertEqual(mdarecord['_id']['username'], 'qz1')
+            self.assertEqual(mdarecord['_id']['month_mod'], 3)
+            self.assertEqual(mdarecord['_id']['ws_id'], 20199999)
+            self.assertEqual(mdarecord['obj_numModified'], 100)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_update_activity_records")
