@@ -941,12 +941,36 @@ class kb_MetricsTest(unittest.TestCase):
         wsids = ['15206', '23165', '27834']
         ws_narrs = self.dbi.list_ws_narratives()
 
+        # test mapping with real data
         self.assertItemsEqual(self.db_controller._map_narrative(
             wsids[0], ws_narrs), ('', '0'))
         self.assertItemsEqual(self.db_controller._map_narrative(
             wsids[1], ws_narrs), ('', '0'))
         self.assertItemsEqual(self.db_controller._map_narrative(
             wsids[2], ws_narrs), ('Staging Test', '1'))
+
+        # test mapping with fake data
+        fake_wnarrs = [{
+                    'meta': [{'k': 'narrative', 'v': '1'},
+                             {'k': 'narrative_nice_name',
+                              'v': 'fake_but_nice'}],
+                    'name': 'joedoe:1468507681406',
+                    'workspace_id': 15206
+                }, {
+                    'meta': [{'k': 'narrative_nice_name',
+                              'v': 'nice_name_ver0'}],
+                    'name': 'abc:1468512987188',
+                    'workspace_id': 23165
+                }, {
+                    'meta': [{'k': 'narrative', 'v': '1'}],
+                    'name': 'wo77:1468515770961',
+                    'workspace_id': 27834}]
+        self.assertItemsEqual(self.db_controller._map_narrative(
+            wsids[0], fake_wnarrs), ('fake_but_nice', '1'))
+        self.assertItemsEqual(self.db_controller._map_narrative(
+            wsids[1], fake_wnarrs), ('nice_name_ver0', '0'))
+        self.assertItemsEqual(self.db_controller._map_narrative(
+            wsids[2], fake_wnarrs), ('wo77:1468515770961', '1'))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_join_task_ujs")
@@ -1127,10 +1151,18 @@ class kb_MetricsTest(unittest.TestCase):
                                                     '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
                                                   '%Y-%m-%dT%H:%M:%S.%fZ')
-
-        # testing update_user_info with given user_ids
         params = {'user_ids': user_list}
         params['epoch_range'] = (start_datetime, end_datetime)
+
+        # testing user access permission
+        err_msg = 'You do not have permission to invoke this action.'
+        not_permitted_u = 'user_joe'
+        with self.assertRaisesRegexp(ValueError, err_msg):
+            upd_ret = self.db_controller._update_user_info(
+                            not_permitted_u,
+                            params, self.getContext()['token'])
+
+        # testing update_user_info with given user_ids
         upd_ret = self.db_controller._update_user_info(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
@@ -1151,9 +1183,17 @@ class kb_MetricsTest(unittest.TestCase):
                                                     '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
                                                   '%Y-%m-%dT%H:%M:%S.%fZ')
+        params = {'epoch_range': (start_datetime, end_datetime)}
+
+        # testing user access permission
+        err_msg = 'You do not have permission to invoke this action.'
+        not_permitted_u = 'user_joe'
+        with self.assertRaisesRegexp(ValueError, err_msg):
+            upd_ret = self.db_controller._update_daily_activities(
+                            not_permitted_u,
+                            params, self.getContext()['token'])
 
         # testing update_daily_activities with given user_ids
-        params = {'epoch_range': (start_datetime, end_datetime)}
         upd_ret = self.db_controller._update_daily_activities(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
@@ -1167,20 +1207,23 @@ class kb_MetricsTest(unittest.TestCase):
         end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
                                                   '%Y-%m-%dT%H:%M:%S.%fZ')
 
-        narr = [{u'object_version': 11, u'workspace_id': 27834, u'numObj': 4,
-                 u'deleted': False, u'object_id': 1,
-                 u'name': u'psdehal:narrative_1513709108341',
-                 u'last_saved_at': datetime.datetime(2018, 1, 24, 19, 35, 30, 1000),
-                 u'nice_name': u'Staging Test',
-                 u'last_saved_by': u'psdehal', u'desc': u''}]
+        params = {'epoch_range': (start_datetime, end_datetime)}
+
+        # testing user access permission
+        err_msg = 'You do not have permission to invoke this action.'
+        not_permitted_u = 'user_joe'
+        with self.assertRaisesRegexp(ValueError, err_msg):
+            upd_ret = self.db_controller._update_narratives(
+                            not_permitted_u,
+                            params, self.getContext()['token'])
 
         # ensure this record does not exist in the db yet
         n_cur = self.dbi.metricsDBs['metrics']['narratives'].find({
-                    'workspace_id': 27834, 'object_id': 1, 'object_version': 11})
+                    'workspace_id': 27834, 'object_id': 1,
+                    'object_version': 11})
         self.assertEqual(len(list(n_cur)), 0)
 
         # testing update_daily_activities with given user_ids
-        params = {'epoch_range': (start_datetime, end_datetime)}
         upd_ret = self.db_controller._update_narratives(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
@@ -1188,7 +1231,8 @@ class kb_MetricsTest(unittest.TestCase):
 
         # confirm this record is upserted into the db
         n_cur = self.dbi.metricsDBs['metrics']['narratives'].find({
-                    'workspace_id': 27834, 'object_id': 1, 'object_version': 11})
+                    'workspace_id': 27834, 'object_id': 1,
+                    'object_version': 11})
         self.assertEqual(len(list(n_cur)), 1)
         self.assertEqual(n_cur['numObj'], 4)
         self.assertEqual(n_cur['name'], 'psdehal:narrative_1513709108341')
