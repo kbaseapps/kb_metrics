@@ -669,8 +669,8 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ws_narratives")
     def test_MetricsMongoDBs_list_ws_narratives(self):
-        minTime = 1468592344887
-        maxTime = 1519768865840
+        minTime = 1468592344887 # 1468467259000
+        maxTime = 1519768865840 # 1516822530001
 
         # Testing with time limit
         ws_narrs = self.dbi.list_ws_narratives(minTime, maxTime)
@@ -705,6 +705,24 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(ws_narrs[23]['numObj'], 4)
         self.assertEqual(ws_narrs[23]['last_saved_at'],
                          datetime.datetime(2018, 1, 24, 19, 35, 30, 1000))
+
+        # testing the broadest time range in the db
+        earliest = 1468454614192
+        latest = 1516822530001
+        ws_narrs = self.dbi.list_ws_narratives(earliest, latest)
+        self.assertEqual(len(ws_narrs), 24)
+
+        # testing only given the lower bound
+        ws_narrs = self.dbi.list_ws_narratives(minT=earliest)
+        self.assertEqual(len(ws_narrs), 24)
+
+        # testing only given the upper bound
+        ws_narrs = self.dbi.list_ws_narratives(maxT=latest)
+        self.assertEqual(len(ws_narrs), 24)
+
+        # testing swap the lower/upper bounds
+        ws_narrs = self.dbi.list_ws_narratives(minT=latest, maxT=earliest)
+        self.assertEqual(len(ws_narrs), 24)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ujs_results")

@@ -291,14 +291,22 @@ class MongoMetricsDBI:
         m_cursor = kbworkspaces.aggregate(pipeline)
         return list(m_cursor)
 
-    def list_ws_narratives(self, minTime=0, maxTime=0):
+    def list_ws_narratives(self, minT=0, maxT=0):
         match_filter = {"del": False,
                         "meta": {"$elemMatch": {"k": "narrative_nice_name"}}}
 
-        if minTime > 0 and maxTime > 0:
+        if minT > 0 and maxT > 0:
+            minTime = min(minT, maxT)
+            maxTime = max(minT, maxT)
             minTime = datetime.datetime.fromtimestamp(minTime / 1000.0)
             maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
             match_filter['moddate'] = {"$gte": minTime, "$lte": maxTime}
+        elif minT > 0:
+            minTime = datetime.datetime.fromtimestamp(minT / 1000.0)
+            match_filter['moddate'] = {"$gte": minTime}
+        elif maxT > 0:
+            maxTime = datetime.datetime.fromtimestamp(maxT / 1000.0)
+            match_filter['moddate'] = {"$lte": maxTime}
 
         # Define the pipeline operations
         pipeline = [
