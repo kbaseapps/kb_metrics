@@ -1434,7 +1434,10 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(app_metrics_ret[0]['method'], 'kb_SPAdes.run_SPAdes')
         self.assertNotIn('finish_time', app_metrics_ret[0])
         self.assertIn('client_groups', app_metrics_ret[0])
-        self.assertIn('njs', app_metrics_ret[0]['client_groups'])
+        if 'ci' in self.cfg['kbase_endpoint']:
+            self.assertIn('njs', app_metrics_ret[0]['client_groups'])
+        else:
+            self.assertIn('bigmemlong', app_metrics_ret[0]['client_groups'])
         self.assertEqual(app_metrics_ret[0]['narrative_name'], 'Staging Test')
         self.assertEqual(app_metrics_ret[0]['workspace_name'],
                          'psdehal:narrative_1513709108341')
