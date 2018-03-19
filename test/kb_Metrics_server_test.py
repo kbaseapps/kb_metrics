@@ -353,23 +353,26 @@ class kb_MetricsTest(unittest.TestCase):
                         'signup_at': dt1, 'last_signin_at': dt2}
         isKBstaff = False
 
+        # record does not exist (yet)
+        db_mu = self.client.metrics.users
+        assert db_mu.find_one(upd_filter_set) is None
+
         # testing freshly upserted result
         upd_ret = self.dbi.update_user_records(upd_filter_set,
                                                upd_data_set, isKBstaff)
 
-        self.assertFalse(upd_ret.raw_result.get('upserted', None) is None)
+        self.assertTrue(upd_ret.raw_result.get('upserted'))
         self.assertFalse(upd_ret.raw_result.get('updatedExisting'))
         self.assertTrue(upd_ret.raw_result.get('ok'))
         self.assertEqual(upd_ret.raw_result.get('n'), 1)
 
-        db_mu = self.client.metrics.users
-        for murecord in db_mu.find({'username': 'test_u1',
-                                    'email': 'test_e1'}):
-            self.assertEqual(murecord['full_name'], 'test_nm1')
-            self.assertEqual(murecord['roles'], [])
-            self.assertEqual(murecord['signup_at'], dt1)
-            self.assertEqual(murecord['last_signin_at'], dt2)
-            self.assertEqual(murecord['kbase_staff'], isKBstaff)
+        murecord = db_mu.find_one({'username': 'test_u1',
+                                   'email': 'test_e1'})
+        self.assertEqual(murecord['full_name'], 'test_nm1')
+        self.assertEqual(murecord['roles'], [])
+        self.assertEqual(murecord['signup_at'], dt1)
+        self.assertEqual(murecord['last_signin_at'], dt2)
+        self.assertEqual(murecord['kbase_staff'], isKBstaff)
 
         # testing updating existing record
         dt2 = datetime.datetime(2018, 3, 13, 1, 35, 30)
@@ -379,19 +382,18 @@ class kb_MetricsTest(unittest.TestCase):
         upd_ret = self.dbi.update_user_records(upd_filter_set,
                                                upd_data_set, isKBstaff)
 
-        self.assertTrue(upd_ret.raw_result.get('upserted', None) is None)
+        self.assertFalse(upd_ret.raw_result.get('upserted'))
         self.assertTrue(upd_ret.raw_result.get('updatedExisting'))
         self.assertTrue(upd_ret.raw_result.get('ok'))
         self.assertEqual(upd_ret.raw_result.get('n'), 1)
 
-        db_mu = self.client.metrics.users
-        for murecord in db_mu.find({'username': 'test_u1',
-                                    'email': 'test_e1'}):
-            self.assertEqual(murecord['full_name'], 'test_nm1')
-            self.assertEqual(murecord['roles'], [])
-            self.assertEqual(murecord['signup_at'], dt1)
-            self.assertEqual(murecord['last_signin_at'], dt2)
-            self.assertEqual(murecord['kbase_staff'], isKBstaff)
+        murecord = db_mu.find_one({'username': 'test_u1',
+                                   'email': 'test_e1'})
+        self.assertEqual(murecord['full_name'], 'test_nm1')
+        self.assertEqual(murecord['roles'], [])
+        self.assertEqual(murecord['signup_at'], dt1)
+        self.assertEqual(murecord['last_signin_at'], dt2)
+        self.assertEqual(murecord['kbase_staff'], isKBstaff)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_insert_activity_records")
@@ -423,8 +425,8 @@ class kb_MetricsTest(unittest.TestCase):
 
         db_mda = self.client.metrics.daily_activities
         # before insert
-        self.assertEqual(len(list(db_mda.find(filter_set1))), 0)
-        self.assertEqual(len(list(db_mda.find(filter_set2))), 0)
+        assert db_mda.find_one(filter_set1) is None
+        assert db_mda.find_one(filter_set2) is None
 
         # testing freshly inserted result
         inst_ret = self.dbi.insert_activity_records(act_set)
@@ -432,13 +434,14 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(list(db_mda.find(filter_set1))), 1)
         self.assertEqual(len(list(db_mda.find(filter_set2))), 1)
 
-        for mdarecord in db_mda.find(filter_set1):
-            self.assertEqual(mdarecord['_id']['ws_id'], 20199994)
-            self.assertEqual(mdarecord['obj_numModified'], 94)
-        for mdarecord in db_mda.find(filter_set2):
-            self.assertEqual(mdarecord['_id']['year_mod'], 2019)
-            self.assertEqual(mdarecord['_id']['ws_id'], 20199995)
-            self.assertEqual(mdarecord['obj_numModified'], 95)
+        mdarecord = db_mda.find_one(filter_set1)
+        self.assertEqual(mdarecord['_id']['ws_id'], 20199994)
+        self.assertEqual(mdarecord['obj_numModified'], 94)
+
+        mdarecord = db_mda.find_one(filter_set2)
+        self.assertEqual(mdarecord['_id']['year_mod'], 2019)
+        self.assertEqual(mdarecord['_id']['ws_id'], 20199995)
+        self.assertEqual(mdarecord['obj_numModified'], 95)
 
         # test inserting data set with duplicates already in db
         act_set1 = [{'_id': {'username': 'qz',
@@ -478,10 +481,10 @@ class kb_MetricsTest(unittest.TestCase):
                        '_id.ws_id': 20199999}
 
         # before insert
-        self.assertEqual(len(list(db_mda.find(filter_set3))), 0)
-        self.assertEqual(len(list(db_mda.find(filter_set4))), 0)
+        assert db_mda.find_one(filter_set3) is None
+        assert db_mda.find_one(filter_set4) is None
 
-        # testing freshly inserted result
+        # testing freshly inserted result, skipped exisiting entries
         inst_ret1 = self.dbi.insert_activity_records(act_set1)
         self.assertEqual(inst_ret1, 2)
         self.assertEqual(len(list(db_mda.find(filter_set1))), 1)
@@ -490,13 +493,14 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(list(db_mda.find(filter_set4))), 1)
 
         # existing records intact
-        for mdarecord in db_mda.find(filter_set1):
-            self.assertEqual(mdarecord['_id']['ws_id'], 20199994)
-            self.assertEqual(mdarecord['obj_numModified'], 94)
-        for mdarecord in db_mda.find(filter_set2):
-            self.assertEqual(mdarecord['_id']['year_mod'], 2019)
-            self.assertEqual(mdarecord['_id']['ws_id'], 20199995)
-            self.assertEqual(mdarecord['obj_numModified'], 95)
+        mdarecord = db_mda.find_one(filter_set1)
+        self.assertEqual(mdarecord['_id']['ws_id'], 20199994)
+        self.assertEqual(mdarecord['obj_numModified'], 94)
+
+        mdarecord = db_mda.find_one(filter_set2)
+        self.assertEqual(mdarecord['_id']['year_mod'], 2019)
+        self.assertEqual(mdarecord['_id']['ws_id'], 20199995)
+        self.assertEqual(mdarecord['obj_numModified'], 95)
 
         # two new records inserted
         for mdarecord in db_mda.find(filter_set3):
@@ -530,10 +534,10 @@ class kb_MetricsTest(unittest.TestCase):
         upd_data_set3 = {'obj_numModified': 93}
 
         db_mda = self.client.metrics.daily_activities
-        self.assertEqual(len(list(db_mda.find(upd_filter_set1))), 0)
-        self.assertEqual(len(list(db_mda.find(upd_filter_set2))), 0)
-        # testing freshly upserted result
+        assert db_mda.find_one(upd_filter_set1) is None
+        assert db_mda.find_one(upd_filter_set2) is None
 
+        # testing freshly upserted result
         upd_ret = self.dbi.update_activity_records(upd_filter_set1,
                                                    upd_data_set1)
         self.assertTrue(upd_ret.raw_result.get('upserted'))
@@ -546,57 +550,56 @@ class kb_MetricsTest(unittest.TestCase):
                                                    upd_data_set2)
         self.assertEqual(len(list(db_mda.find(upd_filter_set2))), 1)
 
-        for mdarecord in db_mda.find(upd_filter_set1):
-            self.assertEqual(mdarecord['obj_numModified'], 91)
-        for mdarecord in db_mda.find(upd_filter_set2):
-            self.assertEqual(mdarecord['obj_numModified'], 92)
+        self.assertEqual(db_mda.find_one(
+                         upd_filter_set1)['obj_numModified'], 91)
+        self.assertEqual(db_mda.find_one(
+                         upd_filter_set2)['obj_numModified'], 92)
 
         # testing updating existing record
         upd_ret = self.dbi.update_activity_records(upd_filter_set2,
                                                    upd_data_set3)
-        self.assertTrue(upd_ret.raw_result.get('upserted', None) is None)
+        self.assertFalse(upd_ret.raw_result.get('upserted'))
         self.assertTrue(upd_ret.raw_result.get('updatedExisting'))
         self.assertTrue(upd_ret.raw_result.get('ok'))
         self.assertEqual(upd_ret.raw_result.get('n'), 1)
-        for mdarecord in db_mda.find(upd_filter_set2):
-            self.assertEqual(mdarecord['obj_numModified'], 93)
+        self.assertEqual(db_mda.find_one(
+                         upd_filter_set2)['obj_numModified'], 93)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_update_narrative_records")
     def test_MetricsMongoDBs_update_narrative_records(self):
         # Fake data
         upd_filter_set1 = {'object_id': 1,
+                           'object_version': 1,
                            'workspace_id': 20199991}
         upd_data_set1 = {'name': 'qz1:narrative_1548358542000',
                          'last_saved_at': datetime.datetime(
                                                 2019, 1, 24, 19, 35, 42),
                          'last_saved_by': 'qz1',
                          'numObj': 3,
-                         'object_version': 1,
                          'nice_name': 'nice_to_have',
                          'desc': '',
                          'deleted': False}
 
         upd_filter_set2 = {'object_id': 1,
+                           'object_version': 1,
                            'workspace_id': 20199992}
         upd_data_set2 = {'name': 'qz1:narrative_1548358542100',
                          'last_saved_at': datetime.datetime(
                                                 2019, 1, 24, 19, 35, 42, 1000),
                          'last_saved_by': 'qz1',
                          'numObj': 5,
-                         'object_version': 1,
                          'nice_name': 'nice_to_have_2',
                          'desc': 'temp_desc',
                          'deleted': False}
 
         upd_data_set3 = {'last_saved_at': datetime.datetime(
                                                 2019, 1, 24, 19, 35, 48, 1000),
-                         'numObj': 7,
-                         'object_version': 2}
+                         'numObj': 7}
 
         db_mn = self.client.metrics.narratives
-        self.assertEqual(len(list(db_mn.find(upd_filter_set1))), 0)
-        self.assertEqual(len(list(db_mn.find(upd_filter_set2))), 0)
+        assert db_mn.find_one(upd_filter_set1) is None
+        assert db_mn.find_one(upd_filter_set2) is None
 
         # testing freshly upserted result
         upd_ret = self.dbi.update_narrative_records(upd_filter_set1,
@@ -611,12 +614,13 @@ class kb_MetricsTest(unittest.TestCase):
                                                     upd_data_set2)
         self.assertEqual(len(list(db_mn.find(upd_filter_set2))), 1)
 
-        for mnrecord in db_mn.find(upd_filter_set1):
-            self.assertEqual(mnrecord['nice_name'], 'nice_to_have')
-            self.assertEqual(mnrecord['numObj'], 3)
-        for mnrecord in db_mn.find(upd_filter_set2):
-            self.assertEqual(mnrecord['nice_name'], 'nice_to_have_2')
-            self.assertEqual(mnrecord['numObj'], 5)
+        mnrecord = db_mn.find_one(upd_filter_set1)
+        self.assertEqual(mnrecord['nice_name'], 'nice_to_have')
+        self.assertEqual(mnrecord['numObj'], 3)
+
+        mnrecord = db_mn.find_one(upd_filter_set2)
+        self.assertEqual(mnrecord['nice_name'], 'nice_to_have_2')
+        self.assertEqual(mnrecord['numObj'], 5)
 
         # testing updating existing record
         upd_ret = self.dbi.update_narrative_records(upd_filter_set2,
@@ -625,11 +629,11 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertTrue(upd_ret.raw_result.get('updatedExisting'))
         self.assertTrue(upd_ret.raw_result.get('ok'))
         self.assertEqual(upd_ret.raw_result.get('n'), 1)
-        for mnrecord in db_mn.find(upd_filter_set2):
-            self.assertEqual(mnrecord['last_saved_at'],
-                             datetime.datetime(2019, 1, 24, 19, 35, 48, 1000))
-            self.assertEqual(mnrecord['numObj'], 7)
-            self.assertEqual(mnrecord['object_version'], 2)
+
+        mnrecord = db_mn.find_one(upd_filter_set2)
+        self.assertEqual(mnrecord['last_saved_at'],
+                         datetime.datetime(2019, 1, 24, 19, 35, 48, 1000))
+        self.assertEqual(mnrecord['numObj'], 7)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_get_user_info")
