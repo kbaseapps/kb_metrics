@@ -673,8 +673,8 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ws_narratives")
     def test_MetricsMongoDBs_list_ws_narratives(self):
-        minTime = 1468592344887 # 1468467259000
-        maxTime = 1519768865840 # 1516822530001
+        minTime = 1468592344887
+        maxTime = 1519768865840
 
         # Testing with time limit
         ws_narrs = self.dbi.list_ws_narratives(minTime, maxTime)
@@ -1324,6 +1324,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(ujs[0]['method'], 'kb_deseq.run_deseq2_app')
         self.assertEqual(ujs[0]['finish_time'], 1500001203182)
         self.assertIn('client_groups', ujs[0])
+        self.assertIn('njs', ujs[0]['client_groups'])
         self.assertEqual(ujs[0]['workspace_name'], 'tgu2:1481170361822')
 
     # Uncomment to skip this test
