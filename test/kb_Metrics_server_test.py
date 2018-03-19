@@ -56,8 +56,12 @@ class kb_MetricsTest(unittest.TestCase):
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
         cls.db_controller = MetricsMongoDBController(cls.cfg)
 
-        cls.client = MongoClient(port=27017)
-        cls.init_mongodb()
+        cls.dbi = MongoMetricsDBI(cls.cfg.get('mongodb-host'),
+				  db_names,
+				  cls.cfg.get('mongodb-user'),
+				  cls.cfg.get('password'))
+        # cls.client = MongoClient(port=27017)
+        # cls.init_mongodb()
 
     @classmethod
     def tearDownClass(cls):
@@ -1434,7 +1438,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(app_metrics_ret[0]['method'], 'kb_SPAdes.run_SPAdes')
         self.assertNotIn('finish_time', app_metrics_ret[0])
         self.assertIn('client_groups', app_metrics_ret[0])
-        if 'ci' in self.cfg['kbase_endpoint']:
+        if 'ci' in self.cfg['kbase-endpoint']:
             self.assertIn('njs', app_metrics_ret[0]['client_groups'])
         else:
             self.assertIn('bigmemlong', app_metrics_ret[0]['client_groups'])
