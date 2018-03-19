@@ -55,7 +55,6 @@ class kb_MetricsTest(unittest.TestCase):
         cls.scratch = cls.cfg['scratch']
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
         cls.db_controller = MetricsMongoDBController(cls.cfg)
-
         cls.client = MongoClient(port=27017)
         cls.init_mongodb()
 
@@ -445,29 +444,29 @@ class kb_MetricsTest(unittest.TestCase):
 
         # test inserting data set with duplicates already in db
         act_set1 = [{'_id': {'username': 'qz',
-                            'year_mod': 2019,
-                            'month_mod': 1,
-                            'day_mod': 1,
-                            'ws_id': 20199994},
-                    'obj_numModified': 94},
-                   {'_id': {'username': 'qz1',
-                            'year_mod': 2019,
-                            'month_mod': 3,
-                            'day_mod': 1,
-                            'ws_id': 20199998},
-                    'obj_numModified': 99},
-                   {'_id': {'username': 'qz',
-                            'year_mod': 2019,
-                            'month_mod': 1,
-                            'day_mod': 2,
-                            'ws_id': 20199995},
-                    'obj_numModified': 95},
-                   {'_id': {'username': 'qz1',
-                            'year_mod': 2019,
-                            'month_mod': 3,
-                            'day_mod': 2,
-                            'ws_id': 20199999},
-                    'obj_numModified': 100}]
+                             'year_mod': 2019,
+                             'month_mod': 1,
+                             'day_mod': 1,
+                             'ws_id': 20199994},
+                     'obj_numModified': 94},
+                    {'_id': {'username': 'qz1',
+                             'year_mod': 2019,
+                             'month_mod': 3,
+                             'day_mod': 1,
+                             'ws_id': 20199998},
+                     'obj_numModified': 99},
+                    {'_id': {'username': 'qz',
+                             'year_mod': 2019,
+                             'month_mod': 1,
+                             'day_mod': 2,
+                             'ws_id': 20199995},
+                     'obj_numModified': 95},
+                    {'_id': {'username': 'qz1',
+                             'year_mod': 2019,
+                             'month_mod': 3,
+                             'day_mod': 2,
+                             'ws_id': 20199999},
+                     'obj_numModified': 100}]
 
         filter_set3 = {'_id.username': 'qz1',
                        '_id.year_mod': 2019,
@@ -1015,6 +1014,72 @@ class kb_MetricsTest(unittest.TestCase):
             wsids[2], fake_wnarrs), ('wo77:1468515770961', '1'))
 
     # Uncomment to skip this test
+    # @unittecst.skip("skipped test_db_controller_convert_isodate_to_millis")
+    def test_db_controller_convert_isodate_to_millis(self):
+        cdt1 = {'milis': 1500040533893,
+                'date': datetime.datetime(2017, 7, 14, 13, 55, 33, 893000)}
+        sdt1 = {'milis': 1500040545623,
+                'date': datetime.datetime(2017, 7, 14, 13, 55, 45, 623000)}
+        udt1 = {'milis': 1500040626665,
+                'date': datetime.datetime(2017, 7, 14, 13, 57, 6, 665000)}
+        cdt2 = {'milis': 1500040565733,
+                'date': datetime.datetime(2017, 7, 14, 13, 56, 5, 733000)}
+        sdt2 = {'milis': 1500040575585,
+                'date': datetime.datetime(2017, 7, 14, 13, 56, 15, 585000)}
+        udt2 = {'milis': 1500040661079,
+                'date': datetime.datetime(2017, 7, 14, 13, 57, 41, 79000)}
+        cdt3 = {'milis': 1500046845485,
+                'date': datetime.datetime(2017, 7, 14, 15, 40, 45, 485000)}
+        sdt3 = {'milis': 1500046850810,
+                'date': datetime.datetime(2017, 7, 14, 15, 40, 50, 810000)}
+        udt3 = {'milis':  1500047709785,
+                'date': datetime.datetime(2017, 7, 14, 15, 55, 9, 785000)}
+        input_data = [{
+                'created': cdt1['date'],
+                'started': sdt1['date'],
+                'updated': udt1['date'],
+                'user': 'user1'}, {
+                'created': cdt2['date'],
+                'started': sdt2['date'],
+                'updated': udt2['date'],
+                'user': 'user2'}, {
+                'created': cdt3['date'],
+                'started': sdt3['date'],
+                'updated': udt3['date'],
+                'user': 'user3'}]
+        output_data = self.db_controller._convert_isodate_to_millis(
+                           input_data, ['created', 'started', 'updated'])
+        for dt in output_data:
+            if dt['user'] == 'user1':
+                self.assertEqual(dt['created'], cdt1['milis'])
+                self.assertEqual(dt['started'], sdt1['milis'])
+                self.assertEqual(dt['updated'], udt1['milis'])
+            if dt['user'] == 'user2':
+                self.assertEqual(dt['created'], cdt2['milis'])
+                self.assertEqual(dt['started'], sdt2['milis'])
+                self.assertEqual(dt['updated'], udt2['milis'])
+            if dt['user'] == 'user3':
+                self.assertEqual(dt['created'], cdt3['milis'])
+                self.assertEqual(dt['started'], sdt3['milis'])
+                self.assertEqual(dt['updated'], udt3['milis'])
+
+        target_ret_data = [{
+              'created': cdt1['milis'],
+              'started': sdt1['milis'],
+              'updated': udt1['milis'],
+              'user': 'user1'}, {
+              'created': cdt2['milis'],
+              'started': sdt2['milis'],
+              'updated': udt2['milis'],
+              'user': 'user2'}, {
+              'created': cdt3['milis'],
+              'started': sdt3['milis'],
+              'updated': udt3['milis'],
+              'user': 'user3'}]
+        # checking convertions
+        self.assertItemsEqual(output_data, target_ret_data)
+
+    # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_join_task_ujs")
     def test_MetricsMongoDBController_join_task_ujs(self):
         # testing data sets
@@ -1434,7 +1499,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(app_metrics_ret[0]['method'], 'kb_SPAdes.run_SPAdes')
         self.assertNotIn('finish_time', app_metrics_ret[0])
         self.assertIn('client_groups', app_metrics_ret[0])
-        if 'ci' in self.cfg['kbase_endpoint']:
+        if 'ci' in self.cfg['kbase-endpoint']:
             self.assertIn('njs', app_metrics_ret[0]['client_groups'])
         else:
             self.assertIn('bigmemlong', app_metrics_ret[0]['client_groups'])
