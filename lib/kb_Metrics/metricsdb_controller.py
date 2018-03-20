@@ -84,10 +84,6 @@ class MetricsMongoDBController:
         update user info
         If match not found, insert that record as new.
         """
-        if not self._is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to '
-                             'invoke this action.')
-
         params = self._process_parameters(params)
         auth2_ret = self.metrics_dbi.aggr_user_details(
             params['user_ids'], params['minTime'], params['maxTime'])
@@ -95,7 +91,7 @@ class MetricsMongoDBController:
         upSerted = 0
         if len(auth2_ret) == 0:
             print("No user records returned for update!")
-            return (0, 0)
+            return 0
 
         print('Retrieved {} user record(s) for update!'.format(len(auth2_ret)))
         idKeys = ['username', 'email']
@@ -128,8 +124,8 @@ class MetricsMongoDBController:
         upDated = 0
         upSerted = 0
         if len(act_list) == 0:
-            print("No activity records returned for update!")
-            return (0, 0)
+            print("No daily activity records returned for update!")
+            return 0
 
         print('Retrieved {} activity record(s) for '
               'update!'.format(len(act_list)))
@@ -197,12 +193,6 @@ class MetricsMongoDBController:
         Based on the narratives in workspace.workspaceObjects, if additional
         info available then add to existing data from workspace.workspaces.
         """
-        if not self._is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
-
-        if self.ws_narratives is None:
-            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
-
         params = self._process_parameters(params)
 
         ws_narrs = copy.deepcopy(self.ws_narratives)

@@ -1232,6 +1232,10 @@ class kb_MetricsTest(unittest.TestCase):
 
         params = {'epoch_range': (start_datetime, end_datetime)}
 
+        if self.db_controller.ws_narratives is None:
+            dbi = self.db_controller.metrics_dbi
+            self.db_controller.ws_narratives = dbi.list_ws_narratives()
+
         # testing if the data has expected structure
         narr_ret = self.db_controller._get_narratives_from_wsobjs(
                 self.getContext()['user_id'],
@@ -1261,14 +1265,6 @@ class kb_MetricsTest(unittest.TestCase):
         params = {'user_ids': user_list}
         params['epoch_range'] = (start_datetime, end_datetime)
 
-        # testing user access permission
-        err_msg = 'You do not have permission to invoke this action.'
-        not_permitted_u = 'user_joe'
-        with self.assertRaisesRegexp(ValueError, err_msg):
-            upd_ret = self.db_controller._update_user_info(
-                            not_permitted_u,
-                            params, self.getContext()['token'])
-
         # testing update_user_info with given user_ids
         upd_ret = self.db_controller._update_user_info(
                 self.getContext()['user_id'],
@@ -1283,6 +1279,13 @@ class kb_MetricsTest(unittest.TestCase):
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret, 37)
 
+        # testing update_user_info with no match to update
+        params = {'user_ids': ['abc1', 'abc2', 'abc3']}
+        upd_ret = self.db_controller._update_user_info(
+                self.getContext()['user_id'],
+                params, self.getContext()['token'])
+        self.assertEqual(upd_ret, 0)
+
     # Uncomment to skip this test
     # @unittest.skip("skipped _update_daily_activities")
     def test_MetricsMongoDBController_update_daily_activities(self):
@@ -1292,19 +1295,22 @@ class kb_MetricsTest(unittest.TestCase):
                                                   '%Y-%m-%dT%H:%M:%S.%fZ')
         params = {'epoch_range': (start_datetime, end_datetime)}
 
-        # testing user access permission
-        err_msg = 'You do not have permission to invoke this action.'
-        not_permitted_u = 'user_joe'
-        with self.assertRaisesRegexp(ValueError, err_msg):
-            upd_ret = self.db_controller._update_daily_activities(
-                            not_permitted_u,
-                            params, self.getContext()['token'])
-
         # testing update_daily_activities with given user_ids
         upd_ret = self.db_controller._update_daily_activities(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret, 8)
+
+        # testing update_daily_activities with no match to update
+        start_datetime = datetime.datetime.strptime('2018-03-25T00:00:00+0000',
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
+        end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
+        params = {'epoch_range': (start_datetime, end_datetime)}
+        upd_ret = self.db_controller._update_daily_activities(
+                self.getContext()['user_id'],
+                params, self.getContext()['token'])
+        self.assertEqual(upd_ret, 0)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped _update_narratives")

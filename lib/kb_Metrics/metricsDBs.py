@@ -60,13 +60,9 @@ class MongoMetricsDBI:
             # return an instance of UpdateResult(raw_result, acknowledged)
             update_ret = self.mt_users.update_one(upd_filter,
                                                   upd_op, upsert=True)
-        except WriteError as we:
-            # pprint(we.details['writeErrors'])
-            panic = filter(lambda x: x['code'] != 11000,
-                           we.details['writeErrors'])
-            if len(panic) > 0:
-                print "really panic"
-                raise
+        except Exception, e:
+            print str(e)
+            raise
         return update_ret
 
     def update_activity_records(self, upd_filter, upd_data):
@@ -84,13 +80,9 @@ class MongoMetricsDBI:
             # return an instance of UpdateResult(raw_result, acknowledged)
             update_ret = self.mt_coll.update_one(upd_filter,
                                                  upd_op, upsert=True)
-        except WriteError as we:
-            # pprint(we.details['writeErrors'])
-            panic = filter(lambda x: x['code'] != 11000,
-                           we.details['writeErrors'])
-            if len(panic) > 0:
-                print "really panic"
-                raise
+        except Exception, e:
+            print str(e)
+            raise
         return update_ret
 
     def insert_activity_records(self, mt_docs):
