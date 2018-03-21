@@ -1348,11 +1348,10 @@ class kb_MetricsTest(unittest.TestCase):
                                               '%Y-%m-%dT%H:%M:%S+0000')
         end_dt = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
                                             '%Y-%m-%dT%H:%M:%S.%fZ')
-        params1 = {'epoch_range': (start_dt, end_dt)}
-        pprint(params1)
+        params = {'epoch_range': (start_dt, end_dt)}
         upd_ret1 = self.db_controller._update_narratives(
                 self.getContext()['user_id'],
-                params1, self.getContext()['token'])
+                params, self.getContext()['token'])
         self.assertEqual(upd_ret1, 0)
 
     # Uncomment to skip this test
