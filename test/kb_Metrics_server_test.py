@@ -763,15 +763,16 @@ class kb_MetricsTest(unittest.TestCase):
     def test_MetricsMongoDBController_constructor(self):
         cfg_arr = self.cfg
         # testing if all the required parameters are given
+        # if yes, no error is raised
         with self.assertRaises(ValueError):
             try:
                 cfg_arr = self.cfg
-                db_ctr1 = MetricsMongoDBController(cfg_arr)
+                MetricsMongoDBController(cfg_arr)
             except ValueError:
                 pass
             else:
                 raise ValueError
-        # testing if all the required parameters are given, with an empty value
+        # testing if all the required parameters are given, with an empty host
         with self.assertRaises(ValueError):
             try:
                 cfg_arr = self.cfg
