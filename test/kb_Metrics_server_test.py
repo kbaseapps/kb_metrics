@@ -776,7 +776,7 @@ class kb_MetricsTest(unittest.TestCase):
             try:
                 cfg_arr = self.cfg
                 cfg_arr['mongodb-host'] = ''
-                db_ctr1 = MetricsMongoDBController(cfg_arr)
+                MetricsMongoDBController(cfg_arr)
             except ValueError:
                 pass
             else:
@@ -791,7 +791,7 @@ class kb_MetricsTest(unittest.TestCase):
             cfg_arr = copy.deepcopy(self.cfg)
             cfg_arr.pop(k)
             with self.assertRaisesRegexp(ValueError, error_msg):
-                db_ctr2 = MetricsMongoDBController(cfg_arr)
+                MetricsMongoDBController(cfg_arr)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBController_config_str_to_list")
@@ -923,6 +923,28 @@ class kb_MetricsTest(unittest.TestCase):
                             'exec_engine', 'auth2']
         self.assertItemsEqual(self.db_controller.mongodb_dbList,
                               expected_db_list)
+
+    # Uncomment to skip this test
+    # @unittest.skip("test _is_admin")
+    def test_db_controller_is_admin(self):
+        # testing user access permission
+        not_permitted_u = 'user_joe'
+        self.assertFalse(self.db_controller._is_admin(
+                                             not_permitted_u))
+        permitted_u = 'qzhang'
+        self.assertTrue(self.db_controller._is_admin(
+                                            permitted_u))
+
+    # Uncomment to skip this test
+    # @unittest.skip("test _is_metrics_admin")
+    def test_db_controller_is_metrics_admin(self):
+        # testing user access permission
+        not_permitted_u = 'user_joe'
+        self.assertFalse(self.db_controller._is_metrics_admin(
+                                             not_permitted_u))
+        permitted_u = 'qzhang'
+        self.assertTrue(self.db_controller._is_metrics_admin(
+                                            permitted_u))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_db_controller_parse_app_id_method")
@@ -1357,6 +1379,13 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBController_get_user_job_states")
     def test_MetricsMongoDBController_get_user_job_states(self):
+        # testing requesting user access permission
+        requesting_user1 = 'qzhang'
+        self.assertTrue(self.db_controller._is_admin(requesting_user1))
+
+        requesting_user2 = 'JohnDoe'
+        self.assertFalse(self.db_controller._is_admin(requesting_user2))
+
         # testing if the data has expected structure and values
         user_list = ['tgu2', 'umaganapathyswork', 'arfath']
         params = {'user_ids': user_list}
@@ -1369,9 +1398,10 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(input_params.get('minTime'), 1500000932000)
         self.assertEqual(input_params.get('maxTime'), 1500048533956)
 
+        # testing the requesting user is an admin
         ujs_ret = self.db_controller.get_user_job_states(
-                self.getContext()['user_id'],
-                input_params, self.getContext()['token'])
+                    requesting_user1,
+                    input_params, self.getContext()['token'])
         ujs = ujs_ret['job_states']
         self.assertEqual(len(ujs), 16)
 
@@ -1382,6 +1412,37 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('client_groups', ujs[0])
         self.assertIn('njs', ujs[0]['client_groups'])
         self.assertEqual(ujs[0]['workspace_name'], 'tgu2:1481170361822')
+        self.assertEqual(params['user_ids'], user_list)
+
+        # testing the requesting user is not an admin and with no data
+        ujs_ret = self.db_controller.get_user_job_states(
+                requesting_user2,
+                input_params, self.getContext()['token'])
+        ujs = ujs_ret['job_states']
+        self.assertEqual(len(ujs), 0)
+        self.assertEqual(params['user_ids'], [requesting_user2])
+
+        # testing the requesting user is not an admin but has job(s)
+        requesting_user3 = 'arfath'
+        self.assertFalse(self.db_controller._is_admin(requesting_user3))
+        ujs_ret = self.db_controller.get_user_job_states(
+                requesting_user3,
+                input_params, self.getContext()['token'])
+        ujs = ujs_ret['job_states']
+        self.assertEqual(len(ujs), 2)
+        self.assertFalse(ujs[0].get('wsid'))
+        self.assertEqual(
+                    ujs[0]['app_id'],
+                    'kb_rnaseq_donwloader/export_rna_seq_expression_as_zip')
+        self.assertEqual(
+                    ujs[0]['method'],
+                    'kb_rnaseq_donwloader.export_rna_seq_expression_as_zip')
+        self.assertEqual(ujs[0]['finish_time'], 1500040626665)
+        self.assertIn('client_groups', ujs[0])
+        self.assertIn('njs', ujs[0]['client_groups'])
+        self.assertFalse(ujs[0].get('workspace_name'))
+        self.assertEqual(ujs[0]['user'], requesting_user3)
+        self.assertEqual(params['user_ids'], [requesting_user3])
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_get_user_details")
@@ -1556,6 +1617,15 @@ class kb_MetricsTest(unittest.TestCase):
             'epoch_range': (datetime.datetime(2018, 1, 1),
                             datetime.datetime(2018, 3, 31))
         }
+
+        # testing user access permission
+        err_msg = 'You do not have permission to invoke this action.'
+        not_permitted_u = 'user_joe'
+        with self.assertRaisesRegexp(ValueError, err_msg):
+            upd_ret = self.db_controller.update_metrics(
+                            not_permitted_u,
+                            m_params, self.getContext()['token'])
+
         ret = self.getImpl().update_metrics(self.getContext(), m_params)
         upds = ret[0]['metrics_result']
         self.assertEqual(upds['user_updates'], 37)
