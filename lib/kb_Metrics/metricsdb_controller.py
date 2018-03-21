@@ -114,10 +114,6 @@ class MetricsMongoDBController:
         update user activities reported from Workspace.
         If match not found, insert that record as new.
         """
-        if not self._is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to '
-                             'invoke this action.')
-
         ws_ret = self._get_activities_from_wsobjs(requesting_user,
                                                   params, token)
         act_list = ws_ret['metrics_result']
@@ -150,10 +146,6 @@ class MetricsMongoDBController:
         update user narratives reported from Workspace.
         If match not found, insert that record as new.
         """
-        if not self._is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to '
-                             'invoke this action.')
-
         ws_ret = self._get_narratives_from_wsobjs(requesting_user,
                                                   params, token)
         narr_list = ws_ret['metrics_result']
@@ -161,7 +153,7 @@ class MetricsMongoDBController:
         upSerted = 0
         if len(narr_list) == 0:
             print("No narrative records returned for update!")
-            return (0, 0)
+            return 0
 
         print('Retrieved {} narratives record(s) for '
               'update!'.format(len(narr_list)))
@@ -193,13 +185,18 @@ class MetricsMongoDBController:
         Based on the narratives in workspace.workspaceObjects, if additional
         info available then add to existing data from workspace.workspaces.
         """
+        # 0. get the ws_narrative and client_groups data for lookups
+        if self.ws_narratives is None:
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+        if self.client_groups is None:
+            self.client_groups = self._get_client_groups_from_cat(token)
+
         params = self._process_parameters(params)
 
         ws_narrs = copy.deepcopy(self.ws_narratives)
         ws_ids = [wnarr['workspace_id'] for wnarr in ws_narrs]
         wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(
             params['minTime'], params['maxTime'], ws_ids)
-
         ws_narrs1 = []
         for wn in ws_narrs:
             for obj in wsobjs:
@@ -231,8 +228,11 @@ class MetricsMongoDBController:
         return {'metrics_result': ws_narrs1}
 
     def _get_activities_from_wsobjs(self, requesting_user, params, token):
-        if not self._is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
+        # 0. get the ws_narrative and client_groups data for lookups
+        if self.ws_narratives is None:
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+        if self.client_groups is None:
+            self.client_groups = self._get_client_groups_from_cat(token)
 
         params = self._process_parameters(params)
 
@@ -448,12 +448,6 @@ class MetricsMongoDBController:
         if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to '
                              'invoke this action.')
-
-        # 0. get the ws_narrative and client_groups data for lookups
-        if self.ws_narratives is None:
-            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
-        if self.client_groups is None:
-            self.client_groups = self._get_client_groups_from_cat(token)
 
         # 1. update users
         action_result1 = self._update_user_info(

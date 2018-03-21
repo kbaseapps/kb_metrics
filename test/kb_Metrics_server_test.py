@@ -1232,10 +1232,6 @@ class kb_MetricsTest(unittest.TestCase):
 
         params = {'epoch_range': (start_datetime, end_datetime)}
 
-        if self.db_controller.ws_narratives is None:
-            dbi = self.db_controller.metrics_dbi
-            self.db_controller.ws_narratives = dbi.list_ws_narratives()
-
         # testing if the data has expected structure
         narr_ret = self.db_controller._get_narratives_from_wsobjs(
                 self.getContext()['user_id'],
@@ -1322,21 +1318,14 @@ class kb_MetricsTest(unittest.TestCase):
 
         params = {'epoch_range': (start_datetime, end_datetime)}
 
-        # testing user access permission
-        err_msg = 'You do not have permission to invoke this action.'
-        not_permitted_u = 'user_joe'
-        with self.assertRaisesRegexp(ValueError, err_msg):
-            upd_ret = self.db_controller._update_narratives(
-                            not_permitted_u,
-                            params, self.getContext()['token'])
-
         # ensure this record does not exist in the db yet
         n_cur = self.dbi.metricsDBs['metrics']['narratives'].find({
                     'workspace_id': 27834, 'object_id': 1,
                     'object_version': 11})
         self.assertEqual(len(list(n_cur)), 0)
 
-        # testing update_daily_activities with given user_ids
+        print('*********test non-0 narrative updates*******')
+        # testing update_narratives with given user_ids
         upd_ret = self.db_controller._update_narratives(
                 self.getContext()['user_id'],
                 params, self.getContext()['token'])
@@ -1353,6 +1342,19 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(n_cur['last_saved_by'], 'psdehal')
         self.assertEqual(n_cur['last_saved_at'],
                          datetime.datetime(2018, 1, 24, 19, 35, 30, 1000))
+
+        print('*********test 0 narrative updates*******')
+        # testing update_narratives with no match to update
+        start_dt = datetime.datetime.strptime('2018-03-25T00:00:00+0000',
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
+        end_dt = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
+        params1 = {'epoch_range': (start_dt, end_dt)}
+        pprint(params1)
+        upd_ret1 = self.db_controller._update_narratives(
+                self.getContext()['user_id'],
+                params1, self.getContext()['token'])
+        self.assertEqual(upd_ret1, 0)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_update_narratives")
