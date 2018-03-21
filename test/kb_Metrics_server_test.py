@@ -1324,7 +1324,6 @@ class kb_MetricsTest(unittest.TestCase):
                     'object_version': 11})
         self.assertEqual(len(list(n_cur)), 0)
 
-        print('*********test non-0 narrative updates*******')
         # testing update_narratives with given user_ids
         upd_ret = self.db_controller._update_narratives(
                 self.getContext()['user_id'],
@@ -1335,41 +1334,26 @@ class kb_MetricsTest(unittest.TestCase):
         n_cur = self.dbi.metricsDBs['metrics']['narratives'].find({
                     'workspace_id': 27834, 'object_id': 1,
                     'object_version': 11})
-        self.assertEqual(len(list(n_cur)), 1)
-        self.assertEqual(n_cur['numObj'], 4)
-        self.assertEqual(n_cur['name'], 'psdehal:narrative_1513709108341')
-        self.assertEqual(n_cur['nice_name'], 'Staging Test')
-        self.assertEqual(n_cur['last_saved_by'], 'psdehal')
-        self.assertEqual(n_cur['last_saved_at'],
+        n_list = list(n_cur)
+        self.assertEqual(len(n_list), 1)
+        self.assertEqual(n_list[0]['numObj'], 4)
+        self.assertEqual(n_list[0]['name'], 'psdehal:narrative_1513709108341')
+        self.assertEqual(n_list[0]['nice_name'], 'Staging Test')
+        self.assertEqual(n_list[0]['last_saved_by'], 'psdehal')
+        self.assertEqual(n_list[0]['last_saved_at'],
                          datetime.datetime(2018, 1, 24, 19, 35, 30, 1000))
 
-        print('*********test 0 narrative updates*******')
-        # testing update_narratives with no match to update
+        # testing 0 narrative updates
         start_dt = datetime.datetime.strptime('2018-03-25T00:00:00+0000',
-                                                    '%Y-%m-%dT%H:%M:%S+0000')
+                                              '%Y-%m-%dT%H:%M:%S+0000')
         end_dt = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
-                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
+                                            '%Y-%m-%dT%H:%M:%S.%fZ')
         params1 = {'epoch_range': (start_dt, end_dt)}
         pprint(params1)
         upd_ret1 = self.db_controller._update_narratives(
                 self.getContext()['user_id'],
                 params1, self.getContext()['token'])
         self.assertEqual(upd_ret1, 0)
-
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBController_update_narratives")
-    def test_MetricsMongoDBController_update_narratives(self):
-        start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
-                                                    '%Y-%m-%dT%H:%M:%S+0000')
-        end_datetime = datetime.datetime.strptime('2018-03-31T00:00:10.000Z',
-                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
-
-        # testing update_narratives with given user_ids
-        params = {'epoch_range': (start_datetime, end_datetime)}
-        upd_ret = self.db_controller._update_narratives(
-                self.getContext()['user_id'],
-                params, self.getContext()['token'])
-        self.assertEqual(upd_ret, 1)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBController_get_user_job_states")

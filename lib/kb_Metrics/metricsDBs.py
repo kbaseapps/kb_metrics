@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 import datetime
 from pymongo import ASCENDING
-from pymongo.errors import BulkWriteError
+from pymongo.errors import BulkWriteError, WriteError
 from kb_Metrics.Util import _convert_to_datetime
 
 
@@ -80,8 +80,8 @@ class MongoMetricsDBI:
             # return an instance of UpdateResult(raw_result, acknowledged)
             update_ret = self.mt_coll.update_one(upd_filter,
                                                  upd_op, upsert=True)
-        except Exception, e:
-            print str(e)
+        except WriteError as we:
+            pprint(we.details['writeErrors'])
             raise
         return update_ret
 
@@ -133,12 +133,8 @@ class MongoMetricsDBI:
             update_ret = self.mt_narrs.update_one(upd_filter,
                                                   upd_op, upsert=True)
         except WriteError as we:
-            # pprint(we.details['writeErrors'])
-            panic = filter(lambda x: x['code'] != 11000,
-                           we.details['writeErrors'])
-            if len(panic) > 0:
-                print "really panic"
-                raise
+            pprint(we.details['writeErrors'])
+            raise
         else:
             # re-touch the newly inserted records
             self.mt_narrs.update({'access_count': {'$exists': False}},
