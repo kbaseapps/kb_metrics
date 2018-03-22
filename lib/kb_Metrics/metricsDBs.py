@@ -34,12 +34,9 @@ class MongoMetricsDBI:
         self.metricsDBs = dict()
         for m_db in mongo_dbs:
             # create the client and authenticate
-            if mongo_host:
-                self.mongo_clients[m_db] = MongoClient(
-                    "mongodb://" + mongo_user + ":" + mongo_psswd +
-                    "@" + mongo_host + "/" + m_db)
-            else:  # default to localhost:27017
-                self.mongo_clients[m_db] = MongoClient()
+            self.mongo_clients[m_db] = MongoClient(
+                "mongodb://" + mongo_user + ":" + mongo_psswd +
+                "@" + mongo_host + "/" + m_db)
             # grab a handle to the database
             self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
 
@@ -60,9 +57,9 @@ class MongoMetricsDBI:
             # return an instance of UpdateResult(raw_result, acknowledged)
             update_ret = self.mt_users.update_one(upd_filter,
                                                   upd_op, upsert=True)
-        except Exception, e:
-            print str(e)
-            raise
+        except WriteError as we:
+            print('WriteError caught')
+            raise we
         return update_ret
 
     def update_activity_records(self, upd_filter, upd_data):
@@ -81,8 +78,8 @@ class MongoMetricsDBI:
             update_ret = self.mt_coll.update_one(upd_filter,
                                                  upd_op, upsert=True)
         except WriteError as we:
-            pprint(we.details['writeErrors'])
-            raise
+            print('WriteError caught')
+            raise we
         return update_ret
 
     def insert_activity_records(self, mt_docs):
