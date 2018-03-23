@@ -6,7 +6,8 @@ import time
 import datetime
 import copy
 from pymongo import MongoClient
-
+from pymongo.collection import Collection
+from mock import patch
 from os import environ
 try:
     from ConfigParser import ConfigParser  # py2
@@ -14,6 +15,7 @@ except ImportError:
     from configparser import ConfigParser  # py3
 
 from pprint import pprint, pformat  # noqa: F401
+from pymongo.errors import BulkWriteError, WriteError
 
 from biokbase.workspace.client import Workspace as workspaceService
 from kb_Metrics.kb_MetricsImpl import kb_Metrics
@@ -164,13 +166,11 @@ class kb_MetricsTest(unittest.TestCase):
                     upsert=False
                 )
 
-        db_names = cls.client.database_names()
-        for db in db_names:
+        cls.db_names = cls.client.database_names()
+        for db in cls.db_names:
             if db != 'local':
                 cls.client[db].command("createUser", "admin",
                                        pwd="password", roles=["readWrite"])
-
-        cls.dbi = MongoMetricsDBI('', db_names, 'admin', 'password')
 
     @classmethod
     def _insert_data(cls, client, db_name, table):
@@ -205,35 +205,47 @@ class kb_MetricsTest(unittest.TestCase):
     def getContext(self):
         return self.__class__.ctx
 
+    def mock_MongoMetricsDBI(self, mongo_host, mongo_dbs,
+                             mongo_user, mongo_psswd):
+        self.mongo_clients = dict()
+        self.metricsDBs = dict()
+        for m_db in mongo_dbs:
+            self.mongo_clients[m_db] = MongoClient()
+            self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
+
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_constructor")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_constructor(self):
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing if the db is connected and handshakes cab be made
-        exec_cur = self.dbi.metricsDBs['exec_engine']['exec_tasks'].find()
+        exec_cur = dbi.metricsDBs['exec_engine']['exec_tasks'].find()
         self.assertEqual(len(list(exec_cur)), 84)
-        ws_cur = self.dbi.metricsDBs['workspace']['workspaces'].find()
+        ws_cur = dbi.metricsDBs['workspace']['workspaces'].find()
         self.assertEqual(len(list(ws_cur)), 27)
-        wsobj_cur = self.dbi.metricsDBs['workspace']['workspaceObjects'].find()
+        wsobj_cur = dbi.metricsDBs['workspace']['workspaceObjects'].find()
         self.assertEqual(len(list(wsobj_cur)), 41)
-        ujs_cur = self.dbi.metricsDBs['userjobstate']['jobstate'].find()
+        ujs_cur = dbi.metricsDBs['userjobstate']['jobstate'].find()
         self.assertEqual(len(list(ujs_cur)), 36)
-        a_users_cur = self.dbi.metricsDBs['auth2']['users'].find()
+        a_users_cur = dbi.metricsDBs['auth2']['users'].find()
         self.assertEqual(len(list(a_users_cur)), 37)
-        m_users_cur = self.dbi.metricsDBs['metrics']['users'].find()
+        m_users_cur = dbi.metricsDBs['metrics']['users'].find()
         self.assertTrue(len(list(m_users_cur)), 37)
-        act_cur = self.dbi.metricsDBs['metrics']['daily_activities'].find()
+        act_cur = dbi.metricsDBs['metrics']['daily_activities'].find()
         self.assertTrue(len(list(act_cur)) >= 1603)
-        narrs_cur = self.dbi.metricsDBs['metrics']['narratives'].find()
+        narrs_cur = dbi.metricsDBs['metrics']['narratives'].find()
         self.assertTrue(len(list(narrs_cur)), 10)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_exec_tasks")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_exec_tasks(self):
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         minTime = 1500000932952
         maxTime = 1500046845591
 
         # testing list_exec_tasks return data
-        exec_tasks = self.dbi.list_exec_tasks(minTime, maxTime)
+        exec_tasks = dbi.list_exec_tasks(minTime, maxTime)
         self.assertEqual(len(exec_tasks), 3)
         for tsk in exec_tasks:
             self.assertTrue(minTime <= tsk['creation_time'] <= maxTime)
@@ -249,19 +261,21 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBs_list_user_objects_from_wsobjs")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_user_objects_from_wsobjs(self):
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         minTime = 1468592344887
         maxTime = 1519768865840
-        ws_narrs = self.dbi.list_ws_narratives()
+        ws_narrs = dbi.list_ws_narratives()
         ws_list = [wn['workspace_id'] for wn in ws_narrs]
 
         # test list_user_objects_from_wsobjs return count without wsid
-        user_objs = self.dbi.list_user_objects_from_wsobjs(
+        user_objs = dbi.list_user_objects_from_wsobjs(
                         minTime, maxTime)
         self.assertEqual(len(user_objs), 37)
 
         # test list_user_objects_from_wsobjs returned values with wsid filter
-        user_objs = self.dbi.list_user_objects_from_wsobjs(
+        user_objs = dbi.list_user_objects_from_wsobjs(
                         minTime, maxTime, ws_list)
         self.assertEqual(len(user_objs), 22)
 
@@ -283,9 +297,11 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ws_owners")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_ws_owners(self):
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing list_user_objects_from_wsobjs return data
-        ws_owners = self.dbi.list_ws_owners()
+        ws_owners = dbi.list_ws_owners()
         self.assertEqual(len(ws_owners), 27)
         self.assertIn('ws_id', ws_owners[0])
         self.assertIn('username', ws_owners[0])
@@ -297,14 +313,16 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_aggr_user_details")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_aggr_user_details(self):
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         minTime = 1516307704700
         maxTime = 1520549345000
         user_list0 = []
         user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'boris']
 
         # testing aggr_user_details_returned data structure
-        users = self.dbi.aggr_user_details(user_list, minTime, maxTime)
+        users = dbi.aggr_user_details(user_list, minTime, maxTime)
         self.assertEqual(len(users), 4)
         self.assertIn('username', users[0])
         self.assertIn('email', users[0])
@@ -322,17 +340,19 @@ class kb_MetricsTest(unittest.TestCase):
                          datetime.datetime(2018, 2, 16, 15, 19, 56, 426000))
         self.assertEqual(users[1]['roles'], [])
 
-        users = self.dbi.aggr_user_details(user_list0, minTime, maxTime)
+        users = dbi.aggr_user_details(user_list0, minTime, maxTime)
         self.assertEqual(len(users), 37)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_aggr_unique_users_per_day")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_aggr_unique_users_per_day(self):
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         minTime = 1514764800000
         maxTime = 1522454400000
 
         # testing aggr_unique_users_per_day return data
-        users = self.dbi.aggr_unique_users_per_day(minTime, maxTime)
+        users = dbi.aggr_unique_users_per_day(minTime, maxTime)
         self.assertEqual(len(users), 59)
         self.assertIn('numOfUsers', users[0])
         self.assertIn('yyyy-mm-dd', users[0])
@@ -343,7 +363,30 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(users[3]['numOfUsers'], 8)
 
     # Uncomment to skip this test
+    # @unittest.skip("skipped test_update_user_records_WriteError")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
+    @patch('pymongo.collection.Collection.update_one')
+    def test_MetricsMongoDBs_update_user_records_WriteError(
+                                                self, mock_upd):
+        err_msg = 'user write error thrown from mock'
+        mock_upd.side_effect = WriteError(err_msg, 99999)
+
+        dt1 = datetime.datetime(2018, 3, 12, 1, 13, 30)
+        dt2 = datetime.datetime(2018, 3, 12, 1, 35, 30)
+        upd_filter_set = {'username': 'test_u1', 'email': 'test_e1'}
+        upd_data_set = {'full_name': 'test_nm1', 'roles': [],
+                        'signup_at': dt1, 'last_signin_at': dt2}
+        isKBstaff = False
+
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        with self.assertRaises(WriteError) as context_manager:
+            dbi.update_user_records(upd_filter_set,
+                                    upd_data_set, isKBstaff)
+        self.assertEqual(err_msg, str(context_manager.exception.message))
+
+    # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_update_user_records")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_update_user_records(self):
         dt1 = datetime.datetime(2018, 3, 12, 1, 13, 30)
         dt2 = datetime.datetime(2018, 3, 12, 1, 35, 30)
@@ -356,9 +399,10 @@ class kb_MetricsTest(unittest.TestCase):
         db_mu = self.client.metrics.users
         assert db_mu.find_one(upd_filter_set) is None
 
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing freshly upserted result
-        upd_ret = self.dbi.update_user_records(upd_filter_set,
-                                               upd_data_set, isKBstaff)
+        upd_ret = dbi.update_user_records(upd_filter_set,
+                                          upd_data_set, isKBstaff)
 
         self.assertTrue(upd_ret.raw_result.get('upserted'))
         self.assertFalse(upd_ret.raw_result.get('updatedExisting'))
@@ -378,8 +422,8 @@ class kb_MetricsTest(unittest.TestCase):
         upd_data_set = {'full_name': 'test_nm1', 'roles': [],
                         'signup_at': dt1, 'last_signin_at': dt2}
 
-        upd_ret = self.dbi.update_user_records(upd_filter_set,
-                                               upd_data_set, isKBstaff)
+        upd_ret = dbi.update_user_records(upd_filter_set,
+                                          upd_data_set, isKBstaff)
 
         self.assertFalse(upd_ret.raw_result.get('upserted'))
         self.assertTrue(upd_ret.raw_result.get('updatedExisting'))
@@ -396,6 +440,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_insert_activity_records")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_insert_activity_records(self):
         # Fake data
         act_set = [{'_id': {'username': 'qz',
@@ -427,8 +472,9 @@ class kb_MetricsTest(unittest.TestCase):
         assert db_mda.find_one(filter_set1) is None
         assert db_mda.find_one(filter_set2) is None
 
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing freshly inserted result
-        inst_ret = self.dbi.insert_activity_records(act_set)
+        inst_ret = dbi.insert_activity_records(act_set)
         self.assertEqual(inst_ret, 2)
         self.assertEqual(len(list(db_mda.find(filter_set1))), 1)
         self.assertEqual(len(list(db_mda.find(filter_set2))), 1)
@@ -484,7 +530,7 @@ class kb_MetricsTest(unittest.TestCase):
         assert db_mda.find_one(filter_set4) is None
 
         # testing freshly inserted result, skipped exisiting entries
-        inst_ret1 = self.dbi.insert_activity_records(act_set1)
+        inst_ret1 = dbi.insert_activity_records(act_set1)
         self.assertEqual(inst_ret1, 2)
         self.assertEqual(len(list(db_mda.find(filter_set1))), 1)
         self.assertEqual(len(list(db_mda.find(filter_set2))), 1)
@@ -514,7 +560,29 @@ class kb_MetricsTest(unittest.TestCase):
             self.assertEqual(mdarecord['obj_numModified'], 100)
 
     # Uncomment to skip this test
+    # @unittest.skip("skipped test_update_activity_records_WriteError")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
+    @patch('pymongo.collection.Collection.update_one')
+    def test_MetricsMongoDBs_update_activity_records_WriteError(
+                                                self, mock_upd):
+        err_msg = 'activity write error thrown from mock'
+        mock_upd.side_effect = WriteError(err_msg, 99999)
+
+        upd_filter_set = {'_id.username': 'joe',
+                          '_id.year_mod': 2019,
+                          '_id.month_mod': 1,
+                          '_id.day_mod': 1,
+                          '_id.ws_id': 20199991}
+        upd_data_set = {'obj_numModified': 99}
+
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        with self.assertRaises(WriteError) as context_manager:
+            dbi.update_activity_records(upd_filter_set, upd_data_set)
+        self.assertEqual(err_msg, str(context_manager.exception.message))
+
+    # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_update_activity_records")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_update_activity_records(self):
         # Fake data
         upd_filter_set1 = {'_id.username': 'qz',
@@ -536,17 +604,18 @@ class kb_MetricsTest(unittest.TestCase):
         assert db_mda.find_one(upd_filter_set1) is None
         assert db_mda.find_one(upd_filter_set2) is None
 
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing freshly upserted result
-        upd_ret = self.dbi.update_activity_records(upd_filter_set1,
-                                                   upd_data_set1)
+        upd_ret = dbi.update_activity_records(upd_filter_set1,
+                                              upd_data_set1)
         self.assertTrue(upd_ret.raw_result.get('upserted'))
         self.assertFalse(upd_ret.raw_result.get('updatedExisting'))
         self.assertTrue(upd_ret.raw_result.get('ok'))
         self.assertEqual(upd_ret.raw_result.get('n'), 1)
         self.assertEqual(len(list(db_mda.find(upd_filter_set1))), 1)
 
-        upd_ret = self.dbi.update_activity_records(upd_filter_set2,
-                                                   upd_data_set2)
+        upd_ret = dbi.update_activity_records(upd_filter_set2,
+                                              upd_data_set2)
         self.assertEqual(len(list(db_mda.find(upd_filter_set2))), 1)
 
         self.assertEqual(db_mda.find_one(
@@ -555,8 +624,8 @@ class kb_MetricsTest(unittest.TestCase):
                          upd_filter_set2)['obj_numModified'], 92)
 
         # testing updating existing record
-        upd_ret = self.dbi.update_activity_records(upd_filter_set2,
-                                                   upd_data_set3)
+        upd_ret = dbi.update_activity_records(upd_filter_set2,
+                                              upd_data_set3)
         self.assertFalse(upd_ret.raw_result.get('upserted'))
         self.assertTrue(upd_ret.raw_result.get('updatedExisting'))
         self.assertTrue(upd_ret.raw_result.get('ok'))
@@ -566,6 +635,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_update_narrative_records")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_update_narrative_records(self):
         # Fake data
         upd_filter_set1 = {'object_id': 1,
@@ -600,17 +670,18 @@ class kb_MetricsTest(unittest.TestCase):
         assert db_mn.find_one(upd_filter_set1) is None
         assert db_mn.find_one(upd_filter_set2) is None
 
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing freshly upserted result
-        upd_ret = self.dbi.update_narrative_records(upd_filter_set1,
-                                                    upd_data_set1)
+        upd_ret = dbi.update_narrative_records(upd_filter_set1,
+                                               upd_data_set1)
         self.assertTrue(upd_ret.raw_result.get('upserted'))
         self.assertFalse(upd_ret.raw_result.get('updatedExisting'))
         self.assertTrue(upd_ret.raw_result.get('ok'))
         self.assertEqual(upd_ret.raw_result.get('n'), 1)
         self.assertEqual(len(list(db_mn.find(upd_filter_set1))), 1)
 
-        upd_ret = self.dbi.update_narrative_records(upd_filter_set2,
-                                                    upd_data_set2)
+        upd_ret = dbi.update_narrative_records(upd_filter_set2,
+                                               upd_data_set2)
         self.assertEqual(len(list(db_mn.find(upd_filter_set2))), 1)
 
         mnrecord = db_mn.find_one(upd_filter_set1)
@@ -622,8 +693,8 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(mnrecord['numObj'], 5)
 
         # testing updating existing record
-        upd_ret = self.dbi.update_narrative_records(upd_filter_set2,
-                                                    upd_data_set3)
+        upd_ret = dbi.update_narrative_records(upd_filter_set2,
+                                               upd_data_set3)
         self.assertFalse(upd_ret.raw_result.get('upserted'))
         self.assertTrue(upd_ret.raw_result.get('updatedExisting'))
         self.assertTrue(upd_ret.raw_result.get('ok'))
@@ -636,16 +707,18 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_get_user_info")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_get_user_info(self):
         minTime = 1516307704700
         maxTime = 1520549345000
         user_list0 = []
         user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'boris']
 
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing get_user_info return data
-        users = self.dbi.get_user_info(user_list0, minTime, maxTime)
+        users = dbi.get_user_info(user_list0, minTime, maxTime)
         self.assertEqual(len(users), 37)
-        users = self.dbi.get_user_info(user_list, minTime, maxTime)
+        users = dbi.get_user_info(user_list, minTime, maxTime)
         self.assertEqual(len(users), 4)
         self.assertIn('username', users[0])
         self.assertIn('email', users[0])
@@ -656,12 +729,14 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBs_aggr_activities_from_wsobjs")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_aggr_activities_from_wsobjs(self):
         # testing aggr_activities_from_wsobjs return data
         minTime = 1468540813000
         maxTime = 1519768865840
 
-        user_acts = self.dbi.aggr_activities_from_wsobjs(minTime, maxTime)
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        user_acts = dbi.aggr_activities_from_wsobjs(minTime, maxTime)
         self.assertEqual(len(user_acts), 11)
         self.assertEqual(user_acts[4]['_id']['ws_id'], 29624)
         self.assertEqual(user_acts[4]['_id']['year_mod'], 2018)
@@ -671,16 +746,18 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ws_narratives")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_ws_narratives(self):
         minTime = 1468592344887
         maxTime = 1519768865840
 
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # Testing with time limit
-        ws_narrs = self.dbi.list_ws_narratives(minTime, maxTime)
+        ws_narrs = dbi.list_ws_narratives(minTime, maxTime)
         self.assertEqual(len(ws_narrs), 10)
 
         # Testing without given time limit
-        ws_narrs = self.dbi.list_ws_narratives()
+        ws_narrs = dbi.list_ws_narratives()
 
         # Ensure 'narrative_nice_name' exists in 'meta'
         for wn in ws_narrs:
@@ -712,23 +789,24 @@ class kb_MetricsTest(unittest.TestCase):
         # testing the broadest time range in the db
         earliest = 1468454614192
         latest = 1516822530001
-        ws_narrs = self.dbi.list_ws_narratives(earliest, latest)
+        ws_narrs = dbi.list_ws_narratives(earliest, latest)
         self.assertEqual(len(ws_narrs), 24)
 
         # testing only given the lower bound
-        ws_narrs = self.dbi.list_ws_narratives(minT=earliest)
+        ws_narrs = dbi.list_ws_narratives(minT=earliest)
         self.assertEqual(len(ws_narrs), 24)
 
         # testing only given the upper bound
-        ws_narrs = self.dbi.list_ws_narratives(maxT=latest)
+        ws_narrs = dbi.list_ws_narratives(maxT=latest)
         self.assertEqual(len(ws_narrs), 24)
 
         # testing swap the lower/upper bounds
-        ws_narrs = self.dbi.list_ws_narratives(minT=latest, maxT=earliest)
+        ws_narrs = dbi.list_ws_narratives(minT=latest, maxT=earliest)
         self.assertEqual(len(ws_narrs), 24)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ujs_results")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_ujs_results(self):
         minTime = 1500000932952
         maxTime = 1500046845591
@@ -736,10 +814,11 @@ class kb_MetricsTest(unittest.TestCase):
         user_list2 = ['umaganapathyswork', 'arfath']
 
         epoch = datetime.datetime.utcfromtimestamp(0)
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing list_ujs_results return data, with userIds
-        ujs = self.dbi.list_ujs_results(user_list1, minTime, maxTime)
+        ujs = dbi.list_ujs_results(user_list1, minTime, maxTime)
         self.assertEqual(len(ujs), 14)
-        ujs = self.dbi.list_ujs_results(user_list2, minTime, maxTime)
+        ujs = dbi.list_ujs_results(user_list2, minTime, maxTime)
         self.assertEqual(len(ujs), 3)
         for uj in ujs:
             self.assertIn(uj.get('user'), user_list2)
@@ -748,35 +827,37 @@ class kb_MetricsTest(unittest.TestCase):
             self.assertTrue(minTime <= uj_creation_time <= maxTime)
 
         # testing list_ujs_results return data, without userIds
-        ujs = self.dbi.list_ujs_results([], minTime, maxTime)
+        ujs = dbi.list_ujs_results([], minTime, maxTime)
         self.assertEqual(len(ujs), 14)
 
         # testing list_ujs_results return data, different userIds and times
-        ujs = self.dbi.list_ujs_results(['wjriehl'],
-                                        1500052541065, 1500074641912)
+        ujs = dbi.list_ujs_results(['wjriehl'],
+                                   1500052541065, 1500074641912)
         self.assertEqual(len(ujs), 8)
-        ujs = self.dbi.list_ujs_results([], 1500052541065, 1500074641912)
+        ujs = dbi.list_ujs_results([], 1500052541065, 1500074641912)
         self.assertEqual(len(ujs), 14)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_constructor")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBController_constructor(self):
         cfg_arr = self.cfg
         # testing if all the required parameters are given
+        # if yes, no error is raised
         with self.assertRaises(ValueError):
             try:
                 cfg_arr = self.cfg
-                db_ctr1 = MetricsMongoDBController(cfg_arr)
+                MetricsMongoDBController(cfg_arr)
             except ValueError:
                 pass
             else:
                 raise ValueError
-        # testing if all the required parameters are given, with an empty value
+        # testing if all the required parameters are given, with an empty host
         with self.assertRaises(ValueError):
             try:
                 cfg_arr = self.cfg
                 cfg_arr['mongodb-host'] = ''
-                db_ctr1 = MetricsMongoDBController(cfg_arr)
+                MetricsMongoDBController(cfg_arr)
             except ValueError:
                 pass
             else:
@@ -791,7 +872,7 @@ class kb_MetricsTest(unittest.TestCase):
             cfg_arr = copy.deepcopy(self.cfg)
             cfg_arr.pop(k)
             with self.assertRaisesRegexp(ValueError, error_msg):
-                db_ctr2 = MetricsMongoDBController(cfg_arr)
+                MetricsMongoDBController(cfg_arr)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBController_config_str_to_list")
@@ -925,6 +1006,28 @@ class kb_MetricsTest(unittest.TestCase):
                               expected_db_list)
 
     # Uncomment to skip this test
+    # @unittest.skip("test _is_admin")
+    def test_db_controller_is_admin(self):
+        # testing user access permission
+        not_permitted_u = 'user_joe'
+        self.assertFalse(self.db_controller._is_admin(
+                                             not_permitted_u))
+        permitted_u = 'qzhang'
+        self.assertTrue(self.db_controller._is_admin(
+                                            permitted_u))
+
+    # Uncomment to skip this test
+    # @unittest.skip("test _is_metrics_admin")
+    def test_db_controller_is_metrics_admin(self):
+        # testing user access permission
+        not_permitted_u = 'user_joe'
+        self.assertFalse(self.db_controller._is_metrics_admin(
+                                             not_permitted_u))
+        permitted_u = 'qzhang'
+        self.assertTrue(self.db_controller._is_metrics_admin(
+                                            permitted_u))
+
+    # Uncomment to skip this test
     # @unittest.skip("skipped test_db_controller_parse_app_id_method")
     def test_db_controller_parse_app_id_method(self):
         mthd = "kb_rnaseq_donwloader.export_rna_seq_expression_as_zip"
@@ -978,9 +1081,11 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_db_controller_map_narrative")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_db_controller_map_narrative(self):
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         wsids = ['15206', '23165', '27834']
-        ws_narrs = self.dbi.list_ws_narratives()
+        ws_narrs = dbi.list_ws_narratives()
 
         # test mapping with real data
         self.assertItemsEqual(self.db_controller._map_narrative(
@@ -1310,6 +1415,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped _update_narratives")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBController_update_narratives(self):
         start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
                                                     '%Y-%m-%dT%H:%M:%S+0000')
@@ -1318,8 +1424,9 @@ class kb_MetricsTest(unittest.TestCase):
 
         params = {'epoch_range': (start_datetime, end_datetime)}
 
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # ensure this record does not exist in the db yet
-        n_cur = self.dbi.metricsDBs['metrics']['narratives'].find({
+        n_cur = dbi.metricsDBs['metrics']['narratives'].find({
                     'workspace_id': 27834, 'object_id': 1,
                     'object_version': 11})
         self.assertEqual(len(list(n_cur)), 0)
@@ -1331,7 +1438,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(upd_ret, 1)
 
         # confirm this record is upserted into the db
-        n_cur = self.dbi.metricsDBs['metrics']['narratives'].find({
+        n_cur = dbi.metricsDBs['metrics']['narratives'].find({
                     'workspace_id': 27834, 'object_id': 1,
                     'object_version': 11})
         n_list = list(n_cur)
@@ -1357,6 +1464,13 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBController_get_user_job_states")
     def test_MetricsMongoDBController_get_user_job_states(self):
+        # testing requesting user access permission
+        requesting_user1 = 'qzhang'
+        self.assertTrue(self.db_controller._is_admin(requesting_user1))
+
+        requesting_user2 = 'JohnDoe'
+        self.assertFalse(self.db_controller._is_admin(requesting_user2))
+
         # testing if the data has expected structure and values
         user_list = ['tgu2', 'umaganapathyswork', 'arfath']
         params = {'user_ids': user_list}
@@ -1369,9 +1483,10 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(input_params.get('minTime'), 1500000932000)
         self.assertEqual(input_params.get('maxTime'), 1500048533956)
 
+        # testing the requesting user is an admin
         ujs_ret = self.db_controller.get_user_job_states(
-                self.getContext()['user_id'],
-                input_params, self.getContext()['token'])
+                    requesting_user1,
+                    input_params, self.getContext()['token'])
         ujs = ujs_ret['job_states']
         self.assertEqual(len(ujs), 16)
 
@@ -1382,6 +1497,37 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('client_groups', ujs[0])
         self.assertIn('njs', ujs[0]['client_groups'])
         self.assertEqual(ujs[0]['workspace_name'], 'tgu2:1481170361822')
+        self.assertEqual(params['user_ids'], user_list)
+
+        # testing the requesting user is not an admin and with no data
+        ujs_ret = self.db_controller.get_user_job_states(
+                requesting_user2,
+                input_params, self.getContext()['token'])
+        ujs = ujs_ret['job_states']
+        self.assertEqual(len(ujs), 0)
+        self.assertEqual(params['user_ids'], [requesting_user2])
+
+        # testing the requesting user is not an admin but has job(s)
+        requesting_user3 = 'arfath'
+        self.assertFalse(self.db_controller._is_admin(requesting_user3))
+        ujs_ret = self.db_controller.get_user_job_states(
+                requesting_user3,
+                input_params, self.getContext()['token'])
+        ujs = ujs_ret['job_states']
+        self.assertEqual(len(ujs), 2)
+        self.assertFalse(ujs[0].get('wsid'))
+        self.assertEqual(
+                    ujs[0]['app_id'],
+                    'kb_rnaseq_donwloader/export_rna_seq_expression_as_zip')
+        self.assertEqual(
+                    ujs[0]['method'],
+                    'kb_rnaseq_donwloader.export_rna_seq_expression_as_zip')
+        self.assertEqual(ujs[0]['finish_time'], 1500040626665)
+        self.assertIn('client_groups', ujs[0])
+        self.assertIn('njs', ujs[0]['client_groups'])
+        self.assertFalse(ujs[0].get('workspace_name'))
+        self.assertEqual(ujs[0]['user'], requesting_user3)
+        self.assertEqual(params['user_ids'], [requesting_user3])
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_get_user_details")
@@ -1556,6 +1702,15 @@ class kb_MetricsTest(unittest.TestCase):
             'epoch_range': (datetime.datetime(2018, 1, 1),
                             datetime.datetime(2018, 3, 31))
         }
+
+        # testing user access permission
+        err_msg = 'You do not have permission to invoke this action.'
+        not_permitted_u = 'user_joe'
+        with self.assertRaisesRegexp(ValueError, err_msg):
+            upd_ret = self.db_controller.update_metrics(
+                            not_permitted_u,
+                            m_params, self.getContext()['token'])
+
         ret = self.getImpl().update_metrics(self.getContext(), m_params)
         upds = ret[0]['metrics_result']
         self.assertEqual(upds['user_updates'], 37)
