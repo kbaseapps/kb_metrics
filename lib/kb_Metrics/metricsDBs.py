@@ -153,20 +153,16 @@ class MongoMetricsDBI:
                         "_id.day_mod": {"$gte": minDate.day,
                                         "$lte": maxDate.day},
                         "obj_numModified": {"$gt": 0}}
+
         if excludeUsers:
             match_filter['_id.username'] = {"$nin": excludeUsers}
 
         pipeline = [
             {"$match": match_filter},
-            {"$project": {"year_mod": "$_id.year_mod",
-                          "month_mod": "$_id.month_mod",
-                          "day_mod": "$_id.day_mod",
-                          "username": "$_id.username",
-                          "_id": 0}},
-            {"$group": {"_id": {"year_mod": "$year_mod",
-                                "month_mod": "$month_mod",
-                                "day_mod": "$day_mod",
-                                "username": "$username"}}},
+            {"$group": {"_id": {"year_mod": "$_id.year_mod",
+                        "month_mod": "$_id.month_mod",
+                        "day_mod": "$_id.day_mod",
+                        "username": "$_id.username"}}},
             {"$group": {"_id": {"year_mod": "$_id.year_mod",
                                 "month_mod": "$_id.month_mod",
                                 "day_mod": "$_id.day_mod"},
