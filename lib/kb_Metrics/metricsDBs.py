@@ -160,8 +160,8 @@ class MongoMetricsDBI:
         pipeline = [
             {"$match": match_filter},
             {"$group": {"_id": {"year_mod": "$_id.year_mod",
-                        "month_mod": "$_id.month_mod",
-                        "day_mod": "$_id.day_mod",
+                                "month_mod": "$_id.month_mod",
+                                "day_mod": "$_id.day_mod",
                         "username": "$_id.username"}}},
             {"$group": {"_id": {"year_mod": "$_id.year_mod",
                                 "month_mod": "$_id.month_mod",
@@ -325,6 +325,14 @@ class MongoMetricsDBI:
                             MongoMetricsDBI._WS_WSOBJECTS]
         m_cursor = kbwsobjs.aggregate(pipeline)
         return list(m_cursor)
+
+    def list_kbstaff_usernames(self):
+        kbstaffFilter = {'kbase_staff': {"$in": [True, 1]}}
+        projection = {'_id': 0, 'username': 1}
+
+        kbusers = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
+
+        return list(kbusers.find(kbstaffFilter, projection))
 
     def list_exec_tasks(self, minTime, maxTime):
         filter = {}
