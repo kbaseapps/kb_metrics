@@ -296,11 +296,24 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertFalse(user_objs[1]['deleted'])
 
     # Uncomment to skip this test
+    # @unittest.skip("skipped test_MetricsMongoDBs_list_kbstaff_usernames")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
+    def test_MetricsMongoDBs_list_kbstaff_usernames(self):
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        # check the returned data from dbi.list_kbstaff_usernames() vs db
+        users_coll = self.client.metrics.users
+        kbstaff_in_coll = list(users_coll.find(
+                                {'kbase_staff': {'$in': [1, True]}},
+                                {'username': 1, '_id': 0}))
+        kbstaffList = dbi.list_kbstaff_usernames()
+        self.assertItemsEqual(kbstaffList, kbstaff_in_coll)
+
+    # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ws_owners")
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_ws_owners(self):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        # testing list_user_objects_from_wsobjs return data
+        # testing returned data
         ws_owners = dbi.list_ws_owners()
         self.assertEqual(len(ws_owners), 27)
         self.assertIn('ws_id', ws_owners[0])
@@ -1315,7 +1328,6 @@ class kb_MetricsTest(unittest.TestCase):
 
         # testing if the data has expected structure
         act_ret = self.db_controller._get_activities_from_wsobjs(
-                self.getContext()['user_id'],
                 params, self.getContext()['token'])
         user_acts = act_ret['metrics_result']
 
@@ -1339,7 +1351,6 @@ class kb_MetricsTest(unittest.TestCase):
 
         # testing if the data has expected structure
         narr_ret = self.db_controller._get_narratives_from_wsobjs(
-                self.getContext()['user_id'],
                 params, self.getContext()['token'])
         narrs = narr_ret['metrics_result']
         self.assertEqual(len(narrs), 2)
@@ -1368,7 +1379,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         # testing update_user_info with given user_ids
         upd_ret = self.db_controller._update_user_info(
-                self.getContext()['user_id'],
+                # self.getContext()['user_id'],
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret, 4)
 
@@ -1376,14 +1387,12 @@ class kb_MetricsTest(unittest.TestCase):
         params = {'user_ids': []}
         params['epoch_range'] = (start_datetime, end_datetime)
         upd_ret = self.db_controller._update_user_info(
-                self.getContext()['user_id'],
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret, 37)
 
         # testing update_user_info with no match to update
         params = {'user_ids': ['abc1', 'abc2', 'abc3']}
         upd_ret = self.db_controller._update_user_info(
-                self.getContext()['user_id'],
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret, 0)
 
@@ -1398,7 +1407,6 @@ class kb_MetricsTest(unittest.TestCase):
 
         # testing update_daily_activities with given user_ids
         upd_ret = self.db_controller._update_daily_activities(
-                self.getContext()['user_id'],
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret, 8)
 
@@ -1409,7 +1417,6 @@ class kb_MetricsTest(unittest.TestCase):
                                                   '%Y-%m-%dT%H:%M:%S.%fZ')
         params = {'epoch_range': (start_datetime, end_datetime)}
         upd_ret = self.db_controller._update_daily_activities(
-                self.getContext()['user_id'],
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret, 0)
 
@@ -1433,7 +1440,6 @@ class kb_MetricsTest(unittest.TestCase):
 
         # testing update_narratives with given user_ids
         upd_ret = self.db_controller._update_narratives(
-                self.getContext()['user_id'],
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret, 1)
 
@@ -1457,7 +1463,6 @@ class kb_MetricsTest(unittest.TestCase):
                                             '%Y-%m-%dT%H:%M:%S.%fZ')
         params = {'epoch_range': (start_dt, end_dt)}
         upd_ret1 = self.db_controller._update_narratives(
-                self.getContext()['user_id'],
                 params, self.getContext()['token'])
         self.assertEqual(upd_ret1, 0)
 
@@ -1595,14 +1600,14 @@ class kb_MetricsTest(unittest.TestCase):
         users = self.db_controller.get_active_users_counts(
                 self.getContext()['user_id'], params,
                 self.getContext()['token'])['metrics_result']
-        self.assertEqual(len(users), 56)
+        self.assertEqual(len(users), 57)
         self.assertIn('numOfUsers', users[0])
         self.assertIn('yyyy-mm-dd', users[0])
         self.assertEqual(users[0]['yyyy-mm-dd'], '2018-1-1')
         self.assertEqual(users[0]['numOfUsers'], 1)
-        self.assertEqual(users[1]['numOfUsers'], 1)
-        self.assertEqual(users[2]['numOfUsers'], 2)
-        self.assertEqual(users[3]['numOfUsers'], 2)
+        self.assertEqual(users[1]['numOfUsers'], 4)
+        self.assertEqual(users[2]['numOfUsers'], 6)
+        self.assertEqual(users[3]['numOfUsers'], 8)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_app_metrics")
@@ -1685,14 +1690,14 @@ class kb_MetricsTest(unittest.TestCase):
                                 self.getContext(), m_params)
         # testing (excluding kbstaff by default)
         users = ret[0]['metrics_result']
-        self.assertEqual(len(users), 58)
+        self.assertEqual(len(users), 59)
         self.assertIn('numOfUsers', users[0])
         self.assertIn('yyyy-mm-dd', users[0])
         self.assertEqual(users[0]['yyyy-mm-dd'], '2018-1-1')
         self.assertEqual(users[0]['numOfUsers'], 1)
-        self.assertEqual(users[1]['numOfUsers'], 1)
-        self.assertEqual(users[2]['numOfUsers'], 2)
-        self.assertEqual(users[3]['numOfUsers'], 2)
+        self.assertEqual(users[1]['numOfUsers'], 4)
+        self.assertEqual(users[2]['numOfUsers'], 6)
+        self.assertEqual(users[3]['numOfUsers'], 8)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_update_metrics")

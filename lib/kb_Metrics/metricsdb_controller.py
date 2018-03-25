@@ -79,7 +79,7 @@ class MetricsMongoDBController:
                 break
         return (n_name, n_obj)
 
-    def _update_user_info(self, requesting_user, params, token):
+    def _update_user_info(self, params, token):
         """
         update user info
         If match not found, insert that record as new.
@@ -109,13 +109,12 @@ class MetricsMongoDBController:
         print('updated {} and upserted {} users.'.format(upDated, upSerted))
         return upDated + upSerted
 
-    def _update_daily_activities(self, requesting_user, params, token):
+    def _update_daily_activities(self, params, token):
         """
         update user activities reported from Workspace.
         If match not found, insert that record as new.
         """
-        ws_ret = self._get_activities_from_wsobjs(requesting_user,
-                                                  params, token)
+        ws_ret = self._get_activities_from_wsobjs(params, token)
         act_list = ws_ret['metrics_result']
         upDated = 0
         upSerted = 0
@@ -141,13 +140,12 @@ class MetricsMongoDBController:
               'activities.'.format(upDated, upSerted))
         return upDated + upSerted
 
-    def _update_narratives(self, requesting_user, params, token):
+    def _update_narratives(self, params, token):
         """
         update user narratives reported from Workspace.
         If match not found, insert that record as new.
         """
-        ws_ret = self._get_narratives_from_wsobjs(requesting_user,
-                                                  params, token)
+        ws_ret = self._get_narratives_from_wsobjs(params, token)
         narr_list = ws_ret['metrics_result']
         upDated = 0
         upSerted = 0
@@ -178,7 +176,7 @@ class MetricsMongoDBController:
     # End functions to write to the metrics database
 
     # functions to get the requested records from other dbs...
-    def _get_narratives_from_wsobjs(self, requesting_user, params, token):
+    def _get_narratives_from_wsobjs(self, params, token):
         """
         get_narratives_from_wsobjs--Given a time period, fetch the narrative
         information from workspace.workspaces and workspace.workspaceObjects.
@@ -227,7 +225,7 @@ class MetricsMongoDBController:
                 ws_narrs1.append(wn)
         return {'metrics_result': ws_narrs1}
 
-    def _get_activities_from_wsobjs(self, requesting_user, params, token):
+    def _get_activities_from_wsobjs(self, params, token):
         # 0. get the ws_narrative and client_groups data for lookups
         if self.ws_narratives is None:
             self.ws_narratives = self.metrics_dbi.list_ws_narratives()
@@ -385,8 +383,6 @@ class MetricsMongoDBController:
                                         config.get('admin-users'))
         self.metricsAdmins = self._config_str_to_list(
                                         config.get('metrics-admins'))
-        self.kbstaffList = self._config_str_to_list(
-                                        config.get('kbase-staff'))
         self.mongodb_dbList = self._config_str_to_list(
                                         config.get('mongodb-databases'))
 
@@ -409,6 +405,7 @@ class MetricsMongoDBController:
         self.catalog_url = config['kbase-endpoint'] + '/catalog'
 
         # commonly used data
+        self.kbstaffList = None
         self.ws_narratives = None
         self.client_groups = None
 
@@ -450,16 +447,13 @@ class MetricsMongoDBController:
                              'invoke this action.')
 
         # 1. update users
-        action_result1 = self._update_user_info(
-                                    requesting_user, params, token)
+        action_result1 = self._update_user_info(params, token)
 
         # 2. update activities
-        action_result2 = self._update_daily_activities(
-                                    requesting_user, params, token)
+        action_result2 = self._update_daily_activities(params, token)
 
         # 3. update narratives
-        action_result3 = self._update_narratives(
-                                    requesting_user, params, token)
+        action_result3 = self._update_narratives(params, token)
 
         return {'metrics_result': {'user_updates': action_result1,
                                    'activity_updates': action_result2,
@@ -470,6 +464,9 @@ class MetricsMongoDBController:
                                 params, token, exclude_kbstaff=True):
         if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
+
+        if self.kbstaffList is None:
+            self.kbstaffList = self.metrics_dbi.list_kbstaff_usernames()
 
         params = self._process_parameters(params)
 
