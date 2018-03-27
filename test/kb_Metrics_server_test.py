@@ -767,18 +767,19 @@ class kb_MetricsTest(unittest.TestCase):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # Testing with time limit
         ws_narrs = dbi.list_ws_narratives(minTime, maxTime)
-        self.assertEqual(len(ws_narrs), 10)
+        self.assertEqual(len(ws_narrs), 12)
 
         # Testing without given time limit
         ws_narrs = dbi.list_ws_narratives()
 
-        # Ensure 'narrative_nice_name' exists in 'meta'
+        # Ensure 'narrative_nice_name' or 'narrative' exists in 'meta'
         for wn in ws_narrs:
             self.assertIn('meta', wn)
             self.assertTrue(any(d['k'] == 'narrative_nice_name'
+                                or d['k'] == 'narrative'
                                 for d in wn['meta']))
 
-        self.assertEqual(len(ws_narrs), 24)
+        self.assertEqual(len(ws_narrs), 27)
         self.assertIn('username', ws_narrs[0])
         self.assertIn('workspace_id', ws_narrs[0])
         self.assertIn('name', ws_narrs[0])
@@ -787,35 +788,35 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('numObj', ws_narrs[0])
         self.assertIn('last_saved_at', ws_narrs[0])
 
-        self.assertEqual(ws_narrs[23]['username'], 'psdehal')
-        self.assertEqual(ws_narrs[23]['workspace_id'], 27834)
+        self.assertEqual(ws_narrs[23]['username'], 'vkumar')
+        self.assertEqual(ws_narrs[23]['workspace_id'], 8781)
         self.assertEqual(ws_narrs[23]['name'],
-                         'psdehal:narrative_1513709108341')
-        self.assertEqual(ws_narrs[23]['meta'][2]['k'], 'narrative_nice_name')
-        self.assertEqual(ws_narrs[23]['meta'][2]['v'], 'Staging Test')
+                         'vkumar:1468639677500')
+        self.assertEqual(ws_narrs[23]['meta'][2]['k'], 'narrative')
+        self.assertEqual(ws_narrs[23]['meta'][2]['v'], '45')
         self.assertFalse(ws_narrs[23]['deleted'])
-        self.assertEqual(ws_narrs[23]['desc'], '')
-        self.assertEqual(ws_narrs[23]['numObj'], 4)
+        self.assertEqual(ws_narrs[23]['desc'], None)
+        self.assertEqual(ws_narrs[23]['numObj'], 46)
         self.assertEqual(ws_narrs[23]['last_saved_at'],
-                         datetime.datetime(2018, 1, 24, 19, 35, 30, 1000))
+                         datetime.datetime(2016, 7, 16, 4, 26, 20, 343000))
 
         # testing the broadest time range in the db
         earliest = 1468454614192
         latest = 1516822530001
         ws_narrs = dbi.list_ws_narratives(earliest, latest)
-        self.assertEqual(len(ws_narrs), 24)
+        self.assertEqual(len(ws_narrs), 27)
 
         # testing only given the lower bound
         ws_narrs = dbi.list_ws_narratives(minT=earliest)
-        self.assertEqual(len(ws_narrs), 24)
+        self.assertEqual(len(ws_narrs), 27)
 
         # testing only given the upper bound
         ws_narrs = dbi.list_ws_narratives(maxT=latest)
-        self.assertEqual(len(ws_narrs), 24)
+        self.assertEqual(len(ws_narrs), 27)
 
         # testing swap the lower/upper bounds
         ws_narrs = dbi.list_ws_narratives(minT=latest, maxT=earliest)
-        self.assertEqual(len(ws_narrs), 24)
+        self.assertEqual(len(ws_narrs), 27)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ujs_results")

@@ -274,7 +274,9 @@ class MongoMetricsDBI:
 
     def list_ws_narratives(self, minT=0, maxT=0):
         match_filter = {"del": False,
-                        "meta": {"$elemMatch": {"k": "narrative_nice_name"}}}
+                        "meta": {"$elemMatch": {"$or":
+                                 [{"k": "narrative"},
+                                  {"k": "narrative_nice_name"}]}}}
 
         if minT > 0 and maxT > 0:
             minTime = min(minT, maxT)
