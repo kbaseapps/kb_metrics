@@ -130,8 +130,8 @@ class MongoMetricsDBI:
             update_ret = self.mt_narrs.update_one(upd_filter,
                                                   upd_op, upsert=True)
         except WriteError as we:
-            pprint(we.details['writeErrors'])
-            raise
+            print('WriteError caught')
+            raise we
         else:
             # re-touch the newly inserted records
             self.mt_narrs.update({'access_count': {'$exists': False}},

@@ -14,7 +14,6 @@ try:
 except ImportError:
     from configparser import ConfigParser  # py3
 
-from pprint import pprint, pformat  # noqa: F401
 from pymongo.errors import BulkWriteError, WriteError
 
 from biokbase.workspace.client import Workspace as workspaceService
@@ -647,6 +646,27 @@ class kb_MetricsTest(unittest.TestCase):
                          upd_filter_set2)['obj_numModified'], 93)
 
     # Uncomment to skip this test
+    # @unittest.skip("skipped test_update_narrative_records_WriteError")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
+    @patch('pymongo.collection.Collection.update_one')
+    def test_MetricsMongoDBs_update_narrative_records_WriteError(
+                                                self, mock_upd):
+        err_msg = 'narrative write error thrown from mock'
+        mock_upd.side_effect = WriteError(err_msg, 99999)
+
+        upd_narr_filter = {'object_id': 99,
+                           'object_version': 5,
+                           'workspace_id': 30199990}
+        upd_narr_data = {'last_saved_at': datetime.datetime(
+                                                2019, 1, 24, 19, 35, 48, 1000),
+                         'numObj': 7}
+
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        with self.assertRaises(WriteError) as context_manager:
+            dbi.update_narrative_records(upd_narr_filter, upd_narr_data)
+        self.assertEqual(err_msg, str(context_manager.exception.message))
+
+    # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_update_narrative_records")
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_update_narrative_records(self):
@@ -889,6 +909,29 @@ class kb_MetricsTest(unittest.TestCase):
                 MetricsMongoDBController(cfg_arr)
 
     # Uncomment to skip this test
+    # @unittest.skip("test_MetricsMongoDBController_constructor2")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
+    def test_MetricsMongoDBController_constructor2(self):
+
+        expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson',
+                               'nlharris', 'dylan', 'chenry', 'ciservices',
+                               'wjriehl', 'sychan', 'jjeffryes',
+                               'thomasoniii', 'eapearson', 'qzhang', 'tgu2']
+        self.assertItemsEqual(self.db_controller.adminList,
+                              expected_admin_list)
+
+        expected_metrics_admin_list = ['scanon', 'psdehal', 'dolson', 'chenry',
+                                       'wjriehl', 'sychan', 'qzhang', 'tgu2',
+                                       'eapearson']
+        self.assertItemsEqual(self.db_controller.metricsAdmins,
+                              expected_metrics_admin_list)
+
+        expected_db_list = ['metrics', 'userjobstate', 'workspace',
+                            'exec_engine', 'auth2']
+        self.assertItemsEqual(self.db_controller.mongodb_dbList,
+                              expected_db_list)
+
+    # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBController_config_str_to_list")
     def test_MetricsMongoDBController_config_str_to_list(self):
         # testing None config input
@@ -996,28 +1039,6 @@ class kb_MetricsTest(unittest.TestCase):
                                             [:3]) - today).days
         self.assertEqual(minTime_from_today, -2)
         self.assertEqual(maxTime_from_today, 0)
-
-    # Uncomment to skip this test
-    # @unittest.skip("test_db_controller_constructor")
-    def test_db_controller_constructor(self):
-
-        expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson',
-                               'nlharris', 'dylan', 'chenry', 'ciservices',
-                               'wjriehl', 'sychan', 'jjeffryes',
-                               'thomasoniii', 'eapearson', 'qzhang', 'tgu2']
-        self.assertItemsEqual(self.db_controller.adminList,
-                              expected_admin_list)
-
-        expected_metrics_admin_list = ['scanon', 'psdehal', 'dolson', 'chenry',
-                                       'wjriehl', 'sychan', 'qzhang', 'tgu2',
-                                       'eapearson']
-        self.assertItemsEqual(self.db_controller.metricsAdmins,
-                              expected_metrics_admin_list)
-
-        expected_db_list = ['metrics', 'userjobstate', 'workspace',
-                            'exec_engine', 'auth2']
-        self.assertItemsEqual(self.db_controller.mongodb_dbList,
-                              expected_db_list)
 
     # Uncomment to skip this test
     # @unittest.skip("test _is_admin")
@@ -1319,6 +1340,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped_get_activities_from_wsobjs")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBController_get_activities_from_wsobjs(self):
         start_datetime = datetime.datetime.strptime('2016-07-15T00:00:00+0000',
                                                     '%Y-%m-%dT%H:%M:%S+0000')
@@ -1342,6 +1364,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped get_narratives_from_wsobjs")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBController_get_narratives_from_wsobjs(self):
         start_datetime = datetime.datetime.strptime('2016-07-15T00:00:00+0000',
                                                     '%Y-%m-%dT%H:%M:%S+0000')
@@ -1369,6 +1392,7 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_update_user_info")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBController_update_user_info(self):
         user_list = ['sulbha', 'ytm123', 'xiaoli', 'andrew78', 'qzhang']
         start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
@@ -1398,7 +1422,8 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(upd_ret, 0)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped _update_daily_activities")
+    # @unittest.skip("skipped_update_daily_activities")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBController_update_daily_activities(self):
         start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
                                                     '%Y-%m-%dT%H:%M:%S+0000')
@@ -1422,7 +1447,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(upd_ret, 0)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped _update_narratives")
+    # @unittest.skip("skipped_update_narratives")
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBController_update_narratives(self):
         start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
