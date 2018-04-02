@@ -130,8 +130,8 @@ class MongoMetricsDBI:
             update_ret = self.mt_narrs.update_one(upd_filter,
                                                   upd_op, upsert=True)
         except WriteError as we:
-            pprint(we.details['writeErrors'])
-            raise
+            print('WriteError caught')
+            raise we
         else:
             # re-touch the newly inserted records
             self.mt_narrs.update({'access_count': {'$exists': False}},
@@ -274,7 +274,9 @@ class MongoMetricsDBI:
 
     def list_ws_narratives(self, minT=0, maxT=0):
         match_filter = {"del": False,
-                        "meta": {"$elemMatch": {"k": "narrative_nice_name"}}}
+                        "meta": {"$elemMatch": {"$or":
+                                 [{"k": "narrative"},
+                                  {"k": "narrative_nice_name"}]}}}
 
         if minT > 0 and maxT > 0:
             minTime = min(minT, maxT)
