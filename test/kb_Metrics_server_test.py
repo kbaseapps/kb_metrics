@@ -14,7 +14,7 @@ try:
 except ImportError:
     from configparser import ConfigParser  # py3
 
-from pymongo.errors import BulkWriteError, WriteError
+from pymongo.errors import WriteError, ConfigurationError
 
 from biokbase.workspace.client import Workspace as workspaceService
 from kb_Metrics.kb_MetricsImpl import kb_Metrics
@@ -873,7 +873,6 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_constructor")
-    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBController_constructor(self):
         cfg_arr = self.cfg
         # testing if all the required parameters are given
@@ -887,15 +886,15 @@ class kb_MetricsTest(unittest.TestCase):
             else:
                 raise ValueError
         # testing if all the required parameters are given, with an empty host
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ConfigurationError):
             try:
                 cfg_arr = self.cfg
                 cfg_arr['mongodb-host'] = ''
                 MetricsMongoDBController(cfg_arr)
-            except ValueError:
-                pass
+            except ConfigurationError as e:
+                raise e
             else:
-                raise ValueError
+                pass
         # testing if any of the required parameters are missing
         for k in ['mongodb-host', 'mongodb-databases',
                   'mongodb-user', 'mongodb-pwd']:
@@ -910,7 +909,6 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("test_MetricsMongoDBController_constructor2")
-    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBController_constructor2(self):
 
         expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson',
@@ -1364,7 +1362,6 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped get_narratives_from_wsobjs")
-    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBController_get_narratives_from_wsobjs(self):
         start_datetime = datetime.datetime.strptime('2016-07-15T00:00:00+0000',
                                                     '%Y-%m-%dT%H:%M:%S+0000')
@@ -1392,7 +1389,6 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_update_user_info")
-    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBController_update_user_info(self):
         user_list = ['sulbha', 'ytm123', 'xiaoli', 'andrew78', 'qzhang']
         start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
@@ -1423,7 +1419,6 @@ class kb_MetricsTest(unittest.TestCase):
 
     # Uncomment to skip this test
     # @unittest.skip("skipped_update_daily_activities")
-    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBController_update_daily_activities(self):
         start_datetime = datetime.datetime.strptime('2018-01-01T00:00:00+0000',
                                                     '%Y-%m-%dT%H:%M:%S+0000')

@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 import datetime
 from pymongo import ASCENDING
-from pymongo.errors import BulkWriteError, WriteError
+from pymongo.errors import BulkWriteError, WriteError, ConfigurationError
 from kb_Metrics.Util import _convert_to_datetime
 
 
@@ -33,12 +33,16 @@ class MongoMetricsDBI:
         self.mongo_clients = dict()
         self.metricsDBs = dict()
         for m_db in mongo_dbs:
-            # create the client and authenticate
-            self.mongo_clients[m_db] = MongoClient(
-                "mongodb://" + mongo_user + ":" + mongo_psswd +
-                "@" + mongo_host + "/" + m_db)
-            # grab a handle to the database
-            self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
+            try:
+                # create the client and authenticate
+                self.mongo_clients[m_db] = MongoClient(
+                    "mongodb://" + mongo_user + ":" + mongo_psswd +
+                    "@" + mongo_host + "/" + m_db)
+                # grab a handle to the database
+                self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
+            except ConfigurationError as ce:
+                print(ce)
+                raise ce
 
     # Begin functions to write to the metrics database...
     def update_user_records(self, upd_filter, upd_data, kbstaff):
