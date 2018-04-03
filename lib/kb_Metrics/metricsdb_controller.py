@@ -252,7 +252,7 @@ class MetricsMongoDBController:
         ujs_ret = []
         for j in ujs_jobs:
             u_j_s = copy.deepcopy(j)
-            u_j_s['job_id'] = u_j_s.pop('_id')
+            u_j_s['job_id'] = str(u_j_s.pop('_id'))
             u_j_s['exec_start_time'] = u_j_s.pop('started', None)
             u_j_s['creation_time'] = u_j_s.pop('created')
             u_j_s['modification_time'] = u_j_s.pop('updated')
