@@ -446,6 +446,9 @@ class MetricsMongoDBController:
             raise ValueError('You do not have permission to '
                              'invoke this action.')
 
+        if self.kbstaffList is None:
+            self.kbstaffList = self.metrics_dbi.list_kbstaff_usernames()
+
         # 1. update users
         action_result1 = self._update_user_info(params, token)
 
@@ -492,6 +495,7 @@ class MetricsMongoDBController:
         mt_ret = self.metrics_dbi.get_user_info(
                             params['user_ids'], params['minTime'],
                             params['maxTime'], exclude_kbstaff)
+
         if len(mt_ret) == 0:
             print("No records returned!")
         else:
