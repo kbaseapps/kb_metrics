@@ -1,0 +1,301 @@
+	[
+		{
+			"email" : "cmccoris@purdue.edu",
+			"username" : "cbmccor",
+			"roles" : [ ],
+			"signup_at" : 1518794529002,
+			"full_name" : "Cassandra B McCorison",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794529018
+		},
+		{
+			"email" : "xie186bioinforcore@gmail.com",
+			"username" : "xie186",
+			"roles" : [ ],
+			"signup_at" : 1518794539025,
+			"full_name" : "Shaojun Xie",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794539028
+		},
+		{
+			"email" : "joel.ykh@gmail.com",
+			"username" : "nyukingh",
+			"roles" : [ ],
+			"signup_at" : 1518794551218,
+			"full_name" : "Nathaphon Yu King Hing",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794551222
+		},
+		{
+			"email" : "jacobshoemake@gmail.com",
+			"username" : "jacobshoemake",
+			"roles" : [ ],
+			"signup_at" : 1518794561863,
+			"full_name" : "Jacob Shoemake",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794561865
+		},
+		{
+			"email" : "andrewyoungwoo@gmail.com",
+			"username" : "andrew78",
+			"roles" : [ ],
+			"signup_at" : 1518794572614,
+			"full_name" : "Youngwoo Lee",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794572618
+		},
+		{
+			"email" : "caseyhooker59@gmail.com",
+			"username" : "caseyhooker59",
+			"roles" : [ ],
+			"signup_at" : 1518794579611,
+			"full_name" : "Casey Hooker",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794579614
+		},
+		{
+			"email" : "jlwangshusheng@gmail.com",
+			"username" : "jlwangshusheng",
+			"roles" : [ ],
+			"signup_at" : 1518794614398,
+			"full_name" : "汪树生",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794614402
+		},
+		{
+			"email" : "csmbl2016@gmail.com",
+			"username" : "xiaoli",
+			"roles" : [ ],
+			"signup_at" : 1518794641935,
+            "kbase_staff" : false,
+			"full_name" : "Xiaoli Sun",
+			"last_signin_at" : 1518794641938
+		},
+		{
+			"email" : "jerryhan1116@gmail.com",
+			"username" : "ruijiehan1116",
+			"roles" : [ ],
+			"signup_at" : 1518794649828,
+			"full_name" : "Ruijie Han",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794649833
+		},
+		{
+			"email" : "ytm1234@gmail.com",
+			"username" : "ytm123",
+			"roles" : [ ],
+			"signup_at" : 1518794884978,
+			"full_name" : "tim yao",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794884985
+		},
+		{
+			"email" : "jyothi.thimmapuram@gmail.com",
+			"username" : "jyothi",
+			"roles" : [ ],
+			"signup_at" : 1518795142925,
+			"full_name" : "Jyothi Thimmapuram",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518795142931
+		},
+		{
+			"email" : "sulbha@purdue.edu",
+			"username" : "sulbha",
+			"roles" : [ ],
+			"signup_at" : 1518795169234,
+			"full_name" : "Sulbha Choudhari",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518795169237
+		},
+		{
+			"email" : "shahmaneshb@gmail.com",
+			"username" : "shahmaneshb",
+			"roles" : [ ],
+			"signup_at" : 1516307704709,
+			"full_name" : "Manesh Shah",
+            "kbase_staff" : false,
+			"last_signin_at" : 1516307705087
+		},
+		{
+			"email" : "thesis1977@gmail.com",
+			"username" : "tnseq",
+			"roles" : [ ],
+			"signup_at" : 1516631575437,
+			"full_name" : "rodham singh",
+            "kbase_staff" : false,
+			"last_signin_at" : 1516631575574
+		},
+		{
+			"email" : "bsadkhin.anl@gmail.com",
+			"username" : "bsadkhin",
+			"roles" : [
+				"DevToken"
+			],
+			"signup_at" : 1517518525587,
+            "kbase_staff" : true,
+			"full_name" : "Boris Sadkhin",
+			"last_signin_at" : 1517521737521
+		},
+		{
+			"email" : "briehl@gmail.com",
+			"username" : "testbriehl",
+			"roles" : [ ],
+			"signup_at" : 1518564203886,
+			"full_name" : "TEST Bill",
+            "kbase_staff" : true,
+			"last_signin_at" : 1518564204399
+		},
+		{
+			"email" : "titigu1987@gmail.com",
+			"username" : "tgu123",
+			"roles" : [ ],
+			"signup_at" : 1518565132329,
+			"full_name" : "Gu Tianhao",
+            "kbase_staff" : true,
+			"last_signin_at" : 1518565132339
+		},
+		{
+			"email" : "tgu1@binghamton.edu",
+			"username" : "test_tgu123",
+			"roles" : [ ],
+			"signup_at" : 1518571824517,
+			"full_name" : "Tianhao Gu",
+            "kbase_staff" : true,
+			"last_signin_at" : 1518571824519
+		},
+		{
+			"email" : "laramy.enders@gmail.com",
+			"username" : "laramyenders",
+			"roles" : [ ],
+			"signup_at" : 1518794395973,
+			"full_name" : "Laramy Enders",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794396426
+		},
+		{
+			"email" : "eason2@purdue.edu",
+			"username" : "eason2",
+			"roles" : [ ],
+			"signup_at" : 1518794407990,
+			"full_name" : "Julius Eason",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794407995
+		},
+		{
+			"email" : "mohitsv@gmail.com",
+			"username" : "mohit007",
+			"roles" : [ ],
+			"signup_at" : 1518794425487,
+			"full_name" : "Mohit Verma",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794425491
+		},
+		{
+			"email" : "allmon@purdue.edu",
+			"username" : "allmon",
+			"roles" : [ ],
+			"signup_at" : 1518794428236,
+			"full_name" : "Lizz Allmon",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794428238
+		},
+		{
+			"email" : "teha237@g.uky.edu",
+			"username" : "njalskarsgard",
+			"roles" : [ ],
+			"signup_at" : 1518794428754,
+			"full_name" : "Thorsten Hansen",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794428757
+		},
+		{
+			"email" : "carmen.wickware@gmail.com",
+			"username" : "cwickware",
+			"roles" : [ ],
+			"signup_at" : 1518794452549,
+			"full_name" : "Carmen Wickware",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794452552
+		},
+		{
+			"email" : "k2bhide@gmail.com",
+			"username" : "k2bhide",
+			"roles" : [ ],
+			"signup_at" : 1518794458612,
+			"full_name" : "Ketaki Bhide",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794458616
+		},
+		{
+			"email" : "ntuhbtad@gmail.com",
+			"username" : "nuhbtad",
+			"roles" : [ ],
+			"signup_at" : 1518794471539,
+			"full_name" : "MING-HSU CHEN",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794471542
+		},
+		{
+			"email" : "andrew.asberry@gmail.com",
+			"username" : "aasberry",
+			"roles" : [ ],
+			"signup_at" : 1518794478670,
+			"full_name" : "Andrew Asberry",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794478678
+		},
+		{
+			"email" : "helenaavila30@gmail.com",
+			"username" : "helenaavilaax2r",
+			"roles" : [ ],
+			"signup_at" : 1518794493006,
+			"full_name" : "Helena Avila Arias",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794493009
+		},
+		{
+			"email" : "pablo.vega.vasquez@gmail.com",
+			"username" : "pablov",
+			"roles" : [ ],
+			"signup_at" : 1518794496799,
+			"full_name" : "pablo vega",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794496804
+		},
+		{
+			"email" : "johnson2929@gmail.com",
+			"username" : "john2185",
+			"roles" : [ ],
+			"signup_at" : 1518794510240,
+			"full_name" : "Tim Johnson",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794510243
+		},
+		{
+			"email" : "mwigren12@gmail.com",
+			"username" : "mwigren",
+			"roles" : [ ],
+			"signup_at" : 1518794525472,
+			"full_name" : "Maggie Wigren",
+            "kbase_staff" : false,
+			"last_signin_at" : 1518794525476
+		},
+		{
+			"email" : "eapearson+test450@lbl.gov",
+			"username" : "erik_s_test_account",
+			"roles" : [ ],
+			"signup_at" : 1519928061147,
+			"full_name" : "Erik Pearson",
+            "kbase_staff" : true,
+			"last_signin_at" : 1519940332261
+		},
+		{
+			"email" : "eapearson+test451a@lbl.gov",
+			"username" : "erik_test451",
+			"roles" : [ ],
+			"signup_at" : 1519940589083,
+			"full_name" : "Erik Pearson",
+            "kbase_staff" : true,
+			"last_signin_at" : 1519940589152
+		}
+	]

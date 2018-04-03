@@ -21,9 +21,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "0.1.0"
-    GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "839aaa116269b4b04f0ce183662fbff30cad9492"
+    VERSION = "0.1.1"
+    GIT_URL = "https://github.com/qzzhang/kb_Metrics"
+    GIT_COMMIT_HASH = "22cfa1eacda7665d206f677b5b878f1aa2e68ecd"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -36,23 +36,20 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # Any configuration parameters that are important should be parsed and
         # saved in the constructor.
-        self.ws_url = config['workspace-url']
-        self.shared_folder = config['scratch']
-        self.config = config
-        self.mdb_controller = MetricsMongoDBController(self.config)
+        self.mdb_controller = MetricsMongoDBController(config)
         #END_CONSTRUCTOR
         pass
 
+
     def get_app_metrics(self, ctx, params):
         """
-        :param params: instance of type "AppMetricsParams" (job_stage has one
-           of 'created', 'started', 'complete', 'canceled', 'error' or 'all'
-           (default)) -> structure: parameter "user_ids" of list of type
-           "user_id" (A string for the user id), parameter "epoch_range" of
-           type "epoch_range" -> tuple of size 2: parameter "e_lowerbound" of
-           type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970 UTC)
-           in milliseconds.), parameter "e_upperbound" of type "epoch" (A
-           Unix epoch (the time since 00:00:00 1/1/1970 UTC) in milliseconds.)
+        :param params: instance of type "AppMetricsParams" -> structure:
+           parameter "user_ids" of list of type "user_id" (A string for the
+           user id), parameter "epoch_range" of type "epoch_range" -> tuple
+           of size 2: parameter "e_lowerbound" of type "epoch" (A Unix epoch
+           (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "e_upperbound" of type "epoch" (A Unix epoch (the time
+           since 00:00:00 1/1/1970 UTC) in milliseconds.)
         :returns: instance of type "AppMetricsResult" -> structure: parameter
            "job_states" of unspecified object
         """
@@ -70,60 +67,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # return the results
         return [return_records]
 
-    def get_exec_apps(self, ctx, params):
-        """
-        :param params: instance of type "MetricsInputParams" (unified
-           input/output parameters) -> structure: parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.)
-        :returns: instance of type "MetricsOutput" -> structure: parameter
-           "metrics_result" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN get_exec_apps
-        return_records = self.mdb_controller.get_exec_apps(ctx['user_id'], params, ctx['token'])
-        #END get_exec_apps
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method get_exec_apps return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
-    def get_exec_tasks(self, ctx, params):
-        """
-        :param params: instance of type "MetricsInputParams" (unified
-           input/output parameters) -> structure: parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.)
-        :returns: instance of type "MetricsOutput" -> structure: parameter
-           "metrics_result" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN get_exec_tasks
-        return_records = self.mdb_controller.get_exec_tasks(ctx['user_id'], params, ctx['token'])
-        #END get_exec_tasks
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method get_exec_tasks return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
     def get_user_details(self, ctx, params):
         """
+        For retrieving from mongodb metrics *
         :param params: instance of type "MetricsInputParams" (unified
            input/output parameters) -> structure: parameter "user_ids" of
            list of type "user_id" (A string for the user id), parameter
@@ -145,275 +91,6 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
             raise ValueError('Method get_user_details return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
-    def get_total_logins(self, ctx, params):
-        """
-        :param params: instance of type "MetricsInputParams" (unified
-           input/output parameters) -> structure: parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.)
-        :returns: instance of type "MetricsOutput" -> structure: parameter
-           "metrics_result" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN get_total_logins
-        return_records = self.mdb_controller.get_total_logins_from_ws(ctx['user_id'], params,
-                                                                      ctx['token'])
-        #END get_total_logins
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method get_total_logins return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
-    def get_user_ws(self, ctx, params):
-        """
-        :param params: instance of type "MetricsInputParams" (unified
-           input/output parameters) -> structure: parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.)
-        :returns: instance of type "MetricsOutput" -> structure: parameter
-           "metrics_result" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN get_user_ws
-        return_records = self.mdb_controller.get_user_ws_stats_from_ws(ctx['user_id'], params,
-                                                                       ctx['token'])
-        #END get_user_ws
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_ws return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
-    def get_user_narrative_stats(self, ctx, params):
-        """
-        :param params: instance of type "MetricsInputParams" (unified
-           input/output parameters) -> structure: parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.)
-        :returns: instance of type "MetricsOutput" -> structure: parameter
-           "metrics_result" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN get_user_narrative_stats
-        return_records = self.mdb_controller.get_user_narrative_stats_from_ws(ctx['user_id'],
-                                                                              params,
-                                                                              ctx['token'])
-        #END get_user_narrative_stats
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_narrative_stats return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
-    def get_user_numObjs(self, ctx, params):
-        """
-        :param params: instance of type "MetricsInputParams" (unified
-           input/output parameters) -> structure: parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.)
-        :returns: instance of type "MetricsOutput" -> structure: parameter
-           "metrics_result" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN get_user_numObjs
-        return_records = self.mdb_controller.get_user_numObjs_from_ws(ctx['user_id'], params,
-                                                                      ctx['token'])
-        #END get_user_numObjs
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_numObjs return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
-    def get_user_logins(self, ctx, params):
-        """
-        :param params: instance of type "MetricsInputParams" (unified
-           input/output parameters) -> structure: parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.)
-        :returns: instance of type "MetricsOutput" -> structure: parameter
-           "metrics_result" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN get_user_logins
-        return_records = self.mdb_controller.get_user_login_stats_from_ws(ctx['user_id'], params,
-                                                                          ctx['token'])
-        #END get_user_logins
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_logins return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
-    def get_user_ujs_results(self, ctx, params):
-        """
-        :param params: instance of type "MetricsInputParams" (unified
-           input/output parameters) -> structure: parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.)
-        :returns: instance of type "MetricsOutput" -> structure: parameter
-           "metrics_result" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN get_user_ujs_results
-        return_records = self.mdb_controller.get_ujs_results(ctx['user_id'], params, ctx['token'])
-        #END get_user_ujs_results
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_ujs_results return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
-    def get_user_job_states(self, ctx, params):
-        """
-        :param params: instance of type "MetricsInputParams" (unified
-           input/output parameters) -> structure: parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.)
-        :returns: instance of type "MetricsOutput" -> structure: parameter
-           "metrics_result" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN get_user_job_states
-        return_records = self.mdb_controller.get_user_job_states(ctx['user_id'], params,
-                                                                 ctx['token'])
-        #END get_user_job_states
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_job_states return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
-    def get_user_narratives(self, ctx, params):
-        """
-        :param params: instance of type "MetricsInputParams" (unified
-           input/output parameters) -> structure: parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.)
-        :returns: instance of type "MetricsOutput" -> structure: parameter
-           "metrics_result" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN get_user_narratives
-        return_records = self.mdb_controller.get_narratives(ctx['user_id'], params, ctx['token'])
-        #END get_user_narratives
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_narratives return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
-    def update_metrics(self, ctx, params):
-        """
-        For writing to mongodb metrics *
-        :param params: instance of type "MetricsInputParams" (unified
-           input/output parameters) -> structure: parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.)
-        :returns: instance of type "MetricsOutput" -> structure: parameter
-           "metrics_result" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN update_metrics
-        return_records = self.mdb_controller.update_metrics(ctx['user_id'], params, ctx['token'])
-        #END update_metrics
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method update_metrics return value ' +
-                             'return_records is not type dict as required.')
-        # return the results
-        return [return_records]
-
-    def get_user_activities(self, ctx, params):
-        """
-        For retrieving from mongodb metrics *
-        :param params: instance of type "MetricsInputParams" (unified
-           input/output parameters) -> structure: parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.)
-        :returns: instance of type "MetricsOutput" -> structure: parameter
-           "metrics_result" of unspecified object
-        """
-        # ctx is the context object
-        # return variables are: return_records
-        #BEGIN get_user_activities
-        return_records = self.mdb_controller.get_activities(ctx['user_id'], params, ctx['token'])
-        #END get_user_activities
-
-        # At some point might do deeper type checking...
-        if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_activities return value ' +
                              'return_records is not type dict as required.')
         # return the results
         return [return_records]
@@ -441,6 +118,33 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
             raise ValueError('Method get_user_counts_per_day return value ' +
+                             'return_records is not type dict as required.')
+        # return the results
+        return [return_records]
+
+    def update_metrics(self, ctx, params):
+        """
+        For writing to mongodb metrics *
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        # ctx is the context object
+        # return variables are: return_records
+        #BEGIN update_metrics
+        return_records = self.mdb_controller.update_metrics(ctx['user_id'], params, ctx['token'])
+        #END update_metrics
+
+        # At some point might do deeper type checking...
+        if not isinstance(return_records, dict):
+            raise ValueError('Method update_metrics return value ' +
                              'return_records is not type dict as required.')
         # return the results
         return [return_records]

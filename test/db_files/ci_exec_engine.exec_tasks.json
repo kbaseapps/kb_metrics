@@ -1,0 +1,2280 @@
+[
+		{
+			"ujs_job_id" : "5787a6abe4b04403bdc5fe60",
+			"app_job_id" : "5787a6abe4b04403bdc5fe60",
+			"job_input" : {
+				"service_ver" : "92294af95f017484be698807f237304557ead55b",
+				"app_id" : "KBaseRNASeq/align_reads_using_hisat2",
+				"method" : "KBaseRNASeq.Hisat2Call",
+				"params" : [
+					{
+						"maxins" : "500",
+						"orientation" : "fr",
+						"np" : "1",
+						"transcriptome_mapping_only" : 0,
+						"skip" : "0",
+						"minins" : "0",
+						"genome_id" : "Ptricocarpa_ensembl",
+						"num_threads" : "2",
+						"trim3" : "0",
+						"tailor_alignments" : "dta-cufflinks",
+						"trim5" : "0",
+						"quality_score" : "phred33",
+						"no_spliced_alignment" : 0,
+						"sampleset_id" : "poplar_6_sampleset",
+						"max_intron_length" : "500000",
+						"ws_id" : "sunita:1468251970460",
+						"min_intron_length" : "20"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5787bf9fe4b04403bdc5fe61",
+			"app_job_id" : "5787bf9fe4b04403bdc5fe61",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"app_id" : "KBaseRNASeq/assemble_transcripts_with_stringtie",
+				"method" : "KBaseRNASeq.StringTieCall",
+				"params" : [
+					{
+						"a_juncs" : "10",
+						"ballgown_mode" : 0,
+						"merge" : 0,
+						"c_min_read_coverage" : "2.5",
+						"label" : "STRG",
+						"j_min_reads" : "1",
+						"num-threads" : "2",
+						"min_length" : "200",
+						"skip_reads_with_no_ref" : 0,
+						"ws_id" : "srividya22:1467843992307",
+						"alignmentset_id" : "Ecoli_SingleEnd_SRR228086_16000_bowtie2_alignment",
+						"disable_trimming" : 0,
+						"min_isoform_abundance" : "0.1",
+						"gap_sep_value" : "50"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5787c10be4b04403bdc5fe62",
+			"app_job_id" : "5787c10be4b04403bdc5fe62",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"app_id" : "KBaseRNASeq/assemble_transcripts_with_stringtie",
+				"method" : "KBaseRNASeq.StringTieCall",
+				"params" : [
+					{
+						"a_juncs" : "10",
+						"ballgown_mode" : 0,
+						"merge" : 0,
+						"c_min_read_coverage" : "2.5",
+						"label" : "STRG",
+						"j_min_reads" : "1",
+						"num-threads" : "2",
+						"min_length" : "200",
+						"skip_reads_with_no_ref" : 0,
+						"ws_id" : "sunita:1468251970460",
+						"alignmentset_id" : "poplar_6_sampleset_hisat2_AlignmentSet",
+						"disable_trimming" : 0,
+						"min_isoform_abundance" : "0.1",
+						"gap_sep_value" : "50"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5787c5dce4b04403bdc5fe63",
+			"app_job_id" : "5787c5dce4b04403bdc5fe63",
+			"job_input" : {
+				"service_ver" : "318aa0fb9c0c70de91780c5b35d818b6c44ab8ba",
+				"app_id" : "kb_cummerbund/create_expression_matrix",
+				"method" : "kb_cummerbund.create_expression_matrix",
+				"params" : [
+					{
+						"include_replicates" : 1,
+						"ws_cuffdiff_id" : "e_sample_cuffdiff",
+						"workspace_name" : "pranjan77:1468515770961",
+						"ws_expression_matrix_id" : "er"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5787c6f1e4b04403bdc5fe64",
+			"app_job_id" : "5787c6f1e4b04403bdc5fe64",
+			"job_input" : {
+				"service_ver" : "318aa0fb9c0c70de91780c5b35d818b6c44ab8ba",
+				"app_id" : "kb_cummerbund/create_expression_matrix",
+				"method" : "kb_cummerbund.create_expression_matrix",
+				"params" : [
+					{
+						"include_replicates" : 1,
+						"ws_cuffdiff_id" : "e_sample_cuffdiff",
+						"workspace_name" : "vkumar:1468515718385",
+						"ws_expression_matrix_id" : "cuffdiff_exp_matrix_1"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5787ce1ce4b04403bdc5fe65",
+			"app_job_id" : "5787ce1ce4b04403bdc5fe65",
+			"job_input" : {
+				"service_ver" : "318aa0fb9c0c70de91780c5b35d818b6c44ab8ba",
+				"app_id" : "kb_cummerbund/create_expression_matrix",
+				"method" : "kb_cummerbund.create_expression_matrix",
+				"params" : [
+					{
+						"include_replicates" : 0,
+						"ws_cuffdiff_id" : "e_sample_cuffdiff",
+						"workspace_name" : "vkumar:1468515718385",
+						"ws_expression_matrix_id" : "test1"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5787cef8e4b04403bdc5fe66",
+			"job_input" : {
+				"service_ver" : "ac848434223d916cf4f97a83e06a4dca3cb1d35f",
+				"app_id" : "GenomeAnnotationFileUtil/import_genomeannotation_gbk_file",
+				"method" : "GenomeAnnotationFileUtil.genbank_to_genome_annotation",
+				"params" : [
+					{
+						"shock_id" : "f0c81cfe-eaf4-4149-833d-9b312a72eb6b",
+						"workspace_name" : "msneddon:1450308782878",
+						"genome_name" : "Ecoli4"
+					}
+				],
+				"wsid" : 3342,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5787f696e4b04403bdc5fe6f",
+			"app_job_id" : "5787f696e4b04403bdc5fe6f",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"app_id" : "KBaseRNASeq/build_bowtie2_index",
+				"method" : "KBaseRNASeq.BuildBowtie2Index",
+				"params" : [
+					{
+						"output_obj_name" : "ecoli_bowtie",
+						"ws_id" : "pranjan77:1468528106093",
+						"reference" : "Ecoli_Genome_Annotation"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5787f733e4b04403bdc5fe70",
+			"app_job_id" : "5787f733e4b04403bdc5fe70",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"app_id" : "KBaseRNASeq/describe_rnaseq_experiment",
+				"method" : "KBaseRNASeq.CreateRNASeqSampleSet",
+				"params" : [
+					{
+						"Library_type" : "SingleEnd",
+						"platform" : null,
+						"publication_id" : null,
+						"source" : null,
+						"condition" : [
+							"8083",
+							"8083",
+							"8085",
+							"8085",
+							"8086",
+							"8086"
+						],
+						"domain" : "Prokaryotes",
+						"sampleset_id" : "rnaseq-sample-set",
+						"ws_id" : "pranjan77:1468528106093",
+						"sample_ids" : [
+							"Ecoli_SE_8083_R1.fastq",
+							"Ecoli_SE_8083_R2.fastq",
+							"Ecoli_SE_8085_R1.fastq",
+							"Ecoli_SE_8085_R2.fastq",
+							"EColi_SE_8086_R1.fastq",
+							"EColi_SE_8086_R2.fastq"
+						],
+						"sampleset_desc" : null
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5787f843e4b04403bdc5fe72",
+			"app_job_id" : "5787f843e4b04403bdc5fe72",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"app_id" : "KBaseRNASeq/describe_rnaseq_experiment",
+				"method" : "KBaseRNASeq.CreateRNASeqSampleSet",
+				"params" : [
+					{
+						"Library_type" : "SingleEnd",
+						"platform" : null,
+						"publication_id" : null,
+						"source" : null,
+						"condition" : [
+							"8083",
+							"8083",
+							"8085",
+							"8085",
+							"8086",
+							"8086"
+						],
+						"domain" : "Prokaryotes",
+						"sampleset_id" : "ecoli_sampleset",
+						"ws_id" : "sunita:1468528134214",
+						"sample_ids" : [
+							"Ecoli_SE_8083_R1.fastq",
+							"Ecoli_SE_8083_R2.fastq",
+							"Ecoli_SE_8085_R1.fastq",
+							"Ecoli_SE_8085_R2.fastq",
+							"EColi_SE_8086_R1.fastq",
+							"EColi_SE_8086_R2.fastq"
+						],
+						"sampleset_desc" : null
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5787f816e4b04403bdc5fe71",
+			"app_job_id" : "5787f816e4b04403bdc5fe71",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"app_id" : "KBaseRNASeq/align_reads_using_bowtie2",
+				"method" : "KBaseRNASeq.Bowtie2Call",
+				"params" : [
+					{
+						"maxins" : "500",
+						"orientation" : null,
+						"np" : "1",
+						"minins" : "0",
+						"num_threads" : "2",
+						"bowtie_index" : "ecoli_bowtie",
+						"trim3" : "0",
+						"trim5" : "0",
+						"quality_score" : "phred33",
+						"alignment_type" : "end-to-end",
+						"preset_options" : null,
+						"sampleset_id" : "rnaseq-sample-set",
+						"ws_id" : "pranjan77:1468528106093"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5787f888e4b04403bdc5fe73",
+			"app_job_id" : "5787f888e4b04403bdc5fe73",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"app_id" : "KBaseRNASeq/build_bowtie2_index",
+				"method" : "KBaseRNASeq.BuildBowtie2Index",
+				"params" : [
+					{
+						"output_obj_name" : "ecoli_indexed_new",
+						"ws_id" : "sunita:1468528134214",
+						"reference" : "Ecoli_refseq_14july"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5787f8ebe4b04403bdc5fe74",
+			"app_job_id" : "5787f8ebe4b04403bdc5fe74",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"app_id" : "KBaseRNASeq/align_reads_using_bowtie2",
+				"method" : "KBaseRNASeq.Bowtie2Call",
+				"params" : [
+					{
+						"maxins" : "500",
+						"orientation" : null,
+						"np" : "1",
+						"minins" : "0",
+						"num_threads" : "2",
+						"bowtie_index" : "ecoli_indexed_new",
+						"trim3" : "0",
+						"trim5" : "0",
+						"quality_score" : "phred33",
+						"alignment_type" : "end-to-end",
+						"preset_options" : null,
+						"sampleset_id" : "ecoli_sampleset",
+						"ws_id" : "sunita:1468528134214"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57880683e4b04403bdc5fe75",
+			"job_input" : {
+				"service_ver" : "ddd1f358630c6b3db3854dbb07480dcfd4d77f30",
+				"source_ws_objects" : [
+					"3342/80/1",
+					"3342/14/1"
+				],
+				"app_id" : "PangenomeComparison/build_pangenome",
+				"method" : "PangenomeComparison.build_pangenome",
+				"params" : [
+					{
+						"genome_refs" : [
+							"msneddon:1450308782878/Rhodobacter_CACIA_14H1",
+							"msneddon:1450308782878/Rhodobacter_sphaeroides_2.4.1"
+						],
+						"output_id" : "pangenome",
+						"genomeset_ref" : null,
+						"workspace" : "msneddon:1450308782878"
+					}
+				],
+				"wsid" : 3342,
+				"meta" : {
+					"cell_id" : "3e49ef06-722b-4917-883c-f2f0e5d51763",
+					"run_id" : "19ec3b4a-ae67-4dad-9985-6427d3293889",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578808e8e4b04403bdc5fe76",
+			"job_input" : {
+				"service_ver" : "74d45440315ad0e520844c075c92ebbebf7cd607",
+				"source_ws_objects" : [
+					"8748/98/1"
+				],
+				"app_id" : "MegaHit/run_megahit",
+				"method" : "MegaHit.run_megahit",
+				"params" : [
+					{
+						"read_library_name" : "paired_end_reads.1",
+						"k_min" : null,
+						"min_contig_len" : null,
+						"k_max" : null,
+						"min_count" : null,
+						"k_list" : [ ],
+						"workspace_name" : "eapearson:1468518477765",
+						"k_step" : null,
+						"megahit_parameter_preset" : "meta",
+						"output_contigset_name" : "MegaHit.contigs"
+					}
+				],
+				"wsid" : 8748,
+				"meta" : {
+					"cell_id" : "b34095de-9939-46ca-94d3-da6328b3b9d8",
+					"run_id" : "ba753069-ce37-44f1-a81c-a0d5464c2023",
+					"tag" : "release"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5788568ee4b04403bdc5fe7c",
+			"job_input" : {
+				"service_ver" : "74d45440315ad0e520844c075c92ebbebf7cd607",
+				"source_ws_objects" : [
+					"7639/2/7"
+				],
+				"app_id" : "MegaHit/run_megahit",
+				"method" : "MegaHit.run_megahit",
+				"params" : [
+					{
+						"read_library_name" : "rhodo.art.q20.int.PE.reads",
+						"k_min" : null,
+						"min_contig_len" : null,
+						"k_max" : null,
+						"min_count" : null,
+						"k_list" : [ ],
+						"workspace_name" : "scanon:1464381876527",
+						"k_step" : null,
+						"megahit_parameter_preset" : "single-cell",
+						"output_contigset_name" : "MegaHit.contigs"
+					}
+				],
+				"wsid" : 7639,
+				"meta" : {
+					"cell_id" : "31668dc6-30de-404a-b31e-688914385f67",
+					"run_id" : "233c76b9-2e6f-460d-87c2-b31586ab5d6b",
+					"tag" : "release"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57887b1ce4b04403bdc5fe7d",
+			"job_input" : {
+				"service_ver" : "74d45440315ad0e520844c075c92ebbebf7cd607",
+				"source_ws_objects" : [
+					"8748/98/1"
+				],
+				"app_id" : "MegaHit/run_megahit",
+				"method" : "MegaHit.run_megahit",
+				"params" : [
+					{
+						"read_library_name" : "paired_end_reads.1",
+						"k_min" : null,
+						"min_contig_len" : null,
+						"k_max" : null,
+						"min_count" : null,
+						"k_list" : [ ],
+						"workspace_name" : "eapearson:1468518477765",
+						"k_step" : null,
+						"megahit_parameter_preset" : "meta",
+						"output_contigset_name" : "x"
+					}
+				],
+				"wsid" : 8748,
+				"meta" : {
+					"cell_id" : "b34095de-9939-46ca-94d3-da6328b3b9d8",
+					"run_id" : "eaf7d5b9-cba6-4e03-b5bb-ebd00dcc0990",
+					"tag" : "release"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57887b54e4b04403bdc5fe7e",
+			"job_input" : {
+				"service_ver" : "74d45440315ad0e520844c075c92ebbebf7cd607",
+				"source_ws_objects" : [
+					"8748/98/1"
+				],
+				"app_id" : "MegaHit/run_megahit",
+				"method" : "MegaHit.run_megahit",
+				"params" : [
+					{
+						"read_library_name" : "paired_end_reads.1",
+						"k_min" : null,
+						"min_contig_len" : null,
+						"k_max" : null,
+						"min_count" : null,
+						"k_list" : [ ],
+						"workspace_name" : "eapearson:1468518477765",
+						"k_step" : null,
+						"megahit_parameter_preset" : "meta",
+						"output_contigset_name" : "x"
+					}
+				],
+				"wsid" : 8748,
+				"meta" : {
+					"cell_id" : "b34095de-9939-46ca-94d3-da6328b3b9d8",
+					"run_id" : "eaf7d5b9-cba6-4e03-b5bb-ebd00dcc0990",
+					"tag" : "release"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5788ead7e4b04403bdc5fe7f",
+			"app_job_id" : "5788ead7e4b04403bdc5fe7f",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"app_id" : "KBaseRNASeq/align_reads_using_bowtie2",
+				"method" : "KBaseRNASeq.Bowtie2Call",
+				"params" : [
+					{
+						"maxins" : "500",
+						"orientation" : null,
+						"np" : "1",
+						"minins" : "0",
+						"num_threads" : "2",
+						"bowtie_index" : "ecoli_bowtie",
+						"trim3" : "0",
+						"trim5" : "0",
+						"quality_score" : "phred33",
+						"alignment_type" : "end-to-end",
+						"preset_options" : null,
+						"sampleset_id" : "rnaseq-sample-set",
+						"ws_id" : "pranjan77:1468528106093"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5788f776e4b04403bdc5fe80",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"source_ws_objects" : [
+					"8768/2/1",
+					"8768/3/1"
+				],
+				"app_id" : "KBaseRNASeq/describe_rnaseq_experiment",
+				"method" : "KBaseRNASeq.CreateRNASeqSampleSet",
+				"params" : [
+					{
+						"Library_type" : "SingleEnd",
+						"platform" : "",
+						"publication_id" : "",
+						"source" : "",
+						"condition" : [
+							"8083",
+							"8086"
+						],
+						"domain" : "Prokaryotes",
+						"sampleset_id" : "test-sample-2",
+						"ws_id" : "vkumar:1468592344827",
+						"sample_ids" : [
+							"Ecoli_SingleEnd_SRR228083_16000.fastq",
+							"Ecoli_SingleEnd_SRR228086_16000.fastq"
+						],
+						"sampleset_desc" : ""
+					}
+				],
+				"wsid" : 8768,
+				"meta" : {
+					"cell_id" : "77e59f7e-b095-4e21-b7df-ce230d329b4a",
+					"run_id" : "b4e9c770-a642-499a-96a6-ffc63e8d106d",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5788f8b6e4b04403bdc5fe81",
+			"job_input" : {
+				"service_ver" : "74d45440315ad0e520844c075c92ebbebf7cd607",
+				"source_ws_objects" : [
+					"7639/2/7"
+				],
+				"app_id" : "MegaHit/run_megahit",
+				"method" : "MegaHit.run_megahit",
+				"params" : [
+					{
+						"read_library_name" : "rhodo.art.q20.int.PE.reads",
+						"k_min" : null,
+						"min_contig_len" : null,
+						"k_max" : null,
+						"min_count" : null,
+						"k_list" : [ ],
+						"workspace_name" : "scanon:1464381876527",
+						"k_step" : null,
+						"megahit_parameter_preset" : "single-cell",
+						"output_contigset_name" : "MegaHit.contigs"
+					}
+				],
+				"wsid" : 7639,
+				"meta" : {
+					"cell_id" : "31668dc6-30de-404a-b31e-688914385f67",
+					"run_id" : "233c76b9-2e6f-460d-87c2-b31586ab5d6b",
+					"tag" : "release"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5788f8dfe4b04403bdc5fe82",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"source_ws_objects" : [
+					"8769/2/1",
+					"8769/3/1",
+					"8769/4/1",
+					"8769/5/1",
+					"8769/6/1",
+					"8769/7/1"
+				],
+				"app_id" : "KBaseRNASeq/describe_rnaseq_experiment",
+				"method" : "KBaseRNASeq.CreateRNASeqSampleSet",
+				"params" : [
+					{
+						"Library_type" : "PairedEnd",
+						"platform" : "",
+						"publication_id" : "",
+						"source" : "",
+						"condition" : [
+							"Control",
+							"Control",
+							"Control",
+							"ProlongDrought",
+							"ProlongDrought",
+							"ProlongDrought"
+						],
+						"domain" : "Eukaryotes",
+						"sampleset_id" : "Poplar_6sampleset_test1",
+						"ws_id" : "sunita:1468593983992",
+						"sample_ids" : [
+							"Root_Control_set_2_Replicate_1",
+							"Root_Control_set_2_Replicate_2",
+							"Root_Control_set_2_Replicate_3",
+							"Root_prolonged_drought_Replicate_1",
+							"Root_prolonged_drought_Replicate_2",
+							"Root_prolonged_drought_Replicate_3"
+						],
+						"sampleset_desc" : ""
+					}
+				],
+				"wsid" : 8769,
+				"meta" : {
+					"cell_id" : "401c10d3-7ee5-49fe-a601-72f8ff62e89c",
+					"run_id" : "1dd8212b-b78e-4d5b-a21b-68ed1fd76ae3",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57890d19e4b04403bdc5fe83",
+			"app_job_id" : "57890d19e4b04403bdc5fe83",
+			"job_input" : {
+				"service_ver" : "a9060667139eaac2987495a67f9d39e6ef5046ce",
+				"app_id" : "RAST_SDK/reannotate_microbial_genome",
+				"method" : "RAST_SDK.annotate_genome",
+				"params" : [
+					{
+						"call_features_tRNA_trnascan" : 0,
+						"kmer_v1_parameters" : 1,
+						"resolve_overlapping_features" : 0,
+						"find_close_neighbors" : 1,
+						"annotate_proteins_kmer_v2" : 1,
+						"workspace" : "chenry:1449260855600",
+						"call_features_crispr" : 0,
+						"call_pyrrolysoproteins" : 0,
+						"call_features_repeat_region_SEED" : 0,
+						"call_features_CDS_prodigal" : 0,
+						"call_features_rRNA_SEED" : 0,
+						"call_features_strep_pneumo_repeat" : 0,
+						"call_features_CDS_glimmer3" : 0,
+						"retain_old_anno_for_hypotheticals" : 0,
+						"input_genome" : "211586.9",
+						"call_features_strep_suis_repeat" : 0,
+						"output_genome" : "211586.9.kbase",
+						"annotate_proteins_similarity" : 1,
+						"call_features_prophage_phispy" : 0,
+						"call_features_insertion_sequences" : 0,
+						"call_selenoproteins" : 0
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57891257e4b04403bdc5fe84",
+			"app_job_id" : "57891257e4b04403bdc5fe84",
+			"job_input" : {
+				"service_ver" : "a9060667139eaac2987495a67f9d39e6ef5046ce",
+				"app_id" : "RAST_SDK/reannotate_microbial_genome",
+				"method" : "RAST_SDK.annotate_genome",
+				"params" : [
+					{
+						"call_features_tRNA_trnascan" : 0,
+						"kmer_v1_parameters" : 1,
+						"resolve_overlapping_features" : 0,
+						"find_close_neighbors" : 1,
+						"annotate_proteins_kmer_v2" : 1,
+						"workspace" : "chenry:1449260855600",
+						"call_features_crispr" : 0,
+						"call_pyrrolysoproteins" : 0,
+						"call_features_repeat_region_SEED" : 0,
+						"call_features_CDS_prodigal" : 0,
+						"call_features_rRNA_SEED" : 0,
+						"call_features_strep_pneumo_repeat" : 0,
+						"call_features_CDS_glimmer3" : 0,
+						"retain_old_anno_for_hypotheticals" : 0,
+						"input_genome" : "211586.9",
+						"call_features_strep_suis_repeat" : 0,
+						"output_genome" : "211586.9.kbase",
+						"annotate_proteins_similarity" : 1,
+						"call_features_prophage_phispy" : 0,
+						"call_features_insertion_sequences" : 0,
+						"call_selenoproteins" : 0
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5789127de4b04403bdc5fe85",
+			"app_job_id" : "5789127de4b04403bdc5fe85",
+			"job_input" : {
+				"service_ver" : "d34334f7ab3067e628133e8471a70b79a32dbc36",
+				"app_id" : "RAST_SDK/reannotate_microbial_genome",
+				"method" : "RAST_SDK.annotate_genome",
+				"params" : [
+					{
+						"call_features_tRNA_trnascan" : 0,
+						"kmer_v1_parameters" : 1,
+						"resolve_overlapping_features" : 0,
+						"find_close_neighbors" : 1,
+						"annotate_proteins_kmer_v2" : 1,
+						"workspace" : "chenry:1449260855600",
+						"call_features_crispr" : 0,
+						"call_pyrrolysoproteins" : 0,
+						"call_features_repeat_region_SEED" : 0,
+						"call_features_CDS_prodigal" : 0,
+						"call_features_rRNA_SEED" : 0,
+						"call_features_strep_pneumo_repeat" : 0,
+						"call_features_CDS_glimmer3" : 0,
+						"retain_old_anno_for_hypotheticals" : 0,
+						"input_genome" : "211586.9",
+						"call_features_strep_suis_repeat" : 0,
+						"output_genome" : "211586.9.kbase",
+						"annotate_proteins_similarity" : 1,
+						"call_features_prophage_phispy" : 0,
+						"call_features_insertion_sequences" : 0,
+						"call_selenoproteins" : 0
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57893527e4b04403bdc5fe87",
+			"job_input" : {
+				"service_ver" : "b7636c3f8d16491593900dd5cc89897b54e7856a",
+				"source_ws_objects" : [
+					"8775/107/1",
+					"8775/108/2"
+				],
+				"app_id" : "onerepotest/send_data",
+				"method" : "onerepotest.send_data",
+				"params" : [
+					{
+						"genomeB" : "kb|g.0",
+						"genomeA" : "Rhodobacter_CACIA_14H1"
+					}
+				],
+				"wsid" : 8775,
+				"meta" : {
+					"cell_id" : "2eb97e83-bb90-4119-85aa-13f4b8dd549c",
+					"run_id" : "f61f02b2-56d0-4e8f-98a7-b2e4a574e3ca",
+					"tag" : "beta"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57893dece4b04403bdc5fe88",
+			"job_input" : {
+				"service_ver" : "ddd1f358630c6b3db3854dbb07480dcfd4d77f30",
+				"source_ws_objects" : [
+					"7645/7/1",
+					"7645/35/1",
+					"7645/14/1"
+				],
+				"app_id" : "PangenomeComparison/build_pangenome",
+				"method" : "PangenomeComparison.build_pangenome",
+				"params" : [
+					{
+						"genome_refs" : [
+							"jplfaria:1464632279763/Shew_GenBank",
+							"jplfaria:1464632279763/Shew_RAST",
+							"jplfaria:1464632279763/Shew_Uniprot"
+						],
+						"output_id" : "testing_pan",
+						"genomeset_ref" : null,
+						"workspace" : "jplfaria:1464632279763"
+					}
+				],
+				"wsid" : 7645,
+				"meta" : {
+					"cell_id" : "eee574ed-d863-4e82-a102-625b1d424b55",
+					"run_id" : "dd821c2f-699e-4192-8641-69e7ffddbbf3",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57894279e4b04403bdc5fe89",
+			"job_input" : {
+				"service_ver" : "ddd1f358630c6b3db3854dbb07480dcfd4d77f30",
+				"source_ws_objects" : [
+					"7645/58/1"
+				],
+				"app_id" : "PangenomeComparison/compare_genomes",
+				"method" : "PangenomeComparison.compare_genomes",
+				"params" : [
+					{
+						"output_id" : "testing_comp",
+						"pangenome_ref" : "jplfaria:1464632279763/testing_pan",
+						"workspace" : "jplfaria:1464632279763"
+					}
+				],
+				"wsid" : 7645,
+				"meta" : {
+					"cell_id" : "665ec599-1f7f-413a-bebe-d0dcef60ce89",
+					"run_id" : "6e6462ac-77cb-49b5-b06c-12b7d773b2e7",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578942b2e4b04403bdc5fe8a",
+			"job_input" : {
+				"service_ver" : "ddd1f358630c6b3db3854dbb07480dcfd4d77f30",
+				"source_ws_objects" : [
+					"7645/58/1"
+				],
+				"app_id" : "PangenomeComparison/compare_genomes",
+				"method" : "PangenomeComparison.compare_genomes",
+				"params" : [
+					{
+						"output_id" : "testing_comp2",
+						"pangenome_ref" : "jplfaria:1464632279763/testing_pan",
+						"workspace" : "jplfaria:1464632279763"
+					}
+				],
+				"wsid" : 7645,
+				"meta" : {
+					"cell_id" : "407cac49-21e8-48fd-afc1-095a53fca2f1",
+					"run_id" : "012296cc-625b-4c4b-a465-e98540ff0abb",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57894417e4b04403bdc5fe8b",
+			"job_input" : {
+				"service_ver" : "74d45440315ad0e520844c075c92ebbebf7cd607",
+				"source_ws_objects" : [
+					"8775/109/1"
+				],
+				"app_id" : "MegaHit/run_megahit",
+				"method" : "MegaHit.run_megahit",
+				"params" : [
+					{
+						"read_library_name" : "paired_end_reads.1",
+						"k_min" : null,
+						"min_contig_len" : null,
+						"k_max" : null,
+						"min_count" : null,
+						"k_list" : [ ],
+						"workspace_name" : "eapearson:1468609573935",
+						"k_step" : null,
+						"megahit_parameter_preset" : "meta",
+						"output_contigset_name" : "MegaHit.contigs"
+					}
+				],
+				"wsid" : 8775,
+				"meta" : {
+					"cell_id" : "5a03bb02-0461-4e51-b2e4-80b5059d7bf5",
+					"run_id" : "9fa7223d-98da-4e25-82a6-72ccd3f3df53",
+					"tag" : "release"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578944ace4b04403bdc5fe8e",
+			"job_input" : {
+				"service_ver" : "87d395e3ccc872a21b563b309b7e8a8844fc583f",
+				"app_id" : "ReadsUtils/import_se_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"wsname" : "gaprice:1466485220633",
+						"name" : "new_reads2",
+						"fwd_id" : "ce3e97c1-1dd0-4799-bec9-376cc1dd7342"
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578944abe4b04403bdc5fe8d",
+			"job_input" : {
+				"service_ver" : "87d395e3ccc872a21b563b309b7e8a8844fc583f",
+				"app_id" : "ReadsUtils/import_se_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"wsname" : "gaprice:1466485220633",
+						"name" : "new_reads2",
+						"fwd_id" : "ce3e97c1-1dd0-4799-bec9-376cc1dd7342"
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578945cfe4b04403bdc5fe8f",
+			"job_input" : {
+				"service_ver" : "d90e2f2cc4cd7c0ba61c9d73b036f37e1ab347b4",
+				"app_id" : "KBaseFeatureValues/import_expression_tsv_file",
+				"method" : "KBaseFeatureValues.tsv_file_to_matrix",
+				"params" : [
+					{
+						"fill_missing_values" : 0,
+						"input_shock_id" : "27b4297e-7a6a-4a03-8e71-268b525a1703",
+						"genome_ref" : null,
+						"data_type" : "unknown",
+						"output_obj_name" : "matrix.1",
+						"output_ws_name" : "rsutormin:1452124397525",
+						"data_scale" : null
+					}
+				],
+				"wsid" : 3630,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57894638e4b04403bdc5fe90",
+			"job_input" : {
+				"service_ver" : "87d395e3ccc872a21b563b309b7e8a8844fc583f",
+				"app_id" : "ReadsUtils/import_se_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"wsname" : "gaprice:1466485220633",
+						"name" : "new_reads3",
+						"fwd_id" : "697f029f-0bf5-457c-a95b-c9dd87e192b0"
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578946eee4b04403bdc5fe91",
+			"job_input" : {
+				"service_ver" : "d90e2f2cc4cd7c0ba61c9d73b036f37e1ab347b4",
+				"app_id" : "KBaseFeatureValues/import_expression_tsv_file",
+				"method" : "KBaseFeatureValues.tsv_file_to_matrix",
+				"params" : [
+					{
+						"fill_missing_values" : 0,
+						"input_shock_id" : "7ca94b84-1f66-44e7-bb93-08ee9eedb757",
+						"genome_ref" : null,
+						"data_type" : "unknown",
+						"output_obj_name" : "matrix.1",
+						"output_ws_name" : "rsutormin:1452124397525",
+						"data_scale" : null
+					}
+				],
+				"wsid" : 3630,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578947b2e4b04403bdc5fe92",
+			"job_input" : {
+				"service_ver" : "74d45440315ad0e520844c075c92ebbebf7cd607",
+				"source_ws_objects" : [
+					"8775/109/1"
+				],
+				"app_id" : "MegaHit/run_megahit",
+				"method" : "MegaHit.run_megahit",
+				"params" : [
+					{
+						"read_library_name" : "paired_end_reads.1",
+						"k_min" : null,
+						"min_contig_len" : null,
+						"k_max" : null,
+						"min_count" : null,
+						"k_list" : [ ],
+						"workspace_name" : "eapearson:1468609573935",
+						"k_step" : null,
+						"megahit_parameter_preset" : "meta",
+						"output_contigset_name" : "MegaHit.contigs"
+					}
+				],
+				"wsid" : 8775,
+				"meta" : {
+					"cell_id" : "5a03bb02-0461-4e51-b2e4-80b5059d7bf5",
+					"run_id" : "9fa7223d-98da-4e25-82a6-72ccd3f3df53",
+					"tag" : "release"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578949b9e4b04403bdc5fe93",
+			"job_input" : {
+				"service_ver" : "a18713f9dbb57c692b9bc044cb1f6327715f721f",
+				"app_id" : "ReadsUtils/import_se_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"wsname" : "gaprice:1466485220633",
+						"name" : "new_reads4",
+						"fwd_id" : "ce3e97c1-1dd0-4799-bec9-376cc1dd7342"
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578956f8e4b04403bdc5feee",
+			"job_input" : {
+				"service_ver" : "e6ab5ac991d90bd6fdfc4dcccddd5dd6243afcc7",
+				"source_ws_objects" : [
+					"8773/2/7",
+					"8773/3/8"
+				],
+				"app_id" : "AssemblyRAST/run_arast",
+				"method" : "AssemblyRAST.run_arast",
+				"params" : [
+					{
+						"recipe" : "kiki",
+						"pipeline" : "",
+						"read_library_names" : [
+							"rhodo.art.q10.PE.reads",
+							"rhodo.art.q50.SE.reads"
+						],
+						"min_contig_len" : null,
+						"workspace_name" : "fangfang:1468608499453",
+						"output_contigset_name" : "contigs",
+						"assembler" : ""
+					}
+				],
+				"wsid" : 8773,
+				"meta" : {
+					"cell_id" : "97804e79-82a1-4f0e-9767-476713b03bc6",
+					"run_id" : "a410f662-c1be-4e9b-86d1-eba4f58ed20d",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57895c8be4b04403bdc5ff39",
+			"job_input" : {
+				"service_ver" : "0e69269f04200f9ad5455e2af6cad5edee2ba142",
+				"app_id" : "AssemblyUtil/import_assembly_fasta_file",
+				"method" : "AssemblyUtil.save_assembly_from_fasta",
+				"params" : [
+					{
+						"shock_id" : "f0c81cfe-eaf4-4149-833d-9b312a72eb6b",
+						"assembly_name" : "Ecoli4_assembly2",
+						"workspace_name" : "msneddon:1450308782878"
+					}
+				],
+				"wsid" : 3342,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57895e7ee4b04403bdc5ff53",
+			"job_input" : {
+				"service_ver" : "679cbcf7dc317c8391d38936d08d90faa0ee67cf",
+				"app_id" : "ReadsUtils/import_se_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"wsname" : "gaprice:1466485220633",
+						"name" : "new_reads4",
+						"fwd_id" : "ce3e97c1-1dd0-4799-bec9-376cc1dd7342",
+						"single_genome" : 1
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57896027e4b04403bdc5ff68",
+			"job_input" : {
+				"service_ver" : "0e69269f04200f9ad5455e2af6cad5edee2ba142",
+				"app_id" : "AssemblyUtil/import_assembly_fasta_file",
+				"method" : "AssemblyUtil.save_assembly_from_fasta",
+				"params" : [
+					{
+						"shock_id" : "9153ac41-0f48-4978-a7cc-e5991b1d9170",
+						"assembly_name" : "asdf",
+						"workspace_name" : "msneddon:1450308782878"
+					}
+				],
+				"wsid" : 3342,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57895ff1e4b04403bdc5ff65",
+			"job_input" : {
+				"service_ver" : "2885a3e17acb2c0c8f78a8c62b40c8170f49664e",
+				"app_id" : "ReadsUtils/import_se_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"wsname" : "gaprice:1466485220633",
+						"name" : "new_reads4",
+						"fwd_id" : "ce3e97c1-1dd0-4799-bec9-376cc1dd7342",
+						"single_genome" : 1
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578960fbe4b04403bdc5ff74",
+			"job_input" : {
+				"service_ver" : "2885a3e17acb2c0c8f78a8c62b40c8170f49664e",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"interleaved" : 1,
+						"name" : "new_reads4",
+						"fwd_id" : "ce3e97c1-1dd0-4799-bec9-376cc1dd7342",
+						"workspace_name" : "gaprice:1466485220633",
+						"rev_id" : ""
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5789626de4b04403bdc5ff83",
+			"job_input" : {
+				"service_ver" : "c9f501e1c60ab7af6a436272d624ef1d51ec63ea",
+				"app_id" : "ReadsUtils/import_se_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"wsname" : "gaprice:1466485220633",
+						"name" : "reads4",
+						"fwd_id" : "ce3e97c1-1dd0-4799-bec9-376cc1dd7342",
+						"single_genome" : 1
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5789647ee4b04403bdc5ff9f",
+			"job_input" : {
+				"service_ver" : "9a3811b03a0db175c4d6482655c34e16223206fc",
+				"app_id" : "ReadsUtils/import_se_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"wsname" : "gaprice:1466485220633",
+						"name" : "newr",
+						"fwd_id" : "ce3e97c1-1dd0-4799-bec9-376cc1dd7342",
+						"single_genome" : 1
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578964b5e4b04403bdc5ffa3",
+			"job_input" : {
+				"service_ver" : "9a3811b03a0db175c4d6482655c34e16223206fc",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"interleaved" : 1,
+						"wsname" : "gaprice:1466485220633",
+						"name" : "newr2",
+						"fwd_id" : "697f029f-0bf5-457c-a95b-c9dd87e192b0",
+						"rev_id" : ""
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578968cfe4b04403bdc5ffd8",
+			"job_input" : {
+				"service_ver" : "ad2b4261294fd5d24c4929452613c16cc8991ae0",
+				"app_id" : "ReadsUtils/import_se_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"wsname" : "gaprice:1466485220633",
+						"name" : "newr",
+						"fwd_id" : "ce3e97c1-1dd0-4799-bec9-376cc1dd7342",
+						"single_genome" : 1
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578968ece4b04403bdc5ffdb",
+			"job_input" : {
+				"service_ver" : "ad2b4261294fd5d24c4929452613c16cc8991ae0",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"interleaved" : 1,
+						"wsname" : "gaprice:1466485220633",
+						"name" : "woo",
+						"fwd_id" : "697f029f-0bf5-457c-a95b-c9dd87e192b0",
+						"single_genome" : 1,
+						"rev_id" : ""
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57896a9de4b04403bdc5ffee",
+			"job_input" : {
+				"service_ver" : "2f5e17a64426f4420055fb4262b5ed1a3808c094",
+				"app_id" : "ReadsUtils/import_se_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"wsname" : "gaprice:1466485220633",
+						"name" : "newr2",
+						"fwd_id" : "ce3e97c1-1dd0-4799-bec9-376cc1dd7342",
+						"single_genome" : 1
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57896ab9e4b04403bdc5fff1",
+			"job_input" : {
+				"service_ver" : "2f5e17a64426f4420055fb4262b5ed1a3808c094",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"interleaved" : 1,
+						"wsname" : "gaprice:1466485220633",
+						"name" : "newr3",
+						"fwd_id" : "697f029f-0bf5-457c-a95b-c9dd87e192b0",
+						"single_genome" : 1,
+						"rev_id" : ""
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57896b5de4b04403bdc5fff9",
+			"job_input" : {
+				"service_ver" : "2f5e17a64426f4420055fb4262b5ed1a3808c094",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"interleaved" : 1,
+						"wsname" : "gaprice:1466485220633",
+						"name" : "nonint",
+						"fwd_id" : "93323150-669e-47e6-8f52-a4cada8722b0",
+						"single_genome" : 1,
+						"rev_id" : "efa1c70c-1859-4281-baa8-08181eff62ca"
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57896c7fe4b04403bdc60006",
+			"job_input" : {
+				"service_ver" : "17074397b01695100514e506a9b6b5aa4799d8b7",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"interleaved" : 1,
+						"wsname" : "gaprice:1466485220633",
+						"name" : "intnew",
+						"fwd_id" : "93323150-669e-47e6-8f52-a4cada8722b0",
+						"single_genome" : 1,
+						"rev_id" : "efa1c70c-1859-4281-baa8-08181eff62ca"
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57897a2de4b04403bdc600b2",
+			"job_input" : {
+				"service_ver" : "934b7f7b81833fc78121c8ed9237deb6b8195cef",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"interleaved" : 1,
+						"wsname" : "gaprice:1466485220633",
+						"name" : "asdfadsf",
+						"insert_size_mean" : 123123123123,
+						"read_orientation_outward" : 1,
+						"fwd_id" : "d9867c59-4edc-46f7-8103-d80ed4059928",
+						"single_genome" : 1,
+						"insert_size_std_dev" : 12312312,
+						"rev_id" : ""
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5789874fe4b04403bdc6015a",
+			"job_input" : {
+				"service_ver" : "224b519d0eaf0503ee4a760e9df8dadd613b4e61",
+				"app_id" : "ReadsUtils/import_se_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"wsname" : "gaprice:1466485220633",
+						"name" : "single1",
+						"fwd_id" : "ce3e97c1-1dd0-4799-bec9-376cc1dd7342",
+						"single_genome" : 1
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57898805e4b04403bdc60165",
+			"job_input" : {
+				"service_ver" : "0e69269f04200f9ad5455e2af6cad5edee2ba142",
+				"app_id" : "AssemblyUtil/import_assembly_fasta_file",
+				"method" : "AssemblyUtil.save_assembly_from_fasta",
+				"params" : [
+					{
+						"shock_id" : "fd73b5b6-149a-4db6-bab5-757fa2ee48ba",
+						"assembly_name" : "assy",
+						"workspace_name" : "gaprice:1466485220633"
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578988bce4b04403bdc6016f",
+			"job_input" : {
+				"service_ver" : "d90e2f2cc4cd7c0ba61c9d73b036f37e1ab347b4",
+				"method" : "KBaseFeatureValues.export_matrix",
+				"params" : [
+					{
+						"input_ref" : "rsutormin:1452124397525/matrix.1"
+					}
+				],
+				"requested_release" : "dev"
+			}
+		},
+		{
+			"ujs_job_id" : "5789894ae4b04403bdc60177",
+			"job_input" : {
+				"service_ver" : "224b519d0eaf0503ee4a760e9df8dadd613b4e61",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"interleaved" : 1,
+						"wsname" : "gaprice:1466485220633",
+						"name" : "whee",
+						"insert_size_mean" : null,
+						"read_orientation_outward" : 0,
+						"fwd_id" : "697f029f-0bf5-457c-a95b-c9dd87e192b0",
+						"single_genome" : 1,
+						"insert_size_std_dev" : null,
+						"rev_id" : ""
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57899217e4b04403bdc601ee",
+			"job_input" : {
+				"service_ver" : "8cc95bfd5f8fc1d2ca57e71d370b6de29f6cdee5",
+				"app_id" : "HelloService3/example_method",
+				"method" : "HelloService3.your_method",
+				"params" : [
+					"eapearson:1468609573935",
+					""
+				],
+				"wsid" : 8775,
+				"meta" : {
+					"cell_id" : "b7149129-5b5b-4018-bb29-079fa578423c",
+					"run_id" : "d2da06b7-db9e-4654-9662-416fdcb8f9d9",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578993c5e4b04403bdc60207",
+			"job_input" : {
+				"service_ver" : "8cc95bfd5f8fc1d2ca57e71d370b6de29f6cdee5",
+				"app_id" : "HelloService3/example_method",
+				"method" : "HelloService3.your_method",
+				"params" : [
+					"eapearson:1468609573935",
+					""
+				],
+				"wsid" : 8775,
+				"meta" : {
+					"cell_id" : "b7149129-5b5b-4018-bb29-079fa578423c",
+					"run_id" : "d2da06b7-db9e-4654-9662-416fdcb8f9d9",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57899432e4b04403bdc6020e",
+			"job_input" : {
+				"service_ver" : "8cc95bfd5f8fc1d2ca57e71d370b6de29f6cdee5",
+				"app_id" : "HelloService3/example_method",
+				"method" : "HelloService3.your_method",
+				"params" : [
+					"eapearson:1468609573935",
+					""
+				],
+				"wsid" : 8775,
+				"meta" : {
+					"cell_id" : "b7149129-5b5b-4018-bb29-079fa578423c",
+					"run_id" : "d2da06b7-db9e-4654-9662-416fdcb8f9d9",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57899933e4b04403bdc6024b",
+			"job_input" : {
+				"service_ver" : "d9311dfdc0dbc28042eb91dfbf8e28bcb1875db7",
+				"source_ws_objects" : [
+					"8775/109/1"
+				],
+				"app_id" : "AssemblyRAST/run_a5",
+				"method" : "AssemblyRAST.run_a5",
+				"params" : [
+					{
+						"read_library_name" : "paired_end_reads.1",
+						"min_contig_len" : null,
+						"workspace_name" : "eapearson:1468609573935",
+						"output_contigset_name" : "a5.contigs",
+						"extra_params" : [ ]
+					}
+				],
+				"wsid" : 8775,
+				"meta" : {
+					"cell_id" : "4e610639-391f-49b5-92fc-eed9168e34a9",
+					"run_id" : "10cf6ff7-4a45-4d2d-bf5b-fba0596e8c6a",
+					"tag" : "beta"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578999dfe4b04403bdc60255",
+			"job_input" : {
+				"service_ver" : "224b519d0eaf0503ee4a760e9df8dadd613b4e61",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"interleaved" : 1,
+						"wsname" : "wjriehl:1468628051410",
+						"name" : "asdf",
+						"insert_size_mean" : 123,
+						"read_orientation_outward" : 1,
+						"fwd_id" : "d9867c59-4edc-46f7-8103-d80ed4059928",
+						"single_genome" : 1,
+						"insert_size_std_dev" : 123,
+						"rev_id" : ""
+					}
+				],
+				"wsid" : 8780,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57899afde4b04403bdc60266",
+			"job_input" : {
+				"service_ver" : "224b519d0eaf0503ee4a760e9df8dadd613b4e61",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"interleaved" : 1,
+						"wsname" : "wjriehl:1468628051410",
+						"name" : "asdf",
+						"insert_size_mean" : 1,
+						"read_orientation_outward" : 1,
+						"fwd_id" : "d9867c59-4edc-46f7-8103-d80ed4059928",
+						"single_genome" : 1,
+						"insert_size_std_dev" : 2,
+						"rev_id" : ""
+					}
+				],
+				"wsid" : 8780,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57899c38e4b04403bdc60278",
+			"job_input" : {
+				"service_ver" : "74be37bbcb2c117d7af12344617569cdd6c77ed2",
+				"source_ws_objects" : [
+					"8780/2/4"
+				],
+				"app_id" : "MegaHit/run_megahit",
+				"method" : "MegaHit.run_megahit",
+				"params" : [
+					{
+						"read_library_name" : "rhodo.art.jgi.reads",
+						"k_min" : null,
+						"min_contig_len" : null,
+						"k_max" : null,
+						"min_count" : null,
+						"k_list" : null,
+						"workspace_name" : "wjriehl:1468628051410",
+						"k_step" : null,
+						"megahit_parameter_preset" : null,
+						"output_contigset_name" : "rhodo.contigs"
+					}
+				],
+				"wsid" : 8780,
+				"meta" : {
+					"tag" : "release"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57899fc6e4b04403bdc602a6",
+			"job_input" : {
+				"service_ver" : "224b519d0eaf0503ee4a760e9df8dadd613b4e61",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"interleaved" : 1,
+						"wsname" : "wjriehl:1468628051410",
+						"name" : "asdf",
+						"insert_size_mean" : null,
+						"read_orientation_outward" : 1,
+						"fwd_id" : "d9867c59-4edc-46f7-8103-d80ed4059928",
+						"single_genome" : 1,
+						"insert_size_std_dev" : null,
+						"rev_id" : ""
+					}
+				],
+				"wsid" : 8780,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "57899fd6e4b04403bdc602a7",
+			"job_input" : {
+				"service_ver" : "224b519d0eaf0503ee4a760e9df8dadd613b4e61",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"interleaved" : 1,
+						"wsname" : "wjriehl:1468628051410",
+						"name" : "asdf",
+						"insert_size_mean" : null,
+						"read_orientation_outward" : 1,
+						"fwd_id" : "d9867c59-4edc-46f7-8103-d80ed4059928",
+						"single_genome" : 1,
+						"insert_size_std_dev" : null,
+						"rev_id" : ""
+					}
+				],
+				"wsid" : 8780,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5789a6f9e4b04403bdc60305",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"source_ws_objects" : [
+					"8744/2/1",
+					"8744/3/1"
+				],
+				"app_id" : "KBaseRNASeq/describe_rnaseq_experiment",
+				"method" : "KBaseRNASeq.CreateRNASeqSampleSet",
+				"params" : [
+					{
+						"Library_type" : "SingleEnd",
+						"platform" : "",
+						"publication_id" : "",
+						"source" : "",
+						"condition" : [
+							"l1",
+							"l2"
+						],
+						"domain" : "Prokaryotes",
+						"sampleset_id" : "test3",
+						"ws_id" : "vkumar:1468515718385",
+						"sample_ids" : [
+							"Ecoli_SingleEnd_SRR228083_16000.fastq",
+							"Ecoli_SingleEnd_SRR228086_16000.fastq"
+						],
+						"sampleset_desc" : ""
+					}
+				],
+				"wsid" : 8744,
+				"meta" : {
+					"cell_id" : "fbe64ebb-f1f0-447a-bacd-f1b0d5bc5224",
+					"run_id" : "0e208f7c-7f25-431e-9331-370b361f5b45",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5789a6fbe4b04403bdc60306",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"source_ws_objects" : [
+					"8744/2/1",
+					"8744/3/1"
+				],
+				"app_id" : "KBaseRNASeq/describe_rnaseq_experiment",
+				"method" : "KBaseRNASeq.CreateRNASeqSampleSet",
+				"params" : [
+					{
+						"Library_type" : "SingleEnd",
+						"platform" : "",
+						"publication_id" : "",
+						"source" : "",
+						"condition" : [
+							"l1",
+							"l2"
+						],
+						"domain" : "Prokaryotes",
+						"sampleset_id" : "test3",
+						"ws_id" : "vkumar:1468515718385",
+						"sample_ids" : [
+							"Ecoli_SingleEnd_SRR228083_16000.fastq",
+							"Ecoli_SingleEnd_SRR228086_16000.fastq"
+						],
+						"sampleset_desc" : ""
+					}
+				],
+				"wsid" : 8744,
+				"meta" : {
+					"cell_id" : "fbe64ebb-f1f0-447a-bacd-f1b0d5bc5224",
+					"run_id" : "500369c5-b0a0-457c-a1de-33a765c6b874",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5789a6fee4b04403bdc60307",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"source_ws_objects" : [
+					"8744/2/1",
+					"8744/3/1"
+				],
+				"app_id" : "KBaseRNASeq/describe_rnaseq_experiment",
+				"method" : "KBaseRNASeq.CreateRNASeqSampleSet",
+				"params" : [
+					{
+						"Library_type" : "SingleEnd",
+						"platform" : "",
+						"publication_id" : "",
+						"source" : "",
+						"condition" : [
+							"l1",
+							"l2"
+						],
+						"domain" : "Prokaryotes",
+						"sampleset_id" : "test3",
+						"ws_id" : "vkumar:1468515718385",
+						"sample_ids" : [
+							"Ecoli_SingleEnd_SRR228083_16000.fastq",
+							"Ecoli_SingleEnd_SRR228086_16000.fastq"
+						],
+						"sampleset_desc" : ""
+					}
+				],
+				"wsid" : 8744,
+				"meta" : {
+					"cell_id" : "fbe64ebb-f1f0-447a-bacd-f1b0d5bc5224",
+					"run_id" : "500369c5-b0a0-457c-a1de-33a765c6b874",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5789a700e4b04403bdc60308",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"source_ws_objects" : [
+					"8744/2/1",
+					"8744/3/1"
+				],
+				"app_id" : "KBaseRNASeq/describe_rnaseq_experiment",
+				"method" : "KBaseRNASeq.CreateRNASeqSampleSet",
+				"params" : [
+					{
+						"Library_type" : "SingleEnd",
+						"platform" : "",
+						"publication_id" : "",
+						"source" : "",
+						"condition" : [
+							"l1",
+							"l2"
+						],
+						"domain" : "Prokaryotes",
+						"sampleset_id" : "test3",
+						"ws_id" : "vkumar:1468515718385",
+						"sample_ids" : [
+							"Ecoli_SingleEnd_SRR228083_16000.fastq",
+							"Ecoli_SingleEnd_SRR228086_16000.fastq"
+						],
+						"sampleset_desc" : ""
+					}
+				],
+				"wsid" : 8744,
+				"meta" : {
+					"cell_id" : "fbe64ebb-f1f0-447a-bacd-f1b0d5bc5224",
+					"run_id" : "500369c5-b0a0-457c-a1de-33a765c6b874",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5789af1ee4b04403bdc60371",
+			"job_input" : {
+				"service_ver" : "224b519d0eaf0503ee4a760e9df8dadd613b4e61",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "IonTorrent",
+						"interleaved" : 1,
+						"wsname" : "gaprice:1466485220633",
+						"name" : "per",
+						"insert_size_mean" : 235,
+						"read_orientation_outward" : 1,
+						"fwd_id" : "5a5d8377-286d-4c04-b9a1-db9750706446",
+						"single_genome" : 1,
+						"insert_size_std_dev" : 8.9,
+						"rev_id" : ""
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5789b1b8e4b04403bdc60391",
+			"job_input" : {
+				"service_ver" : "224b519d0eaf0503ee4a760e9df8dadd613b4e61",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Unknown",
+						"interleaved" : 1,
+						"wsname" : "gaprice:1466485220633",
+						"name" : "per",
+						"insert_size_mean" : 1000,
+						"read_orientation_outward" : 0,
+						"fwd_id" : "93323150-669e-47e6-8f52-a4cada8722b0",
+						"single_genome" : 1,
+						"insert_size_std_dev" : 10,
+						"rev_id" : "efa1c70c-1859-4281-baa8-08181eff62ca"
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5789b505e4b04403bdc603ba",
+			"job_input" : {
+				"service_ver" : "ac82a6c2eea2c4ca4f3ed66db24fc310eb6f3bdf",
+				"app_id" : "ReadsUtils/import_pe_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "PacBio CLR",
+						"interleaved" : 1,
+						"wsname" : "gaprice:1466485220633",
+						"name" : "testpe",
+						"insert_size_mean" : null,
+						"read_orientation_outward" : 1,
+						"fwd_id" : "697f029f-0bf5-457c-a95b-c9dd87e192b0",
+						"single_genome" : 0,
+						"insert_size_std_dev" : 7.6,
+						"rev_id" : "93323150-669e-47e6-8f52-a4cada8722b0"
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5789b5f8e4b04403bdc603c6",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"source_ws_objects" : [
+					"8780/5/1",
+					"8780/6/1"
+				],
+				"app_id" : "KBaseRNASeq/describe_rnaseq_experiment",
+				"method" : "KBaseRNASeq.CreateRNASeqSampleSet",
+				"params" : [
+					{
+						"Library_type" : "SingleEnd",
+						"platform" : "",
+						"publication_id" : "",
+						"source" : "",
+						"condition" : [
+							"test",
+							"test"
+						],
+						"domain" : "Prokaryotes",
+						"sampleset_id" : "ecoli_samples",
+						"ws_id" : "wjriehl:1468628051410",
+						"sample_ids" : [
+							"EColi_SE_8086_R1.fastq",
+							"EColi_SE_8086_R2.fastq"
+						],
+						"sampleset_desc" : ""
+					}
+				],
+				"wsid" : 8780,
+				"meta" : {
+					"cell_id" : "256f80b1-92fe-4197-9bbf-84a9e08b244b",
+					"run_id" : "41a4bc88-caa9-425f-830f-a0e356efa871",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "5789b6a8e4b04403bdc603d0",
+			"job_input" : {
+				"service_ver" : "5b282f93b7dcc631dfe31f875b4d5cc8a5f04fd7",
+				"source_ws_objects" : [
+					"8781/18/1",
+					"8781/19/1",
+					"8781/20/1",
+					"8781/21/1"
+				],
+				"app_id" : "KBaseRNASeq/describe_rnaseq_experiment",
+				"method" : "KBaseRNASeq.CreateRNASeqSampleSet",
+				"params" : [
+					{
+						"Library_type" : "SingleEnd",
+						"platform" : "",
+						"publication_id" : "",
+						"source" : "",
+						"condition" : [
+							"8083",
+							"8083",
+							"8085",
+							"8085"
+						],
+						"domain" : "Prokaryotes",
+						"sampleset_id" : "rna-seq-set-2-samples",
+						"ws_id" : "vkumar:1468639677500",
+						"sample_ids" : [
+							"Ecoli_SE_8083_R1.fastq",
+							"Ecoli_SE_8083_R2.fastq",
+							"Ecoli_SE_8085_R1.fastq",
+							"Ecoli_SE_8085_R2.fastq"
+						],
+						"sampleset_desc" : ""
+					}
+				],
+				"wsid" : 8781,
+				"meta" : {
+					"cell_id" : "39d40252-5c8f-48b5-8942-f15606fb85c4",
+					"run_id" : "2b99fdd8-2e45-4a91-8abb-e13df6a10e5b",
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578a856de4b04403bdc60e13",
+			"job_input" : {
+				"service_ver" : "74d45440315ad0e520844c075c92ebbebf7cd607",
+				"source_ws_objects" : [
+					"7639/2/7"
+				],
+				"app_id" : "MegaHit/run_megahit",
+				"method" : "MegaHit.run_megahit",
+				"params" : [
+					{
+						"read_library_name" : "rhodo.art.q20.int.PE.reads",
+						"k_min" : null,
+						"min_contig_len" : null,
+						"k_max" : null,
+						"min_count" : null,
+						"k_list" : [ ],
+						"workspace_name" : "scanon:1464381876527",
+						"k_step" : null,
+						"megahit_parameter_preset" : "single-cell",
+						"output_contigset_name" : "MegaHit.contigs"
+					}
+				],
+				"wsid" : 7639,
+				"meta" : {
+					"cell_id" : "31668dc6-30de-404a-b31e-688914385f67",
+					"run_id" : "233c76b9-2e6f-460d-87c2-b31586ab5d6b",
+					"tag" : "release"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578a8b70e4b04403bdc60e66",
+			"app_job_id" : "578a8b70e4b04403bdc60e66",
+			"job_input" : {
+				"service_ver" : "bb26a06e158f058937a1c928ad5cd2f79b478897",
+				"app_id" : "InterProScan_SDK/annotate_genome_with_interpro_pipeline",
+				"method" : "InterProScan_SDK.annotate_genome_with_interpro_pipeline",
+				"params" : [
+					{
+						"workspace" : "chenry:1449260855600",
+						"genome_output_id" : "InterproTestGenome_annotated",
+						"genome_id" : "InterproTestGenome"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578ad12be4b04403bdc610d7",
+			"job_input" : {
+				"service_ver" : "ac82a6c2eea2c4ca4f3ed66db24fc310eb6f3bdf",
+				"app_id" : "ReadsUtils/import_se_reads",
+				"method" : "ReadsUtils.upload_reads",
+				"params" : [
+					{
+						"sequencing_tech" : "Illumina",
+						"wsname" : "gaprice:1466485220633",
+						"name" : "singlenew",
+						"fwd_id" : "ce3e97c1-1dd0-4799-bec9-376cc1dd7342",
+						"single_genome" : 1
+					}
+				],
+				"wsid" : 8166,
+				"meta" : {
+					"tag" : "dev"
+				},
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578af27ce4b04403bdc611f8",
+			"app_job_id" : "578af27ce4b04403bdc611f8",
+			"job_input" : {
+				"service_ver" : "bb26a06e158f058937a1c928ad5cd2f79b478897",
+				"app_id" : "InterProScan_SDK/annotate_genome_with_interpro_pipeline",
+				"method" : "InterProScan_SDK.annotate_genome_with_interpro_pipeline",
+				"params" : [
+					{
+						"workspace" : "chenry:1449260855600",
+						"genome_output_id" : "InterproTestGenome.interpro",
+						"genome_id" : "InterproTestGenome"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+		{
+			"ujs_job_id" : "578b0a07e4b04403bdc612e1",
+			"app_job_id" : "578b0a07e4b04403bdc612e1",
+			"job_input" : {
+				"service_ver" : "aa24259c0c28c6170d621e098e16fde216fcc284",
+				"app_id" : "InterProScan_SDK/annotate_genome_with_interpro_pipeline",
+				"method" : "InterProScan_SDK.annotate_genome_with_interpro_pipeline",
+				"params" : [
+					{
+						"workspace" : "chenry:1449260855600",
+						"genome_output_id" : "InterproTestGenome.annotated",
+						"genome_id" : "InterproTestGenome"
+					}
+				],
+				"requested_release" : null
+			}
+		},
+{
+	"ujs_job_id" : "5968cd75e4b08b65f9ff5d7c",
+	"awe_job_id" : "ac949dda-152b-4b98-a163-c9856bedc58d",
+	"creation_time" : 1500040565805,
+	"job_input" : {
+		"service_ver" : "ab6b07be3a1c13e9ad5d54593bda97dfa46590e8",
+		"method" : "kb_rnaseq_donwloader.export_rna_seq_expression_as_zip",
+		"params" : [
+			{
+				"input_ref" : "arfath:narrative_1498151834637/extracted_hy5_rep2_tophat_cufflinks_expression"
+			}
+		],
+		"requested_release" : "release"
+	},
+	"exec_start_time" : 1500040575589,
+	"job_output" : {
+		"id" : "460374937612",
+		"result" : [
+			{
+				"shock_id" : "5b3de7d6-8745-4f92-9bfb-8cf8eb2069a4"
+			}
+		],
+		"version" : "1.1"
+	},
+	"finish_time" : 1500040661062
+},
+{
+	"ujs_job_id" : "596832a4e4b08b65f9ff5d6f",
+	"awe_job_id" : "c4f9378d-8f21-4599-b6ef-d50bfd0cd96f",
+	"creation_time" : 1500000932952,
+	"job_input" : {
+		"service_ver" : "63bd07ebfbdfddd9729809a462ec80bbde18ca3c",
+		"source_ws_objects" : [
+			"15206/242/1"
+		],
+		"app_id" : "kb_deseq/run_DESeq2",
+		"method" : "kb_deseq.run_deseq2_app",
+		"params" : [
+			{
+				"fold_change_cutoff" : 1.5,
+				"condition_labels" : [
+					"WT",
+					"hy5"
+				],
+				"expressionset_ref" : "15206/242/1",
+				"diff_expression_obj_name" : "differential_expr_sample",
+				"fold_scale_type" : "log2",
+				"workspace_name" : "tgu2:1481170361822",
+				"alpha_cutoff" : 1,
+				"num_threads" : 4
+			}
+		],
+		"wsid" : 15206,
+		"meta" : {
+			"cell_id" : "23049ff3-6584-43e7-90a5-3618f095fead",
+			"run_id" : "b2d2ec5d-6e34-4201-9c9b-1c7098aa43f6",
+			"tag" : "beta",
+			"token_id" : "53adf535-ed4e-4c24-a126-e91e2176adfc"
+		},
+		"requested_release" : null
+	},
+	"exec_start_time" : 1500000937699,
+	"job_output" : {
+		"id" : "344120777507",
+		"result" : [
+			{
+				"result_directory" : "/kb/module/work/tmp/1c8a3ed6-07a3-46b4-9242-64cfb99e8f3e",
+				"report_name" : "kb_deseq2_report_82262cbf-9974-41bc-99ec-85fba3012d70",
+				"diff_expression_obj_ref" : "15206/267/2",
+				"report_ref" : "15206/269/1"
+			}
+		],
+		"version" : "1.1"
+	},
+	"finish_time" : 1500001203168
+},
+{
+    "ujs_job_id" : "5968e5fde4b08b65f9ff5d7d",
+    "awe_job_id" : "e24c500d-ac8c-42b5-83e6-73e9120a639a",
+    "creation_time" : 1500046845591,
+    "job_input" : {
+        "service_ver" : "a50583a4ca929eb0ff94a985a1d2db0c7c8997aa",
+        "source_ws_objects" : [
+            "23165/2/1"
+        ],
+        "app_id" : "kb_cufflinks/run_Cuffdiff",
+        "method" : "kb_cufflinks.run_Cuffdiff",
+        "params" : [
+            {
+                "time_series" : 0,
+                "multi_read_correct" : 0,
+                "expressionset_ref" : "23165/2/1",
+                "output_obj_name" : "hisat2_stringtie_cuffdiff_output",
+                "library_norm_method" : "classic-fpkm",
+                "min_alignment_count" : 10,
+                "workspace_name" : "umaganapathyswork:narrative_1498130853194"
+            }
+        ],
+        "wsid" : 23165,
+        "meta" : {
+            "cell_id" : "f993d010-7119-4bd1-979b-4cd28ba4c3e5",
+            "run_id" : "b19a2827-55ee-4bf4-ab28-1e68525ea7df",
+            "tag" : "dev",
+            "token_id" : "593d824b-9e08-4b73-ac68-6a8d2454ff94"
+        },
+        "requested_release" : null
+    },
+    "exec_start_time" : 1500046850814,
+    "finish_time" : 1500047709771
+},
+{
+	"ujs_job_id" : "5a68dffce4b0ace8f870f586",
+	"awe_job_id" : "53c5314d-9b6a-4dc4-8ac1-da3c522331cc",
+	"creation_time" : 1516822524247,
+	"job_input" : {
+		"service_ver" : "56d594701d63d0b21b8b3379348443d274d7edf4",
+		"source_ws_objects" : [
+			"27834/3/1",
+			"27834/2;27601/8/1"
+		],
+		"app_id" : "kb_SPAdes/run_SPAdes",
+		"method" : "kb_SPAdes.run_SPAdes",
+		"params" : [
+			{
+				"dna_source" : "standard",
+				"output_contigset_name" : "SPAdes.contigs",
+				"workspace_name" : "psdehal:narrative_1513709108341"
+            }
+		],
+		"wsid" : 27834,
+		"meta" : {
+			"cell_id" : "9f6fa103-5c19-4ca1-8d54-6fa45aabe880",
+			"run_id" : "372254d7-09b7-4b84-8511-7198cccfd63b",
+			"tag" : "release",
+			"token_id" : "3ba37efc-9e7d-473b-8650-ce1191c524e9"
+		}
+    },
+	"exec_start_time" : 1516822526995,
+	"finish_time" : 1516822657324
+}
+]
