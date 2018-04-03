@@ -33,7 +33,6 @@ module kb_Metrics {
     typedef tuple<timestamp t_lowerbound, timestamp t_upperbound> time_range;
     typedef tuple<epoch e_lowerbound, epoch e_upperbound> epoch_range;
     
-    /*job_stage has one of 'created', 'started', 'complete', 'canceled', 'error' or 'all' (default)*/
     typedef structure {
         list<user_id> user_ids;
         epoch_range epoch_range;
@@ -55,48 +54,15 @@ module kb_Metrics {
     typedef structure {
         UnspecifiedObject metrics_result;
     } MetricsOutput;
-    
-    funcdef get_exec_apps(MetricsInputParams params)
-        returns (MetricsOutput return_records) authentication required;
-    
-    funcdef get_exec_tasks(MetricsInputParams params)
-        returns (MetricsOutput return_records) authentication required;
-    
+
+    /** For retrieving from mongodb metrics **/ 
     funcdef get_user_details(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
-
-    funcdef get_total_logins(MetricsInputParams params)
-        returns (MetricsOutput return_records) authentication required;
-
-    funcdef get_user_ws(MetricsInputParams params)
-        returns (MetricsOutput return_records) authentication required;
-
-    funcdef get_user_narrative_stats(MetricsInputParams params)
-        returns (MetricsOutput return_records) authentication required;
-
-    funcdef get_user_numObjs(MetricsInputParams params)
-        returns (MetricsOutput return_records) authentication required;
-
-    funcdef get_user_logins(MetricsInputParams params)
-        returns (MetricsOutput return_records) authentication required;
-
-    funcdef get_user_ujs_results(MetricsInputParams params)
-        returns (MetricsOutput return_records) authentication required;
     
-    funcdef get_user_job_states(MetricsInputParams params)
-        returns (MetricsOutput return_records) authentication required;
-    
-    funcdef get_user_narratives(MetricsInputParams params)
+    funcdef get_user_counts_per_day(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
    
     /** For writing to mongodb metrics **/ 
     funcdef update_metrics(MetricsInputParams params)
-        returns (MetricsOutput return_records) authentication required;
-
-    /** For retrieving from mongodb metrics **/ 
-    funcdef get_user_activities(MetricsInputParams params)
-        returns (MetricsOutput return_records) authentication required;
-
-    funcdef get_user_counts_per_day(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
 };

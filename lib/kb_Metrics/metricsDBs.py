@@ -1,7 +1,7 @@
-
 from pymongo import MongoClient
+import datetime
 from pymongo import ASCENDING
-from pymongo.errors import BulkWriteError
+from pymongo.errors import BulkWriteError, WriteError, ConfigurationError
 from kb_Metrics.Util import _convert_to_datetime
 
 
@@ -33,17 +33,21 @@ class MongoMetricsDBI:
         self.mongo_clients = dict()
         self.metricsDBs = dict()
         for m_db in mongo_dbs:
-            # create the client and authenticate
-            self.mongo_clients[m_db] = MongoClient(
-                "mongodb://" + mongo_user + ":" + mongo_psswd +
-                "@" + mongo_host + "/" + m_db)
-            # grab a handle to the database
-            self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
+            try:
+                # create the client and authenticate
+                self.mongo_clients[m_db] = MongoClient(
+                    "mongodb://" + mongo_user + ":" + mongo_psswd +
+                    "@" + mongo_host + "/" + m_db)
+                # grab a handle to the database
+                self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
+            except ConfigurationError as ce:
+                print(ce)
+                raise ce
 
     # Begin functions to write to the metrics database...
     def update_user_records(self, upd_filter, upd_data, kbstaff):
         """
-        update_user_records--
+        update_user_records--update the user info in metrics.users
         """
         upd_op = {'$currentDate': {'recordLastUpdated': True},
                   '$set': upd_data,
@@ -57,19 +61,9 @@ class MongoMetricsDBI:
             # return an instance of UpdateResult(raw_result, acknowledged)
             update_ret = self.mt_users.update_one(upd_filter,
                                                   upd_op, upsert=True)
-        except BulkWriteError as bwe:
-            # print("mt_users.update errored\n:")
-            # pprint(bwe.details['writeErrors'])
-            panic = filter(lambda x: x['code'] != 11000,
-                           bwe.details['writeErrors'])
-            if len(panic) > 0:
-                print "really panic"
-                raise
-        else:
-            pass
-            # pprint(update_ret.raw_result)
-            # if update_ret.upserted_id:
-            # print(update_ret.upserted_id)
+        except WriteError as we:
+            print('WriteError caught')
+            raise we
         return update_ret
 
     def update_activity_records(self, upd_filter, upd_data):
@@ -87,18 +81,9 @@ class MongoMetricsDBI:
             # return an instance of UpdateResult(raw_result, acknowledged)
             update_ret = self.mt_coll.update_one(upd_filter,
                                                  upd_op, upsert=True)
-        except BulkWriteError as bwe:
-            # pprint(bwe.details['writeErrors'])
-            panic = filter(lambda x: x['code'] != 11000,
-                           bwe.details['writeErrors'])
-            if len(panic) > 0:
-                print "really panic"
-                raise
-        else:
-            pass
-            # pprint(update_ret.raw_result)
-            # if update_ret.upserted_id:
-            # print(update_ret.upserted_id)
+        except WriteError as we:
+            print('WriteError caught')
+            raise we
         return update_ret
 
     def insert_activity_records(self, mt_docs):
@@ -106,114 +91,102 @@ class MongoMetricsDBI:
         Insert an iterable of user activity documents
         """
         if not isinstance(mt_docs, list):
-            raise ValueError('The variable mt_docs must be a list of mutable mapping type data.')
+            raise ValueError('Variable mt_docs must be' +
+                             ' a list of mutable mapping type data.')
 
         # grab handle(s) to the database collection(s) targeted
-        self.mt_act = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
+        self.mt_act = self.metricsDBs['metrics'][
+                            MongoMetricsDBI._MT_DAILY_ACTIVITIES]
         insert_ret = None
         try:
             # get an instance of InsertManyResult(inserted_ids, acknowledged)
-            insert_ret = self.mt_act.insert_many(mt_docs, ordered=True)
+            insert_ret = self.mt_act.insert_many(mt_docs, ordered=False)
         except BulkWriteError as bwe:
-            # skip uplicate key error (code=11000)
-            panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
+            # skip duplicate key error (code=11000)
+            panic = filter(lambda x: x['code'] != 11000,
+                           bwe.details['writeErrors'])
             if len(panic) > 0:
                 print "really panic"
                 raise
+            else:
+                return bwe.details['nInserted']
         else:
             # insert_ret.inserted_ids is a list
-            print('Inserted {} records.'.format(len(insert_ret.inserted_ids)))
-        return insert_ret
+            print('Inserted {} activity records.'.format(
+                                len(insert_ret.inserted_ids)))
+        return len(insert_ret.inserted_ids)
 
     def update_narrative_records(self, upd_filter, upd_data):
         """
         update_narrative_records--
         """
         upd_op = {'$currentDate': {'recordLastUpdated': True},
+                  '$setOnInsert': {'first_access': upd_data['last_saved_at']},
                   '$set': upd_data,
-                  '$setOnInsert': {'access_count': 1, 'first_access': upd_data['last_saved_at']},
                   '$inc': {'access_count': 1}}
 
         # grab handle(s) to the database collection(s) targeted
-        self.mt_narrs = self.metricsDBs['metrics'][MongoMetricsDBI._MT_NARRATIVES]
+        self.mt_narrs = self.metricsDBs['metrics'][
+                                MongoMetricsDBI._MT_NARRATIVES]
         update_ret = None
         try:
             # return an instance of UpdateResult(raw_result, acknowledged)
-            update_ret = self.mt_narrs.update_one(upd_filter, upd_op, upsert=True)
-        except BulkWriteError as bwe:
-            # print("mt_users.update errored\n:")
-            # pprint(bwe.details['writeErrors'])
-            panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
-            if len(panic) > 0:
-                print "really panic"
-                raise
+            update_ret = self.mt_narrs.update_one(upd_filter,
+                                                  upd_op, upsert=True)
+        except WriteError as we:
+            print('WriteError caught')
+            raise we
         else:
-            pass
-            # pprint(update_ret.raw_result)
-            # if update_ret.upserted_id:
-            # print(update_ret.upserted_id)
+            # re-touch the newly inserted records
+            self.mt_narrs.update({'access_count': {'$exists': False}},
+                                 {'$set': {'access_count': 1}},
+                                 upsert=True, multi=True)
         return update_ret
-
-    def insert_narrative_records(self, mt_docs):
-        """
-        Insert an iterable of narrative documents
-        """
-        if not isinstance(mt_docs, list):
-            raise ValueError('The variable mt_docs must be a list of mutable mapping type data.')
-
-        # grab handle(s) to the database collection(s) targeted
-        self.mt_act = self.metricsDBs['metrics'][MongoMetricsDBI._MT_NARRATIVES]
-        insert_ret = None
-        try:
-            # get an instance of InsertManyResult(inserted_ids, acknowledged)
-            insert_ret = self.mt_act.insert_many(mt_docs, ordered=True)
-        except BulkWriteError as bwe:
-            # skip uplicate key error (code=11000)
-            panic = filter(lambda x: x['code'] != 11000, bwe.details['writeErrors'])
-            if len(panic) > 0:
-                print "really panic"
-                raise
-        else:
-            pass
-            # insert_ret.inserted_ids is a list
-            # print('Inserted {} records.'.format(len(insert_ret.inserted_ids)))
-        return insert_ret
-
     # End functions to write to the metrics database
 
     # Begin functions to query the other dbs...
-    def aggr_unique_users_per_day(self, minTime, maxTime, kbstaff=[]):
+    def aggr_unique_users_per_day(self, minTime, maxTime, excludeUsers=[]):
         # Define the pipeline operations
         minDate = _convert_to_datetime(minTime)
         maxDate = _convert_to_datetime(maxTime)
 
-        match_filter = {"_id.year_mod": {"$gte": minDate.year, "$lte": maxDate.year},
-                        "_id.month_mod": {"$gte": minDate.month, "$lte": maxDate.month},
-                        "_id.day_mod": {"$gte": minDate.day, "$lte": maxDate.day},
+        match_filter = {"_id.year_mod": {"$gte": minDate.year,
+                                         "$lte": maxDate.year},
+                        "_id.month_mod": {"$gte": minDate.month,
+                                          "$lte": maxDate.month},
+                        "_id.day_mod": {"$gte": minDate.day,
+                                        "$lte": maxDate.day},
                         "obj_numModified": {"$gt": 0}}
-        if kbstaff:
-            match_filter['_id.username'] = {"$nin": kbstaff}
+
+        if excludeUsers:
+            match_filter['_id.username'] = {"$nin": excludeUsers}
 
         pipeline = [
             {"$match": match_filter},
-            {"$project": {"year_mod": "$_id.year_mod", "month_mod": "$_id.month_mod",
-                          "day_mod": "$_id.day_mod", "username": "$_id.username", "_id": 0}},
-            {"$group": {"_id": {"year_mod": "$year_mod", "month_mod": "$month_mod",
-                                "day_mod": "$day_mod", "username": "$username"}}},
-            {"$group": {"_id": {"year_mod": "$_id.year_mod", "month_mod": "$_id.month_mod",
-                                "day_mod": "$_id.day_mod"}, "numOfUsers": {"$sum": 1}}},
+            {"$group": {"_id": {"year_mod": "$_id.year_mod",
+                                "month_mod": "$_id.month_mod",
+                                "day_mod": "$_id.day_mod",
+                        "username": "$_id.username"}}},
+            {"$group": {"_id": {"year_mod": "$_id.year_mod",
+                                "month_mod": "$_id.month_mod",
+                                "day_mod": "$_id.day_mod"},
+                        "numOfUsers": {"$sum": 1}}},
             {"$sort": {"_id.year_mod": ASCENDING,
                        "_id.month_mod": ASCENDING,
                        "_id.day_mod": ASCENDING}},
             {"$project": {"yyyy-mm-dd": {"$concat":
-                                         [{"$substr": ["$_id.year_mod", 0, -1]}, '-',
-                                          {"$substr": ["$_id.month_mod", 0, -1]}, '-',
-                                          {"$substr": ["$_id.day_mod", 0, -1]}]},
+                                         [{"$substr": [
+                                             "$_id.year_mod", 0, -1]}, '-',
+                                          {"$substr": [
+                                              "$_id.month_mod", 0, -1]}, '-',
+                                          {"$substr": [
+                                              "$_id.day_mod", 0, -1]}]},
                           "numOfUsers":1, "_id":0}}
         ]
 
-        # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
-        self.mt_acts = self.metricsDBs['metrics'][MongoMetricsDBI._MT_DAILY_ACTIVITIES]
+        # grab handle(s) to the db collection
+        self.mt_acts = self.metricsDBs['metrics'][
+                            MongoMetricsDBI._MT_DAILY_ACTIVITIES]
         m_cursor = self.mt_acts.aggregate(pipeline)
         return list(m_cursor)
 
@@ -268,7 +241,8 @@ class MongoMetricsDBI:
     def aggr_activities_from_wsobjs(self, minTime, maxTime):
         # Define the pipeline operations
         pipeline = [
-            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
+            {"$match": {"moddate": {"$gte": _convert_to_datetime(minTime),
+                                    "$lte": _convert_to_datetime(maxTime)}}},
             {"$project": {"year_mod": {"$year": "$moddate"},
                           "month_mod": {"$month": "$moddate"},
                           "date_mod": {"$dayOfMonth": "$moddate"},
@@ -283,178 +257,88 @@ class MongoMetricsDBI:
                         "obj_numModified": {"$sum": 1}}},
             {"$sort": {"_id": ASCENDING}}
         ]
-        # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
-        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WSOBJECTS]
-        m_cursor = self.kbworkspaces.aggregate(pipeline)
-        return list(m_cursor)
-
-    def aggr_activities_from_ws(self, minTime, maxTime):
-        # Define the pipeline operations
-        pipeline = [
-            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
-            {"$project": {"year_mod": {"$year": "$moddate"},
-                          "month_mod": {"$month": "$moddate"},
-                          "date_mod": {"$dayOfMonth": "$moddate"},
-                          "owner": 1, "ws_id": "$ws",
-                          "numObj": 1, "_id": 0}},
-            {"$group": {"_id": {"username": "$owner",
-                                "year_mod": "$year_mod",
-                                "month_mod": "$month_mod",
-                                "day_mod": "$date_mod"},
-                        "ws_numModified": {"$sum": 1},
-                        "ws_numObjs": {"$sum": "$numObj"}}},
-            {"$sort": {"_id": ASCENDING}}
-        ]
-        # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
-        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
-        m_cursor = self.kbworkspaces.aggregate(pipeline)
-        return list(m_cursor)
-
-    def aggr_user_logins_from_ws(self, minTime, maxTime):
-        # Define the pipeline operations
-        pipeline = [
-            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
-            {"$project": {"year": {"$year": "$moddate"},
-                          "month": {"$month": "$moddate"},
-                          "date": {"$dayOfMonth": "$moddate"},
-                          "owner": 1, "ws_id": "$ws",
-                          "numObj": 1, "meta": 1, "_id": 0}},
-            {"$group": {"_id": {"username": "$owner",
-                                "year": "$year",
-                                "month": "$month"},
-                        "year_mon_user_logins": {"$sum": 1}}},
-            {"$sort": {"_id": ASCENDING}}
-        ]
-        # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
-        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
-        m_cursor = self.kbworkspaces.aggregate(pipeline)
-        return list(m_cursor)
-
-    def aggr_total_logins(self, minTime, maxTime):
-        # Define the pipeline operations
-        pipeline = [
-            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
-            {"$project": {"year": {"$year": "$moddate"},
-                          "month": {"$month": "$moddate"},
-                          "date": {"$dayOfMonth": "$moddate"},
-                          "owner": 1, "ws_id": "$ws",
-                          "numObj": 1, "meta": 1, "_id": 0}},
-            {"$group": {"_id": {"username": "$owner",
-                                "year": "$year",
-                                "month": "$month"},
-                        "count_user_ws_logins": {"$sum": 1}}},
-            {"$group": {"_id": {"year": "$_id.year",
-                                "month": "$_id.month"},
-                        "year_mon_total_logins": {
-                            "$sum": "$count_user_ws_logins"}}},
-            {"$sort": {"_id": ASCENDING}}
-        ]
-        # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
-        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
-        m_cursor = self.kbworkspaces.aggregate(pipeline)
-        return list(m_cursor)
-
-    def aggr_user_ws(self, minTime, maxTime):
-        # Define the pipeline operations
-        pipeline = [
-            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
-            {"$project": {"year": {"$year": "$moddate"},
-                          "month": {"$month": "$moddate"},
-                          "date": {"$dayOfMonth": "$moddate"},
-                          "owner": 1, "ws_id": "$ws",
-                          "numObj": 1, "meta": 1, "_id": 0}},
-            {"$group": {"_id": {"username": "$owner",
-                                "year": "$year",
-                                "month": "$month"},
-                        "count_user_ws": {"$sum": 1}}},
-            {"$sort": {"_id": ASCENDING}}
-        ]
-        # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
-        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
-        m_cursor = self.kbworkspaces.aggregate(pipeline)
-        return list(m_cursor)
-
-    def aggr_user_narratives(self, minTime, maxTime):
-        # Define the pipeline operations
-        pipeline = [
-            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime},
-                        "meta": {"$exists": True, "$not": {"$size": 0}}}},
-            {"$project": {"year": {"$year": "$moddate"},
-                          "month": {"$month": "$moddate"},
-                          "date": {"$dayOfMonth": "$moddate"},
-                          "owner": 1, "ws_id": "$ws",
-                          "numObj": 1, "meta": 1, "_id": 0}},
-            {"$group": {"_id": {"username": "$owner",
-                                "year": "$year",
-                                "month": "$month"},
-                        "count_user_narratives": {"$sum": 1}}},
-            {"$sort": {"_id": ASCENDING}}
-        ]
-        # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
-        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
-        m_cursor = self.kbworkspaces.aggregate(pipeline)
-        return list(m_cursor)
-
-    def aggr_user_numObjs(self, minTime, maxTime):
-        # Define the pipeline operations
-        pipeline = [
-            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
-            {"$project": {"year": {"$year": "$moddate"},
-                          "month": {"$month": "$moddate"},
-                          "date": {"$dayOfMonth": "$moddate"},
-                          "owner": 1, "ws_id": "$ws",
-                          "numObj": 1, "meta": 1, "_id": 0}},
-            {"$group": {"_id": {"username": "$owner",
-                                "year": "$year",
-                                "month": "$month"},
-                        "count_user_numObjs": {
-                            "$sum": "$numObj"}}},
-            {"$sort": {"_id": ASCENDING}}
-        ]
-
-        # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
-        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
-        m_cursor = self.kbworkspaces.aggregate(pipeline)
+        # grab handle(s) to the db collection and retrieve a MongoDB cursor
+        kbwsobjs = self.metricsDBs['workspace'][
+                            MongoMetricsDBI._WS_WSOBJECTS]
+        m_cursor = kbwsobjs.aggregate(pipeline)
         return list(m_cursor)
 
     def list_ws_owners(self):
         # Define the pipeline operations
         pipeline = [
             {"$match": {}},
-            {"$project": {"username": "$owner", "ws_id": "$ws", "name": 1, "_id": 0}}
+            {"$project": {"username": "$owner",
+                          "ws_id": "$ws", "name": 1, "_id": 0}}
         ]
-        # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
-        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
-        m_cursor = self.kbworkspaces.aggregate(pipeline)
+        # grab handle(s) to the db collection and retrieve a MongoDB cursor
+        kbworkspaces = self.metricsDBs['workspace'][
+                                MongoMetricsDBI._WS_WORKSPACES]
+        m_cursor = kbworkspaces.aggregate(pipeline)
         return list(m_cursor)
 
-    def list_ws_narratives(self):
+    def list_ws_narratives(self, minT=0, maxT=0):
+        match_filter = {"del": False,
+                        "meta": {"$elemMatch": {"$or":
+                                 [{"k": "narrative"},
+                                  {"k": "narrative_nice_name"}]}}}
+
+        if minT > 0 and maxT > 0:
+            minTime = min(minT, maxT)
+            maxTime = max(minT, maxT)
+            minTime = datetime.datetime.fromtimestamp(minTime / 1000.0)
+            maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
+            match_filter['moddate'] = {"$gte": minTime, "$lte": maxTime}
+        elif minT > 0:
+            minTime = datetime.datetime.fromtimestamp(minT / 1000.0)
+            match_filter['moddate'] = {"$gte": minTime}
+        elif maxT > 0:
+            maxTime = datetime.datetime.fromtimestamp(maxT / 1000.0)
+            match_filter['moddate'] = {"$lte": maxTime}
+
         # Define the pipeline operations
         pipeline = [
-            {"$match": {"del": False, "meta": {"$exists": True, "$not": {"$size": 0}}}},
+            {"$match": match_filter},
             {"$project": {"username": "$owner", "workspace_id": "$ws",
                           "name": 1, "meta": 1,
                           "deleted": "$del", "desc": 1, "numObj": 1,
                           "last_saved_at": "$moddate", "_id": 0}}
         ]
-        # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
-        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+        # grab handle(s) to the db collection and retrieve a MongoDB cursor
+        self.kbworkspaces = self.metricsDBs['workspace'][
+                                    MongoMetricsDBI._WS_WORKSPACES]
         m_cursor = self.kbworkspaces.aggregate(pipeline)
         return list(m_cursor)
 
-    def list_user_objects_from_wsobjs(self, minTime, maxTime):
+    def list_user_objects_from_wsobjs(self, minTime, maxTime, ws_list=[]):
         # Define the pipeline operations
+        minTime = datetime.datetime.fromtimestamp(minTime / 1000.0)
+        maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
+
+        match_filter = {"del": False,
+                        "moddate": {"$gte": minTime, "$lte": maxTime}}
+        if ws_list:
+            match_filter["ws"] = {"$in": ws_list}
+
         pipeline = [
-            {"$match": {"del": False, "moddate": {"$gte": minTime, "$lte": maxTime}}},
+            {"$match": match_filter},
             {"$project": {"moddate": 1, "workspace_id": "$ws",
                           "object_id": "$id", "object_name": "$name",
-                          "object_version": "$numver", "deleted": "$del",
-                          "latest": 1, "_id": 0}}
+                          "object_version": "$numver",
+                          "deleted": "$del", "_id": 0}}
         ]
-        # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
-        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WSOBJECTS]
-        m_cursor = self.kbworkspaces.aggregate(pipeline)
+        # grab handle(s) to the db collection and retrieve a MongoDB cursor
+        kbwsobjs = self.metricsDBs['workspace'][
+                            MongoMetricsDBI._WS_WSOBJECTS]
+        m_cursor = kbwsobjs.aggregate(pipeline)
         return list(m_cursor)
+
+    def list_kbstaff_usernames(self):
+        kbstaffFilter = {'kbase_staff': {"$in": [True, 1]}}
+        projection = {'_id': 0, 'username': 1}
+
+        kbusers = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
+
+        return list(kbusers.find(kbstaffFilter, projection))
 
     def list_exec_tasks(self, minTime, maxTime):
         filter = {}
@@ -470,15 +354,11 @@ class MongoMetricsDBI:
         projection = {
             '_id': 0,
             'app_job_id': 1,
-            'awe_job_id': 1,
             'ujs_job_id': 1,
-            'job_input': 1,
-            'job_output': 1,
-            'input_shock_id': 1,
-            'output_shock_id': 1,
-            'exec_start_time': 1,  # 1449160731753L--miliseconds
             'creation_time': 1,  # 1449160731753L
-            'finish_time': 1
+            'job_input': 1
+            # 'exec_start_time': 1,  # 1449160731753L--miliseconds
+            # 'finish_time': 1
         }
         # grab handle(s) to the database collections needed
         kbtasks = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_TASKS]
@@ -494,53 +374,17 @@ class MongoMetricsDBI:
             filter, projection,
             sort=[['creation_time', ASCENDING]]))
 
-    def list_exec_apps(self, minTime, maxTime):
-        filter = {}
-
-        creationTimeFilter = {}
-        if minTime is not None:
-            creationTimeFilter['$gte'] = minTime
-        if maxTime is not None:
-            creationTimeFilter['$lte'] = maxTime
-        if len(creationTimeFilter) > 0:
-            filter['creation_time'] = creationTimeFilter
-
-        projection = {
-            '_id': 0,
-            'app_job_id': 1,
-            'app_job_state': 1,  # 'completed', 'suspend', 'in-progress','queued'
-            'app_state_data': 1,
-            'creation_time': 1,
-            'modification_time': 1
-        }
-
-        # grab handle(s) to the database collections needed
-        kbapps = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_APPS]
-
-        '''
-        # Make sure we have an index on user, created and updated
-        self.kbapps.ensure_index([
-            ('app_job_id', ASCENDING),
-            ('app_job_state', ASCENDING),
-            ('creation_time', ASCENDING),
-            ('modification_time', ASCENDING)],
-            unique=True, sparse=False)
-        '''
-        return list(kbapps.find(
-            filter, projection,
-            sort=[['creation_time', ASCENDING]]))
-
     def aggr_user_details(self, userIds, minTime, maxTime, excluded_users=[]):
         # Define the pipeline operations
         if userIds == []:
             match_cond = {"$match":
-                          {"username": {"$nin": excluded_users},
+                          {"user": {"$nin": excluded_users},
                            "create": {"$gte": _convert_to_datetime(minTime),
                                       "$lte": _convert_to_datetime(maxTime)}}
                           }
         else:
             match_cond = {"$match":
-                          {"username": {"$in": userIds, "$nin": excluded_users},
+                          {"user": {"$in": userIds, "$nin": excluded_users},
                            "create": {"$gte": _convert_to_datetime(minTime),
                                       "$lte": _convert_to_datetime(maxTime)}}
                           }
@@ -550,61 +394,15 @@ class MongoMetricsDBI:
             {"$project": {"username": "$user", "email": "$email",
                           "full_name": "$display",
                           "signup_at": "$create",
-                          "last_signin_at": "$login", 
+                          "last_signin_at": "$login",
                           "roles": 1, "_id": 0}},
             {"$sort": {"signup_at": 1}}
         ]
 
-        # grab handle(s) to the database collections needed and retrieve a MongoDB cursor
+        # grab handle(s) to the db collection and retrieve a MongoDB cursor
         kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
         u_cursor = kbusers.aggregate(pipeline)
         return list(u_cursor)
-
-    def list_user_details(self, userIds, minTime, maxTime):
-        filter = {}
-
-        userFilter = {}
-        if (userIds is not None and len(userIds) > 0):
-            userFilter['$in'] = userIds
-        elif userIds == []:
-            userFilter['$ne'] = 'kbasetest'
-        if len(userFilter) > 0:
-            filter['user'] = userFilter
-
-        createFilter = {}
-        if minTime is not None:
-            createFilter['$gte'] = _convert_to_datetime(minTime)
-        if maxTime is not None:
-            createFilter['$lte'] = _convert_to_datetime(maxTime)
-        if len(createFilter) > 0:
-            filter['create'] = createFilter
-        # exclude root, admin etc.
-        filter['lastrst'] = {'$exists': False}
-
-        projection = {
-            '_id': 0,
-            'user': 1,
-            'email': 1,
-            'display': 1,  # full name
-            'roles': 1,
-            'create': 1,  # ISODate("2017-05-24T22:52:27.990Z")
-            'login': 1
-        }
-
-        # grab handle(s) to the database collections needed
-        kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
-
-        '''
-        # Make sure we have an index on user, created and updated
-        self.kbusers.ensure_index([
-            ('user', ASCENDING),
-            ('create', ASCENDING),
-            ('login', ASCENDING)],
-            unique=True, sparse=False)
-        '''
-        return list(kbusers.find(
-            filter, projection))  # ,
-        # sort=[['create', ASCENDING]]))
 
     def list_ujs_results(self, userIds, minTime, maxTime):
         filter = {}
@@ -633,39 +431,16 @@ class MongoMetricsDBI:
             'started': 1,
             'updated': 1,
             'status': 1,
-            'progtype': 1,
             'authparam': 1,  # "DEFAULT" or workspace_id
             'authstrat': 1,  # "DEFAULT" or "kbaseworkspace"
             'complete': 1,
-            'shared': 1,
             'desc': 1,
-            'error': 1,
-            'errormsg': 1,
-            'estcompl': 1,  # e.g.,x ISODate("9999-04-03T08:56:32Z")
-            'maxprog': 1,
-            'meta': 1,
-            'prog': 1,
-            'results': 1,
-            'service': 1  # e.g., "bulkio" or "qzhang"
+            'error': 1
         }
 
         # grab handle(s) to the database collections needed
-        # self.userstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._USERSTATE]
         jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
 
-        '''
-        # Make sure we have an index on user, created and updated
-        self.userstate.ensure_index(('created', ASCENDING), sparse=False)
-        self.jobstate.ensure_index([
-            ('user', ASCENDING),
-            ('created', ASCENDING),
-            ('updated', ASCENDING)],
-            unique=True, sparse=False)
-        '''
-
-        # return list(self.jobstate.find(filter, projection))
-        return list(jobstate.find(
-            filter, projection  # ,
-        ))  # sort=[['created', ASCENDING]]))
+        return list(jobstate.find(filter, projection))
 
     # End functions to query the other dbs...

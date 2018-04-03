@@ -1,0 +1,300 @@
+	[
+		{
+			"user" : "shahmaneshb",
+			"email" : "shahmaneshb@gmail.com",
+			"display" : "Manesh Shah",
+			"roles" : [ ],
+			"create" : 1516307704709,
+			"login" : 1516307705087
+		},
+		{
+			"user" : "bobcottingham2",
+			"email" : "bobcottingham@gmail.com",
+			"display" : "Bob Cottingham",
+			"roles" : [ ],
+			"create" : 1516388210908,
+			"login" : 1519236626225
+		},
+		{
+			"user" : "tnseq",
+			"email" : "thesis1977@gmail.com",
+			"display" : "rodham singh",
+			"roles" : [ ],
+			"create" : 1516631575437,
+			"login" : 1516631575574
+		},
+		{
+			"user" : "lqw5322",
+			"email" : "lqw5322@psu.edu",
+			"display" : "Lin Wang",
+			"roles" : [ ],
+			"create" : 1516894029325,
+			"login" : 1518830174977
+		},
+		{
+			"user" : "bsadkhin",
+			"email" : "bsadkhin.anl@gmail.com",
+			"display" : "Boris Sadkhin",
+			"roles" : [
+				"DevToken"
+			],
+			"create" : 1517518525587,
+			"login" : 1520544658604
+		},
+		{
+			"user" : "testbriehl",
+			"email" : "briehl@gmail.com",
+			"display" : "TEST Bill",
+			"roles" : [ ],
+			"create" : 1518564203886,
+			"login" : 1518564204399
+		},
+		{
+			"user" : "tgu123",
+			"email" : "titigu1987@gmail.com",
+			"display" : "Gu Tianhao",
+			"roles" : [ ],
+			"create" : 1518565132329,
+			"login" : 1518565132339
+		},
+		{
+			"user" : "test_tgu123",
+			"email" : "tgu1@binghamton.edu",
+			"display" : "Tianhao Gu",
+			"roles" : [ ],
+			"create" : 1518571824517,
+			"login" : 1518571824519
+		},
+		{
+			"user" : "laramyenders",
+			"email" : "laramy.enders@gmail.com",
+			"display" : "Laramy Enders",
+			"roles" : [ ],
+			"create" : 1518794395973,
+			"login" : 1518794396426
+		},
+		{
+			"user" : "eason2",
+			"email" : "eason2@purdue.edu",
+			"display" : "Julius Eason",
+			"roles" : [ ],
+			"create" : 1518794407990,
+			"login" : 1518794407995
+		},
+		{
+			"user" : "longyun",
+			"email" : "guo165@purdue.edu",
+			"display" : "Longyun Guo",
+			"roles" : [ ],
+			"create" : 1518794412375,
+			"login" : 1518794412379
+		},
+		{
+			"user" : "mohit007",
+			"email" : "mohitsv@gmail.com",
+			"display" : "Mohit Verma",
+			"roles" : [ ],
+			"create" : 1518794425487,
+			"login" : 1518794425491
+		},
+		{
+			"user" : "allmon",
+			"email" : "allmon@purdue.edu",
+			"display" : "Lizz Allmon",
+			"roles" : [ ],
+			"create" : 1518794428236,
+			"login" : 1518794428238
+		},
+		{
+			"user" : "njalskarsgard",
+			"email" : "teha237@g.uky.edu",
+			"display" : "Thorsten Hansen",
+			"roles" : [ ],
+			"create" : 1518794428754,
+			"login" : 1518794428757
+		},
+		{
+			"user" : "cwickware",
+			"email" : "carmen.wickware@gmail.com",
+			"display" : "Carmen Wickware",
+			"roles" : [ ],
+			"create" : 1518794452549,
+			"login" : 1518794452552
+		},
+		{
+			"user" : "k2bhide",
+			"email" : "k2bhide@gmail.com",
+			"display" : "Ketaki Bhide",
+			"roles" : [ ],
+			"create" : 1518794458612,
+			"login" : 1518794458616
+		},
+		{
+			"user" : "nuhbtad",
+			"email" : "ntuhbtad@gmail.com",
+			"display" : "MING-HSU CHEN",
+			"roles" : [ ],
+			"create" : 1518794471539,
+			"login" : 1518794471542
+		},
+		{
+			"user" : "aasberry",
+			"email" : "andrew.asberry@gmail.com",
+			"display" : "Andrew Asberry",
+			"roles" : [ ],
+			"create" : 1518794478670,
+			"login" : 1518794478678
+		},
+		{
+			"user" : "helenaavilaax2r",
+			"email" : "helenaavila30@gmail.com",
+			"display" : "Helena Avila Arias",
+			"roles" : [ ],
+			"create" : 1518794493006,
+			"login" : 1518794493009
+		},
+		{
+			"user" : "pablov",
+			"email" : "pablo.vega.vasquez@gmail.com",
+			"display" : "pablo vega",
+			"roles" : [ ],
+			"create" : 1518794496799,
+			"login" : 1518794496804
+		},
+		{
+			"user" : "john2185",
+			"email" : "johnson2929@gmail.com",
+			"display" : "Tim Johnson",
+			"roles" : [ ],
+			"create" : 1518794510240,
+			"login" : 1518794510243
+		},
+		{
+			"user" : "mwigren",
+			"email" : "mwigren12@gmail.com",
+			"display" : "Maggie Wigren",
+			"roles" : [ ],
+			"create" : 1518794525472,
+			"login" : 1518794525476
+		},
+		{
+			"user" : "cbmccor",
+			"email" : "cmccoris@purdue.edu",
+			"display" : "Cassandra B McCorison",
+			"roles" : [ ],
+			"create" : 1518794529002,
+			"login" : 1518794529018
+		},
+		{
+			"user" : "xie186",
+			"email" : "xie186bioinforcore@gmail.com",
+			"display" : "Shaojun Xie",
+			"roles" : [ ],
+			"create" : 1518794539025,
+			"login" : 1518794539028
+		},
+		{
+			"user" : "nyukingh",
+			"email" : "joel.ykh@gmail.com",
+			"display" : "Nathaphon Yu King Hing",
+			"roles" : [ ],
+			"create" : 1518794551218,
+			"login" : 1518794551222
+		},
+		{
+			"user" : "jacobshoemake",
+			"email" : "jacobshoemake@gmail.com",
+			"display" : "Jacob Shoemake",
+			"roles" : [ ],
+			"create" : 1518794561863,
+			"login" : 1518794561865
+		},
+		{
+			"user" : "andrew78",
+			"email" : "andrewyoungwoo@gmail.com",
+			"display" : "Youngwoo Lee",
+			"roles" : [ ],
+			"create" : 1518794572614,
+			"login" : 1518794572618
+		},
+		{
+			"user" : "caseyhooker59",
+			"email" : "caseyhooker59@gmail.com",
+			"display" : "Casey Hooker",
+			"roles" : [ ],
+			"create" : 1518794579611,
+			"login" : 1518794579614
+		},
+		{
+			"user" : "jlwangshusheng",
+			"email" : "jlwangshusheng@gmail.com",
+			"display" : "汪树生",
+			"roles" : [ ],
+			"create" : 1518794614398,
+			"login" : 1518794614402
+		},
+		{
+			"user" : "xiaoli",
+			"email" : "csmbl2016@gmail.com",
+			"display" : "Xiaoli Sun",
+			"roles" : [ ],
+			"create" : 1518794641935,
+			"login" : 1518794641938
+		},
+		{
+			"user" : "ruijiehan1116",
+			"email" : "jerryhan1116@gmail.com",
+			"display" : "Ruijie Han",
+			"roles" : [ ],
+			"create" : 1518794649828,
+			"login" : 1518794649833
+		},
+		{
+			"user" : "ytm123",
+			"email" : "ytm1234@gmail.com",
+			"display" : "tim yao",
+			"roles" : [ ],
+			"create" : 1518794884978,
+			"login" : 1518794884985
+		},
+		{
+			"user" : "jyothi",
+			"email" : "jyothi.thimmapuram@gmail.com",
+			"display" : "Jyothi Thimmapuram",
+			"roles" : [ ],
+			"create" : 1518795142925,
+			"login" : 1518795142931
+		},
+		{
+			"user" : "sulbha",
+			"email" : "sulbha@purdue.edu",
+			"display" : "Sulbha Choudhari",
+			"roles" : [ ],
+			"create" : 1518795169234,
+			"login" : 1518795169237
+		},
+		{
+			"user" : "erik_s_test_account",
+			"email" : "eapearson+test450@lbl.gov",
+			"display" : "Erik Pearson",
+			"roles" : [ ],
+			"create" : 1519928061147,
+			"login" : 1519940332261
+		},
+		{
+			"user" : "erik_test451",
+			"email" : "eapearson+test451a@lbl.gov",
+			"display" : "Erik Pearson",
+			"roles" : [ ],
+			"create" : 1519940589083,
+			"login" : 1519940589152
+		},
+		{
+			"user" : "boris",
+			"email" : "bsadkhin@gmail.com",
+			"display" : "Boris Sadkhin (bio-boris)",
+			"roles" : [ ],
+			"create" : 1520549344009,
+			"login" : 1520549344149
+		}
+	]
