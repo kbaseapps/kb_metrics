@@ -276,6 +276,7 @@ class MongoMetricsDBI:
         m_cursor = kbworkspaces.aggregate(pipeline)
         return list(m_cursor)
 
+    @cache_it_json(limit=1000, expire60 * 60 * 24)
     def list_ws_narratives(self, minT=0, maxT=0):
         match_filter = {"del": False,
                         "meta": {"$elemMatch": {"$or":
@@ -332,6 +333,7 @@ class MongoMetricsDBI:
         m_cursor = kbwsobjs.aggregate(pipeline)
         return list(m_cursor)
 
+    @cache_it_json(limit=1000, expire60 * 60 * 24)
     def list_kbstaff_usernames(self):
         kbstaffFilter = {'kbase_staff': {"$in": [True, 1]}}
         projection = {'_id': 0, 'username': 1}

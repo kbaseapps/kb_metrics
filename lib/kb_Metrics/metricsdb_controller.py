@@ -251,74 +251,81 @@ class MetricsMongoDBController:
         """
         ujs_ret = []
         for j in ujs_jobs:
-            u_j_s = copy.deepcopy(j)
-            u_j_s['job_id'] = str(u_j_s.pop('_id'))
-            u_j_s['exec_start_time'] = u_j_s.pop('started', None)
-            u_j_s['creation_time'] = u_j_s.pop('created')
-            u_j_s['modification_time'] = u_j_s.pop('updated')
-
-            authparam = u_j_s.pop('authparam')
-            authstrat = u_j_s.pop('authstrat')
-            if authstrat == 'kbaseworkspace':
-                u_j_s['wsid'] = authparam
-
-            if u_j_s.get('desc'):
-                desc = u_j_s.pop('desc').split()[-1]
-                if '.' in desc:
-                    u_j_s['method'] = desc
-
-            for exec_task in exec_tasks:
-                if exec_task['ujs_job_id'] == u_j_s['job_id']:
-                    if 'job_input' in exec_task:
-                        et_job_in = exec_task['job_input']
-                        u_j_s['app_id'] = self._parse_app_id(exec_task)
-                        if not u_j_s.get('method'):
-                            u_j_s['method'] = self._parse_method(exec_task)
-
-                        if not u_j_s.get('wsid'):
-                            if 'wsid' in et_job_in:
-                                u_j_s['wsid'] = et_job_in['wsid']
-                            elif ('params' in et_job_in and
-                                  'ws_id' in et_job_in['params'][0]):
-                                u_j_s['wsid'] = et_job_in['params'][0]['ws_id']
-
-                        if 'params' in et_job_in:
-                            p_ws = et_job_in['params'][0]
-                            if 'workspace' in p_ws:
-                                u_j_s['workspace_name'] = p_ws['workspace']
-                            elif 'workspace_name' in p_ws:
-                                ws_nm = p_ws['workspace_name']
-                                u_j_s['workspace_name'] = ws_nm
-                    break
-
-            if (not u_j_s.get('app_id') and u_j_s.get('method')):
-                u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
-
-            if (not u_j_s.get('finish_time') and
-                    not u_j_s.get('error') and
-                    u_j_s.get('complete')):
-                u_j_s['finish_time'] = u_j_s.pop('modification_time')
-
-            # get the narrative name and version if any
-            if (u_j_s.get('wsid') and self.ws_narratives):
-                n_nm, n_obj = self._map_narrative(u_j_s['wsid'],
-                                                  self.ws_narratives)
-                if n_nm != "" and n_obj != 0:
-                    u_j_s['narrative_name'] = n_nm
-                    u_j_s['narrative_objNo'] = n_obj
-
-            # get the client groups
-            u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
-            if self.client_groups:
-                for clnt in self.client_groups:
-                    clnt_id = clnt['app_id']
-                    ujs_a_id = str(u_j_s.get('app_id'))
-                    if (str(clnt_id).lower() == ujs_a_id.lower()):
-                        u_j_s['client_groups'] = clnt['client_groups']
-                        break
+            u_j_s = self._assemble_ujs_state(j, exec_tasks)
 
             ujs_ret.append(u_j_s)
         return ujs_ret
+
+    @cache_it_json(limit=1000, expire60 * 60 * 24)
+    #@lru_cache(maxsize=128)
+    def _assemble_ujs_state(self, ujs, exec_tasks):
+        u_j_s = copy.deepcopy(ujs)
+        u_j_s['job_id'] = str(u_j_s.pop('_id'))
+        u_j_s['exec_start_time'] = u_j_s.pop('started', None)
+        u_j_s['creation_time'] = u_j_s.pop('created')
+        u_j_s['modification_time'] = u_j_s.pop('updated')
+
+        authparam = u_j_s.pop('authparam')
+        authstrat = u_j_s.pop('authstrat')
+        if authstrat == 'kbaseworkspace':
+            u_j_s['wsid'] = authparam
+
+        if u_j_s.get('desc'):
+            desc = u_j_s.pop('desc').split()[-1]
+            if '.' in desc:
+                u_j_s['method'] = desc
+
+        for exec_task in exec_tasks:
+            if exec_task['ujs_job_id'] == u_j_s['job_id']:
+                if 'job_input' in exec_task:
+                    et_job_in = exec_task['job_input']
+                    u_j_s['app_id'] = self._parse_app_id(exec_task)
+                    if not u_j_s.get('method'):
+                        u_j_s['method'] = self._parse_method(exec_task)
+
+                    if not u_j_s.get('wsid'):
+                        if 'wsid' in et_job_in:
+                            u_j_s['wsid'] = et_job_in['wsid']
+                        elif ('params' in et_job_in and 
+                              'ws_id' in et_job_in['params'][0]):
+                            u_j_s['wsid'] = et_job_in['params'][0]['ws_id']
+
+                    if 'params' in et_job_in:
+                        p_ws = et_job_in['params'][0]
+                        if 'workspace' in p_ws:
+                            u_j_s['workspace_name'] = p_ws['workspace']
+                        elif 'workspace_name' in p_ws:
+                            ws_nm = p_ws['workspace_name']
+                            u_j_s['workspace_name'] = ws_nm
+                break
+
+        if (not u_j_s.get('app_id') and u_j_s.get('method')):
+            u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
+
+        if (not u_j_s.get('finish_time') and
+               not u_j_s.get('error') and
+                u_j_s.get('complete')):
+            u_j_s['finish_time'] = u_j_s.pop('modification_time')
+
+        # get the narrative name and version if any
+        if (u_j_s.get('wsid') and self.ws_narratives):
+            n_nm, n_obj = self._map_narrative(u_j_s['wsid'],
+                                              self.ws_narratives)
+            if n_nm != "" and n_obj != 0:
+                u_j_s['narrative_name'] = n_nm
+                u_j_s['narrative_objNo'] = n_obj
+
+        # get the client groups
+        u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
+        if self.client_groups:
+            for clnt in self.client_groups:
+                clnt_id = clnt['app_id']
+                ujs_a_id = str(u_j_s.get('app_id'))
+                if (str(clnt_id).lower() == ujs_a_id.lower()):
+                    u_j_s['client_groups'] = clnt['client_groups']
+                    break
+
+        return u_j_s
 
     def _process_parameters(self, params):
 
@@ -356,6 +363,7 @@ class MetricsMongoDBController:
 
         return params
 
+    @cache_it_json(limit=1000, expire60 * 60 * 24)
     def _get_client_groups_from_cat(self, token):
         """
         get_client_groups_from_cat: Get the client_groups data from Catalog API
