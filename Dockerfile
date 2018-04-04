@@ -48,6 +48,8 @@ WORKDIR /kb/module
 
 RUN make all
 
+RUN chmod +x /kb/module/scripts/start_lazy_uwsgi_server.sh
+
 ENTRYPOINT [ "./scripts/entrypoint.sh" ]
 
 CMD [ ]
