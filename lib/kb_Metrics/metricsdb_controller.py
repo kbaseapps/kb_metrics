@@ -41,26 +41,26 @@ class MetricsMongoDBController:
         return username in self.metricsAdmins
 
     def _is_kbstaff(self, username):
-        return username in self.kbstaffList
+        return username in self.kbstaff_list
 
-    def _convert_isodate_to_millis(self, src_list, dt_list):
-        for dr in src_list:
-            for dt in dt_list:
-                if (dt in dr and isinstance(dr[dt], datetime.datetime)):
-                    dr[dt] = _unix_time_millis_from_datetime(dr[dt])
+    def _convert_isodate_to_milis(self, src_list, dt_list):
+        for src in src_list:
+            for ldt in dt_list:
+                if ldt in src and isinstance(src[ldt], datetime.datetime):
+                    src[ldt] = _unix_time_millis_from_datetime(src[ldt])
         return src_list
 
-    def _parse_app_id(self, exec_task):
+    def _parse_app_id(self, et_jobinput):
         app_id = ''
-        if 'app_id' in exec_task['job_input']:
-            app_id = exec_task['job_input']['app_id'].replace('.', '/')
+        if 'app_id' in et_jobinput:
+            app_id = et_jobinput['app_id'].replace('.', '/')
 
         return app_id
 
-    def _parse_method(self, exec_task):
+    def _parse_method(self, et_jobinput):
         method_id = ''
-        if 'method' in exec_task['job_input']:
-            method_id = exec_task['job_input']['method'].replace('/', '.')
+        if 'method' in et_jobinput:
+            method_id = et_jobinput['method'].replace('/', '.')
 
         return method_id
 
@@ -70,11 +70,10 @@ class MetricsMongoDBController:
         """
         n_name = ''
         n_obj = '0'
-        for ws in ws_narrs:
-            if str(ws['workspace_id']) == str(wsid):
-                n_name = ws['name']
-                w_meta = ws['meta']
-                for w_m in w_meta:
+        for wsn in ws_narrs:
+            if str(wsn['workspace_id']) == str(wsid):
+                n_name = wsn['name']
+                for w_m in wsn['meta']:
                     if w_m['k'] == 'narrative':
                         n_obj = w_m['v']
                     if w_m['k'] == 'narrative_nice_name':
@@ -90,27 +89,27 @@ class MetricsMongoDBController:
         params = self._process_parameters(params)
         auth2_ret = self.metrics_dbi.aggr_user_details(
             params['user_ids'], params['minTime'], params['maxTime'])
-        upDated = 0
-        upSerted = 0
-        if len(auth2_ret) == 0:
+        up_dated = 0
+        up_serted = 0
+        if not auth2_ret:
             print("No user records returned for update!")
             return 0
 
         print('Retrieved {} user record(s) for update!'.format(len(auth2_ret)))
-        idKeys = ['username', 'email']
-        dataKeys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
+        id_keys = ['username', 'email']
+        data_keys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
         for u_data in auth2_ret:
-            idData = {x: u_data[x] for x in idKeys}
-            userData = {x: u_data[x] for x in dataKeys}
-            isKbstaff = 1 if self._is_kbstaff(idData['username']) else 0
+            id_data = {x: u_data[x] for x in id_keys}
+            user_data = {x: u_data[x] for x in data_keys}
+            is_kbstaff = 1 if self._is_kbstaff(id_data['username']) else 0
             update_ret = self.metrics_dbi.update_user_records(
-                idData, userData, isKbstaff)
+                id_data, user_data, is_kbstaff)
             if update_ret.raw_result['updatedExisting']:
-                upDated += update_ret.raw_result['nModified']
+                up_dated += update_ret.raw_result['nModified']
             elif update_ret.raw_result.get('upserted'):
-                upSerted += 1
-        print('updated {} and upserted {} users.'.format(upDated, upSerted))
-        return upDated + upSerted
+                up_serted += 1
+        print('updated {} and upserted {} users.'.format(up_dated, up_serted))
+        return up_dated + up_serted
 
     def _update_daily_activities(self, params, token):
         """
@@ -119,29 +118,29 @@ class MetricsMongoDBController:
         """
         ws_ret = self._get_activities_from_wsobjs(params, token)
         act_list = ws_ret['metrics_result']
-        upDated = 0
-        upSerted = 0
-        if len(act_list) == 0:
+        up_dated = 0
+        up_serted = 0
+        if not act_list:
             print("No daily activity records returned for update!")
             return 0
 
         print('Retrieved {} activity record(s) for '
               'update!'.format(len(act_list)))
-        idKeys = ['_id']
-        countKeys = ['obj_numModified']
+        id_keys = ['_id']
+        count_keys = ['obj_numModified']
         for a_data in act_list:
-            idData = {x: a_data[x] for x in idKeys}
-            countData = {x: a_data[x] for x in countKeys}
+            id_data = {x: a_data[x] for x in id_keys}
+            count_data = {x: a_data[x] for x in count_keys}
             update_ret = self.metrics_dbi.update_activity_records(
-                idData, countData)
+                id_data, count_data)
             if update_ret.raw_result['updatedExisting']:
-                upDated += update_ret.raw_result['nModified']
+                up_dated += update_ret.raw_result['nModified']
             elif update_ret.raw_result.get('upserted'):
-                upSerted += 1
+                up_serted += 1
 
         print('updated {} and upserted {} '
-              'activities.'.format(upDated, upSerted))
-        return upDated + upSerted
+              'activities.'.format(up_dated, up_serted))
+        return up_dated + up_serted
 
     def _update_narratives(self, params, token):
         """
@@ -150,31 +149,31 @@ class MetricsMongoDBController:
         """
         ws_ret = self._get_narratives_from_wsobjs(params, token)
         narr_list = ws_ret['metrics_result']
-        upDated = 0
-        upSerted = 0
-        if len(narr_list) == 0:
+        up_dated = 0
+        up_serted = 0
+        if not narr_list:
             print("No narrative records returned for update!")
             return 0
 
         print('Retrieved {} narratives record(s) for '
               'update!'.format(len(narr_list)))
-        idKeys = ['object_id', 'object_version', 'workspace_id']
-        otherKeys = ['name', 'last_saved_at', 'last_saved_by', 'numObj',
-                     'deleted', 'nice_name', 'desc']
+        id_keys = ['object_id', 'object_version', 'workspace_id']
+        other_keys = ['name', 'last_saved_at', 'last_saved_by', 'numObj',
+                      'deleted', 'nice_name', 'desc']
 
         for n_data in narr_list:
-            idData = {x: n_data[x] for x in idKeys}
-            otherData = {x: n_data[x] for x in otherKeys}
+            id_data = {x: n_data[x] for x in id_keys}
+            other_data = {x: n_data[x] for x in other_keys}
             update_ret = self.metrics_dbi.update_narrative_records(
-                                            idData, otherData)
+                id_data, other_data)
             if update_ret.raw_result['updatedExisting']:
-                upDated += update_ret.raw_result['nModified']
+                up_dated += update_ret.raw_result['nModified']
             elif update_ret.raw_result['upserted']:
-                upSerted += 1
+                up_serted += 1
 
         print('updated {} and upserted {} '
-              'narratives.'.format(upDated, upSerted))
-        return upDated + upSerted
+              'narratives.'.format(up_dated, up_serted))
+        return up_dated + up_serted
 
     # End functions to write to the metrics database
 
@@ -199,33 +198,32 @@ class MetricsMongoDBController:
         wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(
             params['minTime'], params['maxTime'], ws_ids)
         ws_narrs1 = []
-        for wn in ws_narrs:
+        for wsn in ws_narrs:
             for obj in wsobjs:
-                if wn['workspace_id'] == obj['workspace_id']:
-                    if wn['name'] == obj['object_name']:
-                        wn[u'object_id'] = obj['object_id']
-                        wn[u'object_version'] = obj['object_version']
+                if wsn['workspace_id'] == obj['workspace_id']:
+                    if wsn['name'] == obj['object_name']:
+                        wsn[u'object_id'] = obj['object_id']
+                        wsn[u'object_version'] = obj['object_version']
                         break
-                    elif ':' in wn['name']:
-                        wts = wn['name'].split(':')[1]
+                    elif ':' in wsn['name']:
+                        wts = wsn['name'].split(':')[1]
                         if '_' in wts:
                             wts = wts.split('_')[1]
                         p = re.compile(wts, re.IGNORECASE)
                         if p.search(obj['object_name']):
-                            wn[u'object_id'] = obj['object_id']
-                            wn[u'object_version'] = obj['object_version']
+                            wsn[u'object_id'] = obj['object_id']
+                            wsn[u'object_version'] = obj['object_version']
                         break
-        for wn in ws_narrs:
-            if wn.get('object_id'):
-                wn[u'last_saved_by'] = wn.pop('username')
-                wn[u'nice_name'] = ''
-                w_meta = wn['meta']
-                for w_m in w_meta:
+        for wsn in ws_narrs:
+            if wsn.get('object_id'):
+                wsn[u'last_saved_by'] = wsn.pop('username')
+                wsn[u'nice_name'] = ''
+                for w_m in wsn['meta']:
                     if w_m['k'] == 'narrative_nice_name':
-                        wn[u'nice_name'] = w_m['v']
+                        wsn[u'nice_name'] = w_m['v']
                         break
-                del wn['meta']
-                ws_narrs1.append(wn)
+                del wsn['meta']
+                ws_narrs1.append(wsn)
         return {'metrics_result': ws_narrs1}
 
     def _get_activities_from_wsobjs(self, params, token):
@@ -260,7 +258,6 @@ class MetricsMongoDBController:
         return ujs_ret
 
     @cache_it_json(limit=1024, expire=60 * 60 * 24)
-    #@lru_cache(maxsize=1024)
     def _assemble_ujs_state(self, ujs, exec_tasks):
         u_j_s = copy.deepcopy(ujs)
         u_j_s['job_id'] = str(u_j_s.pop('_id'))
@@ -279,12 +276,12 @@ class MetricsMongoDBController:
                 u_j_s['method'] = desc
 
         for exec_task in exec_tasks:
-            if exec_task['ujs_job_id'] == u_j_s['job_id']:
+            if str(exec_task['ujs_job_id']) == str(u_j_s['job_id']):
                 if 'job_input' in exec_task:
                     et_job_in = exec_task['job_input']
-                    u_j_s['app_id'] = self._parse_app_id(exec_task)
+                    u_j_s['app_id'] = self._parse_app_id(et_job_in)
                     if not u_j_s.get('method'):
-                        u_j_s['method'] = self._parse_method(exec_task)
+                        u_j_s['method'] = self._parse_method(et_job_in)
 
                     if not u_j_s.get('wsid'):
                         if 'wsid' in et_job_in:
@@ -302,16 +299,16 @@ class MetricsMongoDBController:
                             u_j_s['workspace_name'] = ws_nm
                 break
 
-        if (not u_j_s.get('app_id') and u_j_s.get('method')):
+        if not u_j_s.get('app_id') and u_j_s.get('method'):
             u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
 
         if (not u_j_s.get('finish_time') and
-               not u_j_s.get('error') and
+                not u_j_s.get('error') and
                 u_j_s.get('complete')):
             u_j_s['finish_time'] = u_j_s.pop('modification_time')
 
         # get the narrative name and version if any
-        if (u_j_s.get('wsid') and self.ws_narratives):
+        if u_j_s.get('wsid') and self.ws_narratives:
             n_nm, n_obj = self._map_narrative(u_j_s['wsid'],
                                               self.ws_narratives)
             if n_nm != "" and n_obj != 0:
@@ -324,7 +321,7 @@ class MetricsMongoDBController:
             for clnt in self.client_groups:
                 clnt_id = clnt['app_id']
                 ujs_a_id = str(u_j_s.get('app_id'))
-                if (str(clnt_id).lower() == ujs_a_id.lower()):
+                if str(clnt_id).lower() == ujs_a_id.lower():
                     u_j_s['client_groups'] = clnt['client_groups']
                     break
 
@@ -345,13 +342,13 @@ class MetricsMongoDBController:
             if len(epoch_range) != 2:
                 raise ValueError('Invalide epoch_range. Size must be 2.')
             start_time, end_time = epoch_range
-            if (start_time and end_time):
+            if start_time and end_time:
                 start_time = _convert_to_datetime(start_time)
                 end_time = _convert_to_datetime(end_time)
-            elif (start_time and not end_time):
+            elif start_time and not end_time:
                 start_time = _convert_to_datetime(start_time)
                 end_time = start_time + datetime.timedelta(hours=48)
-            elif (not start_time and end_time):
+            elif not start_time and end_time:
                 end_time = _convert_to_datetime(end_time)
                 start_time = end_time - datetime.timedelta(hours=48)
             else:
@@ -367,7 +364,6 @@ class MetricsMongoDBController:
         return params
 
     @cache_it_json(limit=128, expire=60 * 60 * 24)
-    #@lru_cache(500)
     def _get_client_groups_from_cat(self, token):
         """
         get_client_groups_from_cat: Get the client_groups data from Catalog API
@@ -386,17 +382,17 @@ class MetricsMongoDBController:
         client_groups = self.cat_client.get_client_groups({})
 
         return [{'app_id': client_group.get('app_id'),
-                'client_groups': client_group.get('client_groups')}
+                 'client_groups': client_group.get('client_groups')}
                 for client_group in client_groups]
 
     def __init__(self, config):
         # grab config lists
         self.adminList = self._config_str_to_list(
-                                        config.get('admin-users'))
+            config.get('admin-users'))
         self.metricsAdmins = self._config_str_to_list(
-                                        config.get('metrics-admins'))
+            config.get('metrics-admins'))
         self.mongodb_dbList = self._config_str_to_list(
-                                        config.get('mongodb-databases'))
+            config.get('mongodb-databases'))
 
         # check for required parameters
         for p in ['mongodb-host', 'mongodb-databases',
@@ -417,9 +413,10 @@ class MetricsMongoDBController:
         self.catalog_url = config['kbase-endpoint'] + '/catalog'
 
         # commonly used data
-        self.kbstaffList = None
+        self.kbstaff_list = None
         self.ws_narratives = None
         self.client_groups = None
+        self.cat_client = None
 
     def get_user_job_states(self, requesting_user, params, token):
         """
@@ -447,8 +444,8 @@ class MetricsMongoDBController:
         ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'],
                                                      params['minTime'],
                                                      params['maxTime'])
-        ujs_jobs = self._convert_isodate_to_millis(
-                ujs_jobs, ['created', 'started', 'updated'])
+        ujs_jobs = self._convert_isodate_to_milis(
+            ujs_jobs, ['created', 'started', 'updated'])
 
         return {'job_states': self._join_task_ujs(exec_tasks, ujs_jobs)}
 
@@ -458,8 +455,8 @@ class MetricsMongoDBController:
             raise ValueError('You do not have permission to '
                              'invoke this action.')
 
-        if self.kbstaffList is None:
-            self.kbstaffList = self.metrics_dbi.list_kbstaff_usernames()
+        if self.kbstaff_list is None:
+            self.kbstaff_list = self.metrics_dbi.list_kbstaff_usernames()
 
         # 1. update users
         action_result1 = self._update_user_info(params, token)
@@ -480,20 +477,19 @@ class MetricsMongoDBController:
         if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
-        if self.kbstaffList is None:
-            self.kbstaffList = self.metrics_dbi.list_kbstaff_usernames()
+        if self.kbstaff_list is None:
+            self.kbstaff_list = self.metrics_dbi.list_kbstaff_usernames()
 
         params = self._process_parameters(params)
 
         if exclude_kbstaff:
             mt_ret = self.metrics_dbi.aggr_unique_users_per_day(
-                            params['minTime'], params['maxTime'],
-                            self.kbstaffList)
+                params['minTime'], params['maxTime'], self.kbstaff_list)
         else:
             mt_ret = self.metrics_dbi.aggr_unique_users_per_day(
                 params['minTime'], params['maxTime'], [])
 
-        if len(mt_ret) == 0:
+        if not mt_ret:
             print("No records returned!")
 
         return {'metrics_result': mt_ret}
@@ -505,14 +501,14 @@ class MetricsMongoDBController:
 
         params = self._process_parameters(params)
         mt_ret = self.metrics_dbi.get_user_info(
-                            params['user_ids'], params['minTime'],
-                            params['maxTime'], exclude_kbstaff)
+            params['user_ids'], params['minTime'],
+            params['maxTime'], exclude_kbstaff)
 
-        if len(mt_ret) == 0:
+        if not mt_ret:
             print("No records returned!")
         else:
-            mt_ret = self._convert_isodate_to_millis(
-                            mt_ret, ['signup_at', 'last_signin_at'])
+            mt_ret = self._convert_isodate_to_milis(
+                mt_ret, ['signup_at', 'last_signin_at'])
         return {'metrics_result': mt_ret}
 
     # End functions to get the requested records from metrics db
