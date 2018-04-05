@@ -2,6 +2,10 @@ from pymongo import MongoClient
 import datetime
 from pymongo import ASCENDING
 from pymongo.errors import BulkWriteError, WriteError, ConfigurationError
+
+from redis_cache import cache_it_json
+from repoze.lru import lru_cache
+
 from kb_Metrics.Util import _convert_to_datetime
 
 
@@ -276,7 +280,8 @@ class MongoMetricsDBI:
         m_cursor = kbworkspaces.aggregate(pipeline)
         return list(m_cursor)
 
-    @cache_it_json(limit=1000, expire60 * 60 * 24)
+    #@lru_cache(500)
+    @cache_it_json(limit=128, expire=60 * 60 * 24)
     def list_ws_narratives(self, minT=0, maxT=0):
         match_filter = {"del": False,
                         "meta": {"$elemMatch": {"$or":
@@ -333,7 +338,8 @@ class MongoMetricsDBI:
         m_cursor = kbwsobjs.aggregate(pipeline)
         return list(m_cursor)
 
-    @cache_it_json(limit=1000, expire60 * 60 * 24)
+    #@lru_cache(500)
+    @cache_it_json(limit=128, expire=60 * 60 * 24)
     def list_kbstaff_usernames(self):
         kbstaffFilter = {'kbase_staff': {"$in": [True, 1]}}
         projection = {'_id': 0, 'username': 1}
@@ -342,6 +348,8 @@ class MongoMetricsDBI:
 
         return list(kbusers.find(kbstaffFilter, projection))
 
+    #@lru_cache(500)
+    @cache_it_json(limit=128, expire=60 * 60 * 24)
     def list_exec_tasks(self, minTime, maxTime):
         filter = {}
 
@@ -406,6 +414,8 @@ class MongoMetricsDBI:
         u_cursor = kbusers.aggregate(pipeline)
         return list(u_cursor)
 
+    #@lru_cache(500)
+    @cache_it_json(limit=128, expire=60 * 60 * 24)
     def list_ujs_results(self, userIds, minTime, maxTime):
         filter = {}
 

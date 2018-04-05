@@ -4,6 +4,9 @@ import datetime
 import copy
 import re
 
+from repoze.lru import lru_cache
+from redis_cache import cache_it_json
+
 from kb_Metrics.metricsDBs import MongoMetricsDBI
 from kb_Metrics.Util import (_unix_time_millis_from_datetime,
                              _convert_to_datetime)
@@ -256,8 +259,8 @@ class MetricsMongoDBController:
             ujs_ret.append(u_j_s)
         return ujs_ret
 
-    @cache_it_json(limit=1000, expire60 * 60 * 24)
-    #@lru_cache(maxsize=128)
+    @cache_it_json(limit=1024, expire=60 * 60 * 24)
+    #@lru_cache(maxsize=1024)
     def _assemble_ujs_state(self, ujs, exec_tasks):
         u_j_s = copy.deepcopy(ujs)
         u_j_s['job_id'] = str(u_j_s.pop('_id'))
@@ -363,7 +366,8 @@ class MetricsMongoDBController:
 
         return params
 
-    @cache_it_json(limit=1000, expire60 * 60 * 24)
+    @cache_it_json(limit=128, expire=60 * 60 * 24)
+    #@lru_cache(500)
     def _get_client_groups_from_cat(self, token):
         """
         get_client_groups_from_cat: Get the client_groups data from Catalog API
