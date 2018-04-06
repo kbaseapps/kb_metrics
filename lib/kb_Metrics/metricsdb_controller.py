@@ -185,7 +185,7 @@ class MetricsMongoDBController:
         Based on the narratives in workspace.workspaceObjects, if additional
         info available then add to existing data from workspace.workspaces.
         """
-        # 0. get the ws_narrative and client_groups data for lookups
+        # get the ws_narrative and client_groups data for lookups
         if self.ws_narratives is None:
             self.ws_narratives = self.metrics_dbi.list_ws_narratives()
         if self.client_groups is None:
@@ -227,7 +227,7 @@ class MetricsMongoDBController:
         return {'metrics_result': ws_narrs1}
 
     def _get_activities_from_wsobjs(self, params, token):
-        # 0. get the ws_narrative and client_groups data for lookups
+        # get the ws_narrative and client_groups data for lookups
         if self.ws_narratives is None:
             self.ws_narratives = self.metrics_dbi.list_ws_narratives()
         if self.client_groups is None:
@@ -276,17 +276,16 @@ class MetricsMongoDBController:
                 u_j_s['method'] = desc
 
         for exec_task in exec_tasks:
-            if str(exec_task['ujs_job_id']) == str(u_j_s['job_id']):
+            if str(exec_task['ujs_job_id']) == u_j_s['job_id']:
                 if 'job_input' in exec_task:
                     et_job_in = exec_task['job_input']
                     u_j_s['app_id'] = self._parse_app_id(et_job_in)
                     if not u_j_s.get('method'):
                         u_j_s['method'] = self._parse_method(et_job_in)
-
                     if not u_j_s.get('wsid'):
                         if 'wsid' in et_job_in:
                             u_j_s['wsid'] = et_job_in['wsid']
-                        elif ('params' in et_job_in and 
+                        elif ('params' in et_job_in and
                               'ws_id' in et_job_in['params'][0]):
                             u_j_s['wsid'] = et_job_in['params'][0]['ws_id']
 
@@ -328,7 +327,6 @@ class MetricsMongoDBController:
         return u_j_s
 
     def _process_parameters(self, params):
-
         params['user_ids'] = params.get('user_ids', [])
 
         if not isinstance(params['user_ids'], list):
@@ -451,6 +449,9 @@ class MetricsMongoDBController:
 
     # function(s) to update the metrics db
     def update_metrics(self, requesting_user, params, token):
+        """
+        update_metrics--updates the metrics db collections
+        """
         if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to '
                              'invoke this action.')
@@ -474,6 +475,10 @@ class MetricsMongoDBController:
     # functions to get the requested records from metrics db...
     def get_active_users_counts(self, requesting_user,
                                 params, token, exclude_kbstaff=True):
+        """
+        get_active_users_counts--query (and aggregate) the metrics mongodb
+        to get active user count per day.
+        """
         if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -496,6 +501,9 @@ class MetricsMongoDBController:
 
     def get_user_details(self, requesting_user, params, token,
                          exclude_kbstaff=False):
+        """
+        get_user_details--query the metrics/users db to retrieve user info.
+        """
         if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
