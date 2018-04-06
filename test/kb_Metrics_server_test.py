@@ -7,7 +7,6 @@ import datetime
 import copy
 from bson.objectid import ObjectId
 from pymongo import MongoClient
-from pymongo.collection import Collection
 from mock import patch
 from os import environ
 try:
@@ -22,7 +21,7 @@ from kb_Metrics.kb_MetricsImpl import kb_Metrics
 from kb_Metrics.kb_MetricsServer import MethodContext
 from kb_Metrics.authclient import KBaseAuth as _KBaseAuth
 from kb_Metrics.metricsdb_controller import MetricsMongoDBController
-from kb_Metrics.metricsDBs import MongoMetricsDBI
+from kb_Metrics.metrics_dbi import MongoMetricsDBI
 
 
 class kb_MetricsTest(unittest.TestCase):

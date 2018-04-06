@@ -40,7 +40,6 @@ This KBase SDK module implements methods for generating various KBase metrics.
         #END_CONSTRUCTOR
         pass
 
-
     def get_app_metrics(self, ctx, params):
         """
         :param params: instance of type "AppMetricsParams" -> structure:
@@ -148,6 +147,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
                              'return_records is not type dict as required.')
         # return the results
         return [return_records]
+
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",

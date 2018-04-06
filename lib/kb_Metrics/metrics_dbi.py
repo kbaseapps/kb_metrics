@@ -1,14 +1,16 @@
-from pymongo import MongoClient
 import datetime
+from pymongo import MongoClient
 from pymongo import ASCENDING
 from pymongo.errors import BulkWriteError, WriteError, ConfigurationError
-
 from redis_cache import cache_it_json
 
 from kb_Metrics.Util import _convert_to_datetime
 
 
 class MongoMetricsDBI:
+    '''
+    MongoMetricsDBI--interface to mongodbs behind
+    '''
 
     # Collection Names
 
@@ -57,12 +59,12 @@ class MongoMetricsDBI:
                   '$setOnInsert': {'kbase_staff': kbstaff}}
 
         # grab handle(s) to the database collection(s) targeted
-        self.mt_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
+        mt_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
         update_ret = None
         try:
             # return an instance of UpdateResult(raw_result, acknowledged)
-            update_ret = self.mt_users.update_one(upd_filter,
-                                                  upd_op, upsert=True)
+            update_ret = mt_users.update_one(upd_filter,
+                                             upd_op, upsert=True)
         except WriteError as we:
             print('WriteError caught')
             raise we
@@ -141,24 +143,25 @@ class MongoMetricsDBI:
         else:
             # re-touch the newly inserted records
             mt_narrs.update({'access_count': {'$exists': False}},
-                                 {'$set': {'access_count': 1}},
-                                 upsert=True, multi=True)
+                            {'$set': {'access_count': 1}},
+                            upsert=True, multi=True)
         return update_ret
     # End functions to write to the metrics database
 
     # Begin functions to query the other dbs...
     def aggr_unique_users_per_day(self, minTime, maxTime, excludeUsers=[]):
+
         # Define the pipeline operations
         minDate = _convert_to_datetime(minTime)
         maxDate = _convert_to_datetime(maxTime)
 
-        match_filter = {"_id.year_mod": {"$gte": minDate.year,
-                                             "$lte": maxDate.year},
-                            "_id.month_mod": {"$gte": minDate.month,
-                                              "$lte": maxDate.month},
-                            "_id.day_mod": {"$gte": minDate.day,
-                                            "$lte": maxDate.day},
-                            "obj_numModified": {"$gt": 0}}
+        match_filter = {"_id.year_mod":
+                        {"$gte": minDate.year, "$lte": maxDate.year},
+                        "_id.month_mod": {"$gte": minDate.month,
+                                          "$lte": maxDate.month},
+                        "_id.day_mod": {"$gte": minDate.day,
+                                        "$lte": maxDate.day},
+                        "obj_numModified": {"$gt": 0}}
 
         if excludeUsers:
             match_filter['_id.username'] = {"$nin": excludeUsers}
@@ -319,7 +322,7 @@ class MongoMetricsDBI:
         maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
 
         match_filter = {"del": False,
-                        "moddate":{"$gte": minTime, "$lte": maxTime}}
+                        "moddate": {"$gte": minTime, "$lte": maxTime}}
         if ws_list:
             match_filter["ws"] = {"$in": ws_list}
 

@@ -4,10 +4,9 @@ import datetime
 import copy
 import re
 
-from repoze.lru import lru_cache
 from redis_cache import cache_it_json
 
-from kb_Metrics.metricsDBs import MongoMetricsDBI
+from kb_Metrics.metrics_dbi import MongoMetricsDBI
 from kb_Metrics.Util import (_unix_time_millis_from_datetime,
                              _convert_to_datetime)
 from Catalog.CatalogClient import Catalog
@@ -246,6 +245,7 @@ class MetricsMongoDBController:
                     break
         return {'metrics_result': wsobjs_act}
 
+    @cache_it_json(limit=1024, expire=60 * 60 * 24)
     def _join_task_ujs(self, exec_tasks, ujs_jobs):
         """
         combine/join exec_tasks with ujs_jobs list to get the final return data
