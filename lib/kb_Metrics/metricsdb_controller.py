@@ -245,7 +245,6 @@ class MetricsMongoDBController:
                     break
         return {'metrics_result': wsobjs_act}
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 24)
     def _join_task_ujs(self, exec_tasks, ujs_jobs):
         """
         combine/join exec_tasks with ujs_jobs list to get the final return data
@@ -361,7 +360,7 @@ class MetricsMongoDBController:
 
         return params
 
-    @cache_it_json(limit=128, expire=60 * 60 * 24)
+    @cache_it_json(limit=1024, expire=60 * 60 * 24)
     def _get_client_groups_from_cat(self, token):
         """
         get_client_groups_from_cat: Get the client_groups data from Catalog API

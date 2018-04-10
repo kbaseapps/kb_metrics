@@ -268,6 +268,7 @@ class MongoMetricsDBI:
         m_cursor = kbwsobjs.aggregate(pipeline)
         return list(m_cursor)
 
+    @cache_it_json(limit=1024)
     def list_ws_owners(self):
         # Define the pipeline operations
         pipeline = [

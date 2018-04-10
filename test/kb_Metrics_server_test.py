@@ -1168,13 +1168,13 @@ class kb_MetricsTest(unittest.TestCase):
         input_data = [{'created': cdt1['date'],
                        'started': sdt1['date'],
                        'updated': udt1['date'],
-                       'user': 'user1'
-                      }, {
+                       'user': 'user1'},
+                      {
                           'created': cdt2['date'],
                           'started': sdt2['date'],
                           'updated': udt2['date'],
-                          'user': 'user2'
-                      }, {
+                          'user': 'user2'},
+                      {
                           'created': cdt3['date'],
                           'started': sdt3['date'],
                           'updated': udt3['date'],
@@ -1199,18 +1199,18 @@ class kb_MetricsTest(unittest.TestCase):
         target_ret_data = [{'created': cdt1['milis'],
                             'started': sdt1['milis'],
                             'updated': udt1['milis'],
-                            'user': 'user1'
-                           }, {
-                               'created': cdt2['milis'],
-                               'started': sdt2['milis'],
-                               'updated': udt2['milis'],
-                               'user': 'user2'
-                           }, {
-                               'created': cdt3['milis'],
-                               'started': sdt3['milis'],
-                               'updated': udt3['milis'],
-                               'user': 'user3'
-                               }]
+                            'user': 'user1'},
+                           {
+                            'created': cdt2['milis'],
+                            'started': sdt2['milis'],
+                            'updated': udt2['milis'],
+                            'user': 'user2'},
+                           {
+                            'created': cdt3['milis'],
+                            'started': sdt3['milis'],
+                            'updated': udt3['milis'],
+                            'user': 'user3'
+                           }]
         # checking convertions
         self.assertItemsEqual(output_data, target_ret_data)
 
@@ -1243,8 +1243,7 @@ class kb_MetricsTest(unittest.TestCase):
                 "method": "kb_cufflinks.run_Cuffdiff",
                 "params": [{"workspace_name":
                             ("umaganapathyswork:"
-                             "narrative_1498130853194")
-                           }],
+                             "narrative_1498130853194")}],
                 "wsid": 23165,
             }
         }]
