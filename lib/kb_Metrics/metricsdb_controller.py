@@ -414,18 +414,17 @@ class MetricsMongoDBController:
         self.ws_narratives = None
         self.client_groups = None
         self.cat_client = None
+        self.narr_owners = None
 
     def get_user_job_states(self, requesting_user, params, token):
         """
-        get_jobdata_from_ws_exec_ujs--The original implementation to
-        get data for appcatalog from querying execution_engine,
-        catalog, workspace and userjobstate
+        get_user_job_states--generate data for appcatalog/stats from querying
+        execution_engine, userjobstates, catalog and workspace
         ----------------------
         To get the job's 'status', 'complete'=true/false, etc.,
         we can do joining as follows
         --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
         """
-        params = self._process_parameters(params)
         if not self._is_admin(requesting_user):
             params['user_ids'] = [requesting_user]
 
@@ -436,6 +435,7 @@ class MetricsMongoDBController:
             self.client_groups = self._get_client_groups_from_cat(token)
 
         # 2. query dbs to get lists of tasks and jobs
+        params = self._process_parameters(params)
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'],
                                                       params['maxTime'])
         ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'],
@@ -445,6 +445,39 @@ class MetricsMongoDBController:
             ujs_jobs, ['created', 'started', 'updated'])
 
         return {'job_states': self._join_task_ujs(exec_tasks, ujs_jobs)}
+
+    def get_narrative_stats(self, requesting_user, params, token):
+        """
+        get_jnarrative_stats--generate narrative stats data for reporting purposes
+        """
+        if not self._is_admin(requesting_user):
+                raise ValueError('You do not have permisson to '
+                                 'invoke this action.')
+
+        # 1. get the narr_owners data for lookups
+        if self.narr_owners is None:
+            self.narr_owners = self.metrics_dbi.list_narrative_owners()
+
+        # 2. query db to get lists of narratives with ws_ids and first_access_date
+        params = self._process_parameters(params)
+        ws_firstAccs = self.metrics_dbi.list_ws_firstAccess(
+                            params['minTime'],
+                            params['maxTime'])
+
+        # 3. match the narrative owners and assemble the info
+        narr_info_list = []
+        for narr_owner in self.narr_owners:
+            narr_info = {}
+            for wsobj in ws_firstAccs:
+                if narr_owner['ws'] == wsobj['ws']:
+                    narr_info['ws'] = narr_owner['ws']
+                    narr_info['name'] = narr_owner['name']
+                    narr_info['owner'] = narr_owner['owner']
+                    narr_info['first_access'] = wsobj['yyyy-mm-dd']
+                    narr_info_list.append(narr_info)
+                    break
+
+        return narr_info_list
 
     # function(s) to update the metrics db
     def update_metrics(self, requesting_user, params, token):

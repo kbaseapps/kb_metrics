@@ -283,17 +283,15 @@ class MongoMetricsDBI:
         return list(m_cursor)
 
     @cache_it_json(limit=1024)
-    def list_narrative_owners(self, wsid_list, owner_list=None):
+    def list_narrative_owners(self, wsid_list=None, owner_list=None):
         """
         list_narrative_owners--retrieve the name/ws_id/owner of narratives
         """
-        match_filter = {"del": False,
-                        "lock": False,
-                        "ws": {"$in": wsid_list},
+        match_filter = {"del": False,  # "lock": False,
                         "meta": {"$elemMatch":
                                  {"k": "is_temporary", "v": "false"}}}
         if wsid_list:
-            match_filter['ws'] = {"$in": owner_list}
+            match_filter['ws'] = {"$in": wsid_list}
         if owner_list:
             match_filter['owner'] = {"$in": owner_list}
 
@@ -375,7 +373,8 @@ class MongoMetricsDBI:
     def list_ws_firstAccess(self, minTime, maxTime, ws_list=None):
         """
         list_wsObj_firstAccess--retrieve the ws_ids and first access date (yyyy-mm-dd)
-        ("numver": 1) for workspaces/narratives as objects
+        ("numver": 1) for workspaces/narratives as objects, the 'first_access' date is
+        used for accounting narratives created at certain date.
         """
         minTime = datetime.datetime.fromtimestamp(minTime / 1000.0)
         maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
