@@ -284,11 +284,11 @@ class MetricsMongoDBController:
                     if not u_j_s.get('wsid'):
                         if 'wsid' in et_job_in:
                             u_j_s['wsid'] = et_job_in['wsid']
-                        elif ('params' in et_job_in and
-                              'ws_id' in et_job_in['params'][0]):
-                            u_j_s['wsid'] = et_job_in['params'][0]['ws_id']
+                        elif 'params' in et_job_in and et_job_in['params'] != []:
+                              if 'ws_id' in et_job_in['params'][0]:
+                                  u_j_s['wsid'] = et_job_in['params'][0]['ws_id']
 
-                    if 'params' in et_job_in:
+                    if 'params' in et_job_in and et_job_in['params'] != []:
                         p_ws = et_job_in['params'][0]
                         if 'workspace' in p_ws:
                             u_j_s['workspace_name'] = p_ws['workspace']
