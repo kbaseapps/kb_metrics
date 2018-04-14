@@ -283,9 +283,9 @@ class MongoMetricsDBI:
         return list(m_cursor)
 
     @cache_it_json(limit=1024)
-    def list_narrative_owners(self, wsid_list=[], owner_list=[]):
+    def list_narrative_info(self, wsid_list=[], owner_list=[]):
         """
-        list_narrative_owners--retrieve the name/ws_id/owner of narratives
+        list_narrative_info--retrieve the name/ws_id/owner of narratives
         """
         match_filter = {"del": False,  # "lock": False,
                         "meta": {"$elemMatch":
@@ -298,8 +298,8 @@ class MongoMetricsDBI:
         # Define the pipeline operations
         pipeline = [
             {"$match": match_filter},
-            {"$project": {"name": 1, "owner": 1,
-                          "ws": 1, "_id": 0}}
+            {"$project": {"name": 1, "owner": 1, "ws": 1, "_id": 0,
+                          "narr_keys": "$meta.k", "narr_values": "$meta.v"}}
         ]
 
         # grab handle(s) to the db collection and retrieve a MongoDB cursor
@@ -333,7 +333,7 @@ class MongoMetricsDBI:
         pipeline = [
             {"$match": match_filter},
             {"$project": {"username": "$owner", "workspace_id": "$ws",
-                          "name": 1, "meta": 1,
+                          "name": 1, "narr_keys": "$meta.k", "narr_values": "$meta.v",
                           "deleted": "$del", "desc": 1, "numObj": 1,
                           "last_saved_at": "$moddate", "_id": 0}}
         ]

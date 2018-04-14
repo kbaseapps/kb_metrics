@@ -63,23 +63,6 @@ class MetricsMongoDBController:
 
         return method_id
 
-    def _map_narrative(self, wsid, ws_narrs):
-        """
-        get the narrative name and version
-        """
-        n_name = ''
-        n_obj = '0'
-        for wsn in ws_narrs:
-            if str(wsn['workspace_id']) == str(wsid):
-                n_name = wsn['name']
-                for w_m in wsn['meta']:
-                    if w_m['k'] == 'narrative':
-                        n_obj = w_m['v']
-                    if w_m['k'] == 'narrative_nice_name':
-                        n_name = w_m['v']
-                break
-        return (n_name, n_obj)
-
     def _update_user_info(self, params, token):
         """
         update user info
@@ -179,16 +162,16 @@ class MetricsMongoDBController:
     # functions to get the requested records from other dbs...
     def _get_narratives_from_wsobjs(self, params, token):
         """
-        get_narratives_from_wsobjs--Given a time period, fetch the narrative
+        _get_narratives_from_wsobjs--Given a time period, fetch the narrative
         information from workspace.workspaces and workspace.workspaceObjects.
         Based on the narratives in workspace.workspaceObjects, if additional
         info available then add to existing data from workspace.workspaces.
         """
-        # get the ws_narrative and client_groups data for lookups
+        # get the ws_narrative for lookups
         if self.ws_narratives is None:
             self.ws_narratives = self.metrics_dbi.list_ws_narratives()
-        if self.client_groups is None:
-            self.client_groups = self._get_client_groups_from_cat(token)
+        if self.narrative_name_map == {}:
+            self.narrative_name_map = self._get_narrative_map()
 
         params = self._process_parameters(params)
 
@@ -216,21 +199,11 @@ class MetricsMongoDBController:
         for wsn in ws_narrs:
             if wsn.get('object_id'):
                 wsn[u'last_saved_by'] = wsn.pop('username')
-                wsn[u'nice_name'] = ''
-                for w_m in wsn['meta']:
-                    if w_m['k'] == 'narrative_nice_name':
-                        wsn[u'nice_name'] = w_m['v']
-                        break
-                del wsn['meta']
+                wsn[u'nice_name'] = self.narrative_name_map.get(wsn['workspace_id'])
                 ws_narrs1.append(wsn)
         return {'metrics_result': ws_narrs1}
 
     def _get_activities_from_wsobjs(self, params, token):
-        # get the ws_narrative and client_groups data for lookups
-        if self.ws_narratives is None:
-            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
-        if self.client_groups is None:
-            self.client_groups = self._get_client_groups_from_cat(token)
 
         params = self._process_parameters(params)
 
@@ -305,13 +278,11 @@ class MetricsMongoDBController:
                 u_j_s.get('complete')):
             u_j_s['finish_time'] = u_j_s.pop('modification_time')
 
-        # get the narrative name and version if any
-        if u_j_s.get('wsid') and self.ws_narratives:
-            n_nm, n_obj = self._map_narrative(u_j_s['wsid'],
-                                              self.ws_narratives)
-            if n_nm != "" and n_obj != 0:
+        # get the narrative name if any
+        if u_j_s.get('wsid'):
+            n_nm = self.narrative_name_map.get(int(u_j_s['wsid']))
+            if n_nm != "":
                 u_j_s['narrative_name'] = n_nm
-                u_j_s['narrative_objNo'] = n_obj
 
         # get the client groups
         u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
@@ -361,9 +332,31 @@ class MetricsMongoDBController:
         return params
 
     @cache_it_json(limit=1024, expire=60 * 60 * 24)
+    def _get_narrative_map(self):
+        """
+        _get_narrative_map: Fetch the narrative id and name (or
+        narrative_nice_name if exists) into a dictionary
+        """
+        # 1. get the narr_owners data to start
+        if self.ws_narratives is None:
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+
+        # 2. loop through all self.narr_data
+        narrative_name_map = {}
+        for narr in self.ws_narratives:
+            narrative_name_map[narr['workspace_id']] = narr['name']  # default
+            n_keys = narr['narr_keys']
+            n_vals = narr['narr_values']
+            for i in range(0, len(n_keys)):
+                if n_keys[i] == 'narrative_nice_name':
+                    narrative_name_map[narr['workspace_id']] = n_vals[i]
+                    break
+        return narrative_name_map
+
+    @cache_it_json(limit=1024, expire=60 * 60 * 24)
     def _get_client_groups_from_cat(self, token):
         """
-        get_client_groups_from_cat: Get the client_groups data from Catalog API
+        _get_client_groups_from_cat: Get the client_groups data from Catalog API
         return an array of the following structure (example with data):
         {
             u'app_id': u'assemblyrast/run_arast',
@@ -414,7 +407,8 @@ class MetricsMongoDBController:
         self.ws_narratives = None
         self.client_groups = None
         self.cat_client = None
-        self.narr_owners = None
+        self.narr_data = None
+        self.narrative_name_map = {}
 
     def get_user_job_states(self, requesting_user, params, token):
         """
@@ -433,6 +427,8 @@ class MetricsMongoDBController:
             self.ws_narratives = self.metrics_dbi.list_ws_narratives()
         if self.client_groups is None:
             self.client_groups = self._get_client_groups_from_cat(token)
+        if self.narrative_name_map == {}:
+            self.narrative_name_map = self._get_narrative_map()
 
         # 2. query dbs to get lists of tasks and jobs
         params = self._process_parameters(params)
@@ -448,15 +444,15 @@ class MetricsMongoDBController:
 
     def get_narrative_stats(self, requesting_user, params, token):
         """
-        get_jnarrative_stats--generate narrative stats data for reporting purposes
+        get_narrative_stats--generate narrative stats data for reporting purposes
         """
         if not self._is_admin(requesting_user):
                 raise ValueError('You do not have permisson to '
                                  'invoke this action.')
 
         # 1. get the narr_owners data for lookups
-        if self.narr_owners is None:
-            self.narr_owners = self.metrics_dbi.list_narrative_owners()
+        if self.narr_data is None:
+            self.narr_data = self.metrics_dbi.list_narrative_info()
 
         # 2. query db to get lists of narratives with ws_ids and first_access_date
         params = self._process_parameters(params)
@@ -466,15 +462,15 @@ class MetricsMongoDBController:
 
         # 3. match the narrative owners and assemble the info
         narr_info_list = []
-        for narr_owner in self.narr_owners:
-            narr_info = {}
+        for narr_info in self.narr_data:
+            narr = {}
             for wsobj in ws_firstAccs:
-                if narr_owner['ws'] == wsobj['ws']:
-                    narr_info['ws'] = narr_owner['ws']
-                    narr_info['name'] = narr_owner['name']
-                    narr_info['owner'] = narr_owner['owner']
-                    narr_info['first_access'] = wsobj['yyyy-mm-dd']
-                    narr_info_list.append(narr_info)
+                if narr_info['ws'] == wsobj['ws']:
+                    narr['ws'] = narr_info['ws']
+                    narr['name'] = narr_info['name']
+                    narr['owner'] = narr_info['owner']
+                    narr['first_access'] = wsobj['yyyy-mm-dd']
+                    narr_info_list.append(narr)
                     break
 
         return narr_info_list
