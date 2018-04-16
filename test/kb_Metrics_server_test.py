@@ -791,10 +791,11 @@ class kb_MetricsTest(unittest.TestCase):
 
         # Ensure 'narrative_nice_name' or 'narrative' exists in 'meta'
         for wn in ws_narrs:
-            self.assertIn('meta', wn)
-            self.assertTrue(any(d['k'] == 'narrative_nice_name'
-                                or d['k'] == 'narrative'
-                                for d in wn['meta']))
+            self.assertIn('narr_keys', wn)
+            self.assertIn('narr_values', wn)
+            self.assertTrue(any(d == 'narrative_nice_name'
+                                or d == 'narrative'
+                                for d in wn['narr_keys']))
 
         self.assertEqual(len(ws_narrs), 27)
         self.assertIn('username', ws_narrs[0])
@@ -809,8 +810,8 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(ws_narrs[23]['workspace_id'], 8781)
         self.assertEqual(ws_narrs[23]['name'],
                          'vkumar:1468639677500')
-        self.assertEqual(ws_narrs[23]['meta'][2]['k'], 'narrative')
-        self.assertEqual(ws_narrs[23]['meta'][2]['v'], '45')
+        self.assertEqual(ws_narrs[23]['narr_keys'][2], 'narrative')
+        self.assertEqual(ws_narrs[23]['narr_values'][2], '45')
         self.assertFalse(ws_narrs[23]['deleted'])
         self.assertEqual(ws_narrs[23]['desc'], None)
         self.assertEqual(ws_narrs[23]['numObj'], 46)
@@ -869,22 +870,22 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(ujs), 14)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBs_list_narrative_owners")
+    # @unittest.skip("skipped test_MetricsMongoDBs_list_narrative_info")
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
-    def test_MetricsMongoDBs_list_narrative_owners(self):
+    def test_MetricsMongoDBs_list_narrative_info(self):
         o_list = ['fangfang', 'psdehal', 'jplfaria', 'pranjan77']
         ws_id_list = [8056, 8748, 1111]
 
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
 
-        # testing list_narrative_owners return data, with and without filters
-        narr_owners = dbi.list_narrative_owners(ws_id_list, o_list)
+        # testing list_narrative_info return data, with and without filters
+        narr_owners = dbi.list_narrative_info(ws_id_list, o_list)
         self.assertEqual(len(narr_owners), 1)
         self.assertIn(narr_owners[0]['ws'], ws_id_list)
         self.assertIn(narr_owners[0]['owner'], o_list)
         self.assertEqual(narr_owners[0]['name'], 'pranjan77:1466168703797')
 
-        narr_owners = dbi.list_narrative_owners(wsid_list=ws_id_list)
+        narr_owners = dbi.list_narrative_info(wsid_list=ws_id_list)
         self.assertEqual(len(narr_owners), 2)
         for nrr in narr_owners:
             self.assertIn(nrr['ws'], ws_id_list)
@@ -895,14 +896,14 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(narr_owners[0]['name'], 'pranjan77:1466168703797')
         self.assertEqual(narr_owners[1]['name'], 'eapearson:1468518477765')
 
-        narr_owners = dbi.list_narrative_owners(owner_list=o_list)
+        narr_owners = dbi.list_narrative_info(owner_list=o_list)
         self.assertEqual(len(narr_owners), 10)
         for nrr in narr_owners:
             self.assertIn(nrr['owner'], o_list)
         self.assertEqual(narr_owners[9]['ws'], 27834)
         self.assertEqual(narr_owners[9]['owner'], 'psdehal')
 
-        narr_owners = dbi.list_narrative_owners()
+        narr_owners = dbi.list_narrative_info()
         self.assertEqual(len(narr_owners), 24)
 
     # Uncomment to skip this test
@@ -912,7 +913,7 @@ class kb_MetricsTest(unittest.TestCase):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         min_time = 1468592344887
         max_time = 1519768865840
-        ws_narrs = dbi.list_narrative_owners()
+        ws_narrs = dbi.list_narrative_info()
         ws_list = [wn['ws'] for wn in ws_narrs]
 
         # test list_ws_firstAccess returned values with wsid filter
@@ -931,7 +932,6 @@ class kb_MetricsTest(unittest.TestCase):
                         min_time, max_time)
         self.assertEqual(len(ws_objs), 9)
         for wobj in ws_objs:
-            # self.assertIn(wobj['ws'], ws_list)
             self.assertTrue('2016-7' < wobj['yyyy-mm-dd'] < '2018-3')
         self.assertEqual(ws_objs[0]['yyyy-mm-dd'], '2018-2-27')
 
@@ -1173,45 +1173,6 @@ class kb_MetricsTest(unittest.TestCase):
             exec_tasks[4]["job_input"]), 'kb_deseq.run_deseq2_app')
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_db_controller_map_narrative")
-    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
-    def test_db_controller_map_narrative(self):
-        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        wsids = ['15206', '23165', '27834']
-        ws_narrs = dbi.list_ws_narratives()
-
-        # test mapping with real data
-        self.assertItemsEqual(self.db_controller._map_narrative(
-            wsids[0], ws_narrs), ('', '0'))
-        self.assertItemsEqual(self.db_controller._map_narrative(
-            wsids[1], ws_narrs), ('', '0'))
-        self.assertItemsEqual(self.db_controller._map_narrative(
-            wsids[2], ws_narrs), ('Staging Test', '1'))
-
-        # test mapping with fake data
-        fake_wnarrs = [{
-                    'meta': [{'k': 'narrative', 'v': '1'},
-                             {'k': 'narrative_nice_name',
-                              'v': 'fake_but_nice'}],
-                    'name': 'joedoe:1468507681406',
-                    'workspace_id': 15206
-                }, {
-                    'meta': [{'k': 'narrative_nice_name',
-                              'v': 'nice_name_ver0'}],
-                    'name': 'abc:1468512987188',
-                    'workspace_id': 23165
-                }, {
-                    'meta': [{'k': 'narrative', 'v': '1'}],
-                    'name': 'wo77:1468515770961',
-                    'workspace_id': 27834}]
-        self.assertItemsEqual(self.db_controller._map_narrative(
-            wsids[0], fake_wnarrs), ('fake_but_nice', '1'))
-        self.assertItemsEqual(self.db_controller._map_narrative(
-            wsids[1], fake_wnarrs), ('nice_name_ver0', '0'))
-        self.assertItemsEqual(self.db_controller._map_narrative(
-            wsids[2], fake_wnarrs), ('wo77:1468515770961', '1'))
-
-    # Uncomment to skip this test
     # @unittecst.skip("skipped test_db_controller_convert_isodate_to_milis")
     def test_db_controller_convert_isodate_to_milis(self):
         cdt1 = {'milis': 1500040533893,
@@ -1289,7 +1250,7 @@ class kb_MetricsTest(unittest.TestCase):
         exec_tasks = [{
             "ujs_job_id": "5968cd75e4b08b65f9ff5d7c",
             "job_input": {
-                "method": mthd,
+                "method": mthd
             }
         }, {
             "ujs_job_id": "596832a4e4b08b65f9ff5d6f",
@@ -1312,6 +1273,20 @@ class kb_MetricsTest(unittest.TestCase):
                             ("umaganapathyswork:"
                              "narrative_1498130853194")}],
                 "wsid": 23165,
+            }
+        }, {
+            "ujs_job_id": "5968e5fde4b08b65f9ff3c4e",
+            "job_input": {
+                "app_id": "fake_mod/fake_app",
+                "method": "fake_mod.fake_method",
+                "params": [1230],
+                "wsid": 33333,
+            }
+        }, {
+            "ujs_job_id": "5968cd75e4b08b65f9ff5c7d",
+            "job_input": {
+                "method": mthd,
+                "params": []
             }
         }]
         ujs_jobs = [{
@@ -1353,7 +1328,33 @@ class kb_MetricsTest(unittest.TestCase):
             "started": 1500046850810,
             "complete": True,
             "error": False
+        }, {
+            "_id": ObjectId("5968e5fde4b08b65f9ff3c4e"),
+            "user": "JohnDoe",
+            "authstrat": "DEFAULT",
+            "authparam": "DEFAULT",
+            "created": 1500040565733,
+            "updated": 1500040661079,
+            "estcompl": None,
+            "status": "done",
+            "started": 1500040575585,
+            "complete": True,
+            "error": False
+        }, {
+            "_id": ObjectId("5968cd75e4b08b65f9ff5c7d"),
+            "user": "joesomeone",
+            "authstrat": "kbaseworkspace",
+            "authparam": "55555",
+            "created": 1500046845485,
+            "updated": 1500047709785,
+            "estcompl": None,
+            "status": "done",
+            "desc": "",
+            "started": 1500046850810,
+            "complete": True,
+            "error": False
         }]
+
         # testing the correct data items appear in the assembled result
         joined_ujs0 = self.db_controller._assemble_ujs_state(ujs_jobs[0],
                                                              exec_tasks)
@@ -1389,6 +1390,26 @@ class kb_MetricsTest(unittest.TestCase):
                          ['workspace_name'])
         self.assertEqual(joined_ujs2['finish_time'],  ujs_jobs[2]['updated'])
         self.assertIn('client_groups', joined_ujs2)
+
+        joined_ujs3 = self.db_controller._assemble_ujs_state(ujs_jobs[3],
+                                                             exec_tasks)
+        et_job_input = exec_tasks[3]["job_input"]
+        self.assertEqual(joined_ujs3['wsid'], et_job_input['wsid'])
+        self.assertEqual(joined_ujs3['app_id'], et_job_input['app_id'])
+        self.assertEqual(joined_ujs3['method'], et_job_input['method'])
+        self.assertEqual(joined_ujs3['finish_time'], ujs_jobs[3]['updated'])
+        self.assertEqual(joined_ujs3['creation_time'], ujs_jobs[3]['created'])
+        self.assertIn('client_groups', joined_ujs3)
+        self.assertNotIn('workspace_name', joined_ujs3)
+
+        joined_ujs4 = self.db_controller._assemble_ujs_state(ujs_jobs[4],
+                                                             exec_tasks)
+        self.assertEqual(joined_ujs4['wsid'], ujs_jobs[4]['authparam'])
+        self.assertEqual(joined_ujs4['app_id'], mthd.replace('.', '/'))
+        self.assertEqual(joined_ujs4['method'], mthd)
+        self.assertEqual(joined_ujs4['finish_time'], ujs_jobs[4]['updated'])
+        self.assertIn('client_groups', joined_ujs4)
+        self.assertNotIn('workspace_name', joined_ujs4)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_join_task_ujs")
@@ -1566,8 +1587,18 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertFalse(narrs[1]['deleted'])
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped get_narrative_stats")
-    def test_MetricsMongoDBController_get_narrative_stats(self):
+    # @unittest.skip("skipped _get_narrative_map")
+    def test_MetricsMongoDBController_get_narrative_map(self):
+        # testing with local db data
+        narr_map = self.db_controller._get_narrative_map()
+        self.assertEqual(len(narr_map), 27)
+        self.assertEqual(narr_map.get(8781), 'Ecoli refseq - July 15')
+        self.assertEqual(narr_map.get(27834), 'Staging Test')
+        self.assertEqual(narr_map.get(8736), 'VisCellRefactor')
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped _get_narrative_info")
+    def test_MetricsMongoDBController_get_narrative_info(self):
         start_datetime = datetime.datetime.strptime(
             '2016-01-01T00:00:00+0000', '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime(
@@ -1576,20 +1607,18 @@ class kb_MetricsTest(unittest.TestCase):
         params = {'epoch_range': (start_datetime, end_datetime)}
 
         # testing with local db data
-        requesting_user = 'qzhang'
-        narr_stats = self.db_controller.get_narrative_stats(
-            requesting_user, params, self.getContext()['token'])
-        self.assertEqual(len(narr_stats), 2)
-        self.assertEqual(narr_stats[0]['owner'], 'vkumar')
-        self.assertEqual(narr_stats[1]['owner'], 'psdehal')
-        self.assertEqual(narr_stats[0]['ws'], 8768)
-        self.assertEqual(narr_stats[1]['ws'], 27834)
-        self.assertEqual(narr_stats[0]['name'], 'vkumar:1468592344827')
+        narr_info = self.db_controller._get_narrative_info(params)
+        self.assertEqual(len(narr_info), 2)
+        self.assertEqual(narr_info[0]['owner'], 'vkumar')
+        self.assertEqual(narr_info[1]['owner'], 'psdehal')
+        self.assertEqual(narr_info[0]['ws'], 8768)
+        self.assertEqual(narr_info[1]['ws'], 27834)
+        self.assertEqual(narr_info[0]['name'], 'vkumar:1468592344827')
         self.assertEqual(
-            narr_stats[1]['name'],
+            narr_info[1]['name'],
             'psdehal:narrative_1513709108341')
-        self.assertEqual(narr_stats[0]['first_access'], '2016-7-15')
-        self.assertEqual(narr_stats[1]['first_access'], '2017-12-21')
+        self.assertEqual(narr_info[0]['first_access'], '2016-7-15')
+        self.assertEqual(narr_info[1]['first_access'], '2017-12-21')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_update_user_info")

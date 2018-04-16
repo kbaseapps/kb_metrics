@@ -258,16 +258,17 @@ class MetricsMongoDBController:
                         if 'wsid' in et_job_in:
                             u_j_s['wsid'] = et_job_in['wsid']
                         elif 'params' in et_job_in and et_job_in['params'] != []:
-                            if 'ws_id' in et_job_in['params'][0]:
-                                u_j_s['wsid'] = et_job_in['params'][0]['ws_id']
+                            p_ws = et_job_in['params'][0]
+                            if isinstance(p_ws, dict) and 'ws_id' in p_ws:
+                                u_j_s['wsid'] = p_ws['ws_id']
 
                     if 'params' in et_job_in and et_job_in['params'] != []:
                         p_ws = et_job_in['params'][0]
-                        if 'workspace' in p_ws:
-                            u_j_s['workspace_name'] = p_ws['workspace']
-                        elif 'workspace_name' in p_ws:
-                            ws_nm = p_ws['workspace_name']
-                            u_j_s['workspace_name'] = ws_nm
+                        if isinstance(p_ws, dict):
+                            if 'workspace' in p_ws:
+                                u_j_s['workspace_name'] = p_ws['workspace']
+                            elif 'workspace_name' in p_ws:
+                                u_j_s['workspace_name'] = p_ws['workspace_name']
                 break
 
         if not u_j_s.get('app_id') and u_j_s.get('method'):
@@ -334,14 +335,15 @@ class MetricsMongoDBController:
     @cache_it_json(limit=1024, expire=60 * 60 * 24)
     def _get_narrative_map(self):
         """
-        _get_narrative_map: Fetch the narrative id and name (or
-        narrative_nice_name if exists) into a dictionary
+        _get_narrative_map: Fetch the narrative id and name
+        (or narrative_nice_name if it exists) into a dictionary
+        of {key=ws_id, value=ws_name}
         """
         # 1. get the narr_owners data to start
         if self.ws_narratives is None:
             self.ws_narratives = self.metrics_dbi.list_ws_narratives()
 
-        # 2. loop through all self.narr_data
+        # 2. loop through all self.ws_narratives
         narrative_name_map = {}
         for narr in self.ws_narratives:
             narrative_name_map[narr['workspace_id']] = narr['name']  # default
@@ -374,6 +376,33 @@ class MetricsMongoDBController:
         return [{'app_id': client_group.get('app_id'),
                  'client_groups': client_group.get('client_groups')}
                 for client_group in client_groups]
+
+    @cache_it_json(limit=1024, expire=60 * 60 * 24)
+    def _get_narrative_info(self, params):
+        # 1. get the narr_owners data for lookups
+        if self.narr_data is None:
+            self.narr_data = self.metrics_dbi.list_narrative_info()
+
+        # 2. query db to get lists of narratives with ws_ids and first_access_date
+        params = self._process_parameters(params)
+        ws_firstAccs = self.metrics_dbi.list_ws_firstAccess(
+                            params['minTime'],
+                            params['maxTime'])
+
+        # 3. match the narrative owners and assemble the info
+        narr_info_list = []
+        for narr_info in self.narr_data:
+            narr = {}
+            for wsobj in ws_firstAccs:
+                if narr_info['ws'] == wsobj['ws']:
+                    narr['ws'] = narr_info['ws']
+                    narr['name'] = narr_info['name']
+                    narr['owner'] = narr_info['owner']
+                    narr['first_access'] = wsobj['yyyy-mm-dd']
+                    narr_info_list.append(narr)
+                    break
+
+        return narr_info_list
 
     def __init__(self, config):
         # grab config lists
@@ -445,35 +474,17 @@ class MetricsMongoDBController:
     def get_narrative_stats(self, requesting_user, params, token):
         """
         get_narrative_stats--generate narrative stats data for reporting purposes
+        [{'owner': u'vkumar', 'ws': 8768, 'name': u'vkumar:1468592344827',
+        'first_access': u'2016-7-15'},
+        {'owner': u'psdehal', 'ws': 27834, 'name': u'psdehal:narrative_1513709108341',
+        'first_access': u'2017-12-21'}]
         """
         if not self._is_admin(requesting_user):
                 raise ValueError('You do not have permisson to '
                                  'invoke this action.')
+        narr_info = self._get_narrative_info(params)
 
-        # 1. get the narr_owners data for lookups
-        if self.narr_data is None:
-            self.narr_data = self.metrics_dbi.list_narrative_info()
-
-        # 2. query db to get lists of narratives with ws_ids and first_access_date
-        params = self._process_parameters(params)
-        ws_firstAccs = self.metrics_dbi.list_ws_firstAccess(
-                            params['minTime'],
-                            params['maxTime'])
-
-        # 3. match the narrative owners and assemble the info
-        narr_info_list = []
-        for narr_info in self.narr_data:
-            narr = {}
-            for wsobj in ws_firstAccs:
-                if narr_info['ws'] == wsobj['ws']:
-                    narr['ws'] = narr_info['ws']
-                    narr['name'] = narr_info['name']
-                    narr['owner'] = narr_info['owner']
-                    narr['first_access'] = wsobj['yyyy-mm-dd']
-                    narr_info_list.append(narr)
-                    break
-
-        return narr_info_list
+        return narr_info
 
     # function(s) to update the metrics db
     def update_metrics(self, requesting_user, params, token):
