@@ -218,6 +218,7 @@ class MetricsMongoDBController:
                     break
         return {'metrics_result': wsobjs_act}
 
+    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _join_task_ujs(self, exec_tasks, ujs_jobs):
         """
         combine/join exec_tasks with ujs_jobs list to get the final return data
