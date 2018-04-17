@@ -1,14 +1,16 @@
-from pymongo import MongoClient
 import datetime
+from pymongo import MongoClient
 from pymongo import ASCENDING
 from pymongo.errors import BulkWriteError, WriteError, ConfigurationError
-
 from redis_cache import cache_it_json
 
 from kb_Metrics.Util import _convert_to_datetime
 
 
 class MongoMetricsDBI:
+    '''
+    MongoMetricsDBI--interface to mongodbs behind
+    '''
 
     # Collection Names
 
@@ -57,12 +59,12 @@ class MongoMetricsDBI:
                   '$setOnInsert': {'kbase_staff': kbstaff}}
 
         # grab handle(s) to the database collection(s) targeted
-        self.mt_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
+        mt_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
         update_ret = None
         try:
             # return an instance of UpdateResult(raw_result, acknowledged)
-            update_ret = self.mt_users.update_one(upd_filter,
-                                                  upd_op, upsert=True)
+            update_ret = mt_users.update_one(upd_filter,
+                                             upd_op, upsert=True)
         except WriteError as we:
             print('WriteError caught')
             raise we
@@ -141,24 +143,25 @@ class MongoMetricsDBI:
         else:
             # re-touch the newly inserted records
             mt_narrs.update({'access_count': {'$exists': False}},
-                                 {'$set': {'access_count': 1}},
-                                 upsert=True, multi=True)
+                            {'$set': {'access_count': 1}},
+                            upsert=True, multi=True)
         return update_ret
     # End functions to write to the metrics database
 
     # Begin functions to query the other dbs...
     def aggr_unique_users_per_day(self, minTime, maxTime, excludeUsers=[]):
+
         # Define the pipeline operations
         minDate = _convert_to_datetime(minTime)
         maxDate = _convert_to_datetime(maxTime)
 
-        match_filter = {"_id.year_mod": {"$gte": minDate.year,
-                                             "$lte": maxDate.year},
-                            "_id.month_mod": {"$gte": minDate.month,
-                                              "$lte": maxDate.month},
-                            "_id.day_mod": {"$gte": minDate.day,
-                                            "$lte": maxDate.day},
-                            "obj_numModified": {"$gt": 0}}
+        match_filter = {"_id.year_mod":
+                        {"$gte": minDate.year, "$lte": maxDate.year},
+                        "_id.month_mod": {"$gte": minDate.month,
+                                          "$lte": maxDate.month},
+                        "_id.day_mod": {"$gte": minDate.day,
+                                        "$lte": maxDate.day},
+                        "obj_numModified": {"$gt": 0}}
 
         if excludeUsers:
             match_filter['_id.username'] = {"$nin": excludeUsers}
@@ -265,6 +268,7 @@ class MongoMetricsDBI:
         m_cursor = kbwsobjs.aggregate(pipeline)
         return list(m_cursor)
 
+    @cache_it_json(limit=1024)
     def list_ws_owners(self):
         # Define the pipeline operations
         pipeline = [
@@ -272,6 +276,32 @@ class MongoMetricsDBI:
             {"$project": {"username": "$owner",
                           "ws_id": "$ws", "name": 1, "_id": 0}}
         ]
+        # grab handle(s) to the db collection and retrieve a MongoDB cursor
+        kbworkspaces = self.metricsDBs['workspace'][
+            MongoMetricsDBI._WS_WORKSPACES]
+        m_cursor = kbworkspaces.aggregate(pipeline)
+        return list(m_cursor)
+
+    @cache_it_json(limit=1024)
+    def list_narrative_info(self, wsid_list=[], owner_list=[]):
+        """
+        list_narrative_info--retrieve the name/ws_id/owner of narratives
+        """
+        match_filter = {"del": False,  # "lock": False,
+                        "meta": {"$elemMatch":
+                                 {"k": "is_temporary", "v": "false"}}}
+        if wsid_list:
+            match_filter['ws'] = {"$in": wsid_list}
+        if owner_list:
+            match_filter['owner'] = {"$in": owner_list}
+
+        # Define the pipeline operations
+        pipeline = [
+            {"$match": match_filter},
+            {"$project": {"name": 1, "owner": 1, "ws": 1, "_id": 0,
+                          "narr_keys": "$meta.k", "narr_values": "$meta.v"}}
+        ]
+
         # grab handle(s) to the db collection and retrieve a MongoDB cursor
         kbworkspaces = self.metricsDBs['workspace'][
             MongoMetricsDBI._WS_WORKSPACES]
@@ -303,7 +333,7 @@ class MongoMetricsDBI:
         pipeline = [
             {"$match": match_filter},
             {"$project": {"username": "$owner", "workspace_id": "$ws",
-                          "name": 1, "meta": 1,
+                          "name": 1, "narr_keys": "$meta.k", "narr_values": "$meta.v",
                           "deleted": "$del", "desc": 1, "numObj": 1,
                           "last_saved_at": "$moddate", "_id": 0}}
         ]
@@ -313,13 +343,15 @@ class MongoMetricsDBI:
         m_cursor = kbworkspaces.aggregate(pipeline)
         return list(m_cursor)
 
+    @cache_it_json(limit=128, expire=60 * 60 * 24)
     def list_user_objects_from_wsobjs(self, minTime, maxTime, ws_list=[]):
-        # Define the pipeline operations
+
         minTime = datetime.datetime.fromtimestamp(minTime / 1000.0)
         maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
 
+        # Define the pipeline operations
         match_filter = {"del": False,
-                        "moddate":{"$gte": minTime, "$lte": maxTime}}
+                        "moddate": {"$gte": minTime, "$lte": maxTime}}
         if ws_list:
             match_filter["ws"] = {"$in": ws_list}
 
@@ -329,6 +361,49 @@ class MongoMetricsDBI:
                           "object_id": "$id", "object_name": "$name",
                           "object_version": "$numver",
                           "deleted": "$del", "_id": 0}}
+        ]
+
+        # grab handle(s) to the db collection and retrieve a MongoDB cursor
+        kbwsobjs = self.metricsDBs['workspace'][
+            MongoMetricsDBI._WS_WSOBJECTS]
+        m_cursor = kbwsobjs.aggregate(pipeline)
+        return list(m_cursor)
+
+    @cache_it_json(limit=128, expire=60 * 60 * 24)
+    def list_ws_firstAccess(self, minTime, maxTime, ws_list=[]):
+        """
+        list_wsObj_firstAccess--retrieve the ws_ids and first access date (yyyy-mm-dd)
+        ("numver": 1) for workspaces/narratives as objects, the 'first_access' date is
+        used for accounting narratives created at certain date.
+        """
+        minTime = datetime.datetime.fromtimestamp(minTime / 1000.0)
+        maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
+
+        # Define the pipeline operations
+        match_filter = {"del": False, "numver": 1,
+                        "moddate": {"$gte": minTime, "$lte": maxTime}}
+        if ws_list:
+            match_filter["ws"] = {"$in": ws_list}
+
+        proj1 = {"ws": 1, "moddate": 1, "_id": 0}
+        grp = {"_id": "$ws", "first_access": {"$min": "$moddate"}}
+        proj2 = {"ws": "$_id", "_id": 0,
+                 "first_access_year": {"$year": "$first_access"},
+                 "first_access_month": {"$month": "$first_access"},
+                 "first_access_day": {"$dayOfMonth": "$first_access"}}
+
+        proj3 = {"ws": 1, "yyyy-mm-dd":
+                 {"$concat":
+                  [{"$substr": ["$first_access_year", 0, -1]}, "-",
+                   {"$substr": ["$first_access_month", 0, -1]}, "-",
+                   {"$substr": ["$first_access_day", 0, -1]}]}}
+
+        pipeline = [
+            {"$match": match_filter},
+            {"$project": proj1},
+            {"$group": grp},
+            {"$project": proj2},
+            {"$project": proj3}
         ]
         # grab handle(s) to the db collection and retrieve a MongoDB cursor
         kbwsobjs = self.metricsDBs['workspace'][

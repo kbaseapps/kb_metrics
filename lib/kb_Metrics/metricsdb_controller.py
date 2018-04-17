@@ -4,10 +4,9 @@ import datetime
 import copy
 import re
 
-from repoze.lru import lru_cache
 from redis_cache import cache_it_json
 
-from kb_Metrics.metricsDBs import MongoMetricsDBI
+from kb_Metrics.metrics_dbi import MongoMetricsDBI
 from kb_Metrics.Util import (_unix_time_millis_from_datetime,
                              _convert_to_datetime)
 from Catalog.CatalogClient import Catalog
@@ -63,23 +62,6 @@ class MetricsMongoDBController:
             method_id = et_jobinput['method'].replace('/', '.')
 
         return method_id
-
-    def _map_narrative(self, wsid, ws_narrs):
-        """
-        get the narrative name and version
-        """
-        n_name = ''
-        n_obj = '0'
-        for wsn in ws_narrs:
-            if str(wsn['workspace_id']) == str(wsid):
-                n_name = wsn['name']
-                for w_m in wsn['meta']:
-                    if w_m['k'] == 'narrative':
-                        n_obj = w_m['v']
-                    if w_m['k'] == 'narrative_nice_name':
-                        n_name = w_m['v']
-                break
-        return (n_name, n_obj)
 
     def _update_user_info(self, params, token):
         """
@@ -180,16 +162,16 @@ class MetricsMongoDBController:
     # functions to get the requested records from other dbs...
     def _get_narratives_from_wsobjs(self, params, token):
         """
-        get_narratives_from_wsobjs--Given a time period, fetch the narrative
+        _get_narratives_from_wsobjs--Given a time period, fetch the narrative
         information from workspace.workspaces and workspace.workspaceObjects.
         Based on the narratives in workspace.workspaceObjects, if additional
         info available then add to existing data from workspace.workspaces.
         """
-        # 0. get the ws_narrative and client_groups data for lookups
+        # get the ws_narrative for lookups
         if self.ws_narratives is None:
             self.ws_narratives = self.metrics_dbi.list_ws_narratives()
-        if self.client_groups is None:
-            self.client_groups = self._get_client_groups_from_cat(token)
+        if self.narrative_name_map == {}:
+            self.narrative_name_map = self._get_narrative_map()
 
         params = self._process_parameters(params)
 
@@ -217,21 +199,11 @@ class MetricsMongoDBController:
         for wsn in ws_narrs:
             if wsn.get('object_id'):
                 wsn[u'last_saved_by'] = wsn.pop('username')
-                wsn[u'nice_name'] = ''
-                for w_m in wsn['meta']:
-                    if w_m['k'] == 'narrative_nice_name':
-                        wsn[u'nice_name'] = w_m['v']
-                        break
-                del wsn['meta']
+                wsn[u'nice_name'] = self.narrative_name_map.get(wsn['workspace_id'])
                 ws_narrs1.append(wsn)
         return {'metrics_result': ws_narrs1}
 
     def _get_activities_from_wsobjs(self, params, token):
-        # 0. get the ws_narrative and client_groups data for lookups
-        if self.ws_narratives is None:
-            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
-        if self.client_groups is None:
-            self.client_groups = self._get_client_groups_from_cat(token)
 
         params = self._process_parameters(params)
 
@@ -276,27 +248,36 @@ class MetricsMongoDBController:
                 u_j_s['method'] = desc
 
         for exec_task in exec_tasks:
-            if str(exec_task['ujs_job_id']) == str(u_j_s['job_id']):
+            if str(exec_task['ujs_job_id']) == u_j_s['job_id']:
                 if 'job_input' in exec_task:
                     et_job_in = exec_task['job_input']
                     u_j_s['app_id'] = self._parse_app_id(et_job_in)
                     if not u_j_s.get('method'):
                         u_j_s['method'] = self._parse_method(et_job_in)
-
                     if not u_j_s.get('wsid'):
                         if 'wsid' in et_job_in:
                             u_j_s['wsid'] = et_job_in['wsid']
-                        elif ('params' in et_job_in and 
-                              'ws_id' in et_job_in['params'][0]):
-                            u_j_s['wsid'] = et_job_in['params'][0]['ws_id']
-
-                    if 'params' in et_job_in:
-                        p_ws = et_job_in['params'][0]
-                        if 'workspace' in p_ws:
-                            u_j_s['workspace_name'] = p_ws['workspace']
-                        elif 'workspace_name' in p_ws:
-                            ws_nm = p_ws['workspace_name']
-                            u_j_s['workspace_name'] = ws_nm
+                        elif 'params' in et_job_in and et_job_in['params'] != []:
+                            p_ws = et_job_in['params'][0]
+                            if isinstance(p_ws, dict) and 'ws_id' in p_ws:
+                                u_j_s['wsid'] = p_ws['ws_id']
+                    # try to get the workspace_name--first nice_name,
+                    # if na then job_task--because sometimes both nice_name and
+                    # workspace (or workspace_name) exist, pick nice_name
+                    if u_j_s.get('wsid'):
+                        u_j_s['workspace_name'] = self.narrative_name_map.get(
+                                                        int(u_j_s['wsid']))
+                    if u_j_s.get('workspace_name', None) is None:
+                        if 'params' in et_job_in and et_job_in['params'] != []:
+                            p_ws = et_job_in['params'][0]
+                            if isinstance(p_ws, dict):
+                                if 'workspace' in p_ws:
+                                    u_j_s['workspace_name'] = p_ws['workspace']
+                                elif 'workspace_name' in p_ws:
+                                    u_j_s['workspace_name'] = p_ws['workspace_name']
+                    if ('workspace_name' in u_j_s and
+                            u_j_s['workspace_name'] is None):
+                        u_j_s.pop('workspace_name')
                 break
 
         if not u_j_s.get('app_id') and u_j_s.get('method'):
@@ -307,13 +288,11 @@ class MetricsMongoDBController:
                 u_j_s.get('complete')):
             u_j_s['finish_time'] = u_j_s.pop('modification_time')
 
-        # get the narrative name and version if any
-        if u_j_s.get('wsid') and self.ws_narratives:
-            n_nm, n_obj = self._map_narrative(u_j_s['wsid'],
-                                              self.ws_narratives)
-            if n_nm != "" and n_obj != 0:
+        # get the narrative name if any
+        if u_j_s.get('wsid'):
+            n_nm = self.narrative_name_map.get(int(u_j_s['wsid']))
+            if n_nm != "":
                 u_j_s['narrative_name'] = n_nm
-                u_j_s['narrative_objNo'] = n_obj
 
         # get the client groups
         u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
@@ -328,7 +307,6 @@ class MetricsMongoDBController:
         return u_j_s
 
     def _process_parameters(self, params):
-
         params['user_ids'] = params.get('user_ids', [])
 
         if not isinstance(params['user_ids'], list):
@@ -363,10 +341,33 @@ class MetricsMongoDBController:
 
         return params
 
-    @cache_it_json(limit=128, expire=60 * 60 * 24)
+    @cache_it_json(limit=1024, expire=60 * 60 * 24)
+    def _get_narrative_map(self):
+        """
+        _get_narrative_map: Fetch the narrative id and name
+        (or narrative_nice_name if it exists) into a dictionary
+        of {key=ws_id, value=ws_name}
+        """
+        # 1. get the narr_owners data to start
+        if self.ws_narratives is None:
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+
+        # 2. loop through all self.ws_narratives
+        narrative_name_map = {}
+        for narr in self.ws_narratives:
+            narrative_name_map[narr['workspace_id']] = narr['name']  # default
+            n_keys = narr['narr_keys']
+            n_vals = narr['narr_values']
+            for i in range(0, len(n_keys)):
+                if n_keys[i] == 'narrative_nice_name':
+                    narrative_name_map[narr['workspace_id']] = n_vals[i]
+                    break
+        return narrative_name_map
+
+    @cache_it_json(limit=1024, expire=60 * 60 * 24)
     def _get_client_groups_from_cat(self, token):
         """
-        get_client_groups_from_cat: Get the client_groups data from Catalog API
+        _get_client_groups_from_cat: Get the client_groups data from Catalog API
         return an array of the following structure (example with data):
         {
             u'app_id': u'assemblyrast/run_arast',
@@ -384,6 +385,33 @@ class MetricsMongoDBController:
         return [{'app_id': client_group.get('app_id'),
                  'client_groups': client_group.get('client_groups')}
                 for client_group in client_groups]
+
+    @cache_it_json(limit=1024, expire=60 * 60 * 24)
+    def _get_narrative_info(self, params):
+        # 1. get the narr_owners data for lookups
+        if self.narr_data is None:
+            self.narr_data = self.metrics_dbi.list_narrative_info()
+
+        # 2. query db to get lists of narratives with ws_ids and first_access_date
+        params = self._process_parameters(params)
+        ws_firstAccs = self.metrics_dbi.list_ws_firstAccess(
+                            params['minTime'],
+                            params['maxTime'])
+
+        # 3. match the narrative owners and assemble the info
+        narr_info_list = []
+        for narr_info in self.narr_data:
+            narr = {}
+            for wsobj in ws_firstAccs:
+                if narr_info['ws'] == wsobj['ws']:
+                    narr['ws'] = narr_info['ws']
+                    narr['name'] = narr_info['name']
+                    narr['owner'] = narr_info['owner']
+                    narr['first_access'] = wsobj['yyyy-mm-dd']
+                    narr_info_list.append(narr)
+                    break
+
+        return narr_info_list
 
     def __init__(self, config):
         # grab config lists
@@ -417,18 +445,18 @@ class MetricsMongoDBController:
         self.ws_narratives = None
         self.client_groups = None
         self.cat_client = None
+        self.narr_data = None
+        self.narrative_name_map = {}
 
     def get_user_job_states(self, requesting_user, params, token):
         """
-        get_jobdata_from_ws_exec_ujs--The original implementation to
-        get data for appcatalog from querying execution_engine,
-        catalog, workspace and userjobstate
+        get_user_job_states--generate data for appcatalog/stats from querying
+        execution_engine, userjobstates, catalog and workspace
         ----------------------
         To get the job's 'status', 'complete'=true/false, etc.,
         we can do joining as follows
         --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
         """
-        params = self._process_parameters(params)
         if not self._is_admin(requesting_user):
             params['user_ids'] = [requesting_user]
 
@@ -437,8 +465,11 @@ class MetricsMongoDBController:
             self.ws_narratives = self.metrics_dbi.list_ws_narratives()
         if self.client_groups is None:
             self.client_groups = self._get_client_groups_from_cat(token)
+        if self.narrative_name_map == {}:
+            self.narrative_name_map = self._get_narrative_map()
 
         # 2. query dbs to get lists of tasks and jobs
+        params = self._process_parameters(params)
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'],
                                                       params['maxTime'])
         ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'],
@@ -449,8 +480,26 @@ class MetricsMongoDBController:
 
         return {'job_states': self._join_task_ujs(exec_tasks, ujs_jobs)}
 
+    def get_narrative_stats(self, requesting_user, params, token):
+        """
+        get_narrative_stats--generate narrative stats data for reporting purposes
+        [{'owner': u'vkumar', 'ws': 8768, 'name': u'vkumar:1468592344827',
+        'first_access': u'2016-7-15'},
+        {'owner': u'psdehal', 'ws': 27834, 'name': u'psdehal:narrative_1513709108341',
+        'first_access': u'2017-12-21'}]
+        """
+        if not self._is_admin(requesting_user):
+                raise ValueError('You do not have permisson to '
+                                 'invoke this action.')
+        narr_info = self._get_narrative_info(params)
+
+        return narr_info
+
     # function(s) to update the metrics db
     def update_metrics(self, requesting_user, params, token):
+        """
+        update_metrics--updates the metrics db collections
+        """
         if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to '
                              'invoke this action.')
@@ -474,6 +523,10 @@ class MetricsMongoDBController:
     # functions to get the requested records from metrics db...
     def get_active_users_counts(self, requesting_user,
                                 params, token, exclude_kbstaff=True):
+        """
+        get_active_users_counts--query (and aggregate) the metrics mongodb
+        to get active user count per day.
+        """
         if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 
@@ -496,6 +549,9 @@ class MetricsMongoDBController:
 
     def get_user_details(self, requesting_user, params, token,
                          exclude_kbstaff=False):
+        """
+        get_user_details--query the metrics/users db to retrieve user info.
+        """
         if not self._is_metrics_admin(requesting_user):
             raise ValueError('You do not have permission to view this data.')
 

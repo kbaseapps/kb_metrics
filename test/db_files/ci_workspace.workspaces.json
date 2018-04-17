@@ -6,6 +6,7 @@
 			"moddate" : 1468608552709,
 			"name" : "fangfang:1461853392938",
 			"del" : false,
+			"lock" : false,
 			"numObj" : 1,
 			"desc" : "",
 			"meta" : [
@@ -30,6 +31,7 @@
 			"moddate" : 1468614379909,
 			"name" : "jplfaria:1464632279763",
 			"del" : false,
+			"lock" : false,
 			"numObj" : 63,
 			"desc" : null,
 			"meta" : [
@@ -78,6 +80,7 @@
 			"moddate" : 1468514841704,
 			"name" : "pranjan77:1466528963411",
 			"del" : false,
+			"lock" : false,
 			"numObj" : 8,
 			"desc" : "",
 			"meta" : [
@@ -100,6 +103,7 @@
 			"owner" : "eapearson",
 			"ws" : 8468,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 95,
 			"desc" : null,
 			"meta" : [
@@ -124,6 +128,7 @@
 			"owner" : "pranjan77",
 			"ws" : 8706,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 44,
 			"desc" : null,
 			"meta" : [
@@ -150,6 +155,7 @@
 			"name" : "wjriehl:1468439004137",
 			"moddate" : 1468529982645,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 1,
 			"desc" : "",
 			"meta" : [
@@ -174,6 +180,7 @@
 			"name" : "rsutormin:1468453294248",
 			"moddate" : 1468454614192,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 5,
 			"desc" : "",
 			"meta" : [
@@ -196,6 +203,7 @@
 			"owner" : "eapearson",
 			"ws" : 8737,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 58,
 			"desc" : null,
 			"meta" : [
@@ -220,6 +228,7 @@
 			"owner" : "sjyoo",
 			"ws" : 8738,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 49,
 			"desc" : null,
 			"meta" : [
@@ -246,6 +255,7 @@
 			"name" : "sunita:1468507681406",
 			"moddate" : 1468507738476,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 1,
 			"desc" : "",
 			"meta" : [
@@ -270,6 +280,7 @@
 			"name" : "srividya22:1468512987188",
 			"moddate" : 1468513388130,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 1,
 			"desc" : "",
 			"meta" : [
@@ -294,6 +305,7 @@
 			"name" : "pranjan77:1468515770961",
 			"moddate" : 1468527115150,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 4,
 			"desc" : "",
 			"meta" : [
@@ -316,6 +328,7 @@
 			"owner" : "eapearson",
 			"ws" : 8748,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 105,
 			"desc" : null,
 			"meta" : [
@@ -340,6 +353,7 @@
 			"owner" : "sunita",
 			"ws" : 8756,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 33,
 			"desc" : null,
 			"meta" : [
@@ -366,6 +380,7 @@
 			"name" : "sunita:1468528134214",
 			"moddate" : 1468529024658,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 12,
 			"desc" : "",
 			"meta" : [
@@ -390,6 +405,7 @@
 			"name" : "pranjan77:1468528106093",
 			"moddate" : 1468590809411,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 11,
 			"desc" : "",
 			"meta" : [
@@ -414,6 +430,7 @@
 			"name" : "wjriehl:1468548508461",
 			"moddate" : 1468548560463,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 2,
 			"desc" : "",
 			"meta" : [
@@ -436,6 +453,7 @@
 			"owner" : "vkumar",
 			"ws" : 8768,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 23,
 			"desc" : null,
 			"meta" : [
@@ -460,6 +478,7 @@
 			"owner" : "pranjan77",
 			"ws" : 8771,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 45,
 			"desc" : null,
 			"meta" : [
@@ -486,6 +505,7 @@
 			"name" : "fangfang:1468609298564",
 			"moddate" : 1468609307362,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 1,
 			"desc" : "",
 			"meta" : [
@@ -508,6 +528,7 @@
 			"owner" : "wjriehl",
 			"ws" : 8779,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 45,
 			"desc" : null,
 			"meta" : [
@@ -532,6 +553,7 @@
 			"owner" : "vkumar",
 			"ws" : 8781,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 46,
 			"desc" : null,
 			"meta" : [
@@ -558,6 +580,7 @@
 			"name" : "srividya22:1468507655124",
 			"moddate" : 1468507653335,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 1,
 			"desc" : "",
 			"meta" : [
@@ -578,6 +601,7 @@
 			"name" : "nconrad:1468599125700",
 			"moddate" : 1468599503531,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 7,
 			"desc" : "",
 			"meta" : [
@@ -598,6 +622,7 @@
 			"name" : "janakakbase:1468671484940",
 			"moddate" : 1468671485316,
 			"del" : false,
+			"lock" : false,
 			"numObj" : 1,
 			"desc" : "",
 			"meta" : [
@@ -618,6 +643,7 @@
             "name" : "psdehal:narrative_1513709108341",
             "moddate" : 1516822530001,
             "del" : false,
+			"lock" : false,
             "numObj" : 4,
             "desc" : "",
             "meta" : [
