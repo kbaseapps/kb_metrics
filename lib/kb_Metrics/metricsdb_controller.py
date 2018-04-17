@@ -261,14 +261,23 @@ class MetricsMongoDBController:
                             p_ws = et_job_in['params'][0]
                             if isinstance(p_ws, dict) and 'ws_id' in p_ws:
                                 u_j_s['wsid'] = p_ws['ws_id']
-
-                    if 'params' in et_job_in and et_job_in['params'] != []:
-                        p_ws = et_job_in['params'][0]
-                        if isinstance(p_ws, dict):
-                            if 'workspace' in p_ws:
-                                u_j_s['workspace_name'] = p_ws['workspace']
-                            elif 'workspace_name' in p_ws:
-                                u_j_s['workspace_name'] = p_ws['workspace_name']
+                    # try to get the workspace_name--first nice_name,
+                    # if na then job_task--because sometimes both nice_name and
+                    # workspace (or workspace_name) exist, pick nice_name
+                    if u_j_s.get('wsid'):
+                        u_j_s['workspace_name'] = self.narrative_name_map.get(
+                                                        int(u_j_s['wsid']))
+                    if u_j_s.get('workspace_name', None) is None:
+                        if 'params' in et_job_in and et_job_in['params'] != []:
+                            p_ws = et_job_in['params'][0]
+                            if isinstance(p_ws, dict):
+                                if 'workspace' in p_ws:
+                                    u_j_s['workspace_name'] = p_ws['workspace']
+                                elif 'workspace_name' in p_ws:
+                                    u_j_s['workspace_name'] = p_ws['workspace_name']
+                    if ('workspace_name' in u_j_s and
+                            u_j_s['workspace_name'] is None):
+                        u_j_s.pop('workspace_name')
                 break
 
         if not u_j_s.get('app_id') and u_j_s.get('method'):

@@ -1894,8 +1894,7 @@ class kb_MetricsTest(unittest.TestCase):
         else:
             self.assertIn('bigmemlong', app_metrics_ret[0]['client_groups'])
         self.assertEqual(app_metrics_ret[0]['narrative_name'], 'Staging Test')
-        self.assertEqual(app_metrics_ret[0]['workspace_name'],
-                         'psdehal:narrative_1513709108341')
+        self.assertEqual(app_metrics_ret[0]['workspace_name'], 'Staging Test')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_user_details")
