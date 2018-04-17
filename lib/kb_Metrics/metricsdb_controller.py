@@ -229,7 +229,7 @@ class MetricsMongoDBController:
             ujs_ret.append(u_j_s)
         return ujs_ret
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 24)
+    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _assemble_ujs_state(self, ujs, exec_tasks):
         u_j_s = copy.deepcopy(ujs)
         u_j_s['job_id'] = str(u_j_s.pop('_id'))
@@ -341,7 +341,7 @@ class MetricsMongoDBController:
 
         return params
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 24)
+    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _get_narrative_map(self):
         """
         _get_narrative_map: Fetch the narrative id and name
@@ -364,7 +364,7 @@ class MetricsMongoDBController:
                     break
         return narrative_name_map
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 24)
+    @cache_it_json(limit=1024, expire=60 * 60 * 1)
     def _get_client_groups_from_cat(self, token):
         """
         _get_client_groups_from_cat: Get the client_groups data from Catalog API
@@ -386,7 +386,7 @@ class MetricsMongoDBController:
                  'client_groups': client_group.get('client_groups')}
                 for client_group in client_groups]
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 24)
+    @cache_it_json(limit=1024, expire=60 * 60 * 1)
     def _get_narrative_info(self, params):
         # 1. get the narr_owners data for lookups
         if self.narr_data is None:
