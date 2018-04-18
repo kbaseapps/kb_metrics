@@ -499,7 +499,7 @@ class MongoMetricsDBI:
             created_filter['$lte'] = _convert_to_datetime(maxTime)
         if created_filter:
             qry_filter['created'] = created_filter
-        qry_filter['desc'] = {'$exists': True}
+        # qry_filter['desc'] = {'$exists': True}
         qry_filter['status'] = {'$exists': True}
 
         projection = {

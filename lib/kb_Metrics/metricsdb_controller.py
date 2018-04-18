@@ -226,7 +226,6 @@ class MetricsMongoDBController:
         ujs_ret = []
         for j in ujs_jobs:
             u_j_s = self._assemble_ujs_state(j, exec_tasks)
-
             ujs_ret.append(u_j_s)
         return ujs_ret
 
@@ -262,20 +261,16 @@ class MetricsMongoDBController:
                             p_ws = et_job_in['params'][0]
                             if isinstance(p_ws, dict) and 'ws_id' in p_ws:
                                 u_j_s['wsid'] = p_ws['ws_id']
-                    # try to get the workspace_name--first nice_name,
-                    # if na then job_task--because sometimes both nice_name and
-                    # workspace (or workspace_name) exist, pick nice_name
-                    if u_j_s.get('wsid'):
-                        u_j_s['workspace_name'] = self.narrative_name_map.get(
-                                                        int(u_j_s['wsid']))
-                    if u_j_s.get('workspace_name', None) is None:
-                        if 'params' in et_job_in and et_job_in['params'] != []:
-                            p_ws = et_job_in['params'][0]
-                            if isinstance(p_ws, dict):
-                                if 'workspace' in p_ws:
-                                    u_j_s['workspace_name'] = p_ws['workspace']
-                                elif 'workspace_name' in p_ws:
-                                    u_j_s['workspace_name'] = p_ws['workspace_name']
+
+                    # try to get workspace_name
+                    if 'params' in et_job_in and et_job_in['params'] != []:
+                        p_ws = et_job_in['params'][0]
+                        if isinstance(p_ws, dict):
+                            if 'workspace' in p_ws:
+                                u_j_s['workspace_name'] = p_ws['workspace']
+                            elif 'workspace_name' in p_ws:
+                                u_j_s['workspace_name'] = p_ws['workspace_name']
+                    # remove None u_j_s['workspace_name']
                     if ('workspace_name' in u_j_s and
                             u_j_s['workspace_name'] is None):
                         u_j_s.pop('workspace_name')
@@ -289,11 +284,14 @@ class MetricsMongoDBController:
                 u_j_s.get('complete')):
             u_j_s['finish_time'] = u_j_s.pop('modification_time')
 
-        # get the narrative name if any
+        # get the narrative name via u_j_s['wsid']
         if u_j_s.get('wsid'):
-            n_nm = self.narrative_name_map.get(int(u_j_s['wsid']))
-            if n_nm != "":
-                u_j_s['narrative_name'] = n_nm
+            try:
+                u_j_s['narrative_name'] = self.narrative_name_map.get(
+                                                int(u_j_s['wsid']))
+            except ValueError as ve:
+                # e.g.,u_j_s['wsid'] == "srividya22:1447279981090"
+                u_j_s['narrative_name'] = u_j_s['wsid']
 
         # get the client groups
         u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
