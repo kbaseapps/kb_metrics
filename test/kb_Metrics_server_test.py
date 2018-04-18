@@ -1288,7 +1288,19 @@ class kb_MetricsTest(unittest.TestCase):
                 "method": mthd,
                 "params": []
             }
+        }, {
+            "ujs_job_id": "564a4fd6e4b0d9c152289eac",
+            "job_input": {
+                "service_ver": "bace8ac842135ca4fa15b453f0e971b7293a09a9",
+                "method": "KBaseRNASeq.getAlignmentStats",
+                "params": [{
+                    "output_obj_name": "wewe",
+                    "ws_id": "srividya22:1447279981090",
+                    "alignment_sample_id": "wewe"
+                }]
+            }
         }]
+
         ujs_jobs = [{
             "_id": ObjectId("596832a4e4b08b65f9ff5d6f"),
             "user": "tgu2",
@@ -1353,6 +1365,22 @@ class kb_MetricsTest(unittest.TestCase):
             "started": 1500046850810,
             "complete": True,
             "error": False
+        }, {
+            "_id": ObjectId("564a4fd6e4b0d9c152289eac"),
+            "user": "srividya22",
+            "created": 1449032638757,
+            "updated": 1449032658978,
+            "estcompl": None,
+            "service": "srividya22",
+            "status": ("Error: Image was not found: "
+                       "dockerhub-ci.kbase.us/kbasernaseq:"
+                       "bace8ac842135ca4fa15b453f0e971b7293a09a9"),
+            "desc": "AWE job for KBaseRNASeq.getAlignmentStats",
+            "started": 1449032638823,
+            "complete": True,
+            "error": True,
+            "authstrat": "DEFAULT",
+            "authparam": "DEFAULT"
         }]
 
         # testing the correct data items appear in the assembled result
@@ -1410,6 +1438,18 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs4['finish_time'], ujs_jobs[4]['updated'])
         self.assertIn('client_groups', joined_ujs4)
         self.assertNotIn('workspace_name', joined_ujs4)
+
+        joined_ujs5 = self.db_controller._assemble_ujs_state(ujs_jobs[5],
+                                                             exec_tasks)
+        et_job_input = exec_tasks[5]["job_input"]
+        etj_params = et_job_input["params"][0]
+        etj_methd = et_job_input["method"]
+        self.assertEqual(joined_ujs5['wsid'], etj_params["ws_id"])
+        self.assertEqual(joined_ujs5['app_id'], etj_methd.replace('.', '/'))
+        self.assertEqual(joined_ujs5['method'], etj_methd)
+        self.assertEqual(joined_ujs5['modification_time'], ujs_jobs[5]['updated'])
+        self.assertIn('client_groups', joined_ujs5)
+        self.assertNotIn('workspace_name', joined_ujs5)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_join_task_ujs")
@@ -1894,7 +1934,8 @@ class kb_MetricsTest(unittest.TestCase):
         else:
             self.assertIn('bigmemlong', app_metrics_ret[0]['client_groups'])
         self.assertEqual(app_metrics_ret[0]['narrative_name'], 'Staging Test')
-        self.assertEqual(app_metrics_ret[0]['workspace_name'], 'Staging Test')
+        self.assertEqual(app_metrics_ret[0]['workspace_name'],
+                         'psdehal:narrative_1513709108341')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_user_details")

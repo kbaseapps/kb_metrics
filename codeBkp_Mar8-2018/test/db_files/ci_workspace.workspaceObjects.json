@@ -1,0 +1,5784 @@
+	[
+		{
+			"ws" : 29797,
+			"id" : 1,
+			"numver" : 2,
+			"name" : "TestAssembly",
+			"moddate" : 1519668635558
+		},
+		{
+			"ws" : 29797,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "report_8e6d7d1d-7e93-a75a-d6e6-b91d3b7ef93d",
+			"moddate" : 1519668635558
+		},
+		{
+			"ws" : 29798,
+			"id" : 1,
+			"numver" : 2,
+			"name" : "TestAssembly",
+			"moddate" : 1519668720484
+		},
+		{
+			"ws" : 29798,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "report_817997e2-4027-31da-525a-76b265dcd04c",
+			"moddate" : 1519668720484
+		},
+		{
+			"ws" : 29799,
+			"id" : 1,
+			"numver" : 2,
+			"name" : "TestAssembly",
+			"moddate" : 1519668828531
+		},
+		{
+			"ws" : 29799,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "report_ae9d9228-efbb-721e-9af3-40a0f89ef02f",
+			"moddate" : 1519668828531
+		},
+		{
+			"ws" : 29800,
+			"id" : 1,
+			"numver" : 2,
+			"name" : "TestAssembly",
+			"moddate" : 1519670617212
+		},
+		{
+			"ws" : 29800,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "report_68bdfa75-34e4-4d97-3d83-8d5e655a19f0",
+			"moddate" : 1519670617212
+		},
+		{
+			"ws" : 29801,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Narrative.1460584133466",
+			"moddate" : 1519672363442
+		},
+		{
+			"ws" : 29802,
+			"id" : 1,
+			"numver" : 4,
+			"name" : "Narrative.1460584133466",
+			"moddate" : 1519672363956
+		},
+		{
+			"ws" : 29803,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Narrative.1460584133466",
+			"moddate" : 1519672364364
+		},
+		{
+			"ws" : 29804,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519673068856
+		},
+		{
+			"ws" : 29805,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "at_chrom1_section.gbk_assembly",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "at_chrom1_section.gbk",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "at_chrom1_section",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "test_Reads_1",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "test_Reads_2",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "test_Reads_3",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "test_Reads_4",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "test_Reads_5",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "test_Reads_6",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "extracted_hy5_rep1_hisat2_alignment",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "extracted_hy5_rep1_hisat2_stringtie_expression",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "extracted_hy5_rep2_hisat2_alignment",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "extracted_hy5_rep2_hisat2_stringtie_expression",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "extracted_WT_rep1_hisat2_alignment",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "extracted_WT_rep1_hisat2_stringtie_expression",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "extracted_WT_rep2_hisat2_alignment",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "extracted_WT_rep2_hisat2_stringtie_expression",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "extracted_GT_rep1_hisat2_alignment",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "extracted_GT_rep1_hisat2_stringtie_expression",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "extracted_GT_rep2_hisat2_alignment",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "extracted_GT_rep2_hisat2_stringtie_expression",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "test_Sample_Set",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "test_Alignment_Set",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 24,
+			"numver" : 2,
+			"name" : "test_expression_set",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 25,
+			"numver" : 2,
+			"name" : "testdownsized_KBaseSets_AT_differential_expression_object_hy5_WT",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 26,
+			"numver" : 1,
+			"name" : "testdownsized_KBaseSets_AT_differential_expression_object_hy5_GT",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 27,
+			"numver" : 1,
+			"name" : "testdownsized_KBaseSets_AT_differential_expression_object_WT_GT",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 28,
+			"numver" : 2,
+			"name" : "testdownsized_KBaseSets_AT_differential_expression_object",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 29,
+			"numver" : 1,
+			"name" : "kb_ballgown_report_888871ae-600e-4a14-bed4-8c513fbbd7a7",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 30,
+			"numver" : 1,
+			"name" : "testdownsized_RNASeq_AT_differential_expression_object_hy5_WT",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 31,
+			"numver" : 1,
+			"name" : "testdownsized_RNASeq_AT_differential_expression_object_hy5_GT",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 32,
+			"numver" : 1,
+			"name" : "testdownsized_RNASeq_AT_differential_expression_object_WT_GT",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 33,
+			"numver" : 1,
+			"name" : "testdownsized_RNASeq_AT_differential_expression_object",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 34,
+			"numver" : 1,
+			"name" : "kb_ballgown_report_4b7931d0-c20d-417d-91ab-b227224b9582",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29805,
+			"id" : 35,
+			"numver" : 1,
+			"name" : "kb_ballgown_report_ad767e0e-f668-4764-81f1-9bc9a0334f3b",
+			"moddate" : 1519673537328
+		},
+		{
+			"ws" : 29807,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519673698911
+		},
+		{
+			"ws" : 29666,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519673975939
+		},
+		{
+			"ws" : 29809,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519675837951
+		},
+		{
+			"ws" : 29809,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "Genome_19217_16420_3__GCF_000518705.1_",
+			"moddate" : 1519675837951
+		},
+		{
+			"ws" : 29809,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519675837951
+		},
+		{
+			"ws" : 29809,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519675837951
+		},
+		{
+			"ws" : 29810,
+			"id" : 1,
+			"numver" : 4,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519678838036
+		},
+		{
+			"ws" : 29810,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "jgi_fungal.assembly",
+			"moddate" : 1519678838036
+		},
+		{
+			"ws" : 29810,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "jgi_fungal",
+			"moddate" : 1519678838036
+		},
+		{
+			"ws" : 29810,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "jgi_bacterial.assembly",
+			"moddate" : 1519678838036
+		},
+		{
+			"ws" : 29810,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "jgi_bacterial",
+			"moddate" : 1519678838036
+		},
+		{
+			"ws" : 29810,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "patric_bacterial.assembly",
+			"moddate" : 1519678838036
+		},
+		{
+			"ws" : 29810,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "patric_bacterial",
+			"moddate" : 1519678838036
+		},
+		{
+			"ws" : 29810,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "refseq.assembly",
+			"moddate" : 1519678838036
+		},
+		{
+			"ws" : 29810,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "refseq",
+			"moddate" : 1519678838036
+		},
+		{
+			"ws" : 29810,
+			"id" : 10,
+			"numver" : 3,
+			"name" : "MyGenome",
+			"moddate" : 1519678838036
+		},
+		{
+			"ws" : 29810,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "Plant.assembly",
+			"moddate" : 1519678838036
+		},
+		{
+			"ws" : 29810,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "Plant",
+			"moddate" : 1519678838036
+		},
+		{
+			"ws" : 29811,
+			"id" : 1,
+			"numver" : 4,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519679806590
+		},
+		{
+			"ws" : 29811,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "jgi_fungal.assembly",
+			"moddate" : 1519679806590
+		},
+		{
+			"ws" : 29811,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "jgi_fungal",
+			"moddate" : 1519679806590
+		},
+		{
+			"ws" : 29811,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "jgi_bacterial.assembly",
+			"moddate" : 1519679806590
+		},
+		{
+			"ws" : 29811,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "jgi_bacterial",
+			"moddate" : 1519679806590
+		},
+		{
+			"ws" : 29811,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "patric_bacterial.assembly",
+			"moddate" : 1519679806590
+		},
+		{
+			"ws" : 29811,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "patric_bacterial",
+			"moddate" : 1519679806590
+		},
+		{
+			"ws" : 29811,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "refseq.assembly",
+			"moddate" : 1519679806590
+		},
+		{
+			"ws" : 29811,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "refseq",
+			"moddate" : 1519679806590
+		},
+		{
+			"ws" : 29811,
+			"id" : 10,
+			"numver" : 3,
+			"name" : "MyGenome",
+			"moddate" : 1519679806590
+		},
+		{
+			"ws" : 29811,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "Plant.assembly",
+			"moddate" : 1519679806590
+		},
+		{
+			"ws" : 29811,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "Plant",
+			"moddate" : 1519679806590
+		},
+		{
+			"ws" : 29812,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519681930937
+		},
+		{
+			"ws" : 29624,
+			"id" : 2,
+			"numver" : 8,
+			"name" : "rhodobacter_CACIA14H1.reference",
+			"moddate" : 1519684940770
+		},
+		{
+			"ws" : 29624,
+			"id" : 3,
+			"numver" : 2,
+			"name" : "data_palette",
+			"moddate" : 1519684944506
+		},
+		{
+			"ws" : 29624,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Rhodobacter_sphaeroides_2.4.1",
+			"moddate" : 1519684963568
+		},
+		{
+			"ws" : 29814,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "MyGenome_assembly",
+			"moddate" : 1519685026414
+		},
+		{
+			"ws" : 29814,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "MyGenome",
+			"moddate" : 1519685026414
+		},
+		{
+			"ws" : 29814,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "kb_genome_upload_report_da97f701-f513-4d84-9136-067f02cf2867",
+			"moddate" : 1519685026414
+		},
+		{
+			"ws" : 29815,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519685115844
+		},
+		{
+			"ws" : 29815,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "MyGenome",
+			"moddate" : 1519685115844
+		},
+		{
+			"ws" : 29815,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "report_37b1f66d-a1ff-e3b7-6131-136bdea903ae",
+			"moddate" : 1519685115844
+		},
+		{
+			"ws" : 29624,
+			"id" : 1,
+			"numver" : 7,
+			"name" : "Narrative.1518803256498",
+			"moddate" : 1519685178195
+		},
+		{
+			"ws" : 29624,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "a",
+			"moddate" : 1519685257910
+		},
+		{
+			"ws" : 29816,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519685429592
+		},
+		{
+			"ws" : 29816,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "MyGenome",
+			"moddate" : 1519685429592
+		},
+		{
+			"ws" : 29816,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "report_53f8b6fe-8c05-4500-9db9-21ea5a5f93e6",
+			"moddate" : 1519685429592
+		},
+		{
+			"ws" : 29817,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"moddate" : 1519685557026
+		},
+		{
+			"ws" : 29817,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "ecoli_2contigs",
+			"moddate" : 1519685557026
+		},
+		{
+			"ws" : 29818,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"moddate" : 1519685849567
+		},
+		{
+			"ws" : 29818,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "ecoli_2contigs",
+			"moddate" : 1519685849567
+		},
+		{
+			"ws" : 29819,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519686047385
+		},
+		{
+			"ws" : 29819,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "MyGenome",
+			"moddate" : 1519686047385
+		},
+		{
+			"ws" : 29819,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "report_96c38fc9-44f4-3873-c2dc-45114a94cb3e",
+			"moddate" : 1519686047385
+		},
+		{
+			"ws" : 29819,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "kb_genome_upload_report_26e28966-3143-4790-9541-1289dab0d18c",
+			"moddate" : 1519686047385
+		},
+		{
+			"ws" : 29820,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"moddate" : 1519686473224
+		},
+		{
+			"ws" : 29820,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "ecoli_2contigs",
+			"moddate" : 1519686473224
+		},
+		{
+			"ws" : 29821,
+			"id" : 1,
+			"numver" : 4,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519688172701
+		},
+		{
+			"ws" : 29821,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "jgi_fungal.assembly",
+			"moddate" : 1519688172701
+		},
+		{
+			"ws" : 29821,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "jgi_fungal",
+			"moddate" : 1519688172701
+		},
+		{
+			"ws" : 29821,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "patric_bacterial.assembly",
+			"moddate" : 1519688172701
+		},
+		{
+			"ws" : 29821,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "patric_bacterial",
+			"moddate" : 1519688172701
+		},
+		{
+			"ws" : 29821,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "refseq.assembly",
+			"moddate" : 1519688172701
+		},
+		{
+			"ws" : 29821,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "refseq",
+			"moddate" : 1519688172701
+		},
+		{
+			"ws" : 29821,
+			"id" : 8,
+			"numver" : 3,
+			"name" : "MyGenome",
+			"moddate" : 1519688172701
+		},
+		{
+			"ws" : 29821,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "Plant.assembly",
+			"moddate" : 1519688172701
+		},
+		{
+			"ws" : 29821,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "Plant",
+			"moddate" : 1519688172701
+		},
+		{
+			"ws" : 29822,
+			"id" : 1,
+			"numver" : 4,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519689914786
+		},
+		{
+			"ws" : 29822,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "jgi_fungal.assembly",
+			"moddate" : 1519689914786
+		},
+		{
+			"ws" : 29822,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "jgi_fungal",
+			"moddate" : 1519689914786
+		},
+		{
+			"ws" : 29822,
+			"id" : 4,
+			"numver" : 2,
+			"name" : "jgi_bacterial.assembly",
+			"moddate" : 1519689914786
+		},
+		{
+			"ws" : 29822,
+			"id" : 5,
+			"numver" : 2,
+			"name" : "jgi_bacterial",
+			"moddate" : 1519689914786
+		},
+		{
+			"ws" : 29822,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "patric_bacterial.assembly",
+			"moddate" : 1519689914786
+		},
+		{
+			"ws" : 29822,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "patric_bacterial",
+			"moddate" : 1519689914786
+		},
+		{
+			"ws" : 29822,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "refseq.assembly",
+			"moddate" : 1519689914786
+		},
+		{
+			"ws" : 29822,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "refseq",
+			"moddate" : 1519689914786
+		},
+		{
+			"ws" : 29822,
+			"id" : 10,
+			"numver" : 3,
+			"name" : "MyGenome",
+			"moddate" : 1519689914786
+		},
+		{
+			"ws" : 29822,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "Plant.assembly",
+			"moddate" : 1519689914786
+		},
+		{
+			"ws" : 29822,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "Plant",
+			"moddate" : 1519689914786
+		},
+		{
+			"ws" : 29824,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"moddate" : 1519692160796
+		},
+		{
+			"ws" : 29825,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"moddate" : 1519692366332
+		},
+		{
+			"ws" : 29823,
+			"id" : 1,
+			"numver" : 4,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519692635503
+		},
+		{
+			"ws" : 29823,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "jgi_fungal.assembly",
+			"moddate" : 1519692635503
+		},
+		{
+			"ws" : 29823,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "jgi_fungal",
+			"moddate" : 1519692635503
+		},
+		{
+			"ws" : 29823,
+			"id" : 4,
+			"numver" : 2,
+			"name" : "jgi_bacterial.assembly",
+			"moddate" : 1519692635503
+		},
+		{
+			"ws" : 29823,
+			"id" : 5,
+			"numver" : 2,
+			"name" : "jgi_bacterial",
+			"moddate" : 1519692635503
+		},
+		{
+			"ws" : 29823,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "patric_bacterial.assembly",
+			"moddate" : 1519692635503
+		},
+		{
+			"ws" : 29823,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "patric_bacterial",
+			"moddate" : 1519692635503
+		},
+		{
+			"ws" : 29823,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "refseq.assembly",
+			"moddate" : 1519692635503
+		},
+		{
+			"ws" : 29823,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "refseq",
+			"moddate" : 1519692635503
+		},
+		{
+			"ws" : 29823,
+			"id" : 10,
+			"numver" : 3,
+			"name" : "MyGenome",
+			"moddate" : 1519692635503
+		},
+		{
+			"ws" : 29823,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "Plant.assembly",
+			"moddate" : 1519692635503
+		},
+		{
+			"ws" : 29823,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "Plant",
+			"moddate" : 1519692635503
+		},
+		{
+			"ws" : 29826,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"moddate" : 1519692879067
+		},
+		{
+			"ws" : 29827,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"moddate" : 1519693025396
+		},
+		{
+			"ws" : 29827,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "ecoli_2contigs",
+			"moddate" : 1519693025396
+		},
+		{
+			"ws" : 29828,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"moddate" : 1519693474026
+		},
+		{
+			"ws" : 29828,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "ecoli_2contigs",
+			"moddate" : 1519693474026
+		},
+		{
+			"ws" : 29829,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"moddate" : 1519695400539
+		},
+		{
+			"ws" : 29829,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "ecoli_2contigs",
+			"moddate" : 1519695400539
+		},
+		{
+			"ws" : 29830,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"moddate" : 1519696272000
+		},
+		{
+			"ws" : 29830,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "ecoli_2contigs",
+			"moddate" : 1519696272000
+		},
+		{
+			"ws" : 29831,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "ecoli_2contigs_assembly",
+			"moddate" : 1519696584840
+		},
+		{
+			"ws" : 29832,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519696681386
+		},
+		{
+			"ws" : 29832,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "MyGenome",
+			"moddate" : 1519696681386
+		},
+		{
+			"ws" : 29832,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "report_62d82747-5d86-a846-873a-55afdc6a4e0c",
+			"moddate" : 1519696681386
+		},
+		{
+			"ws" : 29832,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "kb_genome_upload_report_75a8ce00-bd15-47d4-bfdd-239f3f1a2d48",
+			"moddate" : 1519696681386
+		},
+		{
+			"ws" : 29833,
+			"id" : 1,
+			"numver" : 4,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519698572731
+		},
+		{
+			"ws" : 29833,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "jgi_fungal.assembly",
+			"moddate" : 1519698572731
+		},
+		{
+			"ws" : 29833,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "jgi_fungal",
+			"moddate" : 1519698572731
+		},
+		{
+			"ws" : 29833,
+			"id" : 4,
+			"numver" : 2,
+			"name" : "jgi_bacterial.assembly",
+			"moddate" : 1519698572731
+		},
+		{
+			"ws" : 29833,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "patric_bacterial.assembly",
+			"moddate" : 1519698572731
+		},
+		{
+			"ws" : 29833,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "patric_bacterial",
+			"moddate" : 1519698572731
+		},
+		{
+			"ws" : 29833,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "refseq.assembly",
+			"moddate" : 1519698572731
+		},
+		{
+			"ws" : 29833,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "refseq",
+			"moddate" : 1519698572731
+		},
+		{
+			"ws" : 29833,
+			"id" : 9,
+			"numver" : 3,
+			"name" : "MyGenome",
+			"moddate" : 1519698572731
+		},
+		{
+			"ws" : 29833,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "Plant.assembly",
+			"moddate" : 1519698572731
+		},
+		{
+			"ws" : 29833,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "Plant",
+			"moddate" : 1519698572731
+		},
+		{
+			"ws" : 29834,
+			"id" : 1,
+			"numver" : 2,
+			"name" : "jgi_bacterial.assembly",
+			"moddate" : 1519699275394
+		},
+		{
+			"ws" : 29834,
+			"id" : 2,
+			"numver" : 2,
+			"name" : "jgi_bacterial",
+			"moddate" : 1519699275394
+		},
+		{
+			"ws" : 29835,
+			"id" : 1,
+			"numver" : 2,
+			"name" : "jgi_bacterial.assembly",
+			"moddate" : 1519700369376
+		},
+		{
+			"ws" : 29835,
+			"id" : 2,
+			"numver" : 2,
+			"name" : "jgi_bacterial",
+			"moddate" : 1519700369376
+		},
+		{
+			"ws" : 29836,
+			"id" : 1,
+			"numver" : 4,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519701572182
+		},
+		{
+			"ws" : 29836,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "jgi_fungal.assembly",
+			"moddate" : 1519701572182
+		},
+		{
+			"ws" : 29836,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "jgi_fungal",
+			"moddate" : 1519701572182
+		},
+		{
+			"ws" : 29836,
+			"id" : 4,
+			"numver" : 2,
+			"name" : "jgi_bacterial.assembly",
+			"moddate" : 1519701572182
+		},
+		{
+			"ws" : 29836,
+			"id" : 5,
+			"numver" : 2,
+			"name" : "jgi_bacterial",
+			"moddate" : 1519701572182
+		},
+		{
+			"ws" : 29836,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "patric_bacterial.assembly",
+			"moddate" : 1519701572182
+		},
+		{
+			"ws" : 29836,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "patric_bacterial",
+			"moddate" : 1519701572182
+		},
+		{
+			"ws" : 29836,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "refseq.assembly",
+			"moddate" : 1519701572182
+		},
+		{
+			"ws" : 29836,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "refseq",
+			"moddate" : 1519701572182
+		},
+		{
+			"ws" : 29836,
+			"id" : 10,
+			"numver" : 3,
+			"name" : "MyGenome",
+			"moddate" : 1519701572182
+		},
+		{
+			"ws" : 29836,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "Plant.assembly",
+			"moddate" : 1519701572182
+		},
+		{
+			"ws" : 29836,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "Plant",
+			"moddate" : 1519701572182
+		},
+		{
+			"ws" : 29837,
+			"id" : 1,
+			"numver" : 4,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519701766749
+		},
+		{
+			"ws" : 29837,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "jgi_fungal.assembly",
+			"moddate" : 1519701766749
+		},
+		{
+			"ws" : 29837,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "jgi_fungal",
+			"moddate" : 1519701766749
+		},
+		{
+			"ws" : 29837,
+			"id" : 4,
+			"numver" : 2,
+			"name" : "jgi_bacterial.assembly",
+			"moddate" : 1519701766749
+		},
+		{
+			"ws" : 29837,
+			"id" : 5,
+			"numver" : 2,
+			"name" : "jgi_bacterial",
+			"moddate" : 1519701766749
+		},
+		{
+			"ws" : 29837,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "patric_bacterial.assembly",
+			"moddate" : 1519701766749
+		},
+		{
+			"ws" : 29837,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "patric_bacterial",
+			"moddate" : 1519701766749
+		},
+		{
+			"ws" : 29837,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "refseq.assembly",
+			"moddate" : 1519701766749
+		},
+		{
+			"ws" : 29837,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "refseq",
+			"moddate" : 1519701766749
+		},
+		{
+			"ws" : 29837,
+			"id" : 10,
+			"numver" : 3,
+			"name" : "MyGenome",
+			"moddate" : 1519701766749
+		},
+		{
+			"ws" : 29837,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "Plant.assembly",
+			"moddate" : 1519701766749
+		},
+		{
+			"ws" : 29837,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "Plant",
+			"moddate" : 1519701766749
+		},
+		{
+			"ws" : 29838,
+			"id" : 1,
+			"numver" : 4,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29838,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "jgi_fungal.assembly",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29838,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "jgi_fungal",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29838,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "jgi_bacterial2.assembly",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29838,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "jgi_bacterial2",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29838,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "jgi_bacterial.assembly",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29838,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "jgi_bacterial",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29838,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "patric_bacterial.assembly",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29838,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "patric_bacterial",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29838,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "refseq.assembly",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29838,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "refseq",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29838,
+			"id" : 12,
+			"numver" : 3,
+			"name" : "MyGenome",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29838,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "Plant.assembly",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29838,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "Plant",
+			"moddate" : 1519712064398
+		},
+		{
+			"ws" : 29839,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519734444279
+		},
+		{
+			"ws" : 29841,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519736436745
+		},
+		{
+			"ws" : 29843,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519736513883
+		},
+		{
+			"ws" : 29845,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519736665988
+		},
+		{
+			"ws" : 29847,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519736757608
+		},
+		{
+			"ws" : 29849,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519737097228
+		},
+		{
+			"ws" : 29851,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519737164100
+		},
+		{
+			"ws" : 29853,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519737245493
+		},
+		{
+			"ws" : 29855,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519737343296
+		},
+		{
+			"ws" : 29857,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519737408070
+		},
+		{
+			"ws" : 29859,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519737937249
+		},
+		{
+			"ws" : 29861,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519738010391
+		},
+		{
+			"ws" : 29863,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519738070711
+		},
+		{
+			"ws" : 29865,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519738187575
+		},
+		{
+			"ws" : 29867,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519738427420
+		},
+		{
+			"ws" : 29869,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519739654795
+		},
+		{
+			"ws" : 29869,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519739654795
+		},
+		{
+			"ws" : 29869,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_16420_3__GCF_000518705.1_",
+			"moddate" : 1519739654795
+		},
+		{
+			"ws" : 29869,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519739654795
+		},
+		{
+			"ws" : 29869,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519739654795
+		},
+		{
+			"ws" : 29870,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29870,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_001620325.1",
+			"moddate" : 1519739655149
+		},
+		{
+			"ws" : 29871,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519740068240
+		},
+		{
+			"ws" : 29871,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519740068240
+		},
+		{
+			"ws" : 29871,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_16420_3__GCF_000518705.1_",
+			"moddate" : 1519740068240
+		},
+		{
+			"ws" : 29871,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519740068240
+		},
+		{
+			"ws" : 29871,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519740068240
+		},
+		{
+			"ws" : 29872,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29872,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_001620325.1",
+			"moddate" : 1519740068583
+		},
+		{
+			"ws" : 29873,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519740418268
+		},
+		{
+			"ws" : 29873,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519740418268
+		},
+		{
+			"ws" : 29873,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_16420_3__GCF_000518705.1_",
+			"moddate" : 1519740418268
+		},
+		{
+			"ws" : 29873,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519740418268
+		},
+		{
+			"ws" : 29873,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519740418268
+		},
+		{
+			"ws" : 29874,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29874,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_001620325.1",
+			"moddate" : 1519740418613
+		},
+		{
+			"ws" : 29875,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519740826337
+		},
+		{
+			"ws" : 29875,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519740826337
+		},
+		{
+			"ws" : 29875,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_16420_3__GCF_000518705.1_",
+			"moddate" : 1519740826337
+		},
+		{
+			"ws" : 29875,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519740826337
+		},
+		{
+			"ws" : 29875,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519740826337
+		},
+		{
+			"ws" : 29876,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29876,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_001620325.1",
+			"moddate" : 1519740826673
+		},
+		{
+			"ws" : 29877,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519741369148
+		},
+		{
+			"ws" : 29877,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519741369148
+		},
+		{
+			"ws" : 29877,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_16420_3__GCF_000518705.1_",
+			"moddate" : 1519741369148
+		},
+		{
+			"ws" : 29877,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519741369148
+		},
+		{
+			"ws" : 29877,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519741369148
+		},
+		{
+			"ws" : 29878,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29878,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_001620325.1",
+			"moddate" : 1519741369484
+		},
+		{
+			"ws" : 29880,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519741531875
+		},
+		{
+			"ws" : 29880,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519741531875
+		},
+		{
+			"ws" : 29880,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_130714_1__GCF_000146165.2_",
+			"moddate" : 1519741531875
+		},
+		{
+			"ws" : 29880,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Genome_19217_154440_1__GCF_000178875.2_",
+			"moddate" : 1519741531875
+		},
+		{
+			"ws" : 29880,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "Genome_19217_81209_1__GCF_001401775.1_",
+			"moddate" : 1519741531875
+		},
+		{
+			"ws" : 29880,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519741531875
+		},
+		{
+			"ws" : 29880,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519741531875
+		},
+		{
+			"ws" : 29879,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29879,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_001620325.1",
+			"moddate" : 1519741532376
+		},
+		{
+			"ws" : 29882,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519741755907
+		},
+		{
+			"ws" : 29882,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519741755907
+		},
+		{
+			"ws" : 29882,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_130714_1__GCF_000146165.2_",
+			"moddate" : 1519741755907
+		},
+		{
+			"ws" : 29882,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Genome_19217_154440_1__GCF_000178875.2_",
+			"moddate" : 1519741755907
+		},
+		{
+			"ws" : 29882,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "Genome_19217_81209_1__GCF_001401775.1_",
+			"moddate" : 1519741755907
+		},
+		{
+			"ws" : 29882,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519741755907
+		},
+		{
+			"ws" : 29882,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519741755907
+		},
+		{
+			"ws" : 29881,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29881,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_001620325.1",
+			"moddate" : 1519741756242
+		},
+		{
+			"ws" : 29884,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519742019267
+		},
+		{
+			"ws" : 29884,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519742019267
+		},
+		{
+			"ws" : 29884,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_130714_1__GCF_000146165.2_",
+			"moddate" : 1519742019267
+		},
+		{
+			"ws" : 29884,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Genome_19217_154440_1__GCF_000178875.2_",
+			"moddate" : 1519742019267
+		},
+		{
+			"ws" : 29884,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "Genome_19217_81209_1__GCF_001401775.1_",
+			"moddate" : 1519742019267
+		},
+		{
+			"ws" : 29884,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519742019267
+		},
+		{
+			"ws" : 29884,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519742019267
+		},
+		{
+			"ws" : 29883,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29883,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_001620325.1",
+			"moddate" : 1519742019603
+		},
+		{
+			"ws" : 29886,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519742290709
+		},
+		{
+			"ws" : 29886,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519742290709
+		},
+		{
+			"ws" : 29886,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_178636_2__GCF_000013765.1_",
+			"moddate" : 1519742290709
+		},
+		{
+			"ws" : 29886,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Genome_19217_130714_1__GCF_000146165.2_",
+			"moddate" : 1519742290709
+		},
+		{
+			"ws" : 29886,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "Genome_19217_154440_1__GCF_000178875.2_",
+			"moddate" : 1519742290709
+		},
+		{
+			"ws" : 29886,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "Genome_19217_81209_1__GCF_001401775.1_",
+			"moddate" : 1519742290709
+		},
+		{
+			"ws" : 29886,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519742290709
+		},
+		{
+			"ws" : 29886,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519742290709
+		},
+		{
+			"ws" : 29885,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29885,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_000013765.1",
+			"moddate" : 1519742291065
+		},
+		{
+			"ws" : 29888,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519742650232
+		},
+		{
+			"ws" : 29888,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519742650232
+		},
+		{
+			"ws" : 29888,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_178636_2__GCF_000013765.1_",
+			"moddate" : 1519742650232
+		},
+		{
+			"ws" : 29888,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Genome_19217_130714_1__GCF_000146165.2_",
+			"moddate" : 1519742650232
+		},
+		{
+			"ws" : 29888,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "Genome_19217_154440_1__GCF_000178875.2_",
+			"moddate" : 1519742650232
+		},
+		{
+			"ws" : 29888,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "Genome_19217_81209_1__GCF_001401775.1_",
+			"moddate" : 1519742650232
+		},
+		{
+			"ws" : 29888,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519742650232
+		},
+		{
+			"ws" : 29888,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519742650232
+		},
+		{
+			"ws" : 29887,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29887,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_000013765.1",
+			"moddate" : 1519742650568
+		},
+		{
+			"ws" : 29890,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519742862118
+		},
+		{
+			"ws" : 29890,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519742862118
+		},
+		{
+			"ws" : 29890,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_178636_2__GCF_000013765.1_",
+			"moddate" : 1519742862118
+		},
+		{
+			"ws" : 29890,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Genome_19217_130714_1__GCF_000146165.2_",
+			"moddate" : 1519742862118
+		},
+		{
+			"ws" : 29890,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "Genome_19217_154440_1__GCF_000178875.2_",
+			"moddate" : 1519742862118
+		},
+		{
+			"ws" : 29890,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "Genome_19217_81209_1__GCF_001401775.1_",
+			"moddate" : 1519742862118
+		},
+		{
+			"ws" : 29890,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519742862118
+		},
+		{
+			"ws" : 29890,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519742862118
+		},
+		{
+			"ws" : 29889,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29889,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_000013765.1",
+			"moddate" : 1519742862464
+		},
+		{
+			"ws" : 29892,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519743410995
+		},
+		{
+			"ws" : 29892,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "jgi_fungal.assembly",
+			"moddate" : 1519743410995
+		},
+		{
+			"ws" : 29892,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "jgi_fungal",
+			"moddate" : 1519743410995
+		},
+		{
+			"ws" : 29894,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519743698229
+		},
+		{
+			"ws" : 29894,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519743698229
+		},
+		{
+			"ws" : 29894,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_178636_2__GCF_000013765.1_",
+			"moddate" : 1519743698229
+		},
+		{
+			"ws" : 29894,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Genome_19217_130714_1__GCF_000146165.2_",
+			"moddate" : 1519743698229
+		},
+		{
+			"ws" : 29894,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "Genome_19217_154440_1__GCF_000178875.2_",
+			"moddate" : 1519743698229
+		},
+		{
+			"ws" : 29894,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "Genome_19217_81209_1__GCF_001401775.1_",
+			"moddate" : 1519743698229
+		},
+		{
+			"ws" : 29894,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519743698229
+		},
+		{
+			"ws" : 29894,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519743698229
+		},
+		{
+			"ws" : 29893,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29893,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_000013765.1",
+			"moddate" : 1519743698575
+		},
+		{
+			"ws" : 29896,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519743947224
+		},
+		{
+			"ws" : 29896,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519743947224
+		},
+		{
+			"ws" : 29896,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_178636_2__GCF_000013765.1_",
+			"moddate" : 1519743947224
+		},
+		{
+			"ws" : 29896,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Genome_19217_130714_1__GCF_000146165.2_",
+			"moddate" : 1519743947224
+		},
+		{
+			"ws" : 29896,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "Genome_19217_154440_1__GCF_000178875.2_",
+			"moddate" : 1519743947224
+		},
+		{
+			"ws" : 29896,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "Genome_19217_81209_1__GCF_001401775.1_",
+			"moddate" : 1519743947224
+		},
+		{
+			"ws" : 29896,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519743947224
+		},
+		{
+			"ws" : 29896,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519743947224
+		},
+		{
+			"ws" : 29895,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29895,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_000013765.1",
+			"moddate" : 1519743947597
+		},
+		{
+			"ws" : 29898,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519744514920
+		},
+		{
+			"ws" : 29898,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519744514920
+		},
+		{
+			"ws" : 29898,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_130714_1__GCF_000146165.2_",
+			"moddate" : 1519744514920
+		},
+		{
+			"ws" : 29898,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519744514920
+		},
+		{
+			"ws" : 29898,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519744514920
+		},
+		{
+			"ws" : 29897,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29897,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519744515284
+		},
+		{
+			"ws" : 29900,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519744625600
+		},
+		{
+			"ws" : 29900,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519744625600
+		},
+		{
+			"ws" : 29900,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_130714_1__GCF_000146165.2_",
+			"moddate" : 1519744625600
+		},
+		{
+			"ws" : 29900,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519744625600
+		},
+		{
+			"ws" : 29900,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519744625600
+		},
+		{
+			"ws" : 29899,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29899,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519744625948
+		},
+		{
+			"ws" : 29902,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519745058806
+		},
+		{
+			"ws" : 29902,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519745058806
+		},
+		{
+			"ws" : 29902,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_130714_1__GCF_000146165.2_",
+			"moddate" : 1519745058806
+		},
+		{
+			"ws" : 29902,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Genome_19217_154440_1__GCF_000178875.2_",
+			"moddate" : 1519745058806
+		},
+		{
+			"ws" : 29902,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519745058806
+		},
+		{
+			"ws" : 29902,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519745058806
+		},
+		{
+			"ws" : 29901,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519745059200
+		},
+		{
+			"ws" : 29901,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519745059200
+		},
+		{
+			"ws" : 29901,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000712635.2",
+			"moddate" : 1519745059200
+		},
+		{
+			"ws" : 29901,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_001723195.1",
+			"moddate" : 1519745059200
+		},
+		{
+			"ws" : 29901,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_002074855.1",
+			"moddate" : 1519745059200
+		},
+		{
+			"ws" : 29905,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519745237105
+		},
+		{
+			"ws" : 29905,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519745237105
+		},
+		{
+			"ws" : 29905,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_178636_2__GCF_000013765.1_",
+			"moddate" : 1519745237105
+		},
+		{
+			"ws" : 29905,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Genome_19217_130714_1__GCF_000146165.2_",
+			"moddate" : 1519745237105
+		},
+		{
+			"ws" : 29905,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "Genome_19217_154440_1__GCF_000178875.2_",
+			"moddate" : 1519745237105
+		},
+		{
+			"ws" : 29905,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "Genome_19217_81209_1__GCF_001401775.1_",
+			"moddate" : 1519745237105
+		},
+		{
+			"ws" : 29905,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519745237105
+		},
+		{
+			"ws" : 29905,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519745237105
+		},
+		{
+			"ws" : 29904,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519745237481
+		},
+		{
+			"ws" : 29904,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519745237481
+		},
+		{
+			"ws" : 29904,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519745237481
+		},
+		{
+			"ws" : 29904,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000013765.1",
+			"moddate" : 1519745237481
+		},
+		{
+			"ws" : 29903,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Acoerulea.JGI1.1",
+			"moddate" : 1519745278268
+		},
+		{
+			"ws" : 29903,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "Rhodobacter_sphaeroides_2.4.1",
+			"moddate" : 1519745278268
+		},
+		{
+			"ws" : 29903,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "pangen3",
+			"moddate" : 1519745278268
+		},
+		{
+			"ws" : 29906,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Acoerulea.JGI1.1",
+			"moddate" : 1519745458316
+		},
+		{
+			"ws" : 29906,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "Rhodobacter_sphaeroides_2.4.1",
+			"moddate" : 1519745458316
+		},
+		{
+			"ws" : 29906,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "pangen3",
+			"moddate" : 1519745458316
+		},
+		{
+			"ws" : 29908,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "Shewanella_ANA_3_uid58347.genome",
+			"moddate" : 1519745846338
+		},
+		{
+			"ws" : 29908,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "fakeTaxon",
+			"moddate" : 1519745846338
+		},
+		{
+			"ws" : 29908,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "Genome_19217_178636_2__GCF_000013765.1_",
+			"moddate" : 1519745846338
+		},
+		{
+			"ws" : 29908,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "Genome_19217_130714_1__GCF_000146165.2_",
+			"moddate" : 1519745846338
+		},
+		{
+			"ws" : 29908,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "Genome_19217_154440_1__GCF_000178875.2_",
+			"moddate" : 1519745846338
+		},
+		{
+			"ws" : 29908,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "Genome_19217_81209_1__GCF_001401775.1_",
+			"moddate" : 1519745846338
+		},
+		{
+			"ws" : 29908,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "sptree.1",
+			"moddate" : 1519745846338
+		},
+		{
+			"ws" : 29908,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "genomeset.1",
+			"moddate" : 1519745846338
+		},
+		{
+			"ws" : 29907,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "GCF_000146165.2",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "GCF_000016585.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "GCF_000015185.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "GCF_000018765.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "GCF_000017325.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "GCF_000021665.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "GCF_000014685.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "GCF_000014665.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "GCF_000215895.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "GCF_000178875.2",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "GCF_000203935.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "GCF_000282755.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "GCF_000169215.2",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "GCF_000015845.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "GCF_000231345.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "GCF_000485795.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "GCF_000712635.2",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "GCF_001723195.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "GCF_002074855.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_000519065.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_002157365.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "GCF_001591325.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "GCF_001308045.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 24,
+			"numver" : 1,
+			"name" : "GCF_000217915.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 25,
+			"numver" : 1,
+			"name" : "GCF_000798835.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 26,
+			"numver" : 1,
+			"name" : "GCF_001401775.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 27,
+			"numver" : 1,
+			"name" : "GCF_000147735.2",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29907,
+			"id" : 28,
+			"numver" : 1,
+			"name" : "GCF_000013765.1",
+			"moddate" : 1519745846695
+		},
+		{
+			"ws" : 29909,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "at_chrom1_section.gbk_assembly",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "at_chrom1_section.gbk",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "at_chrom1_section",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "test_Reads_1",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "test_Reads_2",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "test_Reads_3",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "test_Reads_4",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "test_Reads_5",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "test_Reads_6",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "extracted_hy5_rep1_hisat2_alignment",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "extracted_hy5_rep1_hisat2_stringtie_expression",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "extracted_hy5_rep2_hisat2_alignment",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "extracted_hy5_rep2_hisat2_stringtie_expression",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "extracted_WT_rep1_hisat2_alignment",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 15,
+			"numver" : 1,
+			"name" : "extracted_WT_rep1_hisat2_stringtie_expression",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 16,
+			"numver" : 1,
+			"name" : "extracted_WT_rep2_hisat2_alignment",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 17,
+			"numver" : 1,
+			"name" : "extracted_WT_rep2_hisat2_stringtie_expression",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 18,
+			"numver" : 1,
+			"name" : "extracted_GT_rep1_hisat2_alignment",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 19,
+			"numver" : 1,
+			"name" : "extracted_GT_rep1_hisat2_stringtie_expression",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "extracted_GT_rep2_hisat2_alignment",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "extracted_GT_rep2_hisat2_stringtie_expression",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "test_Sample_Set",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 23,
+			"numver" : 1,
+			"name" : "test_Alignment_Set",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 24,
+			"numver" : 2,
+			"name" : "test_expression_set",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 25,
+			"numver" : 2,
+			"name" : "testdownsized_KBaseSets_AT_differential_expression_object_hy5_WT",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 26,
+			"numver" : 1,
+			"name" : "testdownsized_KBaseSets_AT_differential_expression_object_hy5_GT",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 27,
+			"numver" : 1,
+			"name" : "testdownsized_KBaseSets_AT_differential_expression_object_WT_GT",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 28,
+			"numver" : 2,
+			"name" : "testdownsized_KBaseSets_AT_differential_expression_object",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 29,
+			"numver" : 1,
+			"name" : "kb_ballgown_report_f08954ee-bb77-4ce4-bca8-4033866e5c86",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 30,
+			"numver" : 1,
+			"name" : "testdownsized_RNASeq_AT_differential_expression_object_hy5_WT",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 31,
+			"numver" : 1,
+			"name" : "testdownsized_RNASeq_AT_differential_expression_object_hy5_GT",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 32,
+			"numver" : 1,
+			"name" : "testdownsized_RNASeq_AT_differential_expression_object_WT_GT",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 33,
+			"numver" : 1,
+			"name" : "testdownsized_RNASeq_AT_differential_expression_object",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 34,
+			"numver" : 1,
+			"name" : "kb_ballgown_report_70721e70-fe4c-4cb3-92ce-0a53a1e209f4",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29909,
+			"id" : 35,
+			"numver" : 1,
+			"name" : "kb_ballgown_report_10c230f9-4033-4610-b30f-90a7050d647a",
+			"moddate" : 1519760034012
+		},
+		{
+			"ws" : 29910,
+			"id" : 1,
+			"numver" : 3,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519765031470
+		},
+		{
+			"ws" : 29910,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "jgi_fungal.assembly",
+			"moddate" : 1519765031470
+		},
+		{
+			"ws" : 29910,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "jgi_fungal",
+			"moddate" : 1519765031470
+		},
+		{
+			"ws" : 29910,
+			"id" : 4,
+			"numver" : 2,
+			"name" : "jgi_bacterial.assembly",
+			"moddate" : 1519765031470
+		},
+		{
+			"ws" : 29910,
+			"id" : 5,
+			"numver" : 2,
+			"name" : "jgi_bacterial",
+			"moddate" : 1519765031470
+		},
+		{
+			"ws" : 29910,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "patric_bacterial.assembly",
+			"moddate" : 1519765031470
+		},
+		{
+			"ws" : 29910,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "patric_bacterial",
+			"moddate" : 1519765031470
+		},
+		{
+			"ws" : 29910,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "refseq.assembly",
+			"moddate" : 1519765031470
+		},
+		{
+			"ws" : 29910,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "refseq",
+			"moddate" : 1519765031470
+		},
+		{
+			"ws" : 29910,
+			"id" : 10,
+			"numver" : 2,
+			"name" : "MyGenome",
+			"moddate" : 1519765031470
+		},
+		{
+			"ws" : 29910,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "Plant.assembly",
+			"moddate" : 1519765031470
+		},
+		{
+			"ws" : 29910,
+			"id" : 12,
+			"numver" : 1,
+			"name" : "Plant",
+			"moddate" : 1519765031470
+		},
+		{
+			"ws" : 29911,
+			"id" : 1,
+			"numver" : 2,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519765534724
+		},
+		{
+			"ws" : 29911,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "jgi_bacterial2.assembly",
+			"moddate" : 1519765534724
+		},
+		{
+			"ws" : 29911,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "jgi_bacterial2",
+			"moddate" : 1519765534724
+		},
+		{
+			"ws" : 29911,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "jgi_bacterial.assembly",
+			"moddate" : 1519765534724
+		},
+		{
+			"ws" : 29911,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "jgi_bacterial",
+			"moddate" : 1519765534724
+		},
+		{
+			"ws" : 29911,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "MyGenome",
+			"moddate" : 1519765534724
+		},
+		{
+			"ws" : 29912,
+			"id" : 1,
+			"numver" : 1,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519768017649
+		},
+		{
+			"ws" : 29913,
+			"id" : 1,
+			"numver" : 4,
+			"name" : "MyGenome.assembly",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 29913,
+			"id" : 2,
+			"numver" : 1,
+			"name" : "jgi_fungal.assembly",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 29913,
+			"id" : 3,
+			"numver" : 1,
+			"name" : "jgi_fungal",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 29913,
+			"id" : 4,
+			"numver" : 1,
+			"name" : "jgi_bacterial2.assembly",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 29913,
+			"id" : 5,
+			"numver" : 1,
+			"name" : "jgi_bacterial2",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 29913,
+			"id" : 6,
+			"numver" : 1,
+			"name" : "jgi_bacterial.assembly",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 29913,
+			"id" : 7,
+			"numver" : 1,
+			"name" : "jgi_bacterial",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 29913,
+			"id" : 8,
+			"numver" : 1,
+			"name" : "patric_bacterial.assembly",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 29913,
+			"id" : 9,
+			"numver" : 1,
+			"name" : "patric_bacterial",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 29913,
+			"id" : 10,
+			"numver" : 1,
+			"name" : "refseq.assembly",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 29913,
+			"id" : 11,
+			"numver" : 1,
+			"name" : "refseq",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 29913,
+			"id" : 12,
+			"numver" : 3,
+			"name" : "MyGenome",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 29913,
+			"id" : 13,
+			"numver" : 1,
+			"name" : "Plant.assembly",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 29913,
+			"id" : 14,
+			"numver" : 1,
+			"name" : "Plant",
+			"moddate" : 1519768544045
+		},
+		{
+			"ws" : 27772,
+			"id" : 1,
+			"numver" : 41,
+			"name" : "Narrative.1513189142746",
+			"moddate" : 1519768788974
+		},
+		{
+			"ws" : 27772,
+			"id" : 20,
+			"numver" : 1,
+			"name" : "GCF_000166115.1_ASM16611v1_genomic.gbff_genome_assembly",
+			"moddate" : 1519768824481
+		},
+		{
+			"ws" : 27772,
+			"id" : 19,
+			"numver" : 3,
+			"name" : "Wican1_FilteredModels1_deflines.gff_genome.assembly",
+			"moddate" : 1519768827474
+		},
+		{
+			"ws" : 27772,
+			"id" : 21,
+			"numver" : 1,
+			"name" : "GCF_000166115.1_ASM16611v1_genomic.gbff_genome",
+			"moddate" : 1519768845275
+		},
+		{
+			"ws" : 27772,
+			"id" : 22,
+			"numver" : 1,
+			"name" : "kb_genome_upload_report_976fa48d-70c4-4f25-8429-454d15fb37ff",
+			"moddate" : 1519768865838
+		}
+	]
