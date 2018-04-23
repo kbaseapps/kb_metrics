@@ -163,7 +163,7 @@ class MetricsMongoDBController:
     def _get_narratives_from_wsobjs(self, params, token):
         """
         _get_narratives_from_wsobjs--Given a time period, fetch the narrative
-        information from workspace.workspaces and workspace.workspaceObjects.
+        information from workspace.workspaces and workspace.workspaceObjects./
         Based on the narratives in workspace.workspaceObjects, if additional
         info available then add to existing data from workspace.workspaces.
         """
@@ -171,7 +171,7 @@ class MetricsMongoDBController:
         if self.ws_narratives is None:
             self.ws_narratives = self.metrics_dbi.list_ws_narratives()
         if self.narrative_name_map == {}:
-            self.narrative_name_map = self._get_narrative_map()
+            self.narrative_name_map = self._get_narrative_name_map()
 
         params = self._process_parameters(params)
 
@@ -199,8 +199,20 @@ class MetricsMongoDBController:
         for wsn in ws_narrs:
             if wsn.get('object_id'):
                 wsn[u'last_saved_by'] = wsn.pop('username')
-                wsn[u'nice_name'] = self.narrative_name_map.get(wsn['workspace_id'])
-                ws_narrs1.append(wsn)
+                try:
+                    wsn[u'nice_name'], wsn[u'n_ver'] = self.narrative_name_map.get(
+                                                                wsn['workspace_id'])
+                    wsn.pop('narr_keys')
+                    wsn.pop('narr_values')
+                    ws_narrs1.append(wsn)
+                except ValueError as ve:
+                    # e.g.,u_j_s['wsid'] == "srividya22:1447279981090"
+                    wsn[u'nice_name'] = wsn['workspace_id']
+                    wsn[u'n_ver'] = '1'
+                except TypeError as ke:
+                    # no match
+                    print('No nice_name matched key {}'.format(wsn['workspace_id']))
+
         return {'metrics_result': ws_narrs1}
 
     def _get_activities_from_wsobjs(self, params, token):
@@ -284,14 +296,19 @@ class MetricsMongoDBController:
                 u_j_s.get('complete')):
             u_j_s['finish_time'] = u_j_s.pop('modification_time')
 
-        # get the narrative name via u_j_s['wsid']
+        # get the narrative name and version via u_j_s['wsid']
         if u_j_s.get('wsid'):
             try:
-                u_j_s['narrative_name'] = self.narrative_name_map.get(
-                                                int(u_j_s['wsid']))
+                n_name, n_ver = self.narrative_name_map[int(u_j_s['wsid'])]
+                u_j_s['narrative_name'] = n_name
+                u_j_s['narrative_objNo'] = n_ver
             except ValueError as ve:
                 # e.g.,u_j_s['wsid'] == "srividya22:1447279981090"
                 u_j_s['narrative_name'] = u_j_s['wsid']
+                u_j_s['narrative_objNo'] = '1'
+            except KeyError as ke:
+                # no match
+                print('No narrative_name matched key {}'.format(u_j_s['wsid']))
 
         # get the client groups
         u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
@@ -341,11 +358,11 @@ class MetricsMongoDBController:
         return params
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
-    def _get_narrative_map(self):
+    def _get_narrative_name_map(self):
         """
-        _get_narrative_map: Fetch the narrative id and name
+        _get_narrative_name_map: Fetch the narrative id and name
         (or narrative_nice_name if it exists) into a dictionary
-        of {key=ws_id, value=ws_name}
+        of {key=ws_id, value=(narr_nm, narr_ver)}
         """
         # 1. get the narr_owners data to start
         if self.ws_narratives is None:
@@ -354,13 +371,16 @@ class MetricsMongoDBController:
         # 2. loop through all self.ws_narratives
         narrative_name_map = {}
         for narr in self.ws_narratives:
-            narrative_name_map[narr['workspace_id']] = narr['name']  # default
+            narr_nm = narr['name']  # default
+            narr_ver = '1'  # default
             n_keys = narr['narr_keys']
             n_vals = narr['narr_values']
             for i in range(0, len(n_keys)):
                 if n_keys[i] == 'narrative_nice_name':
-                    narrative_name_map[narr['workspace_id']] = n_vals[i]
-                    break
+                    narr_nm = n_vals[i]
+                if n_keys[i] == 'narrative':
+                    narr_ver = n_vals[i]
+                narrative_name_map[narr['workspace_id']] = (narr_nm, narr_ver)
         return narrative_name_map
 
     @cache_it_json(limit=1024, expire=60 * 60 * 1)
@@ -465,7 +485,7 @@ class MetricsMongoDBController:
         if self.client_groups is None:
             self.client_groups = self._get_client_groups_from_cat(token)
         if self.narrative_name_map == {}:
-            self.narrative_name_map = self._get_narrative_map()
+            self.narrative_name_map = self._get_narrative_name_map()
 
         # 2. query dbs to get lists of tasks and jobs
         params = self._process_parameters(params)

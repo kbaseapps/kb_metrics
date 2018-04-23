@@ -1280,7 +1280,7 @@ class kb_MetricsTest(unittest.TestCase):
                 "app_id": "fake_mod/fake_app",
                 "method": "fake_mod.fake_method",
                 "params": [1230],
-                "wsid": 33333,
+                "wsid": 8748,
             }
         }, {
             "ujs_job_id": "5968cd75e4b08b65f9ff5c7d",
@@ -1356,7 +1356,7 @@ class kb_MetricsTest(unittest.TestCase):
             "_id": ObjectId("5968cd75e4b08b65f9ff5c7d"),
             "user": "joesomeone",
             "authstrat": "kbaseworkspace",
-            "authparam": "55555",
+            "authparam": "8056",
             "created": 1500046845485,
             "updated": 1500047709785,
             "estcompl": None,
@@ -1383,10 +1383,15 @@ class kb_MetricsTest(unittest.TestCase):
             "authparam": "DEFAULT"
         }]
 
+        # make sure the narratimve_name_map exists
+        if self.db_controller.narrative_name_map == {}:
+            self.db_controller.narrative_name_map = self.db_controller._get_narrative_name_map()
         # testing the correct data items appear in the assembled result
         joined_ujs0 = self.db_controller._assemble_ujs_state(ujs_jobs[0],
                                                              exec_tasks)
         self.assertEqual(joined_ujs0['wsid'], '15206')
+        self.assertNotIn('narrative_name', joined_ujs0)
+        self.assertNotIn('narrative_objNo', joined_ujs0)
         self.assertEqual(joined_ujs0['app_id'],
                          exec_tasks[1]['job_input']['app_id'])
         self.assertEqual(joined_ujs0['method'],
@@ -1423,6 +1428,8 @@ class kb_MetricsTest(unittest.TestCase):
                                                              exec_tasks)
         et_job_input = exec_tasks[3]["job_input"]
         self.assertEqual(joined_ujs3['wsid'], et_job_input['wsid'])
+        self.assertEqual(joined_ujs3['narrative_name'], 'Method Cell Refactor - UI Fixes')
+        self.assertEqual(joined_ujs3['narrative_objNo'], '94')
         self.assertEqual(joined_ujs3['app_id'], et_job_input['app_id'])
         self.assertEqual(joined_ujs3['method'], et_job_input['method'])
         self.assertEqual(joined_ujs3['finish_time'], ujs_jobs[3]['updated'])
@@ -1433,6 +1440,8 @@ class kb_MetricsTest(unittest.TestCase):
         joined_ujs4 = self.db_controller._assemble_ujs_state(ujs_jobs[4],
                                                              exec_tasks)
         self.assertEqual(joined_ujs4['wsid'], ujs_jobs[4]['authparam'])
+        self.assertEqual(joined_ujs4['narrative_name'], 'outx')
+        self.assertEqual(joined_ujs4['narrative_objNo'], '1')
         self.assertEqual(joined_ujs4['app_id'], mthd.replace('.', '/'))
         self.assertEqual(joined_ujs4['method'], mthd)
         self.assertEqual(joined_ujs4['finish_time'], ujs_jobs[4]['updated'])
@@ -1445,6 +1454,8 @@ class kb_MetricsTest(unittest.TestCase):
         etj_params = et_job_input["params"][0]
         etj_methd = et_job_input["method"]
         self.assertEqual(joined_ujs5['wsid'], etj_params["ws_id"])
+        self.assertEqual(joined_ujs5['narrative_name'], joined_ujs5['wsid'])
+        self.assertEqual(joined_ujs5['narrative_objNo'], '1')
         self.assertEqual(joined_ujs5['app_id'], etj_methd.replace('.', '/'))
         self.assertEqual(joined_ujs5['method'], etj_methd)
         self.assertEqual(joined_ujs5['modification_time'], ujs_jobs[5]['updated'])
@@ -1452,14 +1463,14 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertNotIn('workspace_name', joined_ujs5)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_MetricsMongoDBController_join_task_ujs")
+    @unittest.skip("skipped test_MetricsMongoDBController_join_task_ujs")
     def test_MetricsMongoDBController_join_task_ujs(self):
         # testing data sets
         mthd = "kb_rnaseq_donwloader.export_rna_seq_expression_as_zip"
         exec_tasks = [{
             "ujs_job_id": "5968cd75e4b08b65f9ff5d7c",
             "job_input": {
-                "method": mthd,
+                "method": mthd
             }
         }, {
             "ujs_job_id": "596832a4e4b08b65f9ff5d6f",
@@ -1613,6 +1624,7 @@ class kb_MetricsTest(unittest.TestCase):
         narr_ret = self.db_controller._get_narratives_from_wsobjs(
             params, self.getContext()['token'])
         narrs = narr_ret['metrics_result']
+
         self.assertEqual(len(narrs), 2)
         self.assertEqual(narrs[1]['workspace_id'], 27834)
         self.assertEqual(narrs[1]['object_id'], 1)
@@ -1627,14 +1639,17 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertFalse(narrs[1]['deleted'])
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped _get_narrative_map")
-    def test_MetricsMongoDBController_get_narrative_map(self):
+    # @unittest.skip("skipped _get_narrative_name_map")
+    def test_MetricsMongoDBController_get_narrative_name_map(self):
         # testing with local db data
-        narr_map = self.db_controller._get_narrative_map()
+        narr_map = self.db_controller._get_narrative_name_map()
         self.assertEqual(len(narr_map), 27)
-        self.assertEqual(narr_map.get(8781), 'Ecoli refseq - July 15')
-        self.assertEqual(narr_map.get(27834), 'Staging Test')
-        self.assertEqual(narr_map.get(8736), 'VisCellRefactor')
+        self.assertEqual(narr_map.get(8781), ('Ecoli refseq - July 15', '45'))
+        self.assertEqual(narr_map.get(27834), ('Staging Test', '1'))
+        self.assertEqual(narr_map.get(8736), ('VisCellRefactor', '1'))
+        self.assertEqual(narr_map.get(8748), ('Method Cell Refactor - UI Fixes', '94'))
+        self.assertTrue(narr_map.get(15206) is None)
+        self.assertTrue(narr_map.get(23165) is None)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped _get_narrative_info")
