@@ -179,7 +179,7 @@ class MetricsMongoDBController:
         ws_ids = [wnarr['workspace_id'] for wnarr in ws_narrs]
         wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(
             params['minTime'], params['maxTime'], ws_ids)
-        ws_narrs1 = []
+
         for wsn in ws_narrs:
             for obj in wsobjs:
                 if wsn['workspace_id'] == obj['workspace_id']:
@@ -196,24 +196,37 @@ class MetricsMongoDBController:
                             wsn[u'object_id'] = obj['object_id']
                             wsn[u'object_version'] = obj['object_version']
                         break
+
+        ws_narrs1 = []
         for wsn in ws_narrs:
             if wsn.get('object_id'):
                 wsn[u'last_saved_by'] = wsn.pop('username')
-                try:
-                    wsn[u'nice_name'], wsn[u'n_ver'] = self.narrative_name_map.get(
+                ws_nm, wsn[u'nice_name'], wsn[u'n_ver'] = self._map_ws_narr_names(
                                                                 wsn['workspace_id'])
-                    wsn.pop('narr_keys')
-                    wsn.pop('narr_values')
-                    ws_narrs1.append(wsn)
-                except ValueError as ve:
-                    # e.g.,u_j_s['wsid'] == "srividya22:1447279981090"
-                    wsn[u'nice_name'] = wsn['workspace_id']
-                    wsn[u'n_ver'] = '1'
-                except TypeError as ke:
-                    # no match
-                    print('No nice_name matched key {}'.format(wsn['workspace_id']))
+                wsn.pop('narr_keys')
+                wsn.pop('narr_values')
+                ws_narrs1.append(wsn)
 
         return {'metrics_result': ws_narrs1}
+
+    def _map_ws_narr_names(self, ws_id):
+        """
+        _map_ws_narr_names-returns the workspace/narrative name
+        and version with given ws_id
+        """
+        w_nm = ''
+        n_nm = ''
+        n_ver = '1'
+        try:
+            w_nm, n_nm, n_ver = self.narrative_name_map[int(ws_id)]
+        except ValueError as ve:
+            # e.g.,ws_id == "srividya22:1447279981090"
+            w_nm = ws_id
+            n_nm = ws_id
+        except KeyError as ke:
+            # no match
+            print('No workspace/narrative_name matched key {}'.format(ws_id))
+        return (w_nm, n_nm, n_ver)
 
     def _get_activities_from_wsobjs(self, params, token):
 
@@ -274,18 +287,19 @@ class MetricsMongoDBController:
                             if isinstance(p_ws, dict) and 'ws_id' in p_ws:
                                 u_j_s['wsid'] = p_ws['ws_id']
 
-                    # try to get workspace_name
-                    if 'params' in et_job_in and et_job_in['params']:
-                        p_ws = et_job_in['params'][0]
-                        if isinstance(p_ws, dict):
-                            if 'workspace' in p_ws:
-                                u_j_s['workspace_name'] = p_ws['workspace']
-                            elif 'workspace_name' in p_ws:
-                                u_j_s['workspace_name'] = p_ws['workspace_name']
-                    # remove None u_j_s['workspace_name']
-                    if ('workspace_name' in u_j_s and
-                            u_j_s['workspace_name'] is None):
-                        u_j_s.pop('workspace_name')
+                    # try to get workspace_name--first by wsid, then from 'job_input'
+                    if u_j_s.get('wsid') and not u_j_s.get('workspace_name'):
+                        ws_name = self._map_ws_narr_names(u_j_s['wsid'])[0]
+                        if ws_name != '':
+                            u_j_s['workspace_name'] = ws_name
+                    if not u_j_s.get('workspace_name'):
+                        if 'params' in et_job_in and et_job_in['params']:
+                            p_ws = et_job_in['params'][0]
+                            if isinstance(p_ws, dict):
+                                if 'workspace' in p_ws:
+                                    u_j_s['workspace_name'] = p_ws['workspace']
+                                elif 'workspace_name' in p_ws:
+                                    u_j_s['workspace_name'] = p_ws['workspace_name']
                 break
 
         if not u_j_s.get('app_id') and u_j_s.get('method'):
@@ -298,17 +312,14 @@ class MetricsMongoDBController:
 
         # get the narrative name and version via u_j_s['wsid']
         if u_j_s.get('wsid'):
-            try:
-                n_name, n_ver = self.narrative_name_map[int(u_j_s['wsid'])]
+            w_nm, n_name, n_ver = self._map_ws_narr_names(u_j_s['wsid'])
+            if n_name != '':
                 u_j_s['narrative_name'] = n_name
                 u_j_s['narrative_objNo'] = n_ver
-            except ValueError as ve:
-                # e.g.,u_j_s['wsid'] == "srividya22:1447279981090"
-                u_j_s['narrative_name'] = u_j_s['wsid']
-                u_j_s['narrative_objNo'] = '1'
-            except KeyError as ke:
-                # no match
-                print('No narrative_name matched key {}'.format(u_j_s['wsid']))
+
+        # remove None u_j_s['workspace_name']
+        if ('workspace_name' in u_j_s and u_j_s['workspace_name'] is None):
+            u_j_s.pop('workspace_name')
 
         # get the client groups
         u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
@@ -362,7 +373,7 @@ class MetricsMongoDBController:
         """
         _get_narrative_name_map: Fetch the narrative id and name
         (or narrative_nice_name if it exists) into a dictionary
-        of {key=ws_id, value=(narr_nm, narr_ver)}
+        of {key=ws_id, value=(ws_nm, narr_nm, narr_ver)}
         """
         # 1. get the narr_owners data to start
         if self.ws_narratives is None:
@@ -370,17 +381,18 @@ class MetricsMongoDBController:
 
         # 2. loop through all self.ws_narratives
         narrative_name_map = {}
-        for narr in self.ws_narratives:
-            narr_nm = narr['name']  # default
-            narr_ver = '1'  # default
-            n_keys = narr['narr_keys']
-            n_vals = narr['narr_values']
+        for wsnarr in self.ws_narratives:
+            ws_nm = wsnarr['name']  # workspace_name
+            narr_nm = ws_nm  # default narrative_name
+            narr_ver = '1'  # default narrative_objNo
+            n_keys = wsnarr['narr_keys']
+            n_vals = wsnarr['narr_values']
             for i in range(0, len(n_keys)):
                 if n_keys[i] == 'narrative_nice_name':
                     narr_nm = n_vals[i]
                 if n_keys[i] == 'narrative':
                     narr_ver = n_vals[i]
-                narrative_name_map[narr['workspace_id']] = (narr_nm, narr_ver)
+            narrative_name_map[wsnarr['workspace_id']] = (ws_nm, narr_nm, narr_ver)
         return narrative_name_map
 
     @cache_it_json(limit=1024, expire=60 * 60 * 1)

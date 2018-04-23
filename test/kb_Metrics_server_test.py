@@ -1435,7 +1435,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs3['finish_time'], ujs_jobs[3]['updated'])
         self.assertEqual(joined_ujs3['creation_time'], ujs_jobs[3]['created'])
         self.assertIn('client_groups', joined_ujs3)
-        self.assertNotIn('workspace_name', joined_ujs3)
+        self.assertIn('workspace_name', joined_ujs3)
 
         joined_ujs4 = self.db_controller._assemble_ujs_state(ujs_jobs[4],
                                                              exec_tasks)
@@ -1446,7 +1446,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs4['method'], mthd)
         self.assertEqual(joined_ujs4['finish_time'], ujs_jobs[4]['updated'])
         self.assertIn('client_groups', joined_ujs4)
-        self.assertNotIn('workspace_name', joined_ujs4)
+        self.assertEqual(joined_ujs4['workspace_name'], 'pranjan77:1466168703797')
 
         joined_ujs5 = self.db_controller._assemble_ujs_state(ujs_jobs[5],
                                                              exec_tasks)
@@ -1460,7 +1460,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs5['method'], etj_methd)
         self.assertEqual(joined_ujs5['modification_time'], ujs_jobs[5]['updated'])
         self.assertIn('client_groups', joined_ujs5)
-        self.assertNotIn('workspace_name', joined_ujs5)
+        self.assertEqual(joined_ujs5['workspace_name'], 'srividya22:1447279981090')
 
     # Uncomment to skip this test
     @unittest.skip("skipped test_MetricsMongoDBController_join_task_ujs")
@@ -1642,14 +1642,57 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped _get_narrative_name_map")
     def test_MetricsMongoDBController_get_narrative_name_map(self):
         # testing with local db data
-        narr_map = self.db_controller._get_narrative_name_map()
-        self.assertEqual(len(narr_map), 27)
-        self.assertEqual(narr_map.get(8781), ('Ecoli refseq - July 15', '45'))
-        self.assertEqual(narr_map.get(27834), ('Staging Test', '1'))
-        self.assertEqual(narr_map.get(8736), ('VisCellRefactor', '1'))
-        self.assertEqual(narr_map.get(8748), ('Method Cell Refactor - UI Fixes', '94'))
-        self.assertTrue(narr_map.get(15206) is None)
-        self.assertTrue(narr_map.get(23165) is None)
+        wnarr_map = self.db_controller._get_narrative_name_map()
+        # print(wnarr_map)
+        self.assertEqual(len(wnarr_map), 27)
+        self.assertEqual(wnarr_map.get(8781),
+                         ('vkumar:1468639677500', 'Ecoli refseq - July 15', '45'))
+        self.assertEqual(wnarr_map.get(27834),
+                         ('psdehal:narrative_1513709108341', 'Staging Test', '1'))
+        self.assertEqual(wnarr_map.get(8736),
+                         ('rsutormin:1468453294248', 'VisCellRefactor', '1'))
+        self.assertEqual(wnarr_map.get(8748), ('eapearson:1468518477765',
+                         'Method Cell Refactor - UI Fixes', '94'))
+        self.assertTrue(wnarr_map.get(15206) is None)
+        self.assertTrue(wnarr_map.get(23165) is None)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped _map_ws_narr_names")
+    def test_MetricsMongoDBController_map_ws_narr_names(self):
+        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(8781)
+        self.assertEqual(w_nm, 'vkumar:1468639677500')
+        self.assertEqual(n_nm, 'Ecoli refseq - July 15')
+        self.assertEqual(n_ver, '45')
+
+        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(27834)
+        self.assertEqual(w_nm, 'psdehal:narrative_1513709108341')
+        self.assertEqual(n_nm, 'Staging Test')
+        self.assertEqual(n_ver, '1')
+
+        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(8736)
+        self.assertEqual(w_nm, 'rsutormin:1468453294248')
+        self.assertEqual(n_nm, 'VisCellRefactor')
+        self.assertEqual(n_ver, '1')
+
+        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(8748)
+        self.assertEqual(w_nm, 'eapearson:1468518477765')
+        self.assertEqual(n_nm, 'Method Cell Refactor - UI Fixes')
+        self.assertEqual(n_ver, '94')
+
+        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(15206)
+        self.assertEqual(w_nm, '')
+        self.assertEqual(n_nm, '')
+        self.assertEqual(n_ver, '1')
+
+        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(23165)
+        self.assertEqual(w_nm, '')
+        self.assertEqual(n_nm, '')
+        self.assertEqual(n_ver, '1')
+
+        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names('qz:12345678')
+        self.assertEqual(w_nm, 'qz:12345678')
+        self.assertEqual(n_nm, 'qz:12345678')
+        self.assertEqual(n_ver, '1')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped _get_narrative_info")
