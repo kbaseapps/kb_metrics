@@ -168,11 +168,13 @@ class MetricsMongoDBController:
         Based on the narratives in workspace.workspaceObjects, if additional
         info available then add to existing data from workspace.workspaces.
         """
+        params = self._process_parameters(params)
+
         # get the ws/narratives with del=False
-        ws_narrs = self.metrics_dbi.list_ws_narratives()
+        ws_narrs = self.metrics_dbi.list_ws_narratives(
+            minT=params['minTime'], maxT=params['maxTime'])
         ws_ids = [wnarr['workspace_id'] for wnarr in ws_narrs]
 
-        params = self._process_parameters(params)
         wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(
             params['minTime'], params['maxTime'], ws_ids)
 
