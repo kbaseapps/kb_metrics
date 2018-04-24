@@ -160,6 +160,7 @@ class MetricsMongoDBController:
     # End functions to write to the metrics database
 
     # functions to get the requested records from other dbs...
+    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _get_narratives_from_wsobjs(self, params, token):
         """
         _get_narratives_from_wsobjs--Given a time period, fetch the narrative
@@ -167,19 +168,15 @@ class MetricsMongoDBController:
         Based on the narratives in workspace.workspaceObjects, if additional
         info available then add to existing data from workspace.workspaces.
         """
-        # get the ws_narrative for lookups
-        if self.ws_narratives is None:
-            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
-        if self.narrative_name_map == {}:
-            self.narrative_name_map = self._get_narrative_name_map()
+        # get the ws/narratives with del=False
+        ws_narrs = self.metrics_dbi.list_ws_narratives()
+        ws_ids = [wnarr['workspace_id'] for wnarr in ws_narrs]
 
         params = self._process_parameters(params)
-
-        ws_narrs = copy.deepcopy(self.ws_narratives)
-        ws_ids = [wnarr['workspace_id'] for wnarr in ws_narrs]
         wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(
             params['minTime'], params['maxTime'], ws_ids)
 
+        ws_narrs1 = []
         for wsn in ws_narrs:
             for obj in wsobjs:
                 if wsn['workspace_id'] == obj['workspace_id']:
@@ -197,8 +194,6 @@ class MetricsMongoDBController:
                             wsn[u'object_version'] = obj['object_version']
                         break
 
-        ws_narrs1 = []
-        for wsn in ws_narrs:
             if wsn.get('object_id'):
                 wsn[u'last_saved_by'] = wsn.pop('username')
                 ws_nm, wsn[u'nice_name'], wsn[u'n_ver'] = self._map_ws_narr_names(
@@ -209,11 +204,14 @@ class MetricsMongoDBController:
 
         return {'metrics_result': ws_narrs1}
 
+    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _map_ws_narr_names(self, ws_id):
         """
         _map_ws_narr_names-returns the workspace/narrative name
         and version with given ws_id
         """
+        if self.narrative_name_map == {}:
+            self.narrative_name_map = self._get_narrative_name_map()
         w_nm = ''
         n_nm = ''
         n_ver = '1'
@@ -228,6 +226,7 @@ class MetricsMongoDBController:
             print('No workspace/narrative_name matched key {}'.format(ws_id))
         return (w_nm, n_nm, n_ver)
 
+    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _get_activities_from_wsobjs(self, params, token):
 
         params = self._process_parameters(params)
@@ -291,7 +290,7 @@ class MetricsMongoDBController:
                     if u_j_s.get('wsid') and not u_j_s.get('workspace_name'):
                         ws_name = self._map_ws_narr_names(u_j_s['wsid'])[0]
                         u_j_s['workspace_name'] = ws_name
-                    if not u_j_s.get('workspace_name'):
+                    if not u_j_s.get('workspace_name') or u_j_s['workspace_name'] == '':
                         if 'params' in et_job_in and et_job_in['params']:
                             p_ws = et_job_in['params'][0]
                             if isinstance(p_ws, dict):
@@ -375,9 +374,9 @@ class MetricsMongoDBController:
         (or narrative_nice_name if it exists) into a dictionary
         of {key=ws_id, value=(ws_nm, narr_nm, narr_ver)}
         """
-        # 1. get the narr_owners data to start
+        # 1. get the ws_narrative data to start, including deleted ones
         if self.ws_narratives is None:
-            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
 
         # 2. loop through all self.ws_narratives
         narrative_name_map = {}
@@ -493,11 +492,9 @@ class MetricsMongoDBController:
 
         # 1. get the ws_narrative and client_groups data for lookups
         if self.ws_narratives is None:
-            self.ws_narratives = self.metrics_dbi.list_ws_narratives()
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
         if self.client_groups is None:
             self.client_groups = self._get_client_groups_from_cat(token)
-        if self.narrative_name_map == {}:
-            self.narrative_name_map = self._get_narrative_name_map()
 
         # 2. query dbs to get lists of tasks and jobs
         params = self._process_parameters(params)

@@ -221,7 +221,7 @@ class kb_MetricsTest(unittest.TestCase):
         exec_cur = dbi.metricsDBs['exec_engine']['exec_tasks'].find()
         self.assertEqual(len(list(exec_cur)), 84)
         ws_cur = dbi.metricsDBs['workspace']['workspaces'].find()
-        self.assertEqual(len(list(ws_cur)), 27)
+        self.assertEqual(len(list(ws_cur)), 28)
         wsobj_cur = dbi.metricsDBs['workspace']['workspaceObjects'].find()
         self.assertEqual(len(list(wsobj_cur)), 41)
         ujs_cur = dbi.metricsDBs['userjobstate']['jobstate'].find()
@@ -314,7 +314,7 @@ class kb_MetricsTest(unittest.TestCase):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing returned data
         ws_owners = dbi.list_ws_owners()
-        self.assertEqual(len(ws_owners), 27)
+        self.assertEqual(len(ws_owners), 28)
         self.assertIn('ws_id', ws_owners[0])
         self.assertIn('username', ws_owners[0])
         self.assertIn('name', ws_owners[0])
@@ -785,6 +785,10 @@ class kb_MetricsTest(unittest.TestCase):
         # Testing with time limit
         ws_narrs = dbi.list_ws_narratives(min_time, max_time)
         self.assertEqual(len(ws_narrs), 12)
+
+        # Testing ws/narratives with deleted ones
+        ws_narrs = dbi.list_ws_narratives(include_del=True)
+        self.assertEqual(len(ws_narrs), 28)
 
         # Testing without given time limit
         ws_narrs = dbi.list_ws_narratives()
@@ -1644,7 +1648,7 @@ class kb_MetricsTest(unittest.TestCase):
         # testing with local db data
         wnarr_map = self.db_controller._get_narrative_name_map()
         # print(wnarr_map)
-        self.assertEqual(len(wnarr_map), 27)
+        self.assertEqual(len(wnarr_map), 28)
         self.assertEqual(wnarr_map.get(8781),
                          ('vkumar:1468639677500', 'Ecoli refseq - July 15', '45'))
         self.assertEqual(wnarr_map.get(27834),

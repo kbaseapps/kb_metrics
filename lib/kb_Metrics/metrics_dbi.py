@@ -309,11 +309,13 @@ class MongoMetricsDBI:
         return list(m_cursor)
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
-    def list_ws_narratives(self, minT=0, maxT=0):
+    def list_ws_narratives(self, minT=0, maxT=0, include_del=False):
         match_filter = {"meta": {"$elemMatch":
                                  {"$or":
                                   [{"k": "narrative"},
                                    {"k": "narrative_nice_name"}]}}}
+        if not include_del:
+            match_filter['del'] = False
 
         if minT > 0 and maxT > 0:
             minTime = min(minT, maxT)

@@ -664,5 +664,34 @@
                     "v" : "2"
                 }
             ]
+        },
+		{
+            "_id" : "5a395e34e4b059ea412e99ff",
+            "owner" : "joedoe",
+            "ws" : 99999,
+            "name" : "psdehal:narrative_1513709108341",
+            "moddate" : 1516822530001,
+            "del" : true,
+			"lock" : false,
+            "numObj" : 100,
+            "desc" : "",
+            "meta" : [
+                {
+                    "k" : "is_temporary",
+                    "v" : "false"
+                },
+                {
+                    "k" : "narrative",
+                    "v" : "1"
+                },
+                {
+                    "k" : "narrative_nice_name",
+                    "v" : "Staging Test"
+                },
+                {
+                    "k" : "data_palette_id",
+                    "v" : "2"
+                }
+            ]
         }
 	]
