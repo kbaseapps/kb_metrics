@@ -290,8 +290,7 @@ class MetricsMongoDBController:
                     # try to get workspace_name--first by wsid, then from 'job_input'
                     if u_j_s.get('wsid') and not u_j_s.get('workspace_name'):
                         ws_name = self._map_ws_narr_names(u_j_s['wsid'])[0]
-                        if ws_name != '':
-                            u_j_s['workspace_name'] = ws_name
+                        u_j_s['workspace_name'] = ws_name
                     if not u_j_s.get('workspace_name'):
                         if 'params' in et_job_in and et_job_in['params']:
                             p_ws = et_job_in['params'][0]
@@ -318,7 +317,8 @@ class MetricsMongoDBController:
                 u_j_s['narrative_objNo'] = n_ver
 
         # remove None u_j_s['workspace_name']
-        if ('workspace_name' in u_j_s and u_j_s['workspace_name'] is None):
+        if ('workspace_name' in u_j_s and (u_j_s['workspace_name'] is None
+                                           or u_j_s['workspace_name'] == '')):
             u_j_s.pop('workspace_name')
 
         # get the client groups

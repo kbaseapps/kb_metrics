@@ -310,8 +310,7 @@ class MongoMetricsDBI:
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ws_narratives(self, minT=0, maxT=0):
-        match_filter = {"del": False,
-                        "meta": {"$elemMatch":
+        match_filter = {"meta": {"$elemMatch":
                                  {"$or":
                                   [{"k": "narrative"},
                                    {"k": "narrative_nice_name"}]}}}
