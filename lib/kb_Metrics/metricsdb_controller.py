@@ -224,8 +224,9 @@ class MetricsMongoDBController:
             w_nm = ws_id
             n_nm = ws_id
         except KeyError as ke:
-            # no match
-            print('No workspace/narrative_name matched key {}'.format(ws_id))
+            # no match, simply pass
+            # print('No workspace/narrative_name matched key {}'.format(ws_id))
+            pass
         return (w_nm, n_nm, n_ver)
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
@@ -522,8 +523,7 @@ class MetricsMongoDBController:
                 raise ValueError('You do not have permisson to '
                                  'invoke this action.')
         narr_info = self._get_narrative_info(params)
-
-        return narr_info
+        return {'metrics_result': narr_info}
 
     # begin putting the deleted functions back
     def get_total_logins_from_ws(self, requesting_user, params, token):
@@ -549,6 +549,28 @@ class MetricsMongoDBController:
         db_ret = self.metrics_dbi.aggr_user_logins_from_ws(params['minTime'],
                                                            params['maxTime'])
         return {'metrics_result': db_ret}
+
+    def get_user_numObjs_from_ws(self, requesting_user, params, token):
+        if not self._is_admin(requesting_user):
+                raise ValueError('You do not have permisson to '
+                                 'invoke this action.')
+
+        params = self._process_parameters(params)
+        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+
+        db_ret = self.metrics_dbi.aggr_user_numObjs(
+            params['minTime'], params['maxTime'])
+
+        return {'metrics_result': db_ret}
+
+    def get_narratives(self, requesting_user, params, token):
+        # just a wrap around a method with permission checking
+        # should be pointing to the metrics db eventually
+        if not self._is_admin(requesting_user):
+                raise ValueError('You do not have permisson to '
+                                 'invoke this action.')
+        return self._get_narratives_from_wsobjs(requesting_user, params, token)
 
     # end putting the deleted functions back
 

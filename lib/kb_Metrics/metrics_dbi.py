@@ -523,8 +523,7 @@ class MongoMetricsDBI:
             {"$project": {"year": {"$year": "$moddate"},
                           "month": {"$month": "$moddate"},
                           "date": {"$dayOfMonth": "$moddate"},
-                          "owner": 1, "ws_id": "$ws",
-                          "numObj": 1, "meta": 1, "_id": 0}},
+                          "owner": 1, "ws_id": "$ws", "_id": 0}},
             {"$group": {"_id": {"username": "$owner",
                                 "year": "$year",
                                 "month": "$month"},
@@ -542,8 +541,7 @@ class MongoMetricsDBI:
             {"$project": {"year": {"$year": "$moddate"},
                           "month": {"$month": "$moddate"},
                           "date": {"$dayOfMonth": "$moddate"},
-                          "owner": 1, "ws_id": "$ws",
-                          "numObj": 1, "meta": 1, "_id": 0}},
+                          "owner": 1, "ws_id": "$ws", "_id": 0}},
             {"$group": {"_id": {"username": "$owner",
                                 "year": "$year",
                                 "month": "$month"},
@@ -554,6 +552,27 @@ class MongoMetricsDBI:
                             "$sum": "$count_user_ws_logins"}}},
             {"$sort": {"_id": ASCENDING}}
         ]
+        # grab handle(s) to the database collection
+        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+        return list(self.kbworkspaces.aggregate(pipeline))
+
+    def aggr_user_numObjs(self, minTime, maxTime):
+        # Define the pipeline operations
+        pipeline = [
+            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
+            {"$project": {"year": {"$year": "$moddate"},
+                          "month": {"$month": "$moddate"},
+                          "date": {"$dayOfMonth": "$moddate"},
+                          "owner": 1, "ws_id": "$ws",
+                          "numObj": 1, "_id": 0}},
+            {"$group": {"_id": {"username": "$owner",
+                                "year": "$year",
+                                "month": "$month"},
+                        "count_user_numObjs": {
+                            "$sum": "$numObj"}}},
+            {"$sort": {"_id": ASCENDING}}
+        ]
+
         # grab handle(s) to the database collection
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
         return list(self.kbworkspaces.aggregate(pipeline))

@@ -267,6 +267,40 @@ public class KbMetricsClient {
         return res.get(0);
     }
 
+    /**
+     * <p>Original spec-file function name: get_user_numObjs</p>
+     * <pre>
+     * </pre>
+     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
+     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public MetricsOutput getUserNumObjs(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(params);
+        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
+        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_user_numObjs", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: get_narrative_stats</p>
+     * <pre>
+     * </pre>
+     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
+     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public MetricsOutput getNarrativeStats(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(params);
+        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
+        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_narrative_stats", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+        return res.get(0);
+    }
+
     public Map<String, Object> status(RpcContext... jsonRpcContext) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         TypeReference<List<Map<String, Object>>> retType = new TypeReference<List<Map<String, Object>>>() {};
