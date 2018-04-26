@@ -148,7 +148,7 @@ class MongoMetricsDBI:
         return update_ret
     # End functions to write to the metrics database
 
-    # Begin functions to query the other dbs...
+    # Begin functions to query the metrics dbs...
     def aggr_unique_users_per_day(self, minTime, maxTime, excludeUsers=[]):
 
         # Define the pipeline operations
@@ -192,8 +192,7 @@ class MongoMetricsDBI:
         # grab handle(s) to the db collection
         mt_acts = self.metricsDBs['metrics'][
             MongoMetricsDBI._MT_DAILY_ACTIVITIES]
-        m_cursor = mt_acts.aggregate(pipeline)
-        return list(m_cursor)
+        return list(mt_acts.aggregate(pipeline))
 
     def get_user_info(self, userIds, minTime, maxTime, exclude_kbstaff=False):
         qry_filter = {}
@@ -226,7 +225,7 @@ class MongoMetricsDBI:
             'kbase_staff': 1,
             'roles': 1
         }
-        # grab handle(s) to the database collections needed
+        # grab handle(s) to the database collection
         mt_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
         '''
         # Make sure we have an index on user, created and updated
@@ -262,11 +261,10 @@ class MongoMetricsDBI:
                         "obj_numModified": {"$sum": 1}}},
             {"$sort": {"_id": ASCENDING}}
         ]
-        # grab handle(s) to the db collection and retrieve a MongoDB cursor
+        # grab handle(s) to the db collection
         kbwsobjs = self.metricsDBs['workspace'][
             MongoMetricsDBI._WS_WSOBJECTS]
-        m_cursor = kbwsobjs.aggregate(pipeline)
-        return list(m_cursor)
+        return list(kbwsobjs.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ws_owners(self):
@@ -276,11 +274,10 @@ class MongoMetricsDBI:
             {"$project": {"username": "$owner",
                           "ws_id": "$ws", "name": 1, "_id": 0}}
         ]
-        # grab handle(s) to the db collection and retrieve a MongoDB cursor
+        # grab handle(s) to the db collection
         kbworkspaces = self.metricsDBs['workspace'][
             MongoMetricsDBI._WS_WORKSPACES]
-        m_cursor = kbworkspaces.aggregate(pipeline)
-        return list(m_cursor)
+        return list(kbworkspaces.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 * 1)
     def list_narrative_info(self, wsid_list=[], owner_list=[]):
@@ -302,11 +299,10 @@ class MongoMetricsDBI:
                           "narr_keys": "$meta.k", "narr_values": "$meta.v"}}
         ]
 
-        # grab handle(s) to the db collection and retrieve a MongoDB cursor
+        # grab handle(s) to the db collection
         kbworkspaces = self.metricsDBs['workspace'][
             MongoMetricsDBI._WS_WORKSPACES]
-        m_cursor = kbworkspaces.aggregate(pipeline)
-        return list(m_cursor)
+        return list(kbworkspaces.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ws_narratives(self, minT=0, maxT=0, include_del=False):
@@ -334,15 +330,15 @@ class MongoMetricsDBI:
         pipeline = [
             {"$match": match_filter},
             {"$project": {"username": "$owner", "workspace_id": "$ws",
-                          "name": 1, "narr_keys": "$meta.k", "narr_values": "$meta.v",
+                          "name": 1, "narr_keys": "$meta.k",
+                          "narr_values": "$meta.v",
                           "deleted": "$del", "desc": 1, "numObj": 1,
                           "last_saved_at": "$moddate", "_id": 0}}
         ]
-        # grab handle(s) to the db collection and retrieve a MongoDB cursor
+        # grab handle(s) to the db collection
         kbworkspaces = self.metricsDBs['workspace'][
             MongoMetricsDBI._WS_WORKSPACES]
-        m_cursor = kbworkspaces.aggregate(pipeline)
-        return list(m_cursor)
+        return list(kbworkspaces.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_user_objects_from_wsobjs(self, minTime, maxTime, ws_list=[]):
@@ -364,11 +360,10 @@ class MongoMetricsDBI:
                           "deleted": "$del", "_id": 0}}
         ]
 
-        # grab handle(s) to the db collection and retrieve a MongoDB cursor
+        # grab handle(s) to the db collection
         kbwsobjs = self.metricsDBs['workspace'][
             MongoMetricsDBI._WS_WSOBJECTS]
-        m_cursor = kbwsobjs.aggregate(pipeline)
-        return list(m_cursor)
+        return list(kbwsobjs.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 * 24)
     def list_ws_firstAccess(self, minTime, maxTime, ws_list=[]):
@@ -406,7 +401,7 @@ class MongoMetricsDBI:
             {"$project": proj2},
             {"$project": proj3}
         ]
-        # grab handle(s) to the db collection and retrieve a MongoDB cursor
+        # grab handle(s) to the db collection
         kbwsobjs = self.metricsDBs['workspace'][
             MongoMetricsDBI._WS_WSOBJECTS]
         m_cursor = kbwsobjs.aggregate(pipeline)
@@ -440,7 +435,7 @@ class MongoMetricsDBI:
             'creation_time': 1,
             'job_input': 1
         }
-        # grab handle(s) to the database collections needed
+        # grab handle(s) to the database collection
         kbtasks = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_TASKS]
 
         '''
@@ -454,6 +449,7 @@ class MongoMetricsDBI:
             qry_filter, projection,
             sort=[['creation_time', ASCENDING]]))
 
+    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_details(self, userIds, minTime, maxTime, excluded_users=[]):
         # Define the pipeline operations
         if userIds == []:
@@ -476,10 +472,9 @@ class MongoMetricsDBI:
                           "roles": 1, "_id": 0}},
             {"$sort": {"signup_at": 1}}]
 
-        # grab handle(s) to the db collection and retrieve a MongoDB cursor
+        # grab handle(s) to the db collection
         kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
-        u_cursor = kbusers.aggregate(pipeline)
-        return list(u_cursor)
+        return list(kbusers.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ujs_results(self, userIds, minTime, maxTime):
@@ -518,7 +513,49 @@ class MongoMetricsDBI:
 
         # grab handle(s) to the database collections needed
         jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
-
         return list(jobstate.find(qry_filter, projection))
+
+    # putting the deleted functions back for reporting
+    def aggr_user_logins_from_ws(self, minTime, maxTime):
+        # Define the pipeline operations
+        pipeline = [
+            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
+            {"$project": {"year": {"$year": "$moddate"},
+                          "month": {"$month": "$moddate"},
+                          "date": {"$dayOfMonth": "$moddate"},
+                          "owner": 1, "ws_id": "$ws",
+                          "numObj": 1, "meta": 1, "_id": 0}},
+            {"$group": {"_id": {"username": "$owner",
+                                "year": "$year",
+                                "month": "$month"},
+                        "year_mon_user_logins": {"$sum": 1}}},
+            {"$sort": {"_id": ASCENDING}}
+        ]
+        # grab handle(s) to the database collection
+        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+        return list(self.kbworkspaces.aggregate(pipeline))
+
+    def aggr_total_logins(self, minTime, maxTime):
+        # Define the pipeline operations
+        pipeline = [
+            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
+            {"$project": {"year": {"$year": "$moddate"},
+                          "month": {"$month": "$moddate"},
+                          "date": {"$dayOfMonth": "$moddate"},
+                          "owner": 1, "ws_id": "$ws",
+                          "numObj": 1, "meta": 1, "_id": 0}},
+            {"$group": {"_id": {"username": "$owner",
+                                "year": "$year",
+                                "month": "$month"},
+                        "count_user_ws_logins": {"$sum": 1}}},
+            {"$group": {"_id": {"year": "$_id.year",
+                                "month": "$_id.month"},
+                        "year_mon_total_logins": {
+                            "$sum": "$count_user_ws_logins"}}},
+            {"$sort": {"_id": ASCENDING}}
+        ]
+        # grab handle(s) to the database collection
+        self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+        return list(self.kbworkspaces.aggregate(pipeline))
 
     # End functions to query the other dbs...

@@ -1467,7 +1467,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs5['workspace_name'], 'srividya22:1447279981090')
 
     # Uncomment to skip this test
-    @unittest.skip("skipped test_MetricsMongoDBController_join_task_ujs")
+    # @unittest.skip("skipped test_MetricsMongoDBController_join_task_ujs")
     def test_MetricsMongoDBController_join_task_ujs(self):
         # testing data sets
         mthd = "kb_rnaseq_donwloader.export_rna_seq_expression_as_zip"
@@ -1958,6 +1958,98 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(users[1]['numOfUsers'], 4)
         self.assertEqual(users[2]['numOfUsers'], 6)
         self.assertEqual(users[3]['numOfUsers'], 8)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_get_total_logins")
+    def test_run_MetricsImpl_get_total_logins(self):
+
+        # with time range when there are login records
+        m_params = {
+            'epoch_range': (datetime.datetime(2016, 1, 1),
+                            datetime.datetime(2018, 4, 30))}
+        ret = self.getImpl().get_total_logins(self.getContext(), m_params)
+        tot_logins = ret[0]['metrics_result']
+        self.assertEqual(len(tot_logins), 2)
+        self.assertItemsEqual(tot_logins[0],
+                              {'_id': {'year': 2016, 'month': 7}, 'year_mon_total_logins': 26})
+        self.assertItemsEqual(tot_logins[1],
+                              {'_id': {'year': 2018, 'month': 1}, 'year_mon_total_logins': 2})
+
+        # with time range when there is fewer login records
+        m_params = {'epoch_range': (1420083768000, 1505876263000)}
+        ret = self.getImpl().get_total_logins(self.getContext(), m_params)
+        tot_logins = ret[0]['metrics_result']
+        self.assertItemsEqual(tot_logins[0],
+                              {'_id': {'year': 2016, 'month': 7}, 'year_mon_total_logins': 26})
+
+        # with time range when there is no login records
+        m_params = {
+            'epoch_range': (datetime.datetime(2016, 9, 30),
+                            datetime.datetime(2017, 6, 30))}
+        ret = self.getImpl().get_total_logins(self.getContext(), m_params)
+        tot_logins = ret[0]['metrics_result']
+        self.assertEqual(len(tot_logins), 0)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_get_user_logins")
+    def test_run_MetricsImpl_get_user_logins(self):
+        m_params = {
+            'epoch_range': (datetime.datetime(2016, 1, 1),
+                            datetime.datetime(2018, 4, 30))}
+        # with time range when there are login records
+        ret = self.getImpl().get_user_logins(self.getContext(), m_params)
+        usr_logins = ret[0]['metrics_result']
+        self.assertEqual(len(usr_logins), 14)
+        self.assertItemsEqual(usr_logins[0],
+                              {'_id': {'username': 'eapearson',
+                                       'year': 2016, 'month': 7},
+                               'year_mon_user_logins': 3})
+        self.assertItemsEqual(usr_logins[1],
+                              {'_id': {'username': 'fangfang',
+                                       'year': 2016, 'month': 7},
+                               'year_mon_user_logins': 2})
+        self.assertItemsEqual(usr_logins[3],
+                              {'_id': {'username': 'joedoe',
+                                       'year': 2018, 'month': 1},
+                               'year_mon_user_logins': 1})
+        self.assertItemsEqual(usr_logins[7],
+                              {'_id': {'username': 'psdehal',
+                                       'year': 2018, 'month': 1},
+                               'year_mon_user_logins': 1})
+        self.assertItemsEqual(usr_logins[3],
+                              {'_id': {'username': 'wjriehl',
+                                       'year': 2016, 'month': 7},
+                               'year_mon_user_logins': 3})
+
+        # with time range when there are fewer user login records
+        m_params = {'epoch_range': (1420083768000, 1505876263000)}
+        ret = self.getImpl().get_user_logins(self.getContext(), m_params)
+        usr_logins = ret[0]['metrics_result']
+        self.assertEqual(len(usr_logins), 12)
+        self.assertItemsEqual(usr_logins[3],
+                              {'_id': {'username': 'jplfaria',
+                                       'year': 2016, u'month': 7},
+                              'year_mon_user_logins': 1})
+        self.assertItemsEqual(usr_logins[6],
+                              {'_id': {'username': 'rsutormin',
+                                       'year': 2016, u'month': 7},
+                              'year_mon_user_logins': 1})
+
+        # with time range when there are even fewer user login records
+        m_params = {
+            'epoch_range': (datetime.datetime(2017, 9, 30),
+                            datetime.datetime(2018, 4, 30))}
+        ret = self.getImpl().get_user_logins(self.getContext(), m_params)
+        usr_logins = ret[0]['metrics_result']
+        self.assertEqual(len(usr_logins), 2)
+        self.assertItemsEqual(usr_logins[0],
+                              {'_id': {'username': 'joedoe',
+                                       'year': 2018, 'month': 1},
+                               'year_mon_user_logins': 1})
+        self.assertItemsEqual(usr_logins[1],
+                              {'_id': {'username': 'psdehal',
+                                       'year': 2018, 'month': 1},
+                               'year_mon_user_logins': 1})
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_app_metrics")

@@ -54,6 +54,10 @@ module kb_Metrics {
     typedef structure {
         UnspecifiedObject metrics_result;
     } MetricsOutput;
+   
+    /** For writing to mongodb metrics **/ 
+    funcdef update_metrics(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
 
     /** For retrieving from mongodb metrics **/ 
     funcdef get_user_details(MetricsInputParams params)
@@ -61,8 +65,10 @@ module kb_Metrics {
     
     funcdef get_user_counts_per_day(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
-   
-    /** For writing to mongodb metrics **/ 
-    funcdef update_metrics(MetricsInputParams params)
+
+    funcdef get_total_logins(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
+
+    funcdef get_user_logins(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
 };
