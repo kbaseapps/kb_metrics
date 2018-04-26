@@ -365,6 +365,10 @@ class Application(object):
                              name='kb_Metrics.get_narrative_stats',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_narrative_stats'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_user_ws_stats,
+                             name='kb_Metrics.get_user_ws_stats',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_user_ws_stats'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.status,
                              name='kb_Metrics.status',
                              types=[dict])

@@ -1960,6 +1960,49 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(users[3]['numOfUsers'], 8)
 
     # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsMongoDBController_get_user_ws_stats")
+    def test_run_MetricsMongoDBController_get_user_ws_stats(self):
+        m_params = {
+            'epoch_range': (datetime.datetime(2016, 1, 1),
+                            datetime.datetime(2018, 4, 30))
+        }
+        # testing with given parameter values
+        usr_ws = self.db_controller.get_user_ws_stats(
+                self.getContext()['user_id'], m_params,
+                self.getContext()['token'])['metrics_result']
+
+        self.assertEqual(len(usr_ws), 14)
+        for uw in usr_ws:
+            if uw['_id'] == {'username': 'eapearson', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 3)
+            if uw['_id'] == {'username': u'fangfang', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 2)
+            if uw['_id'] == {'username': u'janakakbase', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': 'joedoe', 'year': 2018, 'month': 1}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': 'jplfaria', 'year': 2016, 'month': 7}:
+                    self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': u'nconrad', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': u'pranjan77', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 6)
+            if uw['_id'] == {'username': 'rsutormin', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': u'psdehal', 'year': 2018, 'month': 1}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': 'sjyoo', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': 'srividya22', 'year': 2016, 'month': 7}:
+                    self.assertEqual(uw['count_user_ws'], 2)
+            if uw['_id'] == {'username': u'sunita', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 3)
+            if uw['_id'] == {'username': u'vkumar', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 2)
+            if uw['_id'] == {'username': 'wjriehl', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 3)
+
+    # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsMongoDBController_get_narrative_stats")
     def test_run_MetricsMongoDBController_get_narrative_stats(self):
         m_params = {
@@ -2016,6 +2059,47 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(tot_logins), 0)
 
     # Uncomment to skip this test
+    # unittest.skip("skipped test_run_MetricsImpl_get_user_ws_stats")
+    def test_run_MetricsImpl_get_user_ws_stats(self):
+        m_params = {
+            'epoch_range': (datetime.datetime(2016, 1, 1),
+                            datetime.datetime(2018, 4, 30))
+        }
+        # testing with given parameter values
+        ret = self.getImpl().get_user_ws_stats(self.getContext(), m_params)
+        usr_ws = ret[0]['metrics_result']
+        self.assertEqual(len(usr_ws), 14)
+        for uw in usr_ws:
+            if uw['_id'] == {'username': 'eapearson', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 3)
+            if uw['_id'] == {'username': u'fangfang', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 2)
+            if uw['_id'] == {'username': u'janakakbase', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': 'joedoe', 'year': 2018, 'month': 1}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': 'jplfaria', 'year': 2016, 'month': 7}:
+                    self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': u'nconrad', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': u'pranjan77', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 6)
+            if uw['_id'] == {'username': 'rsutormin', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': u'psdehal', 'year': 2018, 'month': 1}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': 'sjyoo', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': 'srividya22', 'year': 2016, 'month': 7}:
+                    self.assertEqual(uw['count_user_ws'], 2)
+            if uw['_id'] == {'username': u'sunita', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 3)
+            if uw['_id'] == {'username': u'vkumar', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 2)
+            if uw['_id'] == {'username': 'wjriehl', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 3)
+
+    # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_narrative_stats")
     def test_run_MetricsImpl_get_narrative_stats(self):
         m_params = {
@@ -2025,20 +2109,23 @@ class kb_MetricsTest(unittest.TestCase):
         # testing with given parameter values
         ret = self.getImpl().get_narrative_stats(self.getContext(), m_params)
         narr_stats = ret[0]['metrics_result']
-        print(narr_stats)
         self.assertEqual(len(narr_stats), 2)
 
         # assertItemsEqual only checks the keys
         self.assertItemsEqual(narr_stats[0],
                               {'owner': 'mary', 'ws': 321,
-                               'name': 'mary:1468592344827',
+                               'name': 'mary:dontmatter',
                                'first_access': u'yyyy-mm-dd'})
         self.assertItemsEqual(narr_stats[1],
                               {'owner': 'john', 'ws': 123,
-                               'name': 'john:narrative_1513709108341',
+                               'name': 'john:whatever',
                                'first_access': u'yyyy-mm-dd'})
         self.assertEqual(narr_stats[0]['owner'], 'vkumar')
         self.assertEqual(narr_stats[1]['owner'], 'psdehal')
+        self.assertEqual(narr_stats[0]['name'], 'vkumar:1468592344827')
+        self.assertEqual(narr_stats[1]['name'], 'psdehal:narrative_1513709108341')
+        self.assertEqual(narr_stats[0]['first_access'], '2016-7-15')
+        self.assertEqual(narr_stats[1]['first_access'], '2017-12-21')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_user_logins")
@@ -2094,14 +2181,12 @@ class kb_MetricsTest(unittest.TestCase):
         ret = self.getImpl().get_user_logins(self.getContext(), m_params)
         usr_logins = ret[0]['metrics_result']
         self.assertEqual(len(usr_logins), 2)
-        self.assertItemsEqual(usr_logins[0],
-                              {'_id': {'username': 'joedoe',
-                                       'year': 2018, 'month': 1},
-                               'year_mon_user_logins': 1})
-        self.assertItemsEqual(usr_logins[1],
-                              {'_id': {'username': 'psdehal',
-                                       'year': 2018, 'month': 1},
-                               'year_mon_user_logins': 1})
+        self.assertEqual(usr_logins[0]['_id'],
+                         {'username': 'joedoe', 'year': 2018, 'month': 1})
+        self.assertEqual(usr_logins[0]['year_mon_user_logins'], 1)
+        self.assertEqual(usr_logins[1]['_id'],
+                         {'username': 'psdehal', 'year': 2018, 'month': 1})
+        self.assertEqual(usr_logins[1]['year_mon_user_logins'], 1)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_get_user_numObjs")

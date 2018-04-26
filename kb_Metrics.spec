@@ -77,4 +77,7 @@ module kb_Metrics {
 
     funcdef get_narrative_stats(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
+
+    funcdef get_user_ws_stats(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
 };

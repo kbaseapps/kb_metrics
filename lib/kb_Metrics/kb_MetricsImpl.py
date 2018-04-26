@@ -23,7 +23,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "1.0.2"
     GIT_URL = "https://github.com/qzzhang/kb_Metrics"
-    GIT_COMMIT_HASH = "5a556046732a2fdd35c257090936062bae775442"
+    GIT_COMMIT_HASH = "b6a547ef849da81a0a807f9419f6cefd949e644f"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -262,6 +262,34 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
             raise ValueError('Method get_narrative_stats return value ' +
+                             'return_records is not type dict as required.')
+        # return the results
+        return [return_records]
+
+    def get_user_ws_stats(self, ctx, params):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        # ctx is the context object
+        # return variables are: return_records
+        #BEGIN get_user_ws_stats
+        return_records = self.mdb_controller.get_user_ws_stats(ctx['user_id'],
+                                                               params,
+                                                               ctx['token'])
+        #END get_user_ws_stats
+
+        # At some point might do deeper type checking...
+        if not isinstance(return_records, dict):
+            raise ValueError('Method get_user_ws_stats return value ' +
                              'return_records is not type dict as required.')
         # return the results
         return [return_records]

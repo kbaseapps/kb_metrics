@@ -572,6 +572,19 @@ class MetricsMongoDBController:
                                  'invoke this action.')
         return self._get_narratives_from_wsobjs(requesting_user, params, token)
 
+    def get_user_ws_stats(self, requesting_user, params, token):
+        if not self._is_admin(requesting_user):
+                raise ValueError('You do not have permisson to '
+                                 'invoke this action.')
+
+        params = self._process_parameters(params)
+        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+
+        db_ret = self.metrics_dbi.aggr_user_ws(params['minTime'], params['maxTime'])
+
+        return {'metrics_result': db_ret}
+
     # end putting the deleted functions back
 
     # function(s) to update the metrics db
