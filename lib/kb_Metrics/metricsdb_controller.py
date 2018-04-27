@@ -428,11 +428,12 @@ class MetricsMongoDBController:
         narr_data = self.metrics_dbi.list_narrative_info(
                             params['minTime'],
                             params['maxTime'])
-
+        n_ws = [nd['ws'] for nd in narr_data]
         # 2. query db to get lists of narratives with ws_ids and first_access_date
         ws_firstAccs = self.metrics_dbi.list_ws_firstAccess(
                             params['minTime'],
-                            params['maxTime'])
+                            params['maxTime'],
+                            ws_list=n_ws)
 
         # 3. match the narrative owners and assemble the info
         narr_info_list = []
