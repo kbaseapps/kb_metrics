@@ -280,11 +280,15 @@ class MongoMetricsDBI:
         return list(kbworkspaces.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 * 1)
-    def list_narrative_info(self, wsid_list=[], owner_list=[]):
+    def list_narrative_info(self, minTime, maxTime, wsid_list=[], owner_list=[]):
         """
         list_narrative_info--retrieve the name/ws_id/owner of narratives
         """
-        match_filter = {"del": False,  # "lock": False,
+        minTime = datetime.datetime.fromtimestamp(minTime / 1000.0)
+        maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
+
+        match_filter = {"del": False,
+                        "moddate": {"$gte": minTime, "$lte": maxTime},
                         "meta": {"$elemMatch":
                                  {"k": "is_temporary", "v": "false"}}}
         if wsid_list:

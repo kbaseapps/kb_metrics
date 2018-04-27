@@ -877,38 +877,44 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped test_MetricsMongoDBs_list_narrative_info")
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_narrative_info(self):
+        min_time = 1468454614192
+        max_time = 1500046845591
         o_list = ['fangfang', 'psdehal', 'jplfaria', 'pranjan77']
         ws_id_list = [8056, 8748, 1111]
 
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
 
         # testing list_narrative_info return data, with and without filters
-        narr_owners = dbi.list_narrative_info(ws_id_list, o_list)
-        self.assertEqual(len(narr_owners), 1)
-        self.assertIn(narr_owners[0]['ws'], ws_id_list)
-        self.assertIn(narr_owners[0]['owner'], o_list)
-        self.assertEqual(narr_owners[0]['name'], 'pranjan77:1466168703797')
+        narrs = dbi.list_narrative_info(min_time, max_time,
+                                        wsid_list=ws_id_list,
+                                        owner_list=o_list)
+        self.assertEqual(len(narrs), 1)
+        self.assertIn(narrs[0]['ws'], ws_id_list)
+        self.assertIn(narrs[0]['owner'], o_list)
+        self.assertEqual(narrs[0]['name'], 'pranjan77:1466168703797')
 
-        narr_owners = dbi.list_narrative_info(wsid_list=ws_id_list)
-        self.assertEqual(len(narr_owners), 2)
-        for nrr in narr_owners:
+        narrs = dbi.list_narrative_info(min_time, max_time,
+                                        wsid_list=ws_id_list)
+        self.assertEqual(len(narrs), 2)
+        for nrr in narrs:
             self.assertIn(nrr['ws'], ws_id_list)
-        self.assertEqual(narr_owners[0]['ws'], 8056)
-        self.assertEqual(narr_owners[1]['ws'], 8748)
-        self.assertEqual(narr_owners[0]['owner'], 'pranjan77')
-        self.assertEqual(narr_owners[1]['owner'], 'eapearson')
-        self.assertEqual(narr_owners[0]['name'], 'pranjan77:1466168703797')
-        self.assertEqual(narr_owners[1]['name'], 'eapearson:1468518477765')
+        self.assertEqual(narrs[0]['ws'], 8056)
+        self.assertEqual(narrs[1]['ws'], 8748)
+        self.assertEqual(narrs[0]['owner'], 'pranjan77')
+        self.assertEqual(narrs[1]['owner'], 'eapearson')
+        self.assertEqual(narrs[0]['name'], 'pranjan77:1466168703797')
+        self.assertEqual(narrs[1]['name'], 'eapearson:1468518477765')
 
-        narr_owners = dbi.list_narrative_info(owner_list=o_list)
-        self.assertEqual(len(narr_owners), 10)
-        for nrr in narr_owners:
+        narrs = dbi.list_narrative_info(min_time, max_time,
+                                        owner_list=o_list)
+        self.assertEqual(len(narrs), 9)
+        for nrr in narrs:
             self.assertIn(nrr['owner'], o_list)
-        self.assertEqual(narr_owners[9]['ws'], 27834)
-        self.assertEqual(narr_owners[9]['owner'], 'psdehal')
+        self.assertEqual(narrs[8]['ws'], 8774)
+        self.assertEqual(narrs[8]['owner'], 'fangfang')
 
-        narr_owners = dbi.list_narrative_info()
-        self.assertEqual(len(narr_owners), 24)
+        narrs = dbi.list_narrative_info(min_time, max_time)
+        self.assertEqual(len(narrs), 23)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBs_list_ws_firstAccess")
@@ -917,7 +923,7 @@ class kb_MetricsTest(unittest.TestCase):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         min_time = 1468592344887
         max_time = 1519768865840
-        ws_narrs = dbi.list_narrative_info()
+        ws_narrs = dbi.list_narrative_info(min_time, max_time)
         ws_list = [wn['ws'] for wn in ws_narrs]
 
         # test list_ws_firstAccess returned values with wsid filter

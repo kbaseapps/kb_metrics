@@ -421,19 +421,22 @@ class MetricsMongoDBController:
 
     @cache_it_json(limit=1024, expire=60 * 60 * 1)
     def _get_narrative_info(self, params):
+
+        params = self._process_parameters(params)
+
         # 1. get the narr_owners data for lookups
-        if self.narr_data is None:
-            self.narr_data = self.metrics_dbi.list_narrative_info()
+        narr_data = self.metrics_dbi.list_narrative_info(
+                            params['minTime'],
+                            params['maxTime'])
 
         # 2. query db to get lists of narratives with ws_ids and first_access_date
-        params = self._process_parameters(params)
         ws_firstAccs = self.metrics_dbi.list_ws_firstAccess(
                             params['minTime'],
                             params['maxTime'])
 
         # 3. match the narrative owners and assemble the info
         narr_info_list = []
-        for narr_info in self.narr_data:
+        for narr_info in narr_data:
             narr = {}
             for wsobj in ws_firstAccs:
                 if narr_info['ws'] == wsobj['ws']:
@@ -478,7 +481,6 @@ class MetricsMongoDBController:
         self.ws_narratives = None
         self.client_groups = None
         self.cat_client = None
-        self.narr_data = None
         self.narrative_name_map = {}
 
     def get_user_job_states(self, requesting_user, params, token):
