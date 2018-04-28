@@ -456,19 +456,15 @@ class MongoMetricsDBI:
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_details(self, userIds, minTime, maxTime, excluded_users=[]):
         # Define the pipeline operations
+        match_cond = {"create": {"$gte": _convert_to_datetime(minTime),
+                                 "$lte": _convert_to_datetime(maxTime)}}
         if userIds == []:
-            match_cond = {"$match":
-                          {"user": {"$nin": excluded_users},
-                           "create": {"$gte": _convert_to_datetime(minTime),
-                                      "$lte": _convert_to_datetime(maxTime)}}}
+            match_cond["user"] = {"$nin": excluded_users}
         else:
-            match_cond = {"$match":
-                          {"user": {"$in": userIds, "$nin": excluded_users},
-                           "create": {"$gte": _convert_to_datetime(minTime),
-                                      "$lte": _convert_to_datetime(maxTime)}}}
+            match_cond["user"] = {"$in": userIds, "$nin": excluded_users}
 
         pipeline = [
-            match_cond,
+            {"$match": match_cond},
             {"$project": {"username": "$user", "email": "$email",
                           "full_name": "$display",
                           "signup_at": "$create",
@@ -479,6 +475,39 @@ class MongoMetricsDBI:
         # grab handle(s) to the db collection
         kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
         return list(kbusers.aggregate(pipeline))
+
+    @cache_it_json(limit=1024, expire=60 * 60 / 2)
+    def aggr_signup_retn_users(self, userIds, minTime, maxTime, excluded_users=[]):
+        rtn_milis = 86400000
+        # Define the pipeline operations
+        match_cond = {"signup_at": {"$gte": _convert_to_datetime(minTime),
+                                    "$lte": _convert_to_datetime(maxTime)}}
+        if userIds == []:
+            match_cond["username"] = {"$nin": excluded_users}
+        else:
+            match_cond["username"] = {"$in": userIds, "$nin": excluded_users}
+
+        pipeline = [
+            {"$match": match_cond},
+            {"$project": {"year_signup": {"$year": "$signup_at"},
+                          "month_signup": {"$month": "$signup_at"},
+                          "username": 1, "_id": 0,
+                          "signin_delay": {"$subtract":
+                                           ["$last_signin_at", "$signup_at"]}}},
+            {"$project": {"year_signup": 1, "month_signup": 1,
+                          "username": 1, "_id": 0,
+                          "returning": {
+                              "$cond":
+                              [{"$gte": ["$signin_delay", rtn_milis]}, 1, 0]}}},
+            {"$group": {"_id": {"year": "$year_signup",
+                                "month": "$month_signup"},
+                        "user_signups": {"$sum": 1},
+                        "returning_user_count": {"$sum": "$returning"}}},
+            {"$sort": {"_id": 1}}]
+
+        # grab handle(s) to the db collection
+        mtusers = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
+        return list(mtusers.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ujs_results(self, userIds, minTime, maxTime):
@@ -519,7 +548,7 @@ class MongoMetricsDBI:
         jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
         return list(jobstate.find(qry_filter, projection))
 
-    # putting the deleted functions back for reporting
+    # BEGIN putting the deleted functions back for reporting
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_logins_from_ws(self, minTime, maxTime):
         # Define the pipeline operations
@@ -602,5 +631,7 @@ class MongoMetricsDBI:
         # grab handle(s) to the database collection
         self.kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
         return list(self.kbworkspaces.aggregate(pipeline))
+
+    # END putting the deleted functions back for reporting
 
     # End functions to query the other dbs...

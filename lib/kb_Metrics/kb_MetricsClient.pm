@@ -415,6 +415,108 @@ For retrieving from mongodb metrics *
  
 
 
+=head2 get_signup_returning_users
+
+  $return_records = $obj->get_signup_returning_users($params)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$params is a kb_Metrics.MetricsInputParams
+$return_records is a kb_Metrics.MetricsOutput
+MetricsInputParams is a reference to a hash where the following keys are defined:
+	user_ids has a value which is a reference to a list where each element is a kb_Metrics.user_id
+	epoch_range has a value which is a kb_Metrics.epoch_range
+user_id is a string
+epoch_range is a reference to a list containing 2 items:
+	0: (e_lowerbound) a kb_Metrics.epoch
+	1: (e_upperbound) a kb_Metrics.epoch
+epoch is an int
+MetricsOutput is a reference to a hash where the following keys are defined:
+	metrics_result has a value which is an UnspecifiedObject, which can hold any non-null object
+
+</pre>
+
+=end html
+
+=begin text
+
+$params is a kb_Metrics.MetricsInputParams
+$return_records is a kb_Metrics.MetricsOutput
+MetricsInputParams is a reference to a hash where the following keys are defined:
+	user_ids has a value which is a reference to a list where each element is a kb_Metrics.user_id
+	epoch_range has a value which is a kb_Metrics.epoch_range
+user_id is a string
+epoch_range is a reference to a list containing 2 items:
+	0: (e_lowerbound) a kb_Metrics.epoch
+	1: (e_upperbound) a kb_Metrics.epoch
+epoch is an int
+MetricsOutput is a reference to a hash where the following keys are defined:
+	metrics_result has a value which is an UnspecifiedObject, which can hold any non-null object
+
+
+=end text
+
+=item Description
+
+
+
+=back
+
+=cut
+
+ sub get_signup_returning_users
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function get_signup_returning_users (received $n, expecting 1)");
+    }
+    {
+	my($params) = @args;
+
+	my @_bad_arguments;
+        (ref($params) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 1 \"params\" (value was \"$params\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to get_signup_returning_users:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'get_signup_returning_users');
+	}
+    }
+
+    my $url = $self->{url};
+    my $result = $self->{client}->call($url, $self->{headers}, {
+	    method => "kb_Metrics.get_signup_returning_users",
+	    params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'get_signup_returning_users',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method get_signup_returning_users",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'get_signup_returning_users',
+				       );
+    }
+}
+ 
+
+
 =head2 get_user_counts_per_day
 
   $return_records = $obj->get_user_counts_per_day($params)

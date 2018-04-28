@@ -217,6 +217,23 @@ public class KbMetricsClient {
     }
 
     /**
+     * <p>Original spec-file function name: get_signup_returning_users</p>
+     * <pre>
+     * </pre>
+     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
+     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public MetricsOutput getSignupReturningUsers(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(params);
+        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
+        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_signup_returning_users", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+        return res.get(0);
+    }
+
+    /**
      * <p>Original spec-file function name: get_user_counts_per_day</p>
      * <pre>
      * </pre>

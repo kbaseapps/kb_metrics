@@ -62,6 +62,9 @@ module kb_Metrics {
     /** For retrieving from mongodb metrics **/ 
     funcdef get_user_details(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
+
+    funcdef get_signup_returning_users(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
     
     funcdef get_user_counts_per_day(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;

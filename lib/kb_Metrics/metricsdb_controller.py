@@ -42,6 +42,12 @@ class MetricsMongoDBController:
     def _is_kbstaff(self, username):
         return username in self.kbstaff_list
 
+    def _get_kbstaff_list(self):
+        if self.kbstaff_list is None:
+            kbstaff = self.metrics_dbi.list_kbstaff_usernames()
+            self.kbstaff_list = [kbs['username'] for kbs in kbstaff]
+        return self.kbstaff_list
+
     def _convert_isodate_to_milis(self, src_list, dt_list):
         for src in src_list:
             for ldt in dt_list:
@@ -498,7 +504,8 @@ class MetricsMongoDBController:
 
         # 1. get the ws_narrative and client_groups data for lookups
         if self.ws_narratives is None:
-            self.ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives(
+                include_del=True)
         if self.client_groups is None:
             self.client_groups = self._get_client_groups_from_cat(token)
 
@@ -599,9 +606,6 @@ class MetricsMongoDBController:
             raise ValueError('You do not have permission to '
                              'invoke this action.')
 
-        if self.kbstaff_list is None:
-            self.kbstaff_list = self.metrics_dbi.list_kbstaff_usernames()
-
         # 1. update users
         action_result1 = self._update_user_info(params, token)
 
@@ -622,23 +626,23 @@ class MetricsMongoDBController:
         get_active_users_counts--query (and aggregate) the metrics mongodb
         to get active user count per day.
         """
-        if not self._is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
+        if not self._is_admin(requesting_user):
+                raise ValueError('You do not have permisson to '
+                                 'invoke this action.')
 
-        if self.kbstaff_list is None:
-            self.kbstaff_list = self.metrics_dbi.list_kbstaff_usernames()
+        kb_list = self._get_kbstaff_list()
 
         params = self._process_parameters(params)
 
         if exclude_kbstaff:
             mt_ret = self.metrics_dbi.aggr_unique_users_per_day(
-                params['minTime'], params['maxTime'], self.kbstaff_list)
+                params['minTime'], params['maxTime'], kb_list)
         else:
             mt_ret = self.metrics_dbi.aggr_unique_users_per_day(
                 params['minTime'], params['maxTime'], [])
 
         if not mt_ret:
-            print("No records returned!")
+            print("No active user count records returned!")
 
         return {'metrics_result': mt_ret}
 
@@ -647,8 +651,9 @@ class MetricsMongoDBController:
         """
         get_user_details--query the metrics/users db to retrieve user info.
         """
-        if not self._is_metrics_admin(requesting_user):
-            raise ValueError('You do not have permission to view this data.')
+        if not self._is_admin(requesting_user):
+                raise ValueError('You do not have permisson to '
+                                 'invoke this action.')
 
         params = self._process_parameters(params)
         mt_ret = self.metrics_dbi.get_user_info(
@@ -656,10 +661,34 @@ class MetricsMongoDBController:
             params['maxTime'], exclude_kbstaff)
 
         if not mt_ret:
-            print("No records returned!")
+            print("No user records returned!")
         else:
             mt_ret = self._convert_isodate_to_milis(
                 mt_ret, ['signup_at', 'last_signin_at'])
         return {'metrics_result': mt_ret}
 
+    def get_signup_retn_users(self, requesting_user, params, token,
+                              exclude_kbstaff=False):
+        """
+        get_signup_retn_users--query the metrics/users db to retrieve
+        monthly user signups and returning user counts.
+        """
+        if not self._is_admin(requesting_user):
+                raise ValueError('You do not have permisson to '
+                                 'invoke this action.')
+
+        params = self._process_parameters(params)
+        if exclude_kbstaff:
+            kb_list = self._get_kbstaff_list()
+            mt_ret = self.metrics_dbi.aggr_signup_retn_users(
+                params['user_ids'], params['minTime'],
+                params['maxTime'], kb_list)
+        else:
+            mt_ret = self.metrics_dbi.aggr_signup_retn_users(
+                params['user_ids'], params['minTime'],
+                params['maxTime'])
+
+        if not mt_ret:
+            print("No signup/returning user records returned!")
+        return {'metrics_result': mt_ret}
     # End functions to get the requested records from metrics db

@@ -345,6 +345,10 @@ class Application(object):
                              name='kb_Metrics.get_user_details',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_user_details'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_signup_returning_users,
+                             name='kb_Metrics.get_signup_returning_users',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_signup_returning_users'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.get_user_counts_per_day,
                              name='kb_Metrics.get_user_counts_per_day',
                              types=[dict])

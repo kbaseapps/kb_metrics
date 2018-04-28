@@ -23,7 +23,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "1.0.2"
     GIT_URL = "https://github.com/qzzhang/kb_Metrics"
-    GIT_COMMIT_HASH = "b6a547ef849da81a0a807f9419f6cefd949e644f"
+    GIT_COMMIT_HASH = "10da8e1452b52f37b565700814d9902ba27948b5"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -122,6 +122,34 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
             raise ValueError('Method get_user_details return value ' +
+                             'return_records is not type dict as required.')
+        # return the results
+        return [return_records]
+
+    def get_signup_returning_users(self, ctx, params):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        # ctx is the context object
+        # return variables are: return_records
+        #BEGIN get_signup_returning_users
+        return_records = self.mdb_controller.get_signup_retn_users(ctx['user_id'],
+                                                                   params,
+                                                                   ctx['token'])
+        #END get_signup_returning_users
+
+        # At some point might do deeper type checking...
+        if not isinstance(return_records, dict):
+            raise ValueError('Method get_signup_returning_users return value ' +
                              'return_records is not type dict as required.')
         # return the results
         return [return_records]

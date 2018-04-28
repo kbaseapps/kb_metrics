@@ -111,10 +111,10 @@
 			"email" : "shahmaneshb@gmail.com",
 			"username" : "shahmaneshb",
 			"roles" : [ ],
-			"signup_at" : 1516307704709,
+			"signup_at" : 1506307704709,
 			"full_name" : "Manesh Shah",
             "kbase_staff" : false,
-			"last_signin_at" : 1516307705087
+			"last_signin_at" : 1526394205087
 		},
 		{
 			"email" : "thesis1977@gmail.com",
@@ -197,7 +197,7 @@
 			"signup_at" : 1518794428236,
 			"full_name" : "Lizz Allmon",
             "kbase_staff" : false,
-			"last_signin_at" : 1518794428238
+			"last_signin_at" : 1558794428238
 		},
 		{
 			"email" : "teha237@g.uky.edu",
@@ -233,22 +233,22 @@
 			"signup_at" : 1518794471539,
 			"full_name" : "MING-HSU CHEN",
             "kbase_staff" : false,
-			"last_signin_at" : 1518794471542
+			"last_signin_at" : 1538794471542
 		},
 		{
 			"email" : "andrew.asberry@gmail.com",
 			"username" : "aasberry",
 			"roles" : [ ],
-			"signup_at" : 1518794478670,
+			"signup_at" : 1468654614192,
 			"full_name" : "Andrew Asberry",
             "kbase_staff" : false,
-			"last_signin_at" : 1518794478678
+			"last_signin_at" : 1558794478678
 		},
 		{
 			"email" : "helenaavila30@gmail.com",
 			"username" : "helenaavilaax2r",
 			"roles" : [ ],
-			"signup_at" : 1518794493006,
+			"signup_at" : 1468794493006,
 			"full_name" : "Helena Avila Arias",
             "kbase_staff" : false,
 			"last_signin_at" : 1518794493009
@@ -297,5 +297,50 @@
 			"full_name" : "Erik Pearson",
             "kbase_staff" : true,
 			"last_signin_at" : 1519940589152
-		}
+		},
+        {
+            "username" : "takuro",
+            "full_name" : "たくろたくろ",
+            "signup_at" : 1501802943973,
+            "last_signin_at" : 1585259588883,
+            "email" : "redramtk@gmail.com",
+            "kbase_staff" : false,
+            "roles" : [ ]
+        },
+        {
+            "username" : "cibili",
+            "full_name" : "CIBiLI Lab",
+            "signup_at" : 1502220792064,
+            "last_signin_at" : 1582221381358,
+            "email" : "cibililab@gmail.com",
+            "kbase_staff" : false,
+            "roles" : [ ]
+        },
+        {
+            "username" : "gil_eshel",
+            "full_name" : "Gil Eshel",
+            "signup_at" : 1468854614192,
+            "last_signin_at" : 1532220792064,
+            "email" : "ge30@nyu.edu",
+            "kbase_staff" : false,
+            "roles" : [ ]
+        },
+        {
+            "username" : "lisab",
+            "full_name" : "Lisa Blaß",
+            "signup_at" : 1478454614192,
+            "last_signin_at" : 1529220792064,
+            "email" : "lisa.blass@gmail.com",
+            "kbase_staff" : false,
+            "roles" : [ ]
+        },
+        {
+            "username" : "nilsa",
+            "full_name" : "Nils Rabelli",
+            "signup_at" : 1502920792064,
+            "last_signin_at" : 1532220792064,
+            "email" : "nils@abelli.nu",
+            "kbase_staff" : false,
+            "roles" : [ ]
+        }
 	]

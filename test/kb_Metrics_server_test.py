@@ -306,6 +306,9 @@ class kb_MetricsTest(unittest.TestCase):
                                 {'username': 1, '_id': 0}))
         kbstaffList = dbi.list_kbstaff_usernames()
         self.assertItemsEqual(kbstaffList, kbstaff_in_coll)
+        kbs_ids = [kbu['username'] for kbu in kbstaffList]
+        coll_ids = [c['username'] for c in kbstaff_in_coll]
+        self.assertEqual(kbs_ids, coll_ids)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ws_owners")
@@ -333,7 +336,7 @@ class kb_MetricsTest(unittest.TestCase):
         user_list0 = []
         user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'boris']
 
-        # testing aggr_user_details_returned data structure
+        # testing aggr_user_details returned data structure
         users = dbi.aggr_user_details(user_list, min_time, max_time)
         self.assertEqual(len(users), 4)
         self.assertIn('username', users[0])
@@ -354,6 +357,89 @@ class kb_MetricsTest(unittest.TestCase):
 
         users = dbi.aggr_user_details(user_list0, min_time, max_time)
         self.assertEqual(len(users), 37)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_MetricsMongoDBs_aggr_signup_retn_users")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
+    def test_MetricsMongoDBs_aggr_signup_retn_users(self):
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        min_time = 1468454614192
+        max_time = 1580549345000
+        user_list0 = []
+        user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'boris']
+
+        m_users_cur = dbi.metricsDBs['metrics']['users'].find()
+        print('There are {} users in metrics.users before dbi call'.format(
+            len(list(m_users_cur))))
+
+        # testing aggr_signup_retn_users returned data structure and values
+        users = dbi.aggr_signup_retn_users(user_list0, min_time, max_time)
+        self.assertEqual(len(users), 6)
+        for u in users:
+            self.assertItemsEqual(u,
+                                  {'_id': {'year': 2018, 'month': 1},
+                                   'returning_user_count': 10,
+                                   'user_signups': 100})
+            if u['_id'] == {'year': 2018, 'month': 1}:
+                self.assertEqual(u['user_signups'], 4)
+                self.assertEqual(u['returning_user_count'], 2)
+            if u['_id'] == {'year': 2018, 'month': 2}:
+                self.assertEqual(u['user_signups'], 30)
+                self.assertEqual(u['returning_user_count'], 1)
+            if u['_id'] == {'year': 2018, 'month': 3}:
+                self.assertEqual(u['user_signups'], 3)
+                self.assertEqual(u['returning_user_count'], 0)
+            if u['_id'] == {'year': 2017, 'month': 8}:
+                self.assertEqual(u['user_signups'], 3)
+                self.assertEqual(u['returning_user_count'], 3)
+            if u['_id'] == {'year': 2016, 'month': 7}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 1)
+            if u['_id'] == {'year': 2016, 'month': 11}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 1)
+
+        # testing with user exclusions
+        users = dbi.aggr_signup_retn_users(user_list0, min_time, max_time,
+                                           excluded_users=['takuro'])
+        self.assertEqual(len(users), 6)
+        for u in users:
+            self.assertItemsEqual(u,
+                                  {'_id': {'year': 2018, 'month': 1},
+                                   'returning_user_count': 10,
+                                   'user_signups': 100})
+            if u['_id'] == {'year': 2018, 'month': 1}:
+                self.assertEqual(u['user_signups'], 4)
+                self.assertEqual(u['returning_user_count'], 2)
+            if u['_id'] == {'year': 2018, 'month': 2}:
+                self.assertEqual(u['user_signups'], 30)
+                self.assertEqual(u['returning_user_count'], 1)
+            if u['_id'] == {'year': 2018, 'month': 3}:
+                self.assertEqual(u['user_signups'], 3)
+                self.assertEqual(u['returning_user_count'], 0)
+            if u['_id'] == {'year': 2017, 'month': 8}:
+                self.assertEqual(u['user_signups'], 2)
+                self.assertEqual(u['returning_user_count'], 2)
+            if u['_id'] == {'year': 2016, 'month': 7}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 1)
+            if u['_id'] == {'year': 2016, 'month': 11}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 1)
+
+        # testing with user inclusion
+        users = dbi.aggr_signup_retn_users(user_list, min_time, max_time)
+        self.assertEqual(len(users), 3)
+        # testing the sorting (ordered by '_id')
+        self.assertEqual(users[0]['_id'], {'year': 2018, 'month': 1})
+        self.assertEqual(users[0]['user_signups'], 1)
+        self.assertEqual(users[0]['returning_user_count'], 0)
+        self.assertEqual(users[1]['_id'], {'year': 2018, 'month': 2})
+        self.assertEqual(users[1]['user_signups'], 2)
+        self.assertEqual(users[1]['returning_user_count'], 0)
+        self.assertEqual(users[2]['_id'], {'year': 2018, 'month': 3})
+        self.assertEqual(users[2]['user_signups'], 1)
+        self.assertEqual(users[2]['returning_user_count'], 0)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_aggr_unique_users_per_day")
@@ -1129,6 +1215,42 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertFalse(self.db_controller._is_metrics_admin(not_permitted_u))
         permitted_u = 'qzhang'
         self.assertTrue(self.db_controller._is_metrics_admin(permitted_u))
+
+    # Uncomment to skip this test
+    # @unittest.skip("test _is_kbstaff")
+    def test_db_controller_is_kbstaff(self):
+        # testing user access permission
+        not_kbu = 'user_joe'
+        self.assertFalse(self.db_controller._is_kbstaff(not_kbu))
+        kbu1 = 'erik_test451'
+        self.assertTrue(self.db_controller._is_kbstaff(kbu1))
+        kbu2 = 'testbriehl'
+        self.assertTrue(self.db_controller._is_kbstaff(kbu2))
+        kbu3 = 'qzhang'  # not in the local db
+        self.assertFalse(self.db_controller._is_kbstaff(kbu3))
+
+    # Uncomment to skip this test
+    # @unittest.skip("test _get_kbstaff_list")
+    def test_db_controller_get_kbstaff_list(self):
+
+        # check the returned data from dbi.list_kbstaff_usernames() vs db
+        users_coll = self.client.metrics.users
+        kbstaff_in_coll = list(users_coll.find(
+                                {'kbase_staff': {'$in': [1, True]}},
+                                {'username': 1, '_id': 0}))
+        # testing user inclusion or not
+        kb_list = self.db_controller._get_kbstaff_list()
+        self.assertEqual(len(kb_list), 6)
+
+        local_kb_list = [c['username'] for c in kbstaff_in_coll]
+        for u in local_kb_list:
+            self.assertTrue(self.db_controller._is_kbstaff(u))
+            self.assertIn(u, kb_list)
+
+        test_list_2 = ['fakekb1', 'joedoe', 'minions', 'johnwho']
+        for u2 in test_list_2:
+            self.assertFalse(self.db_controller._is_kbstaff(u2))
+            self.assertNotIn(u2, kb_list)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_db_controller_parse_app_id_method")
@@ -1907,7 +2029,7 @@ class kb_MetricsTest(unittest.TestCase):
         users = self.db_controller.get_user_details(
             self.getContext()['user_id'],
             params, self.getContext()['token'])['metrics_result']
-        self.assertEqual(len(users), 33)
+        self.assertEqual(len(users), 30)
 
         # testing get_user_details return data with specified user_ids
         params = {'user_ids': user_list}
@@ -1931,6 +2053,95 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(users[1]['signup_at'], 1518794641935)
         self.assertEqual(users[1]['last_signin_at'], 1518794641938)
         self.assertEqual(users[1]['roles'], [])
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_MetricsMongoDBController_get_signup_retn_users")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
+    def test_MetricsMongoDBController_get_signup_retn_users(self):
+        user_list0 = []
+        start_datetime = datetime.datetime.strptime('2016-01-01T00:00:00+0000',
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
+        end_datetime = datetime.datetime.strptime('2018-04-30T00:00:10.000Z',
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
+
+        # testing get_signup_retn_users return data with empty user_ids
+        params = {'user_ids': user_list0}
+        params['epoch_range'] = (start_datetime, end_datetime)
+
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        m_users_cur = dbi.metricsDBs['metrics']['users'].find()
+        print('There are {} users in metrics.users before dbctlr call'.format(
+            len(list(m_users_cur))))
+
+        users0 = self.db_controller.get_signup_retn_users(
+            self.getContext()['user_id'],
+            params, self.getContext()['token'])['metrics_result']
+        self.assertEqual(len(users0), 7)
+        for u in users0:
+            self.assertItemsEqual(u,
+                                  {'_id': {'year': 2018, 'month': 1},
+                                   'returning_user_count': 10,
+                                   'user_signups': 100})
+            if u['_id'] == {'year': 2018, 'month': 1}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 0)
+            if u['_id'] == {'year': 2018, 'month': 2}:
+                self.assertEqual(u['user_signups'], 27)
+                self.assertEqual(u['returning_user_count'], 2)
+            if u['_id'] == {'year': 2018, 'month': 3}:
+                self.assertEqual(u['user_signups'], 2)
+                self.assertEqual(u['returning_user_count'], 0)
+            if u['_id'] == {'year': 2017, 'month': 8}:
+                self.assertEqual(u['user_signups'], 3)
+                self.assertEqual(u['returning_user_count'], 3)
+            if u['_id'] == {'year': 2017, 'month': 9}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 1)
+            if u['_id'] == {'year': 2016, 'month': 7}:
+                self.assertEqual(u['user_signups'], 3)
+                self.assertEqual(u['returning_user_count'], 3)
+            if u['_id'] == {'year': 2016, 'month': 11}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 1)
+
+        users2 = self.db_controller.get_signup_retn_users(
+            self.getContext()['user_id'],
+            params, self.getContext()['token'],
+            exclude_kbstaff=True)['metrics_result']
+        self.assertEqual(len(users2), 6)
+        for u in users2:
+            self.assertItemsEqual(u,
+                                  {'_id': {'year': 2018, 'month': 1},
+                                   'returning_user_count': 10,
+                                   'user_signups': 100})
+            if u['_id'] == {'year': 2018, 'month': 1}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 0)
+            if u['_id'] == {'year': 2018, 'month': 2}:
+                self.assertEqual(u['user_signups'], 23)
+                self.assertEqual(u['returning_user_count'], 2)
+            if u['_id'] == {'year': 2017, 'month': 8}:
+                self.assertEqual(u['user_signups'], 3)
+                self.assertEqual(u['returning_user_count'], 3)
+            if u['_id'] == {'year': 2017, 'month': 9}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 1)
+            if u['_id'] == {'year': 2016, 'month': 7}:
+                self.assertEqual(u['user_signups'], 3)
+                self.assertEqual(u['returning_user_count'], 3)
+            if u['_id'] == {'year': 2016, 'month': 11}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 1)
+
+        users2_ids = [u['_id'] for u in users2]
+        self.assertNotIn({'year': 2018, 'month': 3}, users2_ids)
+
+        user_list = ['sulbha', 'ytm123', 'xiaoli', 'andrew78', 'qzhang']
+        params = {'user_ids': user_list}
+        users3 = self.db_controller.get_signup_retn_users(
+            self.getContext()['user_id'],
+            params, self.getContext()['token'])['metrics_result']
+        self.assertEqual(len(users3), 0)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped get_active_users_counts")
@@ -2318,6 +2529,45 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(users[1]['numOfUsers'], 4)
         self.assertEqual(users[2]['numOfUsers'], 6)
         self.assertEqual(users[3]['numOfUsers'], 8)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_get_signup_returning_users")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
+    def test_run_MetricsImpl_get_signup_returning_users(self):
+        m_params = {
+            'epoch_range': (datetime.datetime(2016, 1, 1),
+                            datetime.datetime(2018, 4, 30))
+        }
+
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        m_users_cur = dbi.metricsDBs['metrics']['users'].find()
+        print('There are {} users in metrics.users before Impl call'.format(
+            len(list(m_users_cur))))
+
+        # testing (excluding kbstaff by default)
+        ret = self.getImpl().get_signup_returning_users(
+            self.getContext(), m_params)
+        users = ret[0]['metrics_result']
+        self.assertEqual(len(users), 6)
+        for u in users:
+            if u['_id'] == {'year': 2018, 'month': 1}:
+                self.assertEqual(u['user_signups'], 4)
+                self.assertEqual(u['returning_user_count'], 2)
+            if u['_id'] == {'year': 2018, 'month': 2}:
+                self.assertEqual(u['user_signups'], 30)
+                self.assertEqual(u['returning_user_count'], 1)
+            if u['_id'] == {'year': 2018, 'month': 3}:
+                self.assertEqual(u['user_signups'], 4)
+                self.assertEqual(u['returning_user_count'], 1)
+            if u['_id'] == {'year': 2017, 'month': 8}:
+                self.assertEqual(u['user_signups'], 3)
+                self.assertEqual(u['returning_user_count'], 3)
+            if u['_id'] == {'year': 2016, 'month': 7}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 1)
+            if u['_id'] == {'year': 2016, 'month': 11}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 1)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_update_metrics")
