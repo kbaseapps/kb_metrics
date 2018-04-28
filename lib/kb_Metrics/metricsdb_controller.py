@@ -40,7 +40,8 @@ class MetricsMongoDBController:
         return username in self.metricsAdmins
 
     def _is_kbstaff(self, username):
-        return username in self.kbstaff_list
+        kb_list = self._get_kbstaff_list()
+        return username in kb_list
 
     def _get_kbstaff_list(self):
         if self.kbstaff_list is None:
