@@ -348,8 +348,9 @@ class MetricsMongoDBController:
         if not isinstance(params['user_ids'], list):
             raise ValueError('Variable user_ids must be a list.')
 
-        if 'kbasetest' in params['user_ids']:
-            params['user_ids'].remove('kbasetest')
+        exclude_set = ('kbasetest', '***ROOT***', 'ciservices')
+        params['user_ids'] = [u for u in params['user_ids']
+                              if u not in exclude_set]
 
         epoch_range = params.get('epoch_range')
         if epoch_range:
@@ -434,7 +435,8 @@ class MetricsMongoDBController:
         # 1. get the narr_owners data for lookups
         narr_data = self.metrics_dbi.list_narrative_info(
                             params['minTime'],
-                            params['maxTime'])
+                            params['maxTime'],
+                            owner_list=params['user_ids'])
         n_ws = [nd['ws'] for nd in narr_data]
         # 2. query db to get lists of narratives with ws_ids and first_access_date
         ws_firstAccs = self.metrics_dbi.list_ws_firstAccess(
@@ -545,8 +547,8 @@ class MetricsMongoDBController:
         params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
         params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        db_ret = self.metrics_dbi.aggr_total_logins(params['minTime'],
-                                                    params['maxTime'])
+        db_ret = self.metrics_dbi.aggr_total_logins(
+            params['minTime'], params['maxTime'])
         return {'metrics_result': db_ret}
 
     def get_user_login_stats_from_ws(self, requesting_user, params, token):
@@ -557,8 +559,8 @@ class MetricsMongoDBController:
         params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
         params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        db_ret = self.metrics_dbi.aggr_user_logins_from_ws(params['minTime'],
-                                                           params['maxTime'])
+        db_ret = self.metrics_dbi.aggr_user_logins_from_ws(
+            params['user_ids'], params['minTime'], params['maxTime'])
         return {'metrics_result': db_ret}
 
     def get_user_numObjs_from_ws(self, requesting_user, params, token):
@@ -571,7 +573,7 @@ class MetricsMongoDBController:
         params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
         db_ret = self.metrics_dbi.aggr_user_numObjs(
-            params['minTime'], params['maxTime'])
+            params['user_ids'], params['minTime'], params['maxTime'])
 
         return {'metrics_result': db_ret}
 
@@ -592,7 +594,8 @@ class MetricsMongoDBController:
         params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
         params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        db_ret = self.metrics_dbi.aggr_user_ws(params['minTime'], params['maxTime'])
+        db_ret = self.metrics_dbi.aggr_user_ws(
+            params['user_ids'], params['minTime'], params['maxTime'])
 
         return {'metrics_result': db_ret}
 
@@ -686,8 +689,7 @@ class MetricsMongoDBController:
                 params['maxTime'], kb_list)
         else:
             mt_ret = self.metrics_dbi.aggr_signup_retn_users(
-                params['user_ids'], params['minTime'],
-                params['maxTime'])
+                params['user_ids'], params['minTime'], params['maxTime'])
 
         if not mt_ret:
             print("No signup/returning user records returned!")

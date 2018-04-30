@@ -200,7 +200,6 @@ class MongoMetricsDBI:
         user_filter = {}
         if userIds:
             user_filter['$in'] = userIds
-        user_filter['$nin'] = ['kbasetest', '***ROOT***', 'ciservices']
         if user_filter:
             qry_filter['username'] = user_filter
 
@@ -458,7 +457,7 @@ class MongoMetricsDBI:
         # Define the pipeline operations
         match_cond = {"create": {"$gte": _convert_to_datetime(minTime),
                                  "$lte": _convert_to_datetime(maxTime)}}
-        if userIds == []:
+        if not userIds:
             match_cond["user"] = {"$nin": excluded_users}
         else:
             match_cond["user"] = {"$in": userIds, "$nin": excluded_users}
@@ -482,7 +481,7 @@ class MongoMetricsDBI:
         # Define the pipeline operations
         match_cond = {"signup_at": {"$gte": _convert_to_datetime(minTime),
                                     "$lte": _convert_to_datetime(maxTime)}}
-        if userIds == []:
+        if not userIds:
             match_cond["username"] = {"$nin": excluded_users}
         else:
             match_cond["username"] = {"$in": userIds, "$nin": excluded_users}
@@ -516,8 +515,6 @@ class MongoMetricsDBI:
         user_filter = {}
         if userIds:
             user_filter['$in'] = userIds
-        elif userIds == []:
-            user_filter['$ne'] = 'kbasetest'
         if user_filter:
             qry_filter['user'] = user_filter
 
@@ -550,10 +547,14 @@ class MongoMetricsDBI:
 
     # BEGIN putting the deleted functions back for reporting
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
-    def aggr_user_logins_from_ws(self, minTime, maxTime):
+    def aggr_user_logins_from_ws(self, userIds, minTime, maxTime):
+        match_filter = {"moddate": {"$gte": minTime, "$lte": maxTime}}
+        if userIds:
+            match_filter["owner"] = {"$in": userIds}
+
         # Define the pipeline operations
         pipeline = [
-            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
+            {"$match": match_filter},
             {"$project": {"year": {"$year": "$moddate"},
                           "month": {"$month": "$moddate"},
                           "date": {"$dayOfMonth": "$moddate"},
@@ -570,6 +571,7 @@ class MongoMetricsDBI:
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_total_logins(self, minTime, maxTime):
+
         # Define the pipeline operations
         pipeline = [
             {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
@@ -592,10 +594,14 @@ class MongoMetricsDBI:
         return list(self.kbworkspaces.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
-    def aggr_user_numObjs(self, minTime, maxTime):
+    def aggr_user_numObjs(self, userIds, minTime, maxTime):
+        match_filter = {"moddate": {"$gte": minTime, "$lte": maxTime}}
+        if userIds:
+            match_filter["owner"] = {"$in": userIds}
+
         # Define the pipeline operations
         pipeline = [
-            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
+            {"$match": match_filter},
             {"$project": {"year": {"$year": "$moddate"},
                           "month": {"$month": "$moddate"},
                           "date": {"$dayOfMonth": "$moddate"},
@@ -614,10 +620,14 @@ class MongoMetricsDBI:
         return list(self.kbworkspaces.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
-    def aggr_user_ws(self, minTime, maxTime):
+    def aggr_user_ws(self, userIds, minTime, maxTime):
+        match_filter = {"moddate": {"$gte": minTime, "$lte": maxTime}}
+        if userIds:
+            match_filter["owner"] = {"$in": userIds}
+
         # Define the pipeline operations
         pipeline = [
-            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
+            {"$match": match_filter},
             {"$project": {"year": {"$year": "$moddate"},
                           "month": {"$month": "$moddate"},
                           "date": {"$dayOfMonth": "$moddate"},
