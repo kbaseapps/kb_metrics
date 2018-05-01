@@ -221,7 +221,7 @@ class kb_MetricsTest(unittest.TestCase):
         exec_cur = dbi.metricsDBs['exec_engine']['exec_tasks'].find()
         self.assertEqual(len(list(exec_cur)), 84)
         ws_cur = dbi.metricsDBs['workspace']['workspaces'].find()
-        self.assertEqual(len(list(ws_cur)), 28)
+        self.assertEqual(len(list(ws_cur)), 29)
         wsobj_cur = dbi.metricsDBs['workspace']['workspaceObjects'].find()
         self.assertEqual(len(list(wsobj_cur)), 41)
         ujs_cur = dbi.metricsDBs['userjobstate']['jobstate'].find()
@@ -317,7 +317,7 @@ class kb_MetricsTest(unittest.TestCase):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing returned data
         ws_owners = dbi.list_ws_owners()
-        self.assertEqual(len(ws_owners), 28)
+        self.assertEqual(len(ws_owners), 29)
         self.assertIn('ws_id', ws_owners[0])
         self.assertIn('username', ws_owners[0])
         self.assertIn('name', ws_owners[0])
@@ -334,7 +334,7 @@ class kb_MetricsTest(unittest.TestCase):
         min_time = 1516307704700
         max_time = 1520549345000
         user_list0 = []
-        user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'boris']
+        user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'bsadkhin']
 
         # testing aggr_user_details returned data structure
         users = dbi.aggr_user_details(user_list, min_time, max_time)
@@ -345,15 +345,16 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('signup_at', users[0])
         self.assertIn('last_signin_at', users[0])
         self.assertIn('roles', users[0])
+
         # testing the expected values
-        self.assertEqual(users[1]['username'], 'laramyenders')
-        self.assertEqual(users[1]['email'], 'laramy.enders@gmail.com')
-        self.assertEqual(users[1]['full_name'], 'Laramy Enders')
+        self.assertEqual(users[1]['username'], 'bsadkhin')
+        self.assertEqual(users[1]['email'], 'bsadkhin.anl@gmail.com')
+        self.assertEqual(users[1]['full_name'], 'Boris Sadkhin')
         self.assertEqual(users[1]['signup_at'],
-                         datetime.datetime(2018, 2, 16, 15, 19, 55, 973000))
+                         datetime.datetime(2018, 2, 1, 20, 55, 25, 587000))
         self.assertEqual(users[1]['last_signin_at'],
-                         datetime.datetime(2018, 2, 16, 15, 19, 56, 426000))
-        self.assertEqual(users[1]['roles'], [])
+                         datetime.datetime(2018, 3, 8, 21, 30, 58, 604000))
+        self.assertEqual(users[1]['roles'], ['DevToken'])
 
         users = dbi.aggr_user_details(user_list0, min_time, max_time)
         self.assertEqual(len(users), 37)
@@ -363,14 +364,14 @@ class kb_MetricsTest(unittest.TestCase):
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_aggr_signup_retn_users(self):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        min_time = 1468454614192
-        max_time = 1580549345000
-        user_list0 = []
-        user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'boris']
-
         m_users_cur = dbi.metricsDBs['metrics']['users'].find()
         print('There are {} users in metrics.users before dbi call'.format(
             len(list(m_users_cur))))
+
+        min_time = 1468454614192
+        max_time = 1585259588883
+        user_list0 = []
+        user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'boris']
 
         # testing aggr_signup_retn_users returned data structure and values
         users = dbi.aggr_signup_retn_users(user_list0, min_time, max_time)
@@ -440,6 +441,278 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(users[2]['_id'], {'year': 2018, 'month': 3})
         self.assertEqual(users[2]['user_signups'], 1)
         self.assertEqual(users[2]['returning_user_count'], 0)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsMongoDBs_aggr_total_logins")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
+    def test_run_MetricsMongoDBs_aggr_total_logins(self):
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        min_time = datetime.datetime(2015, 1, 1)
+        max_time = datetime.datetime(2018, 4, 30)
+        user_list = []
+        users_coll = self.client.metrics.users
+        kbstaff_in_coll = list(users_coll.find(
+                                {'kbase_staff': {'$in': [1, True]}},
+                                {'username': 1, '_id': 0}))
+        excl_usrs = [usr['username'] for usr in kbstaff_in_coll]
+
+        # testing with time range when there are login records
+        tot_logins = dbi.aggr_total_logins(user_list, min_time, max_time)
+        self.assertEqual(len(tot_logins), 4)
+        for tl in tot_logins:
+            if tl['_id'] == {'year': 2016, 'month': 7}:
+                self.assertEqual(tl['year_mon_total_logins'], 26)
+            if tl['_id'] == {'year': 2018, 'month': 1}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
+            if tl['_id'] == {'year': 2017, 'month': 5}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
+            if tl['_id'] == {'year': 2018, 'month': 2}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
+
+        # testing with excluded user list
+        tot_logins = dbi.aggr_total_logins(user_list, min_time, max_time,
+                                           excluded_users=excl_usrs)
+        self.assertEqual(len(tot_logins), 4)
+        self.assertEqual(tot_logins[0]['_id'], {'year': 2018, 'month': 1})
+        self.assertEqual(tot_logins[0]['year_mon_total_logins'], 1)
+        self.assertEqual(tot_logins[1]['_id'], {'year': 2018, 'month': 2})
+        self.assertEqual(tot_logins[1]['year_mon_total_logins'], 1)
+        self.assertEqual(tot_logins[2]['_id'], {'year': 2017, 'month': 5})
+        self.assertEqual(tot_logins[2]['year_mon_total_logins'], 1)
+        self.assertEqual(tot_logins[3]['_id'], {'year': 2016, 'month': 7})
+        self.assertEqual(tot_logins[3]['year_mon_total_logins'], 25)
+
+        # testing with time range when there is fewer login records
+        min_time = datetime.datetime(2015, 1, 1)
+        max_time = datetime.datetime(2017, 9, 20)
+        tot_logins = dbi.aggr_total_logins(user_list, min_time, max_time)
+        self.assertEqual(len(tot_logins), 2)
+        self.assertEqual(tot_logins[0]['_id'], {'year': 2017, 'month': 5})
+        self.assertEqual(tot_logins[0]['year_mon_total_logins'], 1)
+        self.assertEqual(tot_logins[1]['_id'], {'year': 2016, 'month': 7})
+        self.assertEqual(tot_logins[1]['year_mon_total_logins'], 26)
+
+        # testing with time range when there is even fewer login records
+        min_time = datetime.datetime(2016, 9, 30)
+        max_time = datetime.datetime(2017, 6, 30)
+        tot_logins = dbi.aggr_total_logins(user_list, min_time, max_time)
+        self.assertEqual(len(tot_logins), 1)
+        self.assertEqual(tot_logins[0]['_id'], {'year': 2017, 'month': 5})
+        self.assertEqual(tot_logins[0]['year_mon_total_logins'], 1)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_MetricsMongoDBs_aggr_user_logins_from_ws")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
+    def test_MetricsMongoDBs_aggr_user_logins_from_ws(self):
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        min_time = datetime.datetime(2016, 1, 1)
+        max_time = datetime.datetime(2018, 4, 30)
+        user_list0 = []
+        user_list1 = ['vkumar', 'psdehal', 'wjriehl', 'qzhang']
+        user_list2 = ['shahmaneshb', 'laramyenders', 'allmon', 'bsadkhin']
+
+        # testing aggr_user_logins_from_ws returned data structure and values
+        usr_logins = dbi.aggr_user_logins_from_ws(user_list0, min_time, max_time)
+        self.assertEqual(len(usr_logins), 16)
+
+        self.assertEqual(usr_logins[0]['_id'],
+                         {'username': 'bsadkhin', 'year': 2016, 'month': 7})
+        self.assertEqual(usr_logins[0]['year_mon_user_logins'], 1)
+        self.assertEqual(usr_logins[2]['_id'],
+                         {'username': 'fakeusr', 'year': 2017, 'month': 5})
+        self.assertEqual(usr_logins[2]['year_mon_user_logins'], 1)
+        self.assertEqual(usr_logins[3]['_id'],
+                         {'username': 'fangfang', 'year': 2016, 'month': 7})
+        self.assertEqual(usr_logins[3]['year_mon_user_logins'], 2)
+        self.assertEqual(usr_logins[4]['_id'],
+                         {'username': 'janakakbase', 'year': 2016, 'month': 7})
+        self.assertEqual(usr_logins[4]['year_mon_user_logins'], 1)
+        self.assertEqual(usr_logins[8]['_id'],
+                         {'username': 'pranjan77', 'year': 2016, 'month': 7})
+        self.assertEqual(usr_logins[8]['year_mon_user_logins'], 6)
+        self.assertEqual(usr_logins[14]['_id'],
+                         {'username': 'vkumar', 'year': 2016, 'month': 7})
+        self.assertEqual(usr_logins[14]['year_mon_user_logins'], 2)
+        self.assertEqual(usr_logins[15]['_id'],
+                         {'username': 'wjriehl', 'year': 2016, 'month': 7})
+        self.assertEqual(usr_logins[15]['year_mon_user_logins'], 3)
+
+        # with time range when there are fewer user login records
+        min_time = datetime.datetime(2016, 1, 1)
+        max_time = datetime.datetime(2017, 9, 30)
+        usr_logins = dbi.aggr_user_logins_from_ws(user_list0, min_time, max_time)
+        self.assertEqual(len(usr_logins), 14)
+        self.assertItemsEqual(usr_logins[3],
+                              {'_id': {'username': 'jplfaria',
+                                       'year': 2016, u'month': 7},
+                              'year_mon_user_logins': 1})
+        self.assertItemsEqual(usr_logins[6],
+                              {'_id': {'username': 'rsutormin',
+                                       'year': 2016, u'month': 7},
+                              'year_mon_user_logins': 1})
+
+        # with time range when there are even fewer user login records
+        min_time = datetime.datetime(2015, 1, 1)
+        max_time = datetime.datetime(2017, 9, 20)
+        usr_logins = dbi.aggr_user_logins_from_ws(user_list0, min_time, max_time)
+        self.assertEqual(len(usr_logins), 14)
+        self.assertItemsEqual(usr_logins[3],
+                              {'_id': {'username': 'jplfaria',
+                                       'year': 2016, u'month': 7},
+                              'year_mon_user_logins': 1})
+        self.assertItemsEqual(usr_logins[6],
+                              {'_id': {'username': 'rsutormin',
+                                       'year': 2016, u'month': 7},
+                              'year_mon_user_logins': 1})
+
+        min_time = datetime.datetime(2017, 9, 30)
+        max_time = datetime.datetime(2018, 4, 30)
+        usr_logins = dbi.aggr_user_logins_from_ws(user_list0, min_time, max_time)
+        self.assertEqual(len(usr_logins), 2)
+        self.assertEqual(usr_logins[0]['_id'],
+                         {'username': 'joedoe', 'year': 2018, 'month': 2})
+        self.assertEqual(usr_logins[0]['year_mon_user_logins'], 1)
+        self.assertEqual(usr_logins[1]['_id'],
+                         {'username': 'psdehal', 'year': 2018, 'month': 1})
+        self.assertEqual(usr_logins[1]['year_mon_user_logins'], 1)
+        self.assertEqual(usr_logins[0]['_id'],
+                         {'username': 'joedoe', 'year': 2018, 'month': 2})
+        self.assertEqual(usr_logins[0]['year_mon_user_logins'], 1)
+        self.assertEqual(usr_logins[1]['_id'],
+                         {'username': 'psdehal', 'year': 2018, 'month': 1})
+        self.assertEqual(usr_logins[1]['year_mon_user_logins'], 1)
+
+        # testing with given parameter values with user_ids given
+        usr_logins1 = dbi.aggr_user_logins_from_ws(user_list1, min_time, max_time)
+        self.assertEqual(len(usr_logins1), 1)
+        self.assertEqual(usr_logins1[0]['_id'],
+                         {'username': 'psdehal', 'year': 2018, 'month': 1})
+        self.assertEqual(usr_logins1[0]['year_mon_user_logins'], 1)
+
+        usr_logins2 = dbi.aggr_user_logins_from_ws(user_list2, min_time, max_time)
+        self.assertEqual(len(usr_logins2), 0)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsMongoDBs_aggr_user_numObjs")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
+    def test_run_MetricsMongoDBs_aggr_user_numObjs(self):
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        min_time = datetime.datetime(2016, 1, 1)
+        max_time = datetime.datetime(2018, 4, 30)
+        user_list0 = []
+        user_list1 = ['vkumar', 'psdehal', 'wjriehl', 'qzhang']
+        user_list2 = ['shahmaneshb', 'laramyenders', 'allmon', 'bsadkhin']
+
+        # testing with time range only
+        usr_objNum = dbi.aggr_user_numObjs(user_list0, min_time, max_time)
+        self.assertEqual(len(usr_objNum), 16)
+        self.assertItemsEqual(usr_objNum[0],
+                              {'_id': {'username': 'eapearson',
+                                       'year': 2016, 'month': 7},
+                               'count_user_numObjs': 258})
+        self.assertItemsEqual(usr_objNum[1],
+                              {'_id': {'username': 'fangfang',
+                                       'year': 2016, 'month': 7},
+                               'count_user_numObjs': 2})
+        self.assertItemsEqual(usr_objNum[3],
+                              {'_id': {'username': 'joedoe',
+                                       'year': 2018, 'month': 1},
+                               'count_user_numObjs': 100})
+        self.assertItemsEqual(usr_objNum[6],
+                              {'_id': {'username': 'pranjan77',
+                                       'year': 2016, 'month': 7},
+                               'count_user_numObjs': 124})
+        self.assertItemsEqual(usr_objNum[7],
+                              {'_id': {'username': 'psdehal',
+                                       'year': 2018, 'month': 1},
+                               'count_user_numObjs': 4})
+        self.assertItemsEqual(usr_objNum[13],
+                              {'_id': {'username': 'wjriehl',
+                                       'year': 2016, 'month': 7},
+                               'count_user_numObjs': 48})
+
+        # testing with given parameter values with user_ids given
+        usr_objNum = dbi.aggr_user_numObjs(user_list1, min_time, max_time)
+        self.assertEqual(len(usr_objNum), 3)
+        self.assertEqual(usr_objNum[0]['_id'],
+                         {'username': 'psdehal', 'year': 2018, 'month': 1}),
+        self.assertEqual(usr_objNum[0]['count_user_numObjs'], 4)
+        self.assertEqual(usr_objNum[1]['_id'],
+                         {u'username': 'vkumar', 'year': 2016, 'month': 7}),
+        self.assertEqual(usr_objNum[1]['count_user_numObjs'], 69)
+        self.assertEqual(usr_objNum[2]['_id'],
+                         {'username': 'wjriehl', 'year': 2016, 'month': 7}),
+        self.assertEqual(usr_objNum[2]['count_user_numObjs'], 48)
+
+        # testing with given parameter values with user_ids given
+        usr_objNum = dbi.aggr_user_numObjs(user_list2, min_time, max_time)
+        self.assertEqual(len(usr_objNum), 1)
+        self.assertEqual(usr_objNum[0]['_id'], {'username': 'bsadkhin', 'year': 2016, 'month': 7})
+        self.assertEqual(usr_objNum[0]['count_user_numObjs'], 105)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsMongoDBs_aggr_user_ws")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
+    def test_run_MetricsMongoDBs_aggr_user_ws(self):
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        min_time = datetime.datetime(2016, 1, 1)
+        max_time = datetime.datetime(2018, 4, 30)
+        user_list0 = []
+        user_list1 = ['vkumar', 'psdehal', 'wjriehl', 'qzhang']
+        user_list2 = ['shahmaneshb', 'laramyenders', 'allmon', 'bsadkhin']
+
+        # testing with given parameter values without user_ids
+        usr_ws = dbi.aggr_user_ws(user_list0, min_time, max_time)
+        self.assertEqual(len(usr_ws), 16)
+        for uw in usr_ws:
+            if uw['_id'] == {'username': 'eapearson', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 2)
+            if uw['_id'] == {'username': 'fangfang', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 2)
+            if uw['_id'] == {'username': 'janakakbase', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': 'joedoe', 'year': 2018, 'month': 1}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': 'jplfaria', 'year': 2016, 'month': 7}:
+                    self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': u'nconrad', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': u'pranjan77', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 6)
+            if uw['_id'] == {'username': 'rsutormin', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': u'psdehal', 'year': 2018, 'month': 1}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': 'sjyoo', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
+            if uw['_id'] == {'username': 'srividya22', 'year': 2016, 'month': 7}:
+                    self.assertEqual(uw['count_user_ws'], 2)
+            if uw['_id'] == {'username': u'sunita', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 3)
+            if uw['_id'] == {'username': 'vkumar', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 2)
+            if uw['_id'] == {'username': 'wjriehl', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 3)
+
+        # testing with given parameter values with user_ids given
+        usr_ws = dbi.aggr_user_ws(user_list1, min_time, max_time)
+        self.assertEqual(len(usr_ws), 3)
+        self.assertEqual(usr_ws[0]['_id'],
+                         {'username': 'psdehal', 'year': 2018, 'month': 1})
+        self.assertEqual(usr_ws[0]['count_user_ws'], 1)
+        self.assertEqual(usr_ws[1]['_id'],
+                         {'username': 'vkumar', 'year': 2016, 'month': 7})
+        self.assertEqual(usr_ws[1]['count_user_ws'], 2)
+        self.assertEqual(usr_ws[2]['_id'],
+                         {'username': 'wjriehl', u'year': 2016, 'month': 7})
+        self.assertEqual(usr_ws[2]['count_user_ws'], 3)
+
+        # testing with given parameter values with another user_ids
+        usr_ws = dbi.aggr_user_ws(user_list2, min_time, max_time)
+        self.assertEqual(len(usr_ws), 1)
+        self.assertEqual(usr_ws[0]['_id'],
+                         {u'username': u'bsadkhin', u'year': 2016, u'month': 7})
+        self.assertEqual(usr_ws[0]['count_user_ws'], 1)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_aggr_unique_users_per_day")
@@ -828,7 +1101,7 @@ class kb_MetricsTest(unittest.TestCase):
         min_time = 1516307704700
         max_time = 1520549345000
         user_list0 = []
-        user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'boris']
+        user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'bsadkhin']
 
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing get_user_info return data
@@ -874,7 +1147,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         # Testing ws/narratives with deleted ones
         ws_narrs = dbi.list_ws_narratives(include_del=True)
-        self.assertEqual(len(ws_narrs), 28)
+        self.assertEqual(len(ws_narrs), 29)
 
         # Testing without given time limit
         ws_narrs = dbi.list_ws_narratives()
@@ -987,9 +1260,9 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(narrs[0]['ws'], 8056)
         self.assertEqual(narrs[1]['ws'], 8748)
         self.assertEqual(narrs[0]['owner'], 'pranjan77')
-        self.assertEqual(narrs[1]['owner'], 'eapearson')
+        self.assertEqual(narrs[1]['owner'], 'bsadkhin')
         self.assertEqual(narrs[0]['name'], 'pranjan77:1466168703797')
-        self.assertEqual(narrs[1]['name'], 'eapearson:1468518477765')
+        self.assertEqual(narrs[1]['name'], 'bsadkhin:1468518477765')
 
         narrs = dbi.list_narrative_info(min_time, max_time,
                                         owner_list=o_list)
@@ -1114,6 +1387,8 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped MetricsMongoDBController_process_parameters")
     def test_MetricsMongoDBController_process_parameters(self):
 
+        kb_set = ('kbasetest', '***ROOT***', 'ciservices')
+
         # testing 'user_ids'
         user_list = ['user_1', 'user_2']
         params = {'user_ids': user_list}
@@ -1134,6 +1409,12 @@ class kb_MetricsTest(unittest.TestCase):
         # testing removing 'kbasetest'
         user_list_kbasetest = ['user_1', 'user_2', 'kbasetest']
         params = {'user_ids': user_list_kbasetest}
+        ret_params = self.db_controller._process_parameters(params)
+        self.assertItemsEqual(ret_params.get('user_ids'), user_list)
+
+        # 'user_ids' has kb_set items to be removed
+        user_list_kbset = user_list + list(kb_set)
+        params = {'user_ids': user_list_kbset}
         ret_params = self.db_controller._process_parameters(params)
         self.assertItemsEqual(ret_params.get('user_ids'), user_list)
 
@@ -1776,14 +2057,14 @@ class kb_MetricsTest(unittest.TestCase):
         # testing with local db data
         wnarr_map = self.db_controller._get_narrative_name_map()
         # print(wnarr_map)
-        self.assertEqual(len(wnarr_map), 28)
+        self.assertEqual(len(wnarr_map), 29)
         self.assertEqual(wnarr_map.get(8781),
                          ('vkumar:1468639677500', 'Ecoli refseq - July 15', '45'))
         self.assertEqual(wnarr_map.get(27834),
                          ('psdehal:narrative_1513709108341', 'Staging Test', '1'))
         self.assertEqual(wnarr_map.get(8736),
                          ('rsutormin:1468453294248', 'VisCellRefactor', '1'))
-        self.assertEqual(wnarr_map.get(8748), ('eapearson:1468518477765',
+        self.assertEqual(wnarr_map.get(8748), ('bsadkhin:1468518477765',
                          'Method Cell Refactor - UI Fixes', '94'))
         self.assertTrue(wnarr_map.get(15206) is None)
         self.assertTrue(wnarr_map.get(23165) is None)
@@ -1807,7 +2088,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(n_ver, '1')
 
         w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(8748)
-        self.assertEqual(w_nm, 'eapearson:1468518477765')
+        self.assertEqual(w_nm, 'bsadkhin:1468518477765')
         self.assertEqual(n_nm, 'Method Cell Refactor - UI Fixes')
         self.assertEqual(n_ver, '94')
 
@@ -1833,7 +2114,6 @@ class kb_MetricsTest(unittest.TestCase):
             '2016-01-01T00:00:00+0000', '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime(
             '2018-04-30T00:00:10.000Z', '%Y-%m-%dT%H:%M:%S.%fZ')
-
         params = {'epoch_range': (start_datetime, end_datetime)}
 
         # testing with local db data
@@ -1849,6 +2129,19 @@ class kb_MetricsTest(unittest.TestCase):
             'psdehal:narrative_1513709108341')
         self.assertEqual(narr_info[0]['first_access'], '2016-7-15')
         self.assertEqual(narr_info[1]['first_access'], '2017-12-21')
+
+        start_datetime = datetime.datetime.strptime(
+            '2014-01-01T00:00:00+0000', '%Y-%m-%dT%H:%M:%S+0000')
+        end_datetime = datetime.datetime.strptime(
+            '2018-04-30T00:00:10.000Z', '%Y-%m-%dT%H:%M:%S.%fZ')
+        params = {'user_ids': ['vkumar'],
+                  'epoch_range': (start_datetime, end_datetime)}
+        narr_info = self.db_controller._get_narrative_info(params)
+        self.assertEqual(len(narr_info), 1)
+        self.assertEqual(narr_info[0]['owner'], 'vkumar')
+        self.assertEqual(narr_info[0]['ws'], 8768)
+        self.assertEqual(narr_info[0]['name'], 'vkumar:1468592344827')
+        self.assertEqual(narr_info[0]['first_access'], '2016-7-15')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_update_user_info")
@@ -2013,6 +2306,68 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(params['user_ids'], [requesting_user3])
 
     # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsMongoDBController_get_total_logins_from_ws")
+    def test_run_MetricsMongoDBController_get_total_logins_from_ws(self):
+
+        # testing with time range when there are login records
+        params = {
+            'epoch_range': (datetime.datetime(2016, 1, 1),
+                            datetime.datetime(2018, 4, 30))}
+        tot_logins = self.db_controller.get_total_logins_from_ws(
+            self.getContext()['user_id'],
+            params, self.getContext()['token'])['metrics_result']
+        self.assertEqual(len(tot_logins), 4)
+        for tl in tot_logins:
+            if tl['_id'] == {'year': 2016, 'month': 7}:
+                self.assertEqual(tl['year_mon_total_logins'], 26)
+            if tl['_id'] == {'year': 2018, 'month': 1}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
+            if tl['_id'] == {'year': 2018, 'month': 2}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
+            if tl['_id'] == {'year': 2017, 'month': 5}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
+
+        # testing with time range when exclude_kbstaff=True
+        params = {
+            'epoch_range': (datetime.datetime(2016, 1, 1),
+                            datetime.datetime(2018, 4, 30))}
+        tot_logins = self.db_controller.get_total_logins_from_ws(
+            self.getContext()['user_id'], params, self.getContext()['token'],
+            exclude_kbstaff=True)['metrics_result']
+        self.assertEqual(len(tot_logins), 4)
+        for tl in tot_logins:
+            if tl['_id'] == {'year': 2016, 'month': 7}:
+                self.assertEqual(tl['year_mon_total_logins'], 25)
+            if tl['_id'] == {'year': 2018, 'month': 1}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
+            if tl['_id'] == {'year': 2018, 'month': 2}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
+            if tl['_id'] == {'year': 2017, 'month': 5}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
+
+        # testing with time range when there is fewer login records
+        params = {'epoch_range': (1420083768000, 1505876263000)}
+        tot_logins = self.db_controller.get_total_logins_from_ws(
+            self.getContext()['user_id'],
+            params, self.getContext()['token'])['metrics_result']
+        self.assertEqual(len(tot_logins), 2)
+        self.assertEqual(tot_logins[0]['_id'], {'year': 2017, 'month': 5})
+        self.assertEqual(tot_logins[0]['year_mon_total_logins'], 1)
+        self.assertEqual(tot_logins[1]['_id'], {'year': 2016, 'month': 7})
+        self.assertEqual(tot_logins[1]['year_mon_total_logins'], 26)
+
+        # testing with time range when there is even fewer records
+        params = {
+            'epoch_range': (datetime.datetime(2016, 9, 30),
+                            datetime.datetime(2017, 6, 30))}
+        tot_logins = self.db_controller.get_total_logins_from_ws(
+            self.getContext()['user_id'],
+            params, self.getContext()['token'])['metrics_result']
+        self.assertEqual(len(tot_logins), 1)
+        self.assertEqual(tot_logins[0]['_id'], {'year': 2017, 'month': 5})
+        self.assertEqual(tot_logins[0]['year_mon_total_logins'], 1)
+
+    # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_get_user_details")
     def test_MetricsMongoDBController_get_user_details(self):
         user_list0 = []
@@ -2058,6 +2413,12 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped test_MetricsMongoDBController_get_signup_retn_users")
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBController_get_signup_retn_users(self):
+
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        m_users_cur = dbi.metricsDBs['metrics']['users'].find()
+        print('There are {} users in metrics.users before dbctlr call'.format(
+            len(list(m_users_cur))))
+
         user_list0 = []
         start_datetime = datetime.datetime.strptime('2016-01-01T00:00:00+0000',
                                                     '%Y-%m-%dT%H:%M:%S+0000')
@@ -2068,80 +2429,135 @@ class kb_MetricsTest(unittest.TestCase):
         params = {'user_ids': user_list0}
         params['epoch_range'] = (start_datetime, end_datetime)
 
-        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        m_users_cur = dbi.metricsDBs['metrics']['users'].find()
-        print('There are {} users in metrics.users before dbctlr call'.format(
-            len(list(m_users_cur))))
-
         users0 = self.db_controller.get_signup_retn_users(
-            self.getContext()['user_id'],
-            params, self.getContext()['token'])['metrics_result']
+            self.getContext()['user_id'], params,
+            self.getContext()['token'])['metrics_result']
         self.assertEqual(len(users0), 7)
-        for u in users0:
-            self.assertItemsEqual(u,
+        for usr in users0:
+            self.assertItemsEqual(usr,
                                   {'_id': {'year': 2018, 'month': 1},
                                    'returning_user_count': 10,
                                    'user_signups': 100})
-            if u['_id'] == {'year': 2018, 'month': 1}:
-                self.assertEqual(u['user_signups'], 1)
-                self.assertEqual(u['returning_user_count'], 0)
-            if u['_id'] == {'year': 2018, 'month': 2}:
-                self.assertEqual(u['user_signups'], 27)
-                self.assertEqual(u['returning_user_count'], 2)
-            if u['_id'] == {'year': 2018, 'month': 3}:
-                self.assertEqual(u['user_signups'], 2)
-                self.assertEqual(u['returning_user_count'], 0)
-            if u['_id'] == {'year': 2017, 'month': 8}:
-                self.assertEqual(u['user_signups'], 3)
-                self.assertEqual(u['returning_user_count'], 3)
-            if u['_id'] == {'year': 2017, 'month': 9}:
-                self.assertEqual(u['user_signups'], 1)
-                self.assertEqual(u['returning_user_count'], 1)
-            if u['_id'] == {'year': 2016, 'month': 7}:
-                self.assertEqual(u['user_signups'], 3)
-                self.assertEqual(u['returning_user_count'], 3)
-            if u['_id'] == {'year': 2016, 'month': 11}:
-                self.assertEqual(u['user_signups'], 1)
-                self.assertEqual(u['returning_user_count'], 1)
+            if usr['_id'] == {'year': 2018, 'month': 1}:
+                self.assertEqual(usr['user_signups'], 1)
+                self.assertEqual(usr['returning_user_count'], 0)
+            if usr['_id'] == {'year': 2018, 'month': 2}:
+                self.assertEqual(usr['user_signups'], 27)
+                self.assertEqual(usr['returning_user_count'], 2)
+            if usr['_id'] == {'year': 2018, 'month': 3}:
+                self.assertEqual(usr['user_signups'], 2)
+                self.assertEqual(usr['returning_user_count'], 0)
+            if usr['_id'] == {'year': 2017, 'month': 8}:
+                self.assertEqual(usr['user_signups'], 3)
+                self.assertEqual(usr['returning_user_count'], 3)
+            if usr['_id'] == {'year': 2017, 'month': 9}:
+                self.assertEqual(usr['user_signups'], 1)
+                self.assertEqual(usr['returning_user_count'], 1)
+            if usr['_id'] == {'year': 2016, 'month': 7}:
+                self.assertEqual(usr['user_signups'], 3)
+                self.assertEqual(usr['returning_user_count'], 3)
+            if usr['_id'] == {'year': 2016, 'month': 11}:
+                self.assertEqual(usr['user_signups'], 1)
+                self.assertEqual(usr['returning_user_count'], 1)
 
+        # testing results with kbasse staff excluded
+        users1 = self.db_controller.get_signup_retn_users(
+            self.getContext()['user_id'], params, self.getContext()['token'],
+            exclude_kbstaff=True)['metrics_result']
+        self.assertEqual(len(users1), 6)
+        for usr in users1:
+            self.assertItemsEqual(usr,
+                                  {'_id': {'year': 2018, 'month': 1},
+                                   'returning_user_count': 10,
+                                   'user_signups': 100})
+            if usr['_id'] == {'year': 2018, 'month': 1}:
+                self.assertEqual(usr['user_signups'], 1)
+                self.assertEqual(usr['returning_user_count'], 0)
+            if usr['_id'] == {'year': 2018, 'month': 2}:
+                self.assertEqual(usr['user_signups'], 23)
+                self.assertEqual(usr['returning_user_count'], 2)
+            if usr['_id'] == {'year': 2017, 'month': 8}:
+                self.assertEqual(usr['user_signups'], 3)
+                self.assertEqual(usr['returning_user_count'], 3)
+            if usr['_id'] == {'year': 2017, 'month': 9}:
+                self.assertEqual(usr['user_signups'], 1)
+                self.assertEqual(usr['returning_user_count'], 1)
+            if usr['_id'] == {'year': 2016, 'month': 7}:
+                self.assertEqual(usr['user_signups'], 3)
+                self.assertEqual(usr['returning_user_count'], 3)
+            if usr['_id'] == {'year': 2016, 'month': 11}:
+                self.assertEqual(usr['user_signups'], 1)
+                self.assertEqual(usr['returning_user_count'], 1)
+
+        users1_ids = [usr['_id'] for usr in users1]
+        self.assertNotIn({'year': 2018, 'month': 3}, users1_ids)
+
+        # testing results for a given list of users
+        user_list = ['shahmaneshb', 'allmon', 'laramyenders', 'bsadkhin', 'qzhang']
+        params = {'user_ids': user_list}
+        params['epoch_range'] = (start_datetime, end_datetime)
         users2 = self.db_controller.get_signup_retn_users(
             self.getContext()['user_id'],
-            params, self.getContext()['token'],
-            exclude_kbstaff=True)['metrics_result']
-        self.assertEqual(len(users2), 6)
-        for u in users2:
-            self.assertItemsEqual(u,
-                                  {'_id': {'year': 2018, 'month': 1},
-                                   'returning_user_count': 10,
-                                   'user_signups': 100})
-            if u['_id'] == {'year': 2018, 'month': 1}:
-                self.assertEqual(u['user_signups'], 1)
-                self.assertEqual(u['returning_user_count'], 0)
-            if u['_id'] == {'year': 2018, 'month': 2}:
-                self.assertEqual(u['user_signups'], 23)
-                self.assertEqual(u['returning_user_count'], 2)
-            if u['_id'] == {'year': 2017, 'month': 8}:
-                self.assertEqual(u['user_signups'], 3)
-                self.assertEqual(u['returning_user_count'], 3)
-            if u['_id'] == {'year': 2017, 'month': 9}:
-                self.assertEqual(u['user_signups'], 1)
-                self.assertEqual(u['returning_user_count'], 1)
-            if u['_id'] == {'year': 2016, 'month': 7}:
-                self.assertEqual(u['user_signups'], 3)
-                self.assertEqual(u['returning_user_count'], 3)
-            if u['_id'] == {'year': 2016, 'month': 11}:
-                self.assertEqual(u['user_signups'], 1)
-                self.assertEqual(u['returning_user_count'], 1)
-
-        users2_ids = [u['_id'] for u in users2]
-        self.assertNotIn({'year': 2018, 'month': 3}, users2_ids)
-
-        user_list = ['sulbha', 'ytm123', 'xiaoli', 'andrew78', 'qzhang']
-        params = {'user_ids': user_list}
-        users3 = self.db_controller.get_signup_retn_users(
-            self.getContext()['user_id'],
             params, self.getContext()['token'])['metrics_result']
-        self.assertEqual(len(users3), 0)
+        self.assertEqual(len(users2), 2)
+        self.assertEqual(users2[0]['_id'], {'year': 2018, 'month': 2})
+        self.assertEqual(users2[0]['user_signups'], 3)
+        self.assertEqual(users2[0]['returning_user_count'], 1)
+        self.assertEqual(users2[1]['_id'], {'year': 2017, 'month': 9})
+        self.assertEqual(users2[1]['user_signups'], 1)
+        self.assertEqual(users2[1]['returning_user_count'], 1)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsMongoDBController_get_user_numObjs_from_ws")
+    def test_run_MetricsMongoDBController_get_user_numObjs_from_ws(self):
+        params = {
+            'epoch_range': (datetime.datetime(2016, 1, 1),
+                            datetime.datetime(2018, 4, 30))}
+        # testing with time range only
+        usr_objNum = self.db_controller.get_user_numObjs_from_ws(
+            self.getContext()['user_id'], params,
+            self.getContext()['token'])['metrics_result']
+        self.assertEqual(len(usr_objNum), 16)
+        self.assertItemsEqual(usr_objNum[0],
+                              {'_id': {'username': 'eapearson',
+                                       'year': 2016, 'month': 7},
+                               'count_user_numObjs': 258})
+        self.assertItemsEqual(usr_objNum[1],
+                              {'_id': {'username': 'fangfang',
+                                       'year': 2016, 'month': 7},
+                               'count_user_numObjs': 2})
+        self.assertItemsEqual(usr_objNum[3],
+                              {'_id': {'username': 'joedoe',
+                                       'year': 2018, 'month': 1},
+                               'count_user_numObjs': 100})
+        self.assertItemsEqual(usr_objNum[6],
+                              {'_id': {'username': 'pranjan77',
+                                       'year': 2016, 'month': 7},
+                               'count_user_numObjs': 124})
+        self.assertItemsEqual(usr_objNum[7],
+                              {'_id': {'username': 'psdehal',
+                                       'year': 2018, 'month': 1},
+                               'count_user_numObjs': 4})
+        self.assertItemsEqual(usr_objNum[13],
+                              {'_id': {'username': 'wjriehl',
+                                       'year': 2016, 'month': 7},
+                               'count_user_numObjs': 48})
+
+        # testing with given parameter values with user_ids given
+        params['user_ids'] = ['vkumar', 'psdehal', 'wjriehl', 'qzhang']
+        usr_objNum = self.db_controller.get_user_numObjs_from_ws(
+            self.getContext()['user_id'], params,
+            self.getContext()['token'])['metrics_result']
+        self.assertEqual(len(usr_objNum), 3)
+        self.assertEqual(usr_objNum[0]['_id'],
+                         {'username': 'psdehal', 'year': 2018, 'month': 1}),
+        self.assertEqual(usr_objNum[0]['count_user_numObjs'], 4)
+        self.assertEqual(usr_objNum[1]['_id'],
+                         {u'username': 'vkumar', 'year': 2016, 'month': 7}),
+        self.assertEqual(usr_objNum[1]['count_user_numObjs'], 69)
+        self.assertEqual(usr_objNum[2]['_id'],
+                         {'username': 'wjriehl', 'year': 2016, 'month': 7}),
+        self.assertEqual(usr_objNum[2]['count_user_numObjs'], 48)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped get_active_users_counts")
@@ -2183,20 +2599,22 @@ class kb_MetricsTest(unittest.TestCase):
             'epoch_range': (datetime.datetime(2016, 1, 1),
                             datetime.datetime(2018, 4, 30))
         }
-        # testing with given parameter values
+        # testing with given parameter values without user_ids
         usr_ws = self.db_controller.get_user_ws_stats(
                 self.getContext()['user_id'], m_params,
                 self.getContext()['token'])['metrics_result']
 
-        self.assertEqual(len(usr_ws), 14)
+        self.assertEqual(len(usr_ws), 16)
         for uw in usr_ws:
+            if uw['_id'] == {'username': 'bsadkhin', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
             if uw['_id'] == {'username': 'eapearson', 'year': 2016, 'month': 7}:
-                self.assertEqual(uw['count_user_ws'], 3)
+                self.assertEqual(uw['count_user_ws'], 2)
             if uw['_id'] == {'username': u'fangfang', 'year': 2016, 'month': 7}:
                 self.assertEqual(uw['count_user_ws'], 2)
             if uw['_id'] == {'username': u'janakakbase', 'year': 2016, 'month': 7}:
                 self.assertEqual(uw['count_user_ws'], 1)
-            if uw['_id'] == {'username': 'joedoe', 'year': 2018, 'month': 1}:
+            if uw['_id'] == {'username': 'joedoe', 'year': 2018, 'month': 2}:
                 self.assertEqual(uw['count_user_ws'], 1)
             if uw['_id'] == {'username': 'jplfaria', 'year': 2016, 'month': 7}:
                     self.assertEqual(uw['count_user_ws'], 1)
@@ -2218,6 +2636,40 @@ class kb_MetricsTest(unittest.TestCase):
                 self.assertEqual(uw['count_user_ws'], 2)
             if uw['_id'] == {'username': 'wjriehl', 'year': 2016, 'month': 7}:
                 self.assertEqual(uw['count_user_ws'], 3)
+            if uw['_id'] == {'username': 'fakeusr', 'year': 2017, 'month': 5}:
+                self.assertEqual(uw['count_user_ws'], 1)
+
+        # testing with given parameter values with user_ids given
+        m_params['user_ids'] = ['pranjan77', 'psdehal', 'wjriehl', 'qzhang']
+        usr_ws = self.db_controller.get_user_ws_stats(
+                self.getContext()['user_id'], m_params,
+                self.getContext()['token'])['metrics_result']
+        self.assertEqual(len(usr_ws), 3)
+        self.assertEqual(usr_ws[0]['_id'],
+                         {'username': 'pranjan77', 'year': 2016, 'month': 7})
+        self.assertEqual(usr_ws[0]['count_user_ws'], 6)
+        self.assertEqual(usr_ws[1]['_id'],
+                         {'username': 'psdehal', 'year': 2018, 'month': 1})
+        self.assertEqual(usr_ws[1]['count_user_ws'], 1)
+        self.assertEqual(usr_ws[2]['_id'],
+                         {u'username': 'wjriehl', u'year': 2016, 'month': 7})
+        self.assertEqual(usr_ws[2]['count_user_ws'], 3)
+
+        # testing with given parameter values with user_ids given
+        m_params['user_ids'] = ['vkumar', 'psdehal', 'wjriehl', 'qzhang']
+        usr_ws = self.db_controller.get_user_ws_stats(
+                self.getContext()['user_id'], m_params,
+                self.getContext()['token'])['metrics_result']
+        self.assertEqual(len(usr_ws), 3)
+        self.assertEqual(usr_ws[0]['_id'],
+                         {'username': 'psdehal', 'year': 2018, 'month': 1})
+        self.assertEqual(usr_ws[0]['count_user_ws'], 1)
+        self.assertEqual(usr_ws[1]['_id'],
+                         {'username': 'vkumar', 'year': 2016, 'month': 7})
+        self.assertEqual(usr_ws[1]['count_user_ws'], 2)
+        self.assertEqual(usr_ws[2]['_id'],
+                         {u'username': 'wjriehl', u'year': 2016, 'month': 7})
+        self.assertEqual(usr_ws[2]['count_user_ws'], 3)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsMongoDBController_get_narrative_stats")
@@ -2226,10 +2678,28 @@ class kb_MetricsTest(unittest.TestCase):
             'epoch_range': (datetime.datetime(2016, 1, 1),
                             datetime.datetime(2018, 4, 30))
         }
-        # testing with given parameter values
+        # testing with given parameter values (no user_ids)
         narr_stats = self.db_controller.get_narrative_stats(
             self.getContext()['user_id'], m_params,
             self.getContext()['token'])['metrics_result']
+        self.assertEqual(len(narr_stats), 2)
+        self.assertEqual(narr_stats[0]['owner'], 'vkumar')
+        self.assertEqual(narr_stats[1]['owner'], 'psdehal')
+        self.assertEqual(narr_stats[0]['ws'], 8768)
+        self.assertEqual(narr_stats[1]['ws'], 27834)
+        self.assertEqual(narr_stats[0]['name'], 'vkumar:1468592344827')
+        self.assertEqual(
+            narr_stats[1]['name'],
+            'psdehal:narrative_1513709108341')
+        self.assertEqual(narr_stats[0]['first_access'], '2016-7-15')
+        self.assertEqual(narr_stats[1]['first_access'], '2017-12-21')
+
+        # testing with given parameter values with user_ids given
+        m_params['user_ids'] = ['vkumar', 'psdehal', 'wjriehl', 'qzhang']
+        narr_stats = self.db_controller.get_narrative_stats(
+                self.getContext()['user_id'], m_params,
+                self.getContext()['token'])['metrics_result']
+        self.assertEqual(len(narr_stats), 2)
         self.assertEqual(len(narr_stats), 2)
         self.assertEqual(narr_stats[0]['owner'], 'vkumar')
         self.assertEqual(narr_stats[1]['owner'], 'psdehal')
@@ -2252,28 +2722,73 @@ class kb_MetricsTest(unittest.TestCase):
                             datetime.datetime(2018, 4, 30))}
         ret = self.getImpl().get_total_logins(self.getContext(), m_params)
         tot_logins = ret[0]['metrics_result']
-        self.assertEqual(len(tot_logins), 2)
+        self.assertEqual(len(tot_logins), 4)
         for tl in tot_logins:
+            if tl['_id'] == {'year': 2018, 'month': 1}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
+            if tl['_id'] == {'year': 2018, 'month': 2}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
             if tl['_id'] == {'year': 2016, 'month': 7}:
                 self.assertEqual(tl['year_mon_total_logins'], 26)
-            if tl['_id'] == {'year': 2018, 'month': 1}:
-                self.assertEqual(tl['year_mon_total_logins'], 2)
+            if tl['_id'] == {'year': 2017, 'month': 5}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
 
-        # with time range when there is fewer login records
+        # testing with time range when there is fewer login records
         m_params = {'epoch_range': (1420083768000, 1505876263000)}
         ret = self.getImpl().get_total_logins(self.getContext(), m_params)
         tot_logins = ret[0]['metrics_result']
-        self.assertEqual(len(tot_logins), 1)
-        self.assertEqual(tot_logins[0]['_id'], {'year': 2016, 'month': 7})
-        self.assertEqual(tot_logins[0]['year_mon_total_logins'], 26)
+        self.assertEqual(len(tot_logins), 2)
+        self.assertEqual(tot_logins[0]['_id'], {'year': 2017, 'month': 5})
+        self.assertEqual(tot_logins[0]['year_mon_total_logins'], 1)
 
-        # with time range when there is no login records
+        # testing with time range when there is no login records
         m_params = {
             'epoch_range': (datetime.datetime(2016, 9, 30),
                             datetime.datetime(2017, 6, 30))}
         ret = self.getImpl().get_total_logins(self.getContext(), m_params)
         tot_logins = ret[0]['metrics_result']
-        self.assertEqual(len(tot_logins), 0)
+        self.assertEqual(len(tot_logins), 1)
+        self.assertEqual(tot_logins[0]['_id'], {'year': 2017, 'month': 5})
+        self.assertEqual(tot_logins[0]['year_mon_total_logins'], 1)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_get_nonkb_total_logins")
+    def test_run_MetricsImpl_get_nonkb_total_logins(self):
+
+        # with time range when there are login records
+        m_params = {
+            'epoch_range': (datetime.datetime(2016, 1, 1),
+                            datetime.datetime(2018, 4, 30))}
+        ret = self.getImpl().get_nonkb_total_logins(self.getContext(), m_params)
+        tot_logins = ret[0]['metrics_result']
+        self.assertEqual(len(tot_logins), 4)
+        for tl in tot_logins:
+            if tl['_id'] == {'year': 2018, 'month': 1}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
+            if tl['_id'] == {'year': 2018, 'month': 2}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
+            if tl['_id'] == {'year': 2016, 'month': 7}:
+                self.assertEqual(tl['year_mon_total_logins'], 25)
+            if tl['_id'] == {'year': 2017, 'month': 5}:
+                self.assertEqual(tl['year_mon_total_logins'], 1)
+
+        # testing with time range when there is fewer login records
+        m_params = {'epoch_range': (1420083768000, 1505876263000)}
+        ret = self.getImpl().get_nonkb_total_logins(self.getContext(), m_params)
+        tot_logins = ret[0]['metrics_result']
+        self.assertEqual(len(tot_logins), 2)
+        self.assertEqual(tot_logins[0]['_id'], {'year': 2017, 'month': 5})
+        self.assertEqual(tot_logins[0]['year_mon_total_logins'], 1)
+
+        # testing with time range when there is no login records
+        m_params = {
+            'epoch_range': (datetime.datetime(2016, 9, 30),
+                            datetime.datetime(2017, 6, 30))}
+        ret = self.getImpl().get_nonkb_total_logins(self.getContext(), m_params)
+        tot_logins = ret[0]['metrics_result']
+        self.assertEqual(len(tot_logins), 1)
+        self.assertEqual(tot_logins[0]['_id'], {'year': 2017, 'month': 5})
+        self.assertEqual(tot_logins[0]['year_mon_total_logins'], 1)
 
     # Uncomment to skip this test
     # unittest.skip("skipped test_run_MetricsImpl_get_user_ws_stats")
@@ -2285,15 +2800,17 @@ class kb_MetricsTest(unittest.TestCase):
         # testing with given parameter values
         ret = self.getImpl().get_user_ws_stats(self.getContext(), m_params)
         usr_ws = ret[0]['metrics_result']
-        self.assertEqual(len(usr_ws), 14)
+        self.assertEqual(len(usr_ws), 16)
         for uw in usr_ws:
+            if uw['_id'] == {'username': 'bsadkhin', 'year': 2016, 'month': 7}:
+                self.assertEqual(uw['count_user_ws'], 1)
             if uw['_id'] == {'username': 'eapearson', 'year': 2016, 'month': 7}:
-                self.assertEqual(uw['count_user_ws'], 3)
+                self.assertEqual(uw['count_user_ws'], 2)
             if uw['_id'] == {'username': u'fangfang', 'year': 2016, 'month': 7}:
                 self.assertEqual(uw['count_user_ws'], 2)
             if uw['_id'] == {'username': u'janakakbase', 'year': 2016, 'month': 7}:
                 self.assertEqual(uw['count_user_ws'], 1)
-            if uw['_id'] == {'username': 'joedoe', 'year': 2018, 'month': 1}:
+            if uw['_id'] == {'username': 'joedoe', 'year': 2018, 'month': 2}:
                 self.assertEqual(uw['count_user_ws'], 1)
             if uw['_id'] == {'username': 'jplfaria', 'year': 2016, 'month': 7}:
                     self.assertEqual(uw['count_user_ws'], 1)
@@ -2315,6 +2832,23 @@ class kb_MetricsTest(unittest.TestCase):
                 self.assertEqual(uw['count_user_ws'], 2)
             if uw['_id'] == {'username': 'wjriehl', 'year': 2016, 'month': 7}:
                 self.assertEqual(uw['count_user_ws'], 3)
+            if uw['_id'] == {'username': 'fakeusr', 'year': 2017, 'month': 5}:
+                self.assertEqual(uw['count_user_ws'], 1)
+
+        # testing with given parameter values with user_ids given
+        m_params['user_ids'] = ['vkumar', 'psdehal', 'wjriehl', 'qzhang']
+        ret = self.getImpl().get_user_ws_stats(self.getContext(), m_params)
+        usr_ws = ret[0]['metrics_result']
+        self.assertEqual(len(usr_ws), 3)
+        self.assertEqual(usr_ws[0]['_id'],
+                         {'username': 'psdehal', 'year': 2018, 'month': 1})
+        self.assertEqual(usr_ws[0]['count_user_ws'], 1)
+        self.assertEqual(usr_ws[1]['_id'],
+                         {'username': 'vkumar', 'year': 2016, 'month': 7})
+        self.assertEqual(usr_ws[1]['count_user_ws'], 2)
+        self.assertEqual(usr_ws[2]['_id'],
+                         {u'username': 'wjriehl', u'year': 2016, 'month': 7})
+        self.assertEqual(usr_ws[2]['count_user_ws'], 3)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_narrative_stats")
@@ -2344,6 +2878,15 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(narr_stats[0]['first_access'], '2016-7-15')
         self.assertEqual(narr_stats[1]['first_access'], '2017-12-21')
 
+        # testing with given parameter values with user_ids given
+        m_params['user_ids'] = ['psdehal', 'wjriehl', 'qzhang']
+        ret = self.getImpl().get_narrative_stats(self.getContext(), m_params)
+        narr_stats = ret[0]['metrics_result']
+        self.assertEqual(len(narr_stats), 1)
+        self.assertEqual(narr_stats[0]['owner'], 'psdehal')
+        self.assertEqual(narr_stats[0]['name'], 'psdehal:narrative_1513709108341')
+        self.assertEqual(narr_stats[0]['first_access'], '2017-12-21')
+
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_user_logins")
     def test_run_MetricsImpl_get_user_logins(self):
@@ -2353,7 +2896,7 @@ class kb_MetricsTest(unittest.TestCase):
         # with time range when there are login records
         ret = self.getImpl().get_user_logins(self.getContext(), m_params)
         usr_logins = ret[0]['metrics_result']
-        self.assertEqual(len(usr_logins), 14)
+        self.assertEqual(len(usr_logins), 16)
         self.assertItemsEqual(usr_logins[0],
                               {'_id': {'username': 'eapearson',
                                        'year': 2016, 'month': 7},
@@ -2364,24 +2907,29 @@ class kb_MetricsTest(unittest.TestCase):
                                'year_mon_user_logins': 2})
 
         self.assertEqual(usr_logins[3]['_id'],
-                         {'username': 'joedoe', 'year': 2018, 'month': 1})
-        self.assertEqual(usr_logins[3]['year_mon_user_logins'], 1)
+                         {'username': 'fangfang', 'year': 2016, 'month': 7})
+        self.assertEqual(usr_logins[3]['year_mon_user_logins'], 2)
 
-        self.assertEqual(usr_logins[7]['_id'],
-                         {'username': 'psdehal',
-                          'year': 2018, 'month': 1})
-        self.assertEqual(usr_logins[7]['year_mon_user_logins'], 1)
+        self.assertEqual(usr_logins[8]['_id'],
+                         {'username': 'pranjan77',
+                          'year': 2016, 'month': 7})
+        self.assertEqual(usr_logins[8]['year_mon_user_logins'], 6)
 
-        self.assertEqual(usr_logins[13]['_id'],
+        self.assertEqual(usr_logins[14]['_id'],
+                         {'username': 'vkumar',
+                          'year': 2016, 'month': 7})
+        self.assertEqual(usr_logins[14]['year_mon_user_logins'], 2)
+
+        self.assertEqual(usr_logins[15]['_id'],
                          {'username': 'wjriehl',
                           'year': 2016, 'month': 7})
-        self.assertEqual(usr_logins[13]['year_mon_user_logins'], 3)
+        self.assertEqual(usr_logins[15]['year_mon_user_logins'], 3)
 
         # with time range when there are fewer user login records
         m_params = {'epoch_range': (1420083768000, 1505876263000)}
         ret = self.getImpl().get_user_logins(self.getContext(), m_params)
         usr_logins = ret[0]['metrics_result']
-        self.assertEqual(len(usr_logins), 12)
+        self.assertEqual(len(usr_logins), 14)
         self.assertItemsEqual(usr_logins[3],
                               {'_id': {'username': 'jplfaria',
                                        'year': 2016, u'month': 7},
@@ -2399,22 +2947,31 @@ class kb_MetricsTest(unittest.TestCase):
         usr_logins = ret[0]['metrics_result']
         self.assertEqual(len(usr_logins), 2)
         self.assertEqual(usr_logins[0]['_id'],
-                         {'username': 'joedoe', 'year': 2018, 'month': 1})
+                         {'username': 'joedoe', 'year': 2018, 'month': 2})
         self.assertEqual(usr_logins[0]['year_mon_user_logins'], 1)
         self.assertEqual(usr_logins[1]['_id'],
                          {'username': 'psdehal', 'year': 2018, 'month': 1})
         self.assertEqual(usr_logins[1]['year_mon_user_logins'], 1)
 
+        # testing with given parameter values with user_ids given
+        m_params['user_ids'] = ['vkumar', 'psdehal', 'wjriehl', 'qzhang']
+        ret = self.getImpl().get_user_logins(self.getContext(), m_params)
+        usr_logins = ret[0]['metrics_result']
+        self.assertEqual(len(usr_logins), 1)
+        self.assertEqual(usr_logins[0]['_id'],
+                         {'username': 'psdehal', 'year': 2018, 'month': 1})
+        self.assertEqual(usr_logins[0]['year_mon_user_logins'], 1)
+
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_get_user_numObjs")
-    def test_run_get_user_numObjs(self):
+    # @unittest.skip("skipped test_run_MetricsImpl_get_user_numObjs")
+    def test_run_MetricsImpl_get_user_numObjs(self):
         m_params = {
             'epoch_range': (datetime.datetime(2016, 1, 1),
                             datetime.datetime(2018, 4, 30))}
-        # Second, call your implementation
+        # testing get_user_numObjs
         ret = self.getImpl().get_user_numObjs(self.getContext(), m_params)
         usr_objNum = ret[0]['metrics_result']
-        self.assertEqual(len(usr_objNum), 14)
+        self.assertEqual(len(usr_objNum), 16)
         self.assertItemsEqual(usr_objNum[0],
                               {'_id': {'username': 'eapearson',
                                        'year': 2016, 'month': 7},
@@ -2439,6 +2996,21 @@ class kb_MetricsTest(unittest.TestCase):
                               {'_id': {'username': 'wjriehl',
                                        'year': 2016, 'month': 7},
                                'count_user_numObjs': 48})
+
+        # testing with given parameter values with user_ids given
+        m_params['user_ids'] = ['vkumar', 'psdehal', 'wjriehl', 'qzhang']
+        ret = self.getImpl().get_user_numObjs(self.getContext(), m_params)
+        usr_objNum = ret[0]['metrics_result']
+        self.assertEqual(len(usr_objNum), 3)
+        self.assertEqual(usr_objNum[0]['_id'],
+                         {'username': 'psdehal', 'year': 2018, 'month': 1}),
+        self.assertEqual(usr_objNum[0]['count_user_numObjs'], 4)
+        self.assertEqual(usr_objNum[1]['_id'],
+                         {u'username': 'vkumar', 'year': 2016, 'month': 7}),
+        self.assertEqual(usr_objNum[1]['count_user_numObjs'], 69)
+        self.assertEqual(usr_objNum[2]['_id'],
+                         {'username': 'wjriehl', 'year': 2016, 'month': 7}),
+        self.assertEqual(usr_objNum[2]['count_user_numObjs'], 48)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_app_metrics")
@@ -2484,7 +3056,8 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped test_run_MetricsImpl_get_user_details")
     def test_run_MetricsImpl_get_user_details(self):
         # testing get_user_details return data with specified user_ids
-        user_list = ['sulbha', 'ytm123', 'xiaoli', 'andrew78', 'qzhang']
+        user_list = ['sulbha', 'ytm123', 'xiaoli', 'andrew78',
+                     'qzhang', 'erik_s_test_account']
         epoch_range = (datetime.datetime(2018, 1, 1),
                        datetime.datetime(2018, 3, 31))
         m_params = {
@@ -2493,13 +3066,51 @@ class kb_MetricsTest(unittest.TestCase):
         }
         ret = self.getImpl().get_user_details(self.getContext(), m_params)
         users = ret[0]['metrics_result']
-        self.assertEqual(len(users), 4)
-        self.assertIn('username', users[0])
-        self.assertIn('email', users[0])
-        self.assertIn('full_name', users[0])
-        self.assertIn('signup_at', users[0])
-        self.assertIn('last_signin_at', users[0])
-        self.assertIn('roles', users[0])
+        self.assertEqual(len(users), 5)
+        self.assertItemsEqual(users[0],
+                              {'username': 'xxx',
+                               'email': 'xxx@yyy.zzz',
+                               'full_name': 'xxx yyy',
+                               'signup_at': 'whenever',
+                               'last_signin_at': 'whenever2',
+                               'kbase_staff': False,
+                               'roles': []})
+        for usr in users:
+            if usr['username'] == 'andrew78':
+                self.assertEqual(usr['email'], 'andrewyoungwoo@gmail.com')
+                self.assertEqual(usr['full_name'], 'Youngwoo Lee')
+                self.assertEqual(usr['signup_at'], 1518794572614)
+                self.assertEqual(usr['last_signin_at'], 1518794572618)
+                self.assertFalse(usr['roles'], [])
+                self.assertFalse(usr['kbase_staff'])
+            if usr['username'] == 'xiaoli':
+                self.assertEqual(usr['email'], 'csmbl2016@gmail.com')
+                self.assertEqual(usr['full_name'], 'Xiaoli Sun')
+                self.assertEqual(usr['signup_at'], 1518794641935)
+                self.assertEqual(usr['last_signin_at'], 1518794641938)
+                self.assertFalse(usr['roles'], [])
+                self.assertFalse(usr['kbase_staff'])
+            if usr['username'] == 'ytm123':
+                self.assertEqual(usr['email'], 'ytm1234@gmail.com')
+                self.assertEqual(usr['full_name'], 'tim yao')
+                self.assertEqual(usr['signup_at'], 1518794884978)
+                self.assertEqual(usr['last_signin_at'], 1518794884985)
+                self.assertFalse(usr['roles'], [])
+                self.assertFalse(usr['kbase_staff'])
+            if usr['username'] == 'sulbha':
+                self.assertEqual(usr['email'], 'sulbha@purdue.edu')
+                self.assertEqual(usr['full_name'], 'Sulbha Choudhari')
+                self.assertEqual(usr['signup_at'], 1518795169234)
+                self.assertEqual(usr['last_signin_at'], 1518795169237)
+                self.assertFalse(usr['roles'], [])
+                self.assertFalse(usr['kbase_staff'])
+            if usr['username'] == 'erik_s_test_account':
+                self.assertEqual(usr['email'], 'eapearson+test450@lbl.gov')
+                self.assertEqual(usr['full_name'], 'Erik Pearson')
+                self.assertEqual(usr['signup_at'], 1519928061147)
+                self.assertEqual(usr['last_signin_at'], 1519940332261)
+                self.assertFalse(usr['roles'], [])
+                self.assertTrue(usr['kbase_staff'])
 
         # testing get_user_details return data with empty user_ids
         m_params = {
@@ -2509,6 +3120,70 @@ class kb_MetricsTest(unittest.TestCase):
         ret = self.getImpl().get_user_details(self.getContext(), m_params)
         users = ret[0]['metrics_result']
         self.assertEqual(len(users), 38)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_get_nonkbuser_details")
+    def test_run_MetricsImpl_get_nonkbuser_details(self):
+
+        user_list = ['sulbha', 'ytm123', 'xiaoli', 'andrew78',
+                     'qzhang', 'erik_s_test_account']
+        epoch_range = (datetime.datetime(2018, 1, 1),
+                       datetime.datetime(2018, 3, 31))
+
+        # testing get_nonkbuser_details return data with specified user_ids
+        m_params = {
+            'user_ids': user_list,
+            'epoch_range': epoch_range
+        }
+        ret = self.getImpl().get_nonkbuser_details(self.getContext(), m_params)
+        users = ret[0]['metrics_result']
+        self.assertEqual(len(users), 4)
+        self.assertItemsEqual(users[0],
+                              {'username': 'xxx',
+                               'email': 'xxx@yyy.zzz',
+                               'full_name': 'xxx yyy',
+                               'signup_at': 'whenever',
+                               'last_signin_at': 'whenever2',
+                               'kbase_staff': False,
+                               'roles': []})
+        for usr in users:
+            if usr['username'] == 'andrew78':
+                self.assertEqual(usr['email'], 'andrewyoungwoo@gmail.com')
+                self.assertEqual(usr['full_name'], 'Youngwoo Lee')
+                self.assertEqual(usr['signup_at'], 1518794572614)
+                self.assertEqual(usr['last_signin_at'], 1518794572618)
+                self.assertFalse(usr['roles'], [])
+                self.assertFalse(usr['kbase_staff'])
+            if usr['username'] == 'xiaoli':
+                self.assertEqual(usr['email'], 'csmbl2016@gmail.com')
+                self.assertEqual(usr['full_name'], 'Xiaoli Sun')
+                self.assertEqual(usr['signup_at'], 1518794641935)
+                self.assertEqual(usr['last_signin_at'], 1518794641938)
+                self.assertFalse(usr['roles'], [])
+                self.assertFalse(usr['kbase_staff'])
+            if usr['username'] == 'ytm123':
+                self.assertEqual(usr['email'], 'ytm1234@gmail.com')
+                self.assertEqual(usr['full_name'], 'tim yao')
+                self.assertEqual(usr['signup_at'], 1518794884978)
+                self.assertEqual(usr['last_signin_at'], 1518794884985)
+                self.assertFalse(usr['roles'], [])
+                self.assertFalse(usr['kbase_staff'])
+            if usr['username'] == 'sulbha':
+                self.assertEqual(usr['email'], 'sulbha@purdue.edu')
+                self.assertEqual(usr['full_name'], 'Sulbha Choudhari')
+                self.assertEqual(usr['signup_at'], 1518795169234)
+                self.assertEqual(usr['last_signin_at'], 1518795169237)
+                self.assertFalse(usr['roles'], [])
+                self.assertFalse(usr['kbase_staff'])
+
+        # testing get_nonkbuser_details return data with empty user_ids
+        m_params = {
+            'user_ids': [],
+            'epoch_range': epoch_range
+        }
+        ret = self.getImpl().get_nonkbuser_details(self.getContext(), m_params)
+        users = ret[0]['metrics_result']
+        self.assertEqual(len(users), 28)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_user_counts_per_day")
@@ -2558,6 +3233,45 @@ class kb_MetricsTest(unittest.TestCase):
                 self.assertEqual(u['returning_user_count'], 1)
             if u['_id'] == {'year': 2018, 'month': 3}:
                 self.assertEqual(u['user_signups'], 4)
+                self.assertEqual(u['returning_user_count'], 1)
+            if u['_id'] == {'year': 2017, 'month': 8}:
+                self.assertEqual(u['user_signups'], 3)
+                self.assertEqual(u['returning_user_count'], 3)
+            if u['_id'] == {'year': 2016, 'month': 7}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 1)
+            if u['_id'] == {'year': 2016, 'month': 11}:
+                self.assertEqual(u['user_signups'], 1)
+                self.assertEqual(u['returning_user_count'], 1)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_get_signup_returning_nonkbusers")
+    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
+    def test_run_MetricsImpl_get_signup_returning_nonkbusers(self):
+        m_params = {
+            'epoch_range': (datetime.datetime(2016, 1, 1),
+                            datetime.datetime(2018, 4, 30))
+        }
+
+        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        m_users_cur = dbi.metricsDBs['metrics']['users'].find()
+        print('There are {} users in metrics.users before Impl call'.format(
+            len(list(m_users_cur))))
+
+        # testing (excluding kbstaff by default)
+        ret = self.getImpl().get_signup_returning_nonkbusers(
+            self.getContext(), m_params)
+        users = ret[0]['metrics_result']
+        self.assertEqual(len(users), 6)
+        for u in users:
+            if u['_id'] == {'year': 2018, 'month': 1}:
+                self.assertEqual(u['user_signups'], 4)
+                self.assertEqual(u['returning_user_count'], 2)
+            if u['_id'] == {'year': 2018, 'month': 2}:
+                self.assertEqual(u['user_signups'], 26)
+                self.assertEqual(u['returning_user_count'], 0)
+            if u['_id'] == {'year': 2018, 'month': 3}:
+                self.assertEqual(u['user_signups'], 2)
                 self.assertEqual(u['returning_user_count'], 1)
             if u['_id'] == {'year': 2017, 'month': 8}:
                 self.assertEqual(u['user_signups'], 3)

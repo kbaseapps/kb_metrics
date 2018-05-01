@@ -477,7 +477,7 @@ class MongoMetricsDBI:
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_signup_retn_users(self, userIds, minTime, maxTime, excluded_users=[]):
-        rtn_milis = 86400000
+        rtn_milis = 86400000  # 1 day
         # Define the pipeline operations
         match_cond = {"signup_at": {"$gte": _convert_to_datetime(minTime),
                                     "$lte": _convert_to_datetime(maxTime)}}
@@ -570,11 +570,16 @@ class MongoMetricsDBI:
         return list(self.kbworkspaces.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
-    def aggr_total_logins(self, minTime, maxTime):
+    def aggr_total_logins(self, userIds, minTime, maxTime, excluded_users=[]):
+        match_cond = {"moddate": {"$gte": minTime, "$lte": maxTime}}
+        if not userIds:
+            match_cond["owner"] = {"$nin": excluded_users}
+        else:
+            match_cond["owner"] = {"$in": userIds, "$nin": excluded_users}
 
         # Define the pipeline operations
         pipeline = [
-            {"$match": {"moddate": {"$gte": minTime, "$lte": maxTime}}},
+            {"$match": match_cond},
             {"$project": {"year": {"$year": "$moddate"},
                           "month": {"$month": "$moddate"},
                           "date": {"$dayOfMonth": "$moddate"},

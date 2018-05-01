@@ -345,10 +345,18 @@ class Application(object):
                              name='kb_Metrics.get_user_details',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_user_details'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_nonkbuser_details,
+                             name='kb_Metrics.get_nonkbuser_details',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_nonkbuser_details'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.get_signup_returning_users,
                              name='kb_Metrics.get_signup_returning_users',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_signup_returning_users'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_signup_returning_nonkbusers,
+                             name='kb_Metrics.get_signup_returning_nonkbusers',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_signup_returning_nonkbusers'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.get_user_counts_per_day,
                              name='kb_Metrics.get_user_counts_per_day',
                              types=[dict])
@@ -357,6 +365,10 @@ class Application(object):
                              name='kb_Metrics.get_total_logins',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_total_logins'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_nonkb_total_logins,
+                             name='kb_Metrics.get_nonkb_total_logins',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_nonkb_total_logins'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.get_user_logins,
                              name='kb_Metrics.get_user_logins',
                              types=[dict])

@@ -539,7 +539,8 @@ class MetricsMongoDBController:
         return {'metrics_result': narr_info}
 
     # begin putting the deleted functions back
-    def get_total_logins_from_ws(self, requesting_user, params, token):
+    def get_total_logins_from_ws(self, requesting_user, params, token,
+                                 exclude_kbstaff=False):
         if not self._is_admin(requesting_user):
                 raise ValueError('You do not have permisson to '
                                  'invoke this action.')
@@ -547,8 +548,15 @@ class MetricsMongoDBController:
         params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
         params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
 
-        db_ret = self.metrics_dbi.aggr_total_logins(
-            params['minTime'], params['maxTime'])
+        if exclude_kbstaff:
+            kb_list = self._get_kbstaff_list()
+            db_ret = self.metrics_dbi.aggr_total_logins(
+                params['user_ids'], params['minTime'],
+                params['maxTime'], kb_list)
+        else:
+            db_ret = self.metrics_dbi.aggr_total_logins(
+                params['user_ids'], params['minTime'], params['maxTime'])
+
         return {'metrics_result': db_ret}
 
     def get_user_login_stats_from_ws(self, requesting_user, params, token):

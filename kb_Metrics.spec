@@ -63,13 +63,22 @@ module kb_Metrics {
     funcdef get_user_details(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
 
+    funcdef get_nonkbuser_details(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
+
     funcdef get_signup_returning_users(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
+
+    funcdef get_signup_returning_nonkbusers(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
     
     funcdef get_user_counts_per_day(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
 
     funcdef get_total_logins(MetricsInputParams params)
+        returns (MetricsOutput return_records) authentication required;
+
+    funcdef get_nonkb_total_logins(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
 
     funcdef get_user_logins(MetricsInputParams params)
