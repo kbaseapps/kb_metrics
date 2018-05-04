@@ -87,10 +87,14 @@ class kb_MetricsTest(unittest.TestCase):
         # updating created to timstamp field for userjobstate.jobstate
         for jrecord in cls.client.userjobstate.jobstate.find():
             created_str = jrecord.get('created')
+            updated_str = jrecord.get('updated')
             cls.client.userjobstate.jobstate.update_many(
                 {"created": created_str},
                 {"$set": {"created": datetime.datetime.utcfromtimestamp(
-                                        int(created_str) / 1000.0)}}
+                                        int(created_str) / 1000.0),
+                          "updated": datetime.datetime.utcfromtimestamp(
+                                        int(updated_str) / 1000.0)}
+                }
             )
         # updating data fields from timstamp to datetime.datetime format
         db_coll1 = cls.client.workspace.workspaceObjects
@@ -225,7 +229,7 @@ class kb_MetricsTest(unittest.TestCase):
         wsobj_cur = dbi.metricsDBs['workspace']['workspaceObjects'].find()
         self.assertEqual(len(list(wsobj_cur)), 41)
         ujs_cur = dbi.metricsDBs['userjobstate']['jobstate'].find()
-        self.assertEqual(len(list(ujs_cur)), 36)
+        self.assertEqual(len(list(ujs_cur)), 37)
         a_users_cur = dbi.metricsDBs['auth2']['users'].find()
         self.assertEqual(len(list(a_users_cur)), 37)
         m_users_cur = dbi.metricsDBs['metrics']['users'].find()
@@ -1223,7 +1227,20 @@ class kb_MetricsTest(unittest.TestCase):
 
         # testing list_ujs_results return data, without userIds
         ujs = dbi.list_ujs_results([], min_time, max_time)
-        self.assertEqual(len(ujs), 14)
+        self.assertEqual(len(ujs), 15)
+
+        # testing list_ujs_results return data, check 'started' existence
+        ujs = dbi.list_ujs_results(['jobnotstarted'], min_time, max_time)
+        self.assertEqual(len(ujs), 1)
+        self.assertNotIn('started', ujs[0])
+        self.assertNotIn('status', ujs[0])
+        self.assertEqual(ujs[0]['created'],
+                         datetime.datetime(2017, 7, 14, 2, 55, 32, 999000))
+        self.assertEqual(ujs[0]['updated'],
+                         datetime.datetime(2017, 7, 14, 3, 0, 3, 182000))
+        self.assertFalse(ujs[0]['complete'])
+        self.assertFalse(ujs[0]['error'])
+        self.assertEqual(ujs[0]['authparam'], '15208')
 
         # testing list_ujs_results return data, different userIds and times
         ujs = dbi.list_ujs_results(['wjriehl'],

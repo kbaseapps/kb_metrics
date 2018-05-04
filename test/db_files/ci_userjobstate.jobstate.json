@@ -14,6 +14,18 @@
 			"error" : false
 		},
 		{
+			"_id" : "987632a4e4b08b65f9ff1234",
+			"user" : "jobnotstarted",
+			"authstrat" : "kbaseworkspace",
+			"authparam" : "15208",
+			"created" : 1500000932999,
+			"updated" : 1500001203182,
+			"estcompl" : null,
+			"desc" : "Whatever description here.",
+			"complete" : false,
+			"error" : false
+		},
+		{
 			"_id" : "59683827e4b08b65f9ff5d70",
 			"user" : "tgu2",
 			"authstrat" : "kbaseworkspace",

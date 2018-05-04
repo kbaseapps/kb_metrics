@@ -526,7 +526,7 @@ class MongoMetricsDBI:
         if created_filter:
             qry_filter['created'] = created_filter
         # qry_filter['desc'] = {'$exists': True}
-        qry_filter['status'] = {'$exists': True}
+        # qry_filter['status'] = {'$exists': True}
 
         projection = {
             'user': 1,
