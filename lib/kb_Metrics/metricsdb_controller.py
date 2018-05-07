@@ -318,17 +318,21 @@ class MetricsMongoDBController:
                 u_j_s.get('complete')):
             u_j_s['finish_time'] = u_j_s.pop('modification_time')
 
+        # remove None u_j_s['workspace_name']
+        if ('workspace_name' in u_j_s and (u_j_s['workspace_name'] is None
+                                           or u_j_s['workspace_name'] == '')):
+            u_j_s.pop('workspace_name')
+
         # get the narrative name and version via u_j_s['wsid']
         if u_j_s.get('wsid'):
             w_nm, n_name, n_ver = self._map_ws_narr_names(u_j_s['wsid'])
             if n_name != '':
                 u_j_s['narrative_name'] = n_name
                 u_j_s['narrative_objNo'] = n_ver
-
-        # remove None u_j_s['workspace_name']
-        if ('workspace_name' in u_j_s and (u_j_s['workspace_name'] is None
-                                           or u_j_s['workspace_name'] == '')):
-            u_j_s.pop('workspace_name')
+            elif (u_j_s.get('workspace_name', None) and
+                  'narrative' in u_j_s['workspace_name']):
+                u_j_s['narrative_name'] = u_j_s['workspace_name']
+                u_j_s['narrative_objNo'] = 1
 
         # get the client groups
         u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
