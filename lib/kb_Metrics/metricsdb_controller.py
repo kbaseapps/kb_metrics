@@ -180,18 +180,19 @@ class MetricsMongoDBController:
         # get the ws/narratives with del=False
         ws_narrs = self.metrics_dbi.list_ws_narratives(
             minT=params['minTime'], maxT=params['maxTime'])
+
         ws_ids = [wnarr['workspace_id'] for wnarr in ws_narrs]
 
         wsobjs = self.metrics_dbi.list_user_objects_from_wsobjs(
             params['minTime'], params['maxTime'], ws_ids)
-
+	print('{} workspaces and {} wsobjs'.format(len(ws_ids), len(wsobjs)))
         ws_narrs1 = []
         for wsn in ws_narrs:
             for obj in wsobjs:
                 if wsn['workspace_id'] == obj['workspace_id']:
                     if wsn['name'] == obj['object_name']:
-                        wsn[u'object_id'] = obj['object_id']
-                        wsn[u'object_version'] = obj['object_version']
+                        wsn['object_id'] = obj['object_id']
+                        wsn['object_version'] = obj['object_version']
                         break
                     elif ':' in wsn['name']:
                         wts = wsn['name'].split(':')[1]
@@ -199,17 +200,19 @@ class MetricsMongoDBController:
                             wts = wts.split('_')[1]
                         p = re.compile(wts, re.IGNORECASE)
                         if p.search(obj['object_name']):
-                            wsn[u'object_id'] = obj['object_id']
-                            wsn[u'object_version'] = obj['object_version']
+                            wsn['object_id'] = obj['object_id']
+                            wsn['object_version'] = obj['object_version']
                         break
 
             if wsn.get('object_id'):
-                wsn[u'last_saved_by'] = wsn.pop('username')
-                ws_nm, wsn[u'nice_name'], wsn[u'n_ver'] = self._map_ws_narr_names(
-                                                                wsn['workspace_id'])
+                wsn['last_saved_by'] = wsn.pop('username')
+                ws_nm, wsn['nice_name'], wsn['n_ver'] = self._map_ws_narr_names(
+                                                              wsn['workspace_id'])
                 wsn.pop('narr_keys')
                 wsn.pop('narr_values')
                 ws_narrs1.append(wsn)
+	ed_time = time.time()
+	print('_get_narratives_from_wsobjs consumed {} seconds'.format(ed_time-st_time))
 
         return {'metrics_result': ws_narrs1}
 
