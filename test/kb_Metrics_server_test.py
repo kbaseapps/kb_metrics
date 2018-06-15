@@ -225,7 +225,7 @@ class kb_MetricsTest(unittest.TestCase):
         exec_cur = dbi.metricsDBs['exec_engine']['exec_tasks'].find()
         self.assertEqual(len(list(exec_cur)), 84)
         ws_cur = dbi.metricsDBs['workspace']['workspaces'].find()
-        self.assertEqual(len(list(ws_cur)), 29)
+        self.assertEqual(len(list(ws_cur)), 30)
         wsobj_cur = dbi.metricsDBs['workspace']['workspaceObjects'].find()
         self.assertEqual(len(list(wsobj_cur)), 41)
         ujs_cur = dbi.metricsDBs['userjobstate']['jobstate'].find()
@@ -321,7 +321,7 @@ class kb_MetricsTest(unittest.TestCase):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing returned data
         ws_owners = dbi.list_ws_owners()
-        self.assertEqual(len(ws_owners), 29)
+        self.assertEqual(len(ws_owners), 30)
         self.assertIn('ws_id', ws_owners[0])
         self.assertIn('username', ws_owners[0])
         self.assertIn('name', ws_owners[0])
@@ -1151,7 +1151,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         # Testing ws/narratives with deleted ones
         ws_narrs = dbi.list_ws_narratives(include_del=True)
-        self.assertEqual(len(ws_narrs), 29)
+        self.assertEqual(len(ws_narrs), 30)
 
         # Testing without given time limit
         ws_narrs = dbi.list_ws_narratives()
@@ -1164,7 +1164,7 @@ class kb_MetricsTest(unittest.TestCase):
                                 or d == 'narrative'
                                 for d in wn['narr_keys']))
 
-        self.assertEqual(len(ws_narrs), 27)
+        self.assertEqual(len(ws_narrs), 28)
         self.assertIn('username', ws_narrs[0])
         self.assertIn('workspace_id', ws_narrs[0])
         self.assertIn('name', ws_narrs[0])
@@ -1193,7 +1193,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         # testing only given the lower bound
         ws_narrs = dbi.list_ws_narratives(minT=earliest)
-        self.assertEqual(len(ws_narrs), 27)
+        self.assertEqual(len(ws_narrs), 28)
 
         # testing only given the upper bound
         ws_narrs = dbi.list_ws_narratives(maxT=latest)
@@ -1363,14 +1363,14 @@ class kb_MetricsTest(unittest.TestCase):
 
         expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson',
                                'nlharris', 'dylan', 'chenry', 'ciservices',
-                               'wjriehl', 'sychan', 'jjeffryes',
+                               'wjriehl', 'sychan', 'jjeffryes', 'drakemm2',
                                'thomasoniii', 'eapearson', 'qzhang', 'tgu2']
         self.assertItemsEqual(self.db_controller.adminList,
                               expected_admin_list)
 
         expected_metrics_admin_list = ['scanon', 'psdehal', 'dolson', 'chenry',
                                        'wjriehl', 'sychan', 'qzhang', 'tgu2',
-                                       'eapearson']
+                                       'eapearson', 'drakemm2']
         self.assertItemsEqual(self.db_controller.metricsAdmins,
                               expected_metrics_admin_list)
 
@@ -2074,7 +2074,7 @@ class kb_MetricsTest(unittest.TestCase):
         # testing with local db data
         wnarr_map = self.db_controller._get_narrative_name_map()
         # print(wnarr_map)
-        self.assertEqual(len(wnarr_map), 29)
+        self.assertEqual(len(wnarr_map), 30)
         self.assertEqual(wnarr_map.get(8781),
                          ('vkumar:1468639677500', 'Ecoli refseq - July 15', '45'))
         self.assertEqual(wnarr_map.get(27834),
@@ -2083,6 +2083,8 @@ class kb_MetricsTest(unittest.TestCase):
                          ('rsutormin:1468453294248', 'VisCellRefactor', '1'))
         self.assertEqual(wnarr_map.get(8748), ('bsadkhin:1468518477765',
                          'Method Cell Refactor - UI Fixes', '94'))
+        self.assertEqual(wnarr_map.get(33473), ('qzhang:narrative_1529080473649',
+                         'test_ws_vs_narr_names', '1'))
         self.assertTrue(wnarr_map.get(15206) is None)
         self.assertTrue(wnarr_map.get(23165) is None)
 
@@ -2122,6 +2124,11 @@ class kb_MetricsTest(unittest.TestCase):
         w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names('qz:12345678')
         self.assertEqual(w_nm, 'qz:12345678')
         self.assertEqual(n_nm, 'qz:12345678')
+        self.assertEqual(n_ver, '1')
+
+        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(33473)
+        self.assertEqual(w_nm, 'qzhang:narrative_1529080473649')
+        self.assertEqual(n_nm, 'test_ws_vs_narr_names')
         self.assertEqual(n_ver, '1')
 
     # Uncomment to skip this test

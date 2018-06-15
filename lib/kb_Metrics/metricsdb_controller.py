@@ -442,6 +442,7 @@ class MetricsMongoDBController:
                             params['maxTime'],
                             owner_list=params['user_ids'])
         n_ws = [nd['ws'] for nd in narr_data]
+
         # 2. query db to get lists of narratives with ws_ids and first_access_date
         ws_firstAccs = self.metrics_dbi.list_ws_firstAccess(
                             params['minTime'],

@@ -718,5 +718,30 @@
                     "v" : "Faking Test"
                 }
             ]
-        }
+        },
+		{
+			"_id" : "5b23ea99e4b0fa8c47f2763f",
+			"owner" : "qzhang",
+			"ws" : 33473,
+			"name" : "qzhang:narrative_1529080473649",
+			"moddate" : 1529080627148,
+			"del" : false,
+			"numObj" : 2,
+			"desc" : "",
+			"lock" : false,
+			"meta" : [
+				{
+					"k" : "is_temporary",
+					"v" : "false"
+				},
+				{
+					"k" : "narrative",
+					"v" : "1"
+				},
+				{
+					"k" : "narrative_nice_name",
+					"v" : "test_ws_vs_narr_names"
+				}
+			]
+		}
 	]
