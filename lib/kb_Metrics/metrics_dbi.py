@@ -480,7 +480,8 @@ class MongoMetricsDBI:
         rtn_milis = 86400000  # 1 day
         # Define the pipeline operations
         match_cond = {"signup_at": {"$gte": _convert_to_datetime(minTime),
-                                    "$lte": _convert_to_datetime(maxTime)}}
+                                    "$lte": _convert_to_datetime(maxTime)},
+                      "last_sigin_at": {"$ne": 'null'}}
         if not userIds:
             match_cond["username"] = {"$nin": excluded_users}
         else:
