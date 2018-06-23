@@ -394,8 +394,8 @@ class MongoMetricsDBI:
         proj3 = {"ws": 1, "yyyy-mm-dd":
                  {"$concat":
                   [{"$substr": ["$first_access_year", 0, -1]}, "-",
-                   {"$substr": ["$first_access_month", 0, -1]}, "-",
-                   {"$substr": ["$first_access_day", 0, -1]}]}}
+                   {"$substr": ["$first_access_month", 0, -1]}]}} # , "-",
+                   # {"$substr": ["$first_access_day", 0, -1]}]}}
 
         pipeline = [
             {"$match": match_filter},
