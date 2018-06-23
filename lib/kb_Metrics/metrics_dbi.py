@@ -481,7 +481,7 @@ class MongoMetricsDBI:
         # Define the pipeline operations
         match_cond = {"signup_at": {"$gte": _convert_to_datetime(minTime),
                                     "$lte": _convert_to_datetime(maxTime)},
-                      "last_sigin_at": {"$ne": 'null'}}
+                      "last_sigin_at": {"$ne": None}}
         if not userIds:
             match_cond["username"] = {"$nin": excluded_users}
         else:
