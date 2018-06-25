@@ -391,7 +391,7 @@ class MongoMetricsDBI:
                  "first_access_month": {"$month": "$first_access"},
                  "first_access_day": {"$dayOfMonth": "$first_access"}}
 
-        proj3 = {"ws": 1, "yyyy-mm-dd":
+        proj3 = {"ws": 1, "yyyy-mm":
                  {"$concat":
                   [{"$substr": ["$first_access_year", 0, -1]}, "-",
                    {"$substr": ["$first_access_month", 0, -1]}]}} # , "-",

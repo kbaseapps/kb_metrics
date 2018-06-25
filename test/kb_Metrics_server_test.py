@@ -1310,16 +1310,17 @@ class kb_MetricsTest(unittest.TestCase):
             self.assertIn(wobj['ws'], ws_list)
         self.assertEqual(ws_objs[0]['ws'], 27834)
         self.assertEqual(ws_objs[1]['ws'], 8768)
-        self.assertEqual(ws_objs[0]['yyyy-mm-dd'], '2017-12-21')
-        self.assertEqual(ws_objs[1]['yyyy-mm-dd'], '2016-7-15')
+        self.assertEqual(ws_objs[0]['yyyy-mm'], '2017-12')
+        self.assertEqual(ws_objs[1]['yyyy-mm'], '2016-7')
 
         # test list_ws_firstAccess return count without wsid
         ws_objs = dbi.list_ws_firstAccess(
                         min_time, max_time)
+
         self.assertEqual(len(ws_objs), 9)
         for wobj in ws_objs:
-            self.assertTrue('2016-7' < wobj['yyyy-mm-dd'] < '2018-3')
-        self.assertEqual(ws_objs[0]['yyyy-mm-dd'], '2018-2-27')
+            self.assertTrue('2016-7' <= wobj['yyyy-mm'] < '2018-3')
+        self.assertEqual(ws_objs[0]['yyyy-mm'], '2018-2')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_constructor")
@@ -2151,8 +2152,8 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(
             narr_info[1]['name'],
             'psdehal:narrative_1513709108341')
-        self.assertEqual(narr_info[0]['first_access'], '2016-7-15')
-        self.assertEqual(narr_info[1]['first_access'], '2017-12-21')
+        self.assertEqual(narr_info[0]['first_access'], '2016-7')
+        self.assertEqual(narr_info[1]['first_access'], '2017-12')
 
         start_datetime = datetime.datetime.strptime(
             '2014-01-01T00:00:00+0000', '%Y-%m-%dT%H:%M:%S+0000')
@@ -2165,7 +2166,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(narr_info[0]['owner'], 'vkumar')
         self.assertEqual(narr_info[0]['ws'], 8768)
         self.assertEqual(narr_info[0]['name'], 'vkumar:1468592344827')
-        self.assertEqual(narr_info[0]['first_access'], '2016-7-15')
+        self.assertEqual(narr_info[0]['first_access'], '2016-7')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_update_user_info")
@@ -2706,35 +2707,9 @@ class kb_MetricsTest(unittest.TestCase):
         narr_stats = self.db_controller.get_narrative_stats(
             self.getContext()['user_id'], m_params,
             self.getContext()['token'])['metrics_result']
-        self.assertEqual(len(narr_stats), 2)
-        self.assertEqual(narr_stats[0]['owner'], 'vkumar')
-        self.assertEqual(narr_stats[1]['owner'], 'psdehal')
-        self.assertEqual(narr_stats[0]['ws'], 8768)
-        self.assertEqual(narr_stats[1]['ws'], 27834)
-        self.assertEqual(narr_stats[0]['name'], 'vkumar:1468592344827')
-        self.assertEqual(
-            narr_stats[1]['name'],
-            'psdehal:narrative_1513709108341')
-        self.assertEqual(narr_stats[0]['first_access'], '2016-7-15')
-        self.assertEqual(narr_stats[1]['first_access'], '2017-12-21')
 
-        # testing with given parameter values with user_ids given
-        m_params['user_ids'] = ['vkumar', 'psdehal', 'wjriehl', 'qzhang']
-        narr_stats = self.db_controller.get_narrative_stats(
-                self.getContext()['user_id'], m_params,
-                self.getContext()['token'])['metrics_result']
-        self.assertEqual(len(narr_stats), 2)
-        self.assertEqual(len(narr_stats), 2)
-        self.assertEqual(narr_stats[0]['owner'], 'vkumar')
-        self.assertEqual(narr_stats[1]['owner'], 'psdehal')
-        self.assertEqual(narr_stats[0]['ws'], 8768)
-        self.assertEqual(narr_stats[1]['ws'], 27834)
-        self.assertEqual(narr_stats[0]['name'], 'vkumar:1468592344827')
-        self.assertEqual(
-            narr_stats[1]['name'],
-            'psdehal:narrative_1513709108341')
-        self.assertEqual(narr_stats[0]['first_access'], '2016-7-15')
-        self.assertEqual(narr_stats[1]['first_access'], '2017-12-21')
+        self.assertEqual(narr_stats['2016-7'], 1)
+        self.assertEqual(narr_stats['2017-12'], 1)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_total_logins")
@@ -2884,32 +2859,10 @@ class kb_MetricsTest(unittest.TestCase):
         # testing with given parameter values
         ret = self.getImpl().get_narrative_stats(self.getContext(), m_params)
         narr_stats = ret[0]['metrics_result']
-        self.assertEqual(len(narr_stats), 2)
-
-        # assertItemsEqual only checks the keys
-        self.assertItemsEqual(narr_stats[0],
-                              {'owner': 'mary', 'ws': 321,
-                               'name': 'mary:dontmatter',
-                               'first_access': u'yyyy-mm-dd'})
-        self.assertItemsEqual(narr_stats[1],
-                              {'owner': 'john', 'ws': 123,
-                               'name': 'john:whatever',
-                               'first_access': u'yyyy-mm-dd'})
-        self.assertEqual(narr_stats[0]['owner'], 'vkumar')
-        self.assertEqual(narr_stats[1]['owner'], 'psdehal')
-        self.assertEqual(narr_stats[0]['name'], 'vkumar:1468592344827')
-        self.assertEqual(narr_stats[1]['name'], 'psdehal:narrative_1513709108341')
-        self.assertEqual(narr_stats[0]['first_access'], '2016-7-15')
-        self.assertEqual(narr_stats[1]['first_access'], '2017-12-21')
-
-        # testing with given parameter values with user_ids given
-        m_params['user_ids'] = ['psdehal', 'wjriehl', 'qzhang']
-        ret = self.getImpl().get_narrative_stats(self.getContext(), m_params)
-        narr_stats = ret[0]['metrics_result']
-        self.assertEqual(len(narr_stats), 1)
-        self.assertEqual(narr_stats[0]['owner'], 'psdehal')
-        self.assertEqual(narr_stats[0]['name'], 'psdehal:narrative_1513709108341')
-        self.assertEqual(narr_stats[0]['first_access'], '2017-12-21')
+        self.assertIn('2016-7', narr_stats)
+        self.assertIn('2017-12', narr_stats)
+        self.assertEqual(narr_stats['2016-7'], 1)
+        self.assertEqual(narr_stats['2017-12'], 1)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_user_logins")

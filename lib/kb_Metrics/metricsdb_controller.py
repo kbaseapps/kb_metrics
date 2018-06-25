@@ -458,7 +458,7 @@ class MetricsMongoDBController:
                     narr['ws'] = narr_info['ws']
                     narr['name'] = narr_info['name']
                     narr['owner'] = narr_info['owner']
-                    narr['first_access'] = wsobj['yyyy-mm-dd']
+                    narr['first_access'] = wsobj['yyyy-mm']
                     narr_info_list.append(narr)
                     break
 
@@ -541,7 +541,16 @@ class MetricsMongoDBController:
                 raise ValueError('You do not have permisson to '
                                  'invoke this action.')
         narr_info = self._get_narrative_info(params)
-        return {'metrics_result': narr_info}
+
+        narr_stats = {}
+        # Futher counting the narratives by grouping into yyyy-mm
+        for narr in narr_info:
+            if narr_stats.get(narr['first_access'], None) is None:
+                narr_stats[narr['first_access']] = 1
+            else:
+                narr_stats[narr['first_access']] += 1
+
+        return {'metrics_result': narr_stats}
 
     # begin putting the deleted functions back
     def get_total_logins_from_ws(self, requesting_user, params, token,
