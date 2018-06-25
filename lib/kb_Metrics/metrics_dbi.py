@@ -294,8 +294,9 @@ class MongoMetricsDBI:
             match_filter['ws'] = {"$in": wsid_list}
         if owner_list:
             match_filter['owner'] = {"$in": owner_list}
-        if excluded_users:
-            match_filter["owner"] = {"$nin": excluded_users}
+        else:
+            if excluded_users:
+                match_filter["owner"] = {"$nin": excluded_users}
 
         # Define the pipeline operations
         pipeline = [

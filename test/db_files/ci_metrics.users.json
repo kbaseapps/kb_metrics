@@ -342,5 +342,25 @@
             "email" : "nils@abelli.nu",
             "kbase_staff" : false,
             "roles" : [ ]
-        }
+        },
+		{
+			"username" : "vkumar",
+			"full_name" : "Vivek Kumar",
+			"signup_at" : 1403136000,
+			"last_signin_at" :1522045416,
+			"email" : "vivek.cshl@gmail.com",
+			"kbase_staff" : true,
+			"roles" : [ ]
+		},
+		{	"username" : "psdehal",
+			"full_name" : "Paramvir Dehal",
+			"signup_at" : 1391126400,
+			"last_signin_at" : 1521841289,
+			"email" : "psdehal@lbl.gov",
+			"kbase_staff" : true,
+			"roles" : [
+				"DevToken",
+				"ServToken"
+			]
+		}
 	]

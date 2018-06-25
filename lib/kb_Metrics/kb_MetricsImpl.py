@@ -21,9 +21,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "1.0.2"
+    VERSION = "1.0.5"
     GIT_URL = "https://github.com/qzzhang/kb_Metrics"
-    GIT_COMMIT_HASH = "211c387e573c53516239f21ccc25a9900efcb056"
+    GIT_COMMIT_HASH = "6b96b7d1f44adfe9703a7c67cf61b6830e9ad88e"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -364,6 +364,33 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
             raise ValueError('Method get_narrative_stats return value ' +
+                             'return_records is not type dict as required.')
+        # return the results
+        return [return_records]
+
+    def get_all_narrative_stats(self, ctx, params):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        # ctx is the context object
+        # return variables are: return_records
+        #BEGIN get_all_narrative_stats
+        return_records = self.mdb_controller.get_narrative_stats(
+            ctx['user_id'], params, ctx['token'], exclude_kbstaff=False)
+        #END get_all_narrative_stats
+
+        # At some point might do deeper type checking...
+        if not isinstance(return_records, dict):
+            raise ValueError('Method get_all_narrative_stats return value ' +
                              'return_records is not type dict as required.')
         # return the results
         return [return_records]

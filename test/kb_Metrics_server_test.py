@@ -476,15 +476,13 @@ class kb_MetricsTest(unittest.TestCase):
         # testing with excluded user list
         tot_logins = dbi.aggr_total_logins(user_list, min_time, max_time,
                                            excluded_users=excl_usrs)
-        self.assertEqual(len(tot_logins), 4)
-        self.assertEqual(tot_logins[0]['_id'], {'year': 2018, 'month': 1})
+        self.assertEqual(len(tot_logins), 3)
+        self.assertEqual(tot_logins[0]['_id'], {'year': 2018, 'month': 2})
         self.assertEqual(tot_logins[0]['year_mon_total_logins'], 1)
-        self.assertEqual(tot_logins[1]['_id'], {'year': 2018, 'month': 2})
+        self.assertEqual(tot_logins[1]['_id'], {'year': 2017, 'month': 5})
         self.assertEqual(tot_logins[1]['year_mon_total_logins'], 1)
-        self.assertEqual(tot_logins[2]['_id'], {'year': 2017, 'month': 5})
-        self.assertEqual(tot_logins[2]['year_mon_total_logins'], 1)
-        self.assertEqual(tot_logins[3]['_id'], {'year': 2016, 'month': 7})
-        self.assertEqual(tot_logins[3]['year_mon_total_logins'], 25)
+        self.assertEqual(tot_logins[2]['_id'], {'year': 2016, 'month': 7})
+        self.assertEqual(tot_logins[2]['year_mon_total_logins'], 23)
 
         # testing with time range when there is fewer login records
         min_time = datetime.datetime(2015, 1, 1)
@@ -1539,7 +1537,7 @@ class kb_MetricsTest(unittest.TestCase):
                                 {'username': 1, '_id': 0}))
         # testing user inclusion or not
         kb_list = self.db_controller._get_kbstaff_list()
-        self.assertEqual(len(kb_list), 6)
+        self.assertEqual(len(kb_list), 8)
 
         local_kb_list = [c['username'] for c in kbstaff_in_coll]
         for u in local_kb_list:
@@ -2359,10 +2357,10 @@ class kb_MetricsTest(unittest.TestCase):
         tot_logins = self.db_controller.get_total_logins_from_ws(
             self.getContext()['user_id'], params, self.getContext()['token'],
             exclude_kbstaff=True)['metrics_result']
-        self.assertEqual(len(tot_logins), 4)
+        self.assertEqual(len(tot_logins), 3)
         for tl in tot_logins:
             if tl['_id'] == {'year': 2016, 'month': 7}:
-                self.assertEqual(tl['year_mon_total_logins'], 25)
+                self.assertEqual(tl['year_mon_total_logins'], 23)
             if tl['_id'] == {'year': 2018, 'month': 1}:
                 self.assertEqual(tl['year_mon_total_logins'], 1)
             if tl['_id'] == {'year': 2018, 'month': 2}:
@@ -2613,7 +2611,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('yyyy-mm-dd', users[0])
         self.assertEqual(users[0]['yyyy-mm-dd'], '2018-1-1')
         self.assertEqual(users[0]['numOfUsers'], 1)
-        self.assertEqual(users[1]['numOfUsers'], 4)
+        self.assertEqual(users[1]['numOfUsers'], 3)
         self.assertEqual(users[2]['numOfUsers'], 6)
         self.assertEqual(users[3]['numOfUsers'], 8)
 
@@ -2708,8 +2706,17 @@ class kb_MetricsTest(unittest.TestCase):
             self.getContext()['user_id'], m_params,
             self.getContext()['token'])['metrics_result']
 
-        self.assertEqual(narr_stats['2016-7'], 1)
-        self.assertEqual(narr_stats['2017-12'], 1)
+        self.assertNotIn('2016-7', narr_stats)
+        self.assertNotIn('2017-12', narr_stats)
+
+        # testing to get ALL users' narrative stats
+        narr_stats1 = self.db_controller.get_narrative_stats(
+            self.getContext()['user_id'], m_params, self.getContext()['token'],
+            exclude_kbstaff=False)['metrics_result']
+        self.assertIn('2016-7', narr_stats1)
+        self.assertIn('2017-12', narr_stats1)
+        self.assertEqual(narr_stats1['2016-7'], 1)
+        self.assertEqual(narr_stats1['2017-12'], 1)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_total_logins")
@@ -2760,14 +2767,14 @@ class kb_MetricsTest(unittest.TestCase):
                             datetime.datetime(2018, 4, 30))}
         ret = self.getImpl().get_nonkb_total_logins(self.getContext(), m_params)
         tot_logins = ret[0]['metrics_result']
-        self.assertEqual(len(tot_logins), 4)
+        self.assertEqual(len(tot_logins), 3)
         for tl in tot_logins:
             if tl['_id'] == {'year': 2018, 'month': 1}:
                 self.assertEqual(tl['year_mon_total_logins'], 1)
             if tl['_id'] == {'year': 2018, 'month': 2}:
                 self.assertEqual(tl['year_mon_total_logins'], 1)
             if tl['_id'] == {'year': 2016, 'month': 7}:
-                self.assertEqual(tl['year_mon_total_logins'], 25)
+                self.assertEqual(tl['year_mon_total_logins'], 23)
             if tl['_id'] == {'year': 2017, 'month': 5}:
                 self.assertEqual(tl['year_mon_total_logins'], 1)
 
@@ -2858,6 +2865,19 @@ class kb_MetricsTest(unittest.TestCase):
         }
         # testing with given parameter values
         ret = self.getImpl().get_narrative_stats(self.getContext(), m_params)
+        narr_stats = ret[0]['metrics_result']
+        self.assertNotIn('2016-7', narr_stats)
+        self.assertNotIn('2017-12', narr_stats)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_get_all_narrative_stats")
+    def test_run_MetricsImpl_get_all_narrative_stats(self):
+        m_params = {
+            'epoch_range': (datetime.datetime(2016, 1, 1),
+                            datetime.datetime(2018, 4, 30))
+        }
+        # testing with given parameter values
+        ret = self.getImpl().get_all_narrative_stats(self.getContext(), m_params)
         narr_stats = ret[0]['metrics_result']
         self.assertIn('2016-7', narr_stats)
         self.assertIn('2017-12', narr_stats)
@@ -3178,7 +3198,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('yyyy-mm-dd', users[0])
         self.assertEqual(users[0]['yyyy-mm-dd'], '2018-1-1')
         self.assertEqual(users[0]['numOfUsers'], 1)
-        self.assertEqual(users[1]['numOfUsers'], 4)
+        self.assertEqual(users[1]['numOfUsers'], 3)
         self.assertEqual(users[2]['numOfUsers'], 6)
         self.assertEqual(users[3]['numOfUsers'], 8)
 

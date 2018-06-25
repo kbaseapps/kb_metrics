@@ -370,6 +370,23 @@ public class KbMetricsClient {
     }
 
     /**
+     * <p>Original spec-file function name: get_all_narrative_stats</p>
+     * <pre>
+     * </pre>
+     * @param   params   instance of type {@link us.kbase.kbmetrics.MetricsInputParams MetricsInputParams}
+     * @return   parameter "return_records" of type {@link us.kbase.kbmetrics.MetricsOutput MetricsOutput}
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public MetricsOutput getAllNarrativeStats(MetricsInputParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(params);
+        TypeReference<List<MetricsOutput>> retType = new TypeReference<List<MetricsOutput>>() {};
+        List<MetricsOutput> res = caller.jsonrpcCall("kb_Metrics.get_all_narrative_stats", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+        return res.get(0);
+    }
+
+    /**
      * <p>Original spec-file function name: get_user_ws_stats</p>
      * <pre>
      * </pre>

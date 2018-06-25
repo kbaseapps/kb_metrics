@@ -544,7 +544,8 @@ class MetricsMongoDBController:
         if exclude_kbstaff:
             kb_list = self._get_kbstaff_list()
             narr_info = self._get_narrative_info(params, kb_list)
-        else:
+        else:  # get narrative for ALL users
+            params['user_ids'] = []
             narr_info = self._get_narrative_info(params)
 
         narr_stats = {}

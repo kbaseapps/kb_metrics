@@ -238,6 +238,23 @@ class kb_Metrics(object):
             'kb_Metrics.get_narrative_stats',
             [params], self._service_ver, context)
 
+    def get_all_narrative_stats(self, params, context=None):
+        """
+        :param params: instance of type "MetricsInputParams" (unified
+           input/output parameters) -> structure: parameter "user_ids" of
+           list of type "user_id" (A string for the user id), parameter
+           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
+           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
+           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
+           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
+           UTC) in milliseconds.)
+        :returns: instance of type "MetricsOutput" -> structure: parameter
+           "metrics_result" of unspecified object
+        """
+        return self._client.call_method(
+            'kb_Metrics.get_all_narrative_stats',
+            [params], self._service_ver, context)
+
     def get_user_ws_stats(self, params, context=None):
         """
         :param params: instance of type "MetricsInputParams" (unified
