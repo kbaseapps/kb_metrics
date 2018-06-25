@@ -432,7 +432,7 @@ class MetricsMongoDBController:
                 for client_group in client_groups]
 
     @cache_it_json(limit=1024, expire=60 * 60 * 1)
-    def _get_narrative_info(self, params):
+    def _get_narrative_info(self, params, excludes=[]):
 
         params = self._process_parameters(params)
 
@@ -440,7 +440,8 @@ class MetricsMongoDBController:
         narr_data = self.metrics_dbi.list_narrative_info(
                             params['minTime'],
                             params['maxTime'],
-                            owner_list=params['user_ids'])
+                            owner_list=params['user_ids'],
+                            excluded_users=excludes)
         n_ws = [nd['ws'] for nd in narr_data]
 
         # 2. query db to get lists of narratives with ws_ids and first_access_date
@@ -529,7 +530,7 @@ class MetricsMongoDBController:
 
         return {'job_states': self._join_task_ujs(exec_tasks, ujs_jobs)}
 
-    def get_narrative_stats(self, requesting_user, params, token):
+    def get_narrative_stats(self, requesting_user, params, token, exclude_kbstaff=True):
         """
         get_narrative_stats--generate narrative stats data for reporting purposes
         [{'owner': u'vkumar', 'ws': 8768, 'name': u'vkumar:1468592344827',
@@ -540,7 +541,11 @@ class MetricsMongoDBController:
         if not self._is_admin(requesting_user):
                 raise ValueError('You do not have permisson to '
                                  'invoke this action.')
-        narr_info = self._get_narrative_info(params)
+        if exclude_kbstaff:
+            kb_list = self._get_kbstaff_list()
+            narr_info = self._get_narrative_info(params, kb_list)
+        else:
+            narr_info = self._get_narrative_info(params)
 
         narr_stats = {}
         # Futher counting the narratives by grouping into yyyy-mm

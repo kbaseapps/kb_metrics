@@ -279,7 +279,7 @@ class MongoMetricsDBI:
         return list(kbworkspaces.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 * 1)
-    def list_narrative_info(self, minTime, maxTime, wsid_list=[], owner_list=[]):
+    def list_narrative_info(self, minTime, maxTime, wsid_list=[], owner_list=[], excluded_users=[]):
         """
         list_narrative_info--retrieve the name/ws_id/owner of narratives
         """
@@ -294,6 +294,8 @@ class MongoMetricsDBI:
             match_filter['ws'] = {"$in": wsid_list}
         if owner_list:
             match_filter['owner'] = {"$in": owner_list}
+        if excluded_users:
+            match_filter["owner"] = {"$nin": excluded_users}
 
         # Define the pipeline operations
         pipeline = [
@@ -394,8 +396,7 @@ class MongoMetricsDBI:
         proj3 = {"ws": 1, "yyyy-mm":
                  {"$concat":
                   [{"$substr": ["$first_access_year", 0, -1]}, "-",
-                   {"$substr": ["$first_access_month", 0, -1]}]}} # , "-",
-                   # {"$substr": ["$first_access_day", 0, -1]}]}}
+                   {"$substr": ["$first_access_month", 0, -1]}]}}
 
         pipeline = [
             {"$match": match_filter},
