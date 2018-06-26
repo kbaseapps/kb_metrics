@@ -1251,24 +1251,21 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped test_MetricsMongoDBs_list_narrative_info")
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_narrative_info(self):
-        min_time = 1468454614192
-        max_time = 1500046845591
+
         o_list = ['fangfang', 'psdehal', 'jplfaria', 'pranjan77']
         ws_id_list = [8056, 8748, 1111]
 
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
 
         # testing list_narrative_info return data, with and without filters
-        narrs = dbi.list_narrative_info(min_time, max_time,
-                                        wsid_list=ws_id_list,
+        narrs = dbi.list_narrative_info(wsid_list=ws_id_list,
                                         owner_list=o_list)
         self.assertEqual(len(narrs), 1)
         self.assertIn(narrs[0]['ws'], ws_id_list)
         self.assertIn(narrs[0]['owner'], o_list)
         self.assertEqual(narrs[0]['name'], 'pranjan77:1466168703797')
 
-        narrs = dbi.list_narrative_info(min_time, max_time,
-                                        wsid_list=ws_id_list)
+        narrs = dbi.list_narrative_info(wsid_list=ws_id_list)
         self.assertEqual(len(narrs), 2)
         for nrr in narrs:
             self.assertIn(nrr['ws'], ws_id_list)
@@ -1279,16 +1276,15 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(narrs[0]['name'], 'pranjan77:1466168703797')
         self.assertEqual(narrs[1]['name'], 'bsadkhin:1468518477765')
 
-        narrs = dbi.list_narrative_info(min_time, max_time,
-                                        owner_list=o_list)
-        self.assertEqual(len(narrs), 9)
+        narrs = dbi.list_narrative_info(owner_list=o_list)
+        self.assertEqual(len(narrs), 10)
         for nrr in narrs:
             self.assertIn(nrr['owner'], o_list)
         self.assertEqual(narrs[8]['ws'], 8774)
         self.assertEqual(narrs[8]['owner'], 'fangfang')
 
-        narrs = dbi.list_narrative_info(min_time, max_time)
-        self.assertEqual(len(narrs), 23)
+        narrs = dbi.list_narrative_info()
+        self.assertEqual(len(narrs), 25)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBs_list_ws_firstAccess")
@@ -1297,28 +1293,28 @@ class kb_MetricsTest(unittest.TestCase):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         min_time = 1468592344887
         max_time = 1519768865840
-        ws_narrs = dbi.list_narrative_info(min_time, max_time)
+        ws_narrs = dbi.list_narrative_info()
         ws_list = [wn['ws'] for wn in ws_narrs]
 
         # test list_ws_firstAccess returned values with wsid filter
-        ws_objs = dbi.list_ws_firstAccess(
-                        min_time, max_time, ws_list)
+        ws_objs = dbi.list_ws_firstAccess(min_time, max_time, ws_list=ws_list)
         self.assertEqual(len(ws_objs), 2)
-        for wobj in ws_objs:
-            self.assertIn(wobj['ws'], ws_list)
-        self.assertEqual(ws_objs[0]['ws'], 27834)
-        self.assertEqual(ws_objs[1]['ws'], 8768)
-        self.assertEqual(ws_objs[0]['yyyy-mm'], '2017-12')
-        self.assertEqual(ws_objs[1]['yyyy-mm'], '2016-7')
+        self.assertEqual(ws_objs[0]['yyyy-mm'], '2016-7')
+        self.assertEqual(ws_objs[1]['yyyy-mm'], '2017-12')
+        self.assertEqual(ws_objs[0]['ws_count'], 1)
+        self.assertEqual(ws_objs[1]['ws_count'], 1)
 
         # test list_ws_firstAccess return count without wsid
-        ws_objs = dbi.list_ws_firstAccess(
-                        min_time, max_time)
-
-        self.assertEqual(len(ws_objs), 9)
+        ws_objs = dbi.list_ws_firstAccess(min_time, max_time)
+        self.assertEqual(len(ws_objs), 3)
         for wobj in ws_objs:
             self.assertTrue('2016-7' <= wobj['yyyy-mm'] < '2018-3')
-        self.assertEqual(ws_objs[0]['yyyy-mm'], '2018-2')
+        self.assertEqual(ws_objs[0]['yyyy-mm'], '2016-7')
+        self.assertEqual(ws_objs[1]['yyyy-mm'], '2017-12')
+        self.assertEqual(ws_objs[2]['yyyy-mm'], '2018-2')
+        self.assertEqual(ws_objs[0]['ws_count'], 1)
+        self.assertEqual(ws_objs[1]['ws_count'], 1)
+        self.assertEqual(ws_objs[2]['ws_count'], 7)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_constructor")
@@ -2129,42 +2125,6 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(w_nm, 'qzhang:narrative_1529080473649')
         self.assertEqual(n_nm, 'test_ws_vs_narr_names')
         self.assertEqual(n_ver, '1')
-
-    # Uncomment to skip this test
-    # @unittest.skip("skipped _get_narrative_info")
-    def test_MetricsMongoDBController_get_narrative_info(self):
-        start_datetime = datetime.datetime.strptime(
-            '2016-01-01T00:00:00+0000', '%Y-%m-%dT%H:%M:%S+0000')
-        end_datetime = datetime.datetime.strptime(
-            '2018-04-30T00:00:10.000Z', '%Y-%m-%dT%H:%M:%S.%fZ')
-        params = {'epoch_range': (start_datetime, end_datetime)}
-
-        # testing with local db data
-        narr_info = self.db_controller._get_narrative_info(params)
-        self.assertEqual(len(narr_info), 2)
-        self.assertEqual(narr_info[0]['owner'], 'vkumar')
-        self.assertEqual(narr_info[1]['owner'], 'psdehal')
-        self.assertEqual(narr_info[0]['ws'], 8768)
-        self.assertEqual(narr_info[1]['ws'], 27834)
-        self.assertEqual(narr_info[0]['name'], 'vkumar:1468592344827')
-        self.assertEqual(
-            narr_info[1]['name'],
-            'psdehal:narrative_1513709108341')
-        self.assertEqual(narr_info[0]['first_access'], '2016-7')
-        self.assertEqual(narr_info[1]['first_access'], '2017-12')
-
-        start_datetime = datetime.datetime.strptime(
-            '2014-01-01T00:00:00+0000', '%Y-%m-%dT%H:%M:%S+0000')
-        end_datetime = datetime.datetime.strptime(
-            '2018-04-30T00:00:10.000Z', '%Y-%m-%dT%H:%M:%S.%fZ')
-        params = {'user_ids': ['vkumar'],
-                  'epoch_range': (start_datetime, end_datetime)}
-        narr_info = self.db_controller._get_narrative_info(params)
-        self.assertEqual(len(narr_info), 1)
-        self.assertEqual(narr_info[0]['owner'], 'vkumar')
-        self.assertEqual(narr_info[0]['ws'], 8768)
-        self.assertEqual(narr_info[0]['name'], 'vkumar:1468592344827')
-        self.assertEqual(narr_info[0]['first_access'], '2016-7')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_update_user_info")

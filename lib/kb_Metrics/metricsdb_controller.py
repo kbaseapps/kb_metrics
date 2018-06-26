@@ -431,40 +431,6 @@ class MetricsMongoDBController:
                  'client_groups': client_group.get('client_groups')}
                 for client_group in client_groups]
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 1)
-    def _get_narrative_info(self, params, excludes=[]):
-
-        params = self._process_parameters(params)
-
-        # 1. get the narr_owners data for lookups
-        narr_data = self.metrics_dbi.list_narrative_info(
-                            params['minTime'],
-                            params['maxTime'],
-                            owner_list=params['user_ids'],
-                            excluded_users=excludes)
-        n_ws = [nd['ws'] for nd in narr_data]
-
-        # 2. query db to get lists of narratives with ws_ids and first_access_date
-        ws_firstAccs = self.metrics_dbi.list_ws_firstAccess(
-                            params['minTime'],
-                            params['maxTime'],
-                            ws_list=n_ws)
-
-        # 3. match the narrative owners and assemble the info
-        narr_info_list = []
-        for narr_info in narr_data:
-            narr = {}
-            for wsobj in ws_firstAccs:
-                if narr_info['ws'] == wsobj['ws']:
-                    narr['ws'] = narr_info['ws']
-                    narr['name'] = narr_info['name']
-                    narr['owner'] = narr_info['owner']
-                    narr['first_access'] = wsobj['yyyy-mm']
-                    narr_info_list.append(narr)
-                    break
-
-        return narr_info_list
-
     def __init__(self, config):
         # grab config lists
         self.adminList = self._config_str_to_list(
@@ -533,28 +499,36 @@ class MetricsMongoDBController:
     def get_narrative_stats(self, requesting_user, params, token, exclude_kbstaff=True):
         """
         get_narrative_stats--generate narrative stats data for reporting purposes
-        [{'owner': u'vkumar', 'ws': 8768, 'name': u'vkumar:1468592344827',
-        'first_access': u'2016-7-15'},
-        {'owner': u'psdehal', 'ws': 27834, 'name': u'psdehal:narrative_1513709108341',
-        'first_access': u'2017-12-21'}]
+        [{'2016-7': 1}, {'2017-12': 1}]
         """
         if not self._is_admin(requesting_user):
                 raise ValueError('You do not have permisson to '
                                  'invoke this action.')
+
+        params = self._process_parameters(params)
+
+        # 1. get the narr_owners data for lookups
         if exclude_kbstaff:
-            kb_list = self._get_kbstaff_list()
-            narr_info = self._get_narrative_info(params, kb_list)
-        else:  # get narrative for ALL users
+            excludes = self._get_kbstaff_list()
+        else:
+            excludes = []
             params['user_ids'] = []
-            narr_info = self._get_narrative_info(params)
+
+        narr_data = self.metrics_dbi.list_narrative_info(
+                        owner_list=params['user_ids'],
+                        excluded_users=excludes)
+        n_ws = [nd['ws'] for nd in narr_data]
+
+        # 2. query db to get lists of narratives with ws_ids and first_access_date
+        ws_firstAccs = self.metrics_dbi.list_ws_firstAccess(
+                            params['minTime'],
+                            params['maxTime'],
+                            ws_list=n_ws)
 
         narr_stats = {}
         # Futher counting the narratives by grouping into yyyy-mm
-        for narr in narr_info:
-            if narr_stats.get(narr['first_access'], None) is None:
-                narr_stats[narr['first_access']] = 1
-            else:
-                narr_stats[narr['first_access']] += 1
+        for narr in ws_firstAccs:
+            narr_stats[narr['yyyy-mm']] = narr['ws_count']
 
         return {'metrics_result': narr_stats}
 

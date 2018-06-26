@@ -279,15 +279,12 @@ class MongoMetricsDBI:
         return list(kbworkspaces.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 * 1)
-    def list_narrative_info(self, minTime, maxTime, wsid_list=[], owner_list=[], excluded_users=[]):
+    def list_narrative_info(self, wsid_list=[], owner_list=[], excluded_users=[]):
         """
         list_narrative_info--retrieve the name/ws_id/owner of narratives
+        of given owner/wsid filters
         """
-        minTime = datetime.datetime.fromtimestamp(minTime / 1000.0)
-        maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
-
         match_filter = {"del": False,
-                        "moddate": {"$gte": minTime, "$lte": maxTime},
                         "meta": {"$elemMatch":
                                  {"k": "is_temporary", "v": "false"}}}
         if wsid_list:
@@ -374,9 +371,12 @@ class MongoMetricsDBI:
     @cache_it_json(limit=1024, expire=60 * 60 * 24)
     def list_ws_firstAccess(self, minTime, maxTime, ws_list=[]):
         """
-        list_wsObj_firstAccess--retrieve the ws_ids and first access date (yyyy-mm-dd)
+        list_wsObj_firstAccess--retrieve the ws_ids and first access month (yyyy-mm)
         ("numver": 1) for workspaces/narratives as objects, the 'first_access' date is
         used for accounting narratives created at certain date.
+        [{'yyyy-mm': '2016-7': 'ws_count': 1},
+         {'yyyy-mm': '2017-12': 'ws_count': 1},
+         {'yyyy-mm': '2018-2': 'ws_count': 7}]
         """
         minTime = datetime.datetime.fromtimestamp(minTime / 1000.0)
         maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
@@ -388,7 +388,7 @@ class MongoMetricsDBI:
             match_filter["ws"] = {"$in": ws_list}
 
         proj1 = {"ws": 1, "moddate": 1, "_id": 0}
-        grp = {"_id": "$ws", "first_access": {"$min": "$moddate"}}
+        grp1 = {"_id": "$ws", "first_access": {"$min": "$moddate"}}
         proj2 = {"ws": "$_id", "_id": 0,
                  "first_access_year": {"$year": "$first_access"},
                  "first_access_month": {"$month": "$first_access"},
@@ -399,12 +399,18 @@ class MongoMetricsDBI:
                   [{"$substr": ["$first_access_year", 0, -1]}, "-",
                    {"$substr": ["$first_access_month", 0, -1]}]}}
 
+        grp2 = {"_id": "$yyyy-mm",
+                "ws_count": {"$sum": 1}}
+        proj4 = {"yyyy-mm": "$_id", "ws_count": 1, "_id": 0}
+
         pipeline = [
             {"$match": match_filter},
             {"$project": proj1},
-            {"$group": grp},
+            {"$group": grp1},
             {"$project": proj2},
-            {"$project": proj3}
+            {"$project": proj3},
+            {"$group": grp2},
+            {"$project": proj4}
         ]
         # grab handle(s) to the db collection
         kbwsobjs = self.metricsDBs['workspace'][
