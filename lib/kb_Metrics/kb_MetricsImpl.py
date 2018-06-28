@@ -40,7 +40,6 @@ This KBase SDK module implements methods for generating various KBase metrics.
         #END_CONSTRUCTOR
         pass
 
-
     def get_app_metrics(self, ctx, params):
         """
         :param params: instance of type "AppMetricsParams" -> structure:

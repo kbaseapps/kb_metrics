@@ -157,10 +157,6 @@ class MongoMetricsDBI:
 
         match_filter = {"_id.year_mod":
                         {"$gte": minDate.year, "$lte": maxDate.year},
-                        "_id.month_mod": {"$gte": minDate.month,
-                                          "$lte": maxDate.month},
-                        "_id.day_mod": {"$gte": minDate.day,
-                                        "$lte": maxDate.day},
                         "obj_numModified": {"$gt": 0}}
 
         if excludeUsers:
@@ -168,17 +164,14 @@ class MongoMetricsDBI:
 
         pipeline = [
             {"$match": match_filter},
-            {"$group": {"_id": {"year_mod": "$_id.year_mod",
-                                "month_mod": "$_id.month_mod",
-                                "day_mod": "$_id.day_mod",
-                                "username": "$_id.username"}}},
-            {"$group": {"_id": {"year_mod": "$_id.year_mod",
-                                "month_mod": "$_id.month_mod",
-                                "day_mod": "$_id.day_mod"},
+            {"$project": {"year_mod": "$_id.year_mod",
+                          "month_mod": "$_id.month_mod",
+                          "day_mod": "$_id.day_mod",
+                          "username": "$_id.username", "_id": 0}},
+            {"$group": {"_id": {"year_mod": "$year_mod",
+                                "month_mod": "$month_mod",
+                                "day_mod": "$day_mod"},
                         "numOfUsers": {"$sum": 1}}},
-            {"$sort": {"_id.year_mod": ASCENDING,
-                       "_id.month_mod": ASCENDING,
-                       "_id.day_mod": ASCENDING}},
             {"$project": {"yyyy-mm-dd": {"$concat":
                                          [{"$substr": [
                                              "$_id.year_mod", 0, -1]}, '-',
@@ -186,7 +179,8 @@ class MongoMetricsDBI:
                                               "$_id.month_mod", 0, -1]}, '-',
                                           {"$substr": [
                                               "$_id.day_mod", 0, -1]}]},
-                          "numOfUsers":1, "_id":0}}
+                          "numOfUsers":1, "_id":0}},
+            {"$sort": {"yyyy-mm-dd": 1}}
         ]
 
         # grab handle(s) to the db collection
