@@ -731,9 +731,9 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('yyyy-mm-dd', users[0])
         self.assertEqual(users[0]['yyyy-mm-dd'], '2018-1-1')
         self.assertEqual(users[0]['numOfUsers'], 1)
-        self.assertEqual(users[1]['numOfUsers'], 4)
+        self.assertEqual(users[1]['numOfUsers'], 13)
         self.assertEqual(users[2]['numOfUsers'], 6)
-        self.assertEqual(users[3]['numOfUsers'], 8)
+        self.assertEqual(users[3]['numOfUsers'], 9)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_update_user_records_WriteError")
@@ -2558,9 +2558,9 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('yyyy-mm-dd', users[0])
         self.assertEqual(users[0]['yyyy-mm-dd'], '2018-1-1')
         self.assertEqual(users[0]['numOfUsers'], 1)
-        self.assertEqual(users[1]['numOfUsers'], 4)
+        self.assertEqual(users[1]['numOfUsers'], 13)
         self.assertEqual(users[2]['numOfUsers'], 6)
-        self.assertEqual(users[3]['numOfUsers'], 8)
+        self.assertEqual(users[3]['numOfUsers'], 9)
 
         # testing excluding kbstaff (by default) with reduced counts
         users = self.db_controller.get_active_users_counts(
@@ -2571,9 +2571,9 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('yyyy-mm-dd', users[0])
         self.assertEqual(users[0]['yyyy-mm-dd'], '2018-1-1')
         self.assertEqual(users[0]['numOfUsers'], 1)
-        self.assertEqual(users[1]['numOfUsers'], 3)
+        self.assertEqual(users[1]['numOfUsers'], 13)
         self.assertEqual(users[2]['numOfUsers'], 6)
-        self.assertEqual(users[3]['numOfUsers'], 8)
+        self.assertEqual(users[3]['numOfUsers'], 9)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsMongoDBController_get_user_ws_stats")
@@ -3158,9 +3158,9 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('yyyy-mm-dd', users[0])
         self.assertEqual(users[0]['yyyy-mm-dd'], '2018-1-1')
         self.assertEqual(users[0]['numOfUsers'], 1)
-        self.assertEqual(users[1]['numOfUsers'], 3)
+        self.assertEqual(users[1]['numOfUsers'], 13)
         self.assertEqual(users[2]['numOfUsers'], 6)
-        self.assertEqual(users[3]['numOfUsers'], 8)
+        self.assertEqual(users[3]['numOfUsers'], 9)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_signup_returning_users")

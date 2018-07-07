@@ -248,7 +248,7 @@ class MetricsMongoDBController:
         for wo in ws_owners:
             for obj in wsobjs_act:
                 if wo['ws_id'] == obj['_id']['ws_id']:
-                    obj['_id'][u'username'] = wo['username']
+                    obj['_id']['username'] = wo['username']
                     break
         return {'metrics_result': wsobjs_act}
 

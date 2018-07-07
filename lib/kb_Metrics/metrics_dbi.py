@@ -365,7 +365,7 @@ class MongoMetricsDBI:
     @cache_it_json(limit=1024, expire=60 * 60 * 24)
     def list_ws_firstAccess(self, minTime, maxTime, ws_list=[]):
         """
-        list_wsObj_firstAccess--retrieve the ws_ids and first access month (yyyy-mm)
+        list_ws_firstAccess--retrieve the ws_ids and first access month (yyyy-mm)
         ("numver": 1) for workspaces/narratives as objects, the 'first_access' date is
         used for accounting narratives created at certain date.
         [{'yyyy-mm': '2016-7': 'ws_count': 1},
@@ -405,6 +405,42 @@ class MongoMetricsDBI:
             {"$project": proj3},
             {"$group": grp2},
             {"$project": proj4}
+        ]
+        # grab handle(s) to the db collection
+        kbwsobjs = self.metricsDBs['workspace'][
+            MongoMetricsDBI._WS_WSOBJECTS]
+        m_cursor = kbwsobjs.aggregate(pipeline)
+        return list(m_cursor)
+
+    @cache_it_json(limit=1024, expire=60 * 60 * 24)
+    def list_ws_lastAccess(self, minTime, maxTime, ws_list=[]):
+        """
+        list_ws_lastAccess--retrieve the ws_ids and last access month (yyyy-mm)
+        for workspaces/narratives as wsObjects, the 'last_access' date is
+        used for detecting a user's most recent activities and for setting the value of
+        last_signin_at in metrics.users.
+        [{'yyyy-mm-dd': '2015-2-20': 'ws': 4033},
+         {'yyyy-mm-dd': '2018-1-9': 'ws': 24394},
+         {'yyyy-mm-dd': '2018-3-13': 'ws': 29451}]
+        """
+        minTime = datetime.datetime.fromtimestamp(minTime / 1000.0)
+        maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
+
+        # Define the pipeline operations
+        match_filter = {"del": False,
+                        "moddate": {"$gte": minTime, "$lte": maxTime}}
+        if ws_list:
+            match_filter["ws"] = {"$in": ws_list}
+
+        proj1 = {"ws": 1, "moddate": 1, "_id": 0}
+        grp = {"_id": "$ws", "last_access": {"$max": "$moddate"}}
+        proj2 = {"ws": "$_id", "_id": 0, "last_access_date": "$last_access"}
+
+        pipeline = [
+            {"$match": match_filter},
+            {"$project": proj1},
+            {"$group": grp},
+            {"$project": proj2}
         ]
         # grab handle(s) to the db collection
         kbwsobjs = self.metricsDBs['workspace'][
@@ -487,6 +523,7 @@ class MongoMetricsDBI:
             match_cond["username"] = {"$nin": excluded_users}
         else:
             match_cond["username"] = {"$in": userIds, "$nin": excluded_users}
+        match_cond["last_signin_at"] = {"$ne": None}
 
         pipeline = [
             {"$match": match_cond},
