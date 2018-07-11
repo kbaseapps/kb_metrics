@@ -3140,7 +3140,7 @@ class kb_MetricsTest(unittest.TestCase):
         }
         ret = self.getImpl().get_nonkbuser_details(self.getContext(), m_params)
         users = ret[0]['metrics_result']
-        self.assertEqual(len(users), 28)
+        self.assertEqual(len(users), 32)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_user_counts_per_day")

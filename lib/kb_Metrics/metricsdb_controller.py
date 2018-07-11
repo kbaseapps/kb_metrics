@@ -78,19 +78,19 @@ class MetricsMongoDBController:
         params = self._process_parameters(params)
         auth2_ret = self.metrics_dbi.aggr_user_details(
             params['user_ids'], params['minTime'], params['maxTime'])
-        up_dated = 0
-        up_serted = 0
         if not auth2_ret:
             print("No user records returned for update!")
             return 0
 
+        up_dated = 0
+        up_serted = 0
         print('Retrieved {} user record(s) for update!'.format(len(auth2_ret)))
         id_keys = ['username', 'email']
         data_keys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
         for u_data in auth2_ret:
             id_data = {x: u_data[x] for x in id_keys}
             user_data = {x: u_data[x] for x in data_keys}
-            is_kbstaff = 1 if self._is_kbstaff(id_data['username']) else 0
+            is_kbstaff = True if self._is_kbstaff(id_data['username']) else False
             update_ret = self.metrics_dbi.update_user_records(
                 id_data, user_data, is_kbstaff)
             if update_ret.raw_result['updatedExisting']:
@@ -102,17 +102,17 @@ class MetricsMongoDBController:
 
     def _update_daily_activities(self, params, token):
         """
-        update user activities reported from Workspace.
+        update user activities reported from Workspace.workspaceObjects.
         If match not found, insert that record as new.
         """
         ws_ret = self._get_activities_from_wsobjs(params, token)
         act_list = ws_ret['metrics_result']
-        up_dated = 0
-        up_serted = 0
         if not act_list:
             print("No daily activity records returned for update!")
             return 0
 
+        up_dated = 0
+        up_serted = 0
         print('Retrieved {} activity record(s) for '
               'update!'.format(len(act_list)))
         id_keys = ['_id']

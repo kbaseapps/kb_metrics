@@ -654,8 +654,7 @@ class MongoMetricsDBI:
             {"$group": {"_id": {"username": "$owner",
                                 "year": "$year",
                                 "month": "$month"},
-                        "count_user_numObjs": {
-                            "$sum": "$numObj"}}},
+                        "count_user_numObjs": {"$sum": "$numObj"}}},
             {"$sort": {"_id": ASCENDING}}
         ]
 
