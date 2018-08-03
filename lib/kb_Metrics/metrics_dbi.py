@@ -376,35 +376,36 @@ class MongoMetricsDBI:
         maxTime = datetime.datetime.fromtimestamp(maxTime / 1000.0)
 
         # Define the pipeline operations
-        match_filter = {"del": False, "numver": 1,
-                        "moddate": {"$gte": minTime, "$lte": maxTime}}
+        match_filter = {"del": False, "numver": 1}
         if ws_list:
             match_filter["ws"] = {"$in": ws_list}
 
         proj1 = {"ws": 1, "moddate": 1, "_id": 0}
         grp1 = {"_id": "$ws", "first_access": {"$min": "$moddate"}}
-        proj2 = {"ws": "$_id", "_id": 0,
+        proj2 = {"ws": "$_id", "_id": 0, "first_access": 1}
+        match_fltr2 = {"first_access": {"$gte": minTime, "$lte": maxTime}}
+        proj3 = {"ws": "$_id", "_id": 0,
                  "first_access_year": {"$year": "$first_access"},
-                 "first_access_month": {"$month": "$first_access"},
-                 "first_access_day": {"$dayOfMonth": "$first_access"}}
-
-        proj3 = {"ws": 1, "yyyy-mm":
+                 "first_access_month": {"$month": "$first_access"}}
+        proj4 = {"ws": 1, "yyyy-mm":
                  {"$concat":
                   [{"$substr": ["$first_access_year", 0, -1]}, "-",
                    {"$substr": ["$first_access_month", 0, -1]}]}}
 
         grp2 = {"_id": "$yyyy-mm",
                 "ws_count": {"$sum": 1}}
-        proj4 = {"yyyy-mm": "$_id", "ws_count": 1, "_id": 0}
+        proj5 = {"yyyy-mm": "$_id", "ws_count": 1, "_id": 0}
 
         pipeline = [
             {"$match": match_filter},
             {"$project": proj1},
             {"$group": grp1},
             {"$project": proj2},
+            {"$match": match_fltr2},
             {"$project": proj3},
+            {"$project": proj4},
             {"$group": grp2},
-            {"$project": proj4}
+            {"$project": proj5}
         ]
         # grab handle(s) to the db collection
         kbwsobjs = self.metricsDBs['workspace'][
@@ -443,8 +444,7 @@ class MongoMetricsDBI:
             {"$project": proj2}
         ]
         # grab handle(s) to the db collection
-        kbwsobjs = self.metricsDBs['workspace'][
-            MongoMetricsDBI._WS_WSOBJECTS]
+        kbwsobjs = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WSOBJECTS]
         m_cursor = kbwsobjs.aggregate(pipeline)
         return list(m_cursor)
 

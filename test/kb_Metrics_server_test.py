@@ -1298,23 +1298,19 @@ class kb_MetricsTest(unittest.TestCase):
 
         # test list_ws_firstAccess returned values with wsid filter
         ws_objs = dbi.list_ws_firstAccess(min_time, max_time, ws_list=ws_list)
-        self.assertEqual(len(ws_objs), 2)
-        self.assertEqual(ws_objs[0]['yyyy-mm'], '2016-7')
-        self.assertEqual(ws_objs[1]['yyyy-mm'], '2017-12')
+        self.assertEqual(len(ws_objs), 1)
+        self.assertEqual(ws_objs[0]['yyyy-mm'], '2017-12')
         self.assertEqual(ws_objs[0]['ws_count'], 1)
-        self.assertEqual(ws_objs[1]['ws_count'], 1)
 
         # test list_ws_firstAccess return count without wsid
         ws_objs = dbi.list_ws_firstAccess(min_time, max_time)
-        self.assertEqual(len(ws_objs), 3)
+        self.assertEqual(len(ws_objs), 2)
         for wobj in ws_objs:
             self.assertTrue('2016-7' <= wobj['yyyy-mm'] < '2018-3')
-        self.assertEqual(ws_objs[0]['yyyy-mm'], '2016-7')
-        self.assertEqual(ws_objs[1]['yyyy-mm'], '2017-12')
-        self.assertEqual(ws_objs[2]['yyyy-mm'], '2018-2')
+        self.assertEqual(ws_objs[0]['yyyy-mm'], '2017-12')
+        self.assertEqual(ws_objs[1]['yyyy-mm'], '2018-2')
         self.assertEqual(ws_objs[0]['ws_count'], 1)
-        self.assertEqual(ws_objs[1]['ws_count'], 1)
-        self.assertEqual(ws_objs[2]['ws_count'], 7)
+        self.assertEqual(ws_objs[1]['ws_count'], 7)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_constructor")
