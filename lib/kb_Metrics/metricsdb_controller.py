@@ -465,6 +465,27 @@ class MetricsMongoDBController:
         self.cat_client = None
         self.narrative_name_map = {}
 
+    def map_ws_narrative_names(self, requesting_user, ws_ids, token):
+        """
+        get_ws_narratives--Give the list of workspace ids, map ws_nm, narr_nm and narr_ver
+        (or narrative_nice_name if it exists) into a dictionary
+        of {key=ws_id, value=(ws_nm, narr_nm, narr_ver)}
+        ----------------------
+        [{'ws_id': 8726,
+          'narr_name_map': (u'wjriehl:1468439004137', u'Updater Testing', u'1')},
+         {'ws_id': 99991,
+          'narr_name_map': (u'fakeusr:narrative_1513709108341', u'Faking Test', u'1')}]
+        """
+        if not self._is_admin(requesting_user):
+                raise ValueError('You do not have permisson to '
+                                 'invoke this action.')
+
+        map_results = []
+        for w_id in ws_ids:
+            map_ret = self._map_ws_narr_names(w_id)
+            map_results.append({'ws_id': w_id, 'narr_name_map': map_ret})
+        return map_results
+
     def get_user_job_states(self, requesting_user, params, token):
         """
         get_user_job_states--generate data for appcatalog/stats from querying

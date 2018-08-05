@@ -32,6 +32,7 @@ module kb_Metrics {
     */
     typedef tuple<timestamp t_lowerbound, timestamp t_upperbound> time_range;
     typedef tuple<epoch e_lowerbound, epoch e_upperbound> epoch_range;
+    typedef tuple<string ws_name, string narrative_name, int narrative_version> narrative_name_map;
     
     typedef structure {
         list<user_id> user_ids;
@@ -41,9 +42,17 @@ module kb_Metrics {
     typedef structure {
         UnspecifiedObject job_states;
     } AppMetricsResult;
-    
+
+    typedef structure {
+        int ws_id;
+        narrative_name_map narr_name_map;
+    } MapWsNarrNamesResult;
+  
     funcdef get_app_metrics(AppMetricsParams params)
         returns (AppMetricsResult return_records) authentication required;
+
+    funcdef map_ws_narrative_names(list<int> ws_ids)
+        returns (list<MapWsNarrNamesResult> return_records) authentication optional;
 
     /* unified input/output parameters*/
     typedef structure {

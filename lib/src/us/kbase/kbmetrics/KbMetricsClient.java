@@ -181,6 +181,23 @@ public class KbMetricsClient {
     }
 
     /**
+     * <p>Original spec-file function name: map_ws_narrative_names</p>
+     * <pre>
+     * </pre>
+     * @param   wsIds   instance of list of Long
+     * @return   parameter "return_records" of list of type {@link us.kbase.kbmetrics.MapWsNarrNamesResult MapWsNarrNamesResult}
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public List<MapWsNarrNamesResult> mapWsNarrativeNames(List<Long> wsIds, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(wsIds);
+        TypeReference<List<List<MapWsNarrNamesResult>>> retType = new TypeReference<List<List<MapWsNarrNamesResult>>>() {};
+        List<List<MapWsNarrNamesResult>> res = caller.jsonrpcCall("kb_Metrics.map_ws_narrative_names", args, retType, true, false, jsonRpcContext, this.serviceVersion);
+        return res.get(0);
+    }
+
+    /**
      * <p>Original spec-file function name: update_metrics</p>
      * <pre>
      * * For writing to mongodb metrics *

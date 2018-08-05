@@ -23,7 +23,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "1.0.5"
     GIT_URL = "https://github.com/qzzhang/kb_Metrics"
-    GIT_COMMIT_HASH = "6b96b7d1f44adfe9703a7c67cf61b6830e9ad88e"
+    GIT_COMMIT_HASH = "bc5f104c19d362f2ffc60cf89fb29b591df62886"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -39,6 +39,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
         self.mdb_controller = MetricsMongoDBController(config)
         #END_CONSTRUCTOR
         pass
+
 
     def get_app_metrics(self, ctx, params):
         """
@@ -64,6 +65,30 @@ This KBase SDK module implements methods for generating various KBase metrics.
         if not isinstance(return_records, dict):
             raise ValueError('Method get_app_metrics return value ' +
                              'return_records is not type dict as required.')
+        # return the results
+        return [return_records]
+
+    def map_ws_narrative_names(self, ctx, ws_ids):
+        """
+        :param ws_ids: instance of list of Long
+        :returns: instance of list of type "MapWsNarrNamesResult" ->
+           structure: parameter "ws_id" of Long, parameter "narr_name_map" of
+           type "narrative_name_map" -> tuple of size 3: parameter "ws_name"
+           of String, parameter "narrative_name" of String, parameter
+           "narrative_version" of Long
+        """
+        # ctx is the context object
+        # return variables are: return_records
+        #BEGIN map_ws_narrative_names
+        return_records = self.mdb_controller.map_ws_narrative_names(ctx['user_id'],
+                                                                    ws_ids,
+                                                                    ctx['token'])
+        #END map_ws_narrative_names
+
+        # At some point might do deeper type checking...
+        if not isinstance(return_records, list):
+            raise ValueError('Method map_ws_narrative_names return value ' +
+                             'return_records is not type list as required.')
         # return the results
         return [return_records]
 

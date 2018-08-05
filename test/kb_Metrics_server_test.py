@@ -2064,7 +2064,7 @@ class kb_MetricsTest(unittest.TestCase):
     def test_MetricsMongoDBController_get_narrative_name_map(self):
         # testing with local db data
         wnarr_map = self.db_controller._get_narrative_name_map()
-        # print(wnarr_map)
+
         self.assertEqual(len(wnarr_map), 30)
         self.assertEqual(wnarr_map.get(8781),
                          ('vkumar:1468639677500', 'Ecoli refseq - July 15', '45'))
@@ -2078,6 +2078,22 @@ class kb_MetricsTest(unittest.TestCase):
                          'test_ws_vs_narr_names', '1'))
         self.assertTrue(wnarr_map.get(15206) is None)
         self.assertTrue(wnarr_map.get(23165) is None)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped map_ws_narrative_names")
+    def test_MetricsMongoDBController_map_ws_narrative_names(self):
+        # testing with local db data
+        ws_ids = [8276, 8726, 99991]
+        wnarr_map_results = self.db_controller.map_ws_narrative_names(
+            'qzhang', ws_ids, self.getContext()['token'])
+        self.assertEqual(wnarr_map_results[0],
+                         {'ws_id': 8276, 'narr_name_map': ('', '', '1')})
+        self.assertEqual(wnarr_map_results[1],
+                         {'ws_id': 8726,
+                          'narr_name_map': ('wjriehl:1468439004137', 'Updater Testing', '1')})
+        self.assertEqual(wnarr_map_results[2],
+                         {'ws_id': 99991,
+                          'narr_name_map': ('fakeusr:narrative_1513709108341', 'Faking Test', '1')})
 
     # Uncomment to skip this test
     # @unittest.skip("skipped _map_ws_narr_names")
@@ -2675,6 +2691,32 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(narr_stats1['2017-12'], 1)
 
     # Uncomment to skip this test
+    # @unittest.skip("skipped run_MetricsImpl_map_ws_narrative_names")
+    def test_run_MetricsImpl_map_ws_narrative_names(self):
+        # testing with local db data
+        ws_ids = [8276, 8726, 99991]
+        wnarr_map_results = self.getImpl().map_ws_narrative_names(
+            self.getContext(), ws_ids)[0]
+        self.assertEqual(wnarr_map_results[0],
+                         {'ws_id': 8276, 'narr_name_map': ('', '', '1')})
+        self.assertEqual(wnarr_map_results[1],
+                         {'ws_id': 8726,
+                          'narr_name_map': ('wjriehl:1468439004137', 'Updater Testing', '1')})
+        self.assertEqual(wnarr_map_results[2],
+                         {'ws_id': 99991,
+                          'narr_name_map': ('fakeusr:narrative_1513709108341', 'Faking Test', '1')})
+        '''
+        self.assertIn({'ws_id': 8276, 'narr_name_map': ('', '', '1')},
+                      wnarr_map_results)
+        self.assertIn({'ws_id': 8726,
+                       'narr_name_map': ('wjriehl:1468439004137', 'Updater Testing', '1')},
+                      wnarr_map_results)
+        self.assertIn({'ws_id': 99991,
+                       'narr_name_map': ('fakeusr:narrative_1513709108341', 'Faking Test', '1')},
+                      wnarr_map_results)
+        '''
+
+    # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_total_logins")
     def test_run_MetricsImpl_get_total_logins(self):
 
@@ -3186,45 +3228,6 @@ class kb_MetricsTest(unittest.TestCase):
                 self.assertEqual(u['returning_user_count'], 1)
             if u['_id'] == {'year': 2018, 'month': 3}:
                 self.assertEqual(u['user_signups'], 4)
-                self.assertEqual(u['returning_user_count'], 1)
-            if u['_id'] == {'year': 2017, 'month': 8}:
-                self.assertEqual(u['user_signups'], 3)
-                self.assertEqual(u['returning_user_count'], 3)
-            if u['_id'] == {'year': 2016, 'month': 7}:
-                self.assertEqual(u['user_signups'], 1)
-                self.assertEqual(u['returning_user_count'], 1)
-            if u['_id'] == {'year': 2016, 'month': 11}:
-                self.assertEqual(u['user_signups'], 1)
-                self.assertEqual(u['returning_user_count'], 1)
-
-    # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_MetricsImpl_get_signup_returning_nonkbusers")
-    @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
-    def test_run_MetricsImpl_get_signup_returning_nonkbusers(self):
-        m_params = {
-            'epoch_range': (datetime.datetime(2016, 1, 1),
-                            datetime.datetime(2018, 4, 30))
-        }
-
-        dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        m_users_cur = dbi.metricsDBs['metrics']['users'].find()
-        print('There are {} users in metrics.users before Impl call'.format(
-            len(list(m_users_cur))))
-
-        # testing (excluding kbstaff by default)
-        ret = self.getImpl().get_signup_returning_nonkbusers(
-            self.getContext(), m_params)
-        users = ret[0]['metrics_result']
-        self.assertEqual(len(users), 6)
-        for u in users:
-            if u['_id'] == {'year': 2018, 'month': 1}:
-                self.assertEqual(u['user_signups'], 4)
-                self.assertEqual(u['returning_user_count'], 2)
-            if u['_id'] == {'year': 2018, 'month': 2}:
-                self.assertEqual(u['user_signups'], 26)
-                self.assertEqual(u['returning_user_count'], 0)
-            if u['_id'] == {'year': 2018, 'month': 3}:
-                self.assertEqual(u['user_signups'], 2)
                 self.assertEqual(u['returning_user_count'], 1)
             if u['_id'] == {'year': 2017, 'month': 8}:
                 self.assertEqual(u['user_signups'], 3)

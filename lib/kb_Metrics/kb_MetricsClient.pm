@@ -211,6 +211,102 @@ AppMetricsResult is a reference to a hash where the following keys are defined:
  
 
 
+=head2 map_ws_narrative_names
+
+  $return_records = $obj->map_ws_narrative_names($ws_ids)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$ws_ids is a reference to a list where each element is an int
+$return_records is a reference to a list where each element is a kb_Metrics.MapWsNarrNamesResult
+MapWsNarrNamesResult is a reference to a hash where the following keys are defined:
+	ws_id has a value which is an int
+	narr_name_map has a value which is a kb_Metrics.narrative_name_map
+narrative_name_map is a reference to a list containing 3 items:
+	0: (ws_name) a string
+	1: (narrative_name) a string
+	2: (narrative_version) an int
+
+</pre>
+
+=end html
+
+=begin text
+
+$ws_ids is a reference to a list where each element is an int
+$return_records is a reference to a list where each element is a kb_Metrics.MapWsNarrNamesResult
+MapWsNarrNamesResult is a reference to a hash where the following keys are defined:
+	ws_id has a value which is an int
+	narr_name_map has a value which is a kb_Metrics.narrative_name_map
+narrative_name_map is a reference to a list containing 3 items:
+	0: (ws_name) a string
+	1: (narrative_name) a string
+	2: (narrative_version) an int
+
+
+=end text
+
+=item Description
+
+
+
+=back
+
+=cut
+
+ sub map_ws_narrative_names
+{
+    my($self, @args) = @_;
+
+# Authentication: optional
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function map_ws_narrative_names (received $n, expecting 1)");
+    }
+    {
+	my($ws_ids) = @args;
+
+	my @_bad_arguments;
+        (ref($ws_ids) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument 1 \"ws_ids\" (value was \"$ws_ids\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to map_ws_narrative_names:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'map_ws_narrative_names');
+	}
+    }
+
+    my $url = $self->{url};
+    my $result = $self->{client}->call($url, $self->{headers}, {
+	    method => "kb_Metrics.map_ws_narrative_names",
+	    params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'map_ws_narrative_names',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method map_ws_narrative_names",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'map_ws_narrative_names',
+				       );
+    }
+}
+ 
+
+
 =head2 update_metrics
 
   $return_records = $obj->update_metrics($params)
@@ -1789,6 +1885,40 @@ a reference to a list containing 2 items:
 
 
 
+=head2 narrative_name_map
+
+=over 4
+
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a list containing 3 items:
+0: (ws_name) a string
+1: (narrative_name) a string
+2: (narrative_version) an int
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a list containing 3 items:
+0: (ws_name) a string
+1: (narrative_name) a string
+2: (narrative_version) an int
+
+
+=end text
+
+=back
+
+
+
 =head2 AppMetricsParams
 
 =over 4
@@ -1843,6 +1973,38 @@ job_states has a value which is an UnspecifiedObject, which can hold any non-nul
 
 a reference to a hash where the following keys are defined:
 job_states has a value which is an UnspecifiedObject, which can hold any non-null object
+
+
+=end text
+
+=back
+
+
+
+=head2 MapWsNarrNamesResult
+
+=over 4
+
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+ws_id has a value which is an int
+narr_name_map has a value which is a kb_Metrics.narrative_name_map
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+ws_id has a value which is an int
+narr_name_map has a value which is a kb_Metrics.narrative_name_map
 
 
 =end text

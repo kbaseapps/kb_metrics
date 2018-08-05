@@ -49,6 +49,19 @@ class kb_Metrics(object):
             'kb_Metrics.get_app_metrics',
             [params], self._service_ver, context)
 
+    def map_ws_narrative_names(self, ws_ids, context=None):
+        """
+        :param ws_ids: instance of list of Long
+        :returns: instance of list of type "MapWsNarrNamesResult" ->
+           structure: parameter "ws_id" of Long, parameter "narr_name_map" of
+           type "narrative_name_map" -> tuple of size 3: parameter "ws_name"
+           of String, parameter "narrative_name" of String, parameter
+           "narrative_version" of Long
+        """
+        return self._client.call_method(
+            'kb_Metrics.map_ws_narrative_names',
+            [ws_ids], self._service_ver, context)
+
     def update_metrics(self, params, context=None):
         """
         For writing to mongodb metrics *
