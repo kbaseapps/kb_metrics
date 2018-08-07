@@ -262,8 +262,9 @@ class MongoMetricsDBI:
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ws_owners(self):
         # Define the pipeline operations
+        match_filter = {"cloning": {"$exists": False}}
         pipeline = [
-            {"$match": {}},
+            {"$match": match_filter},
             {"$project": {"username": "$owner",
                           "ws_id": "$ws", "name": 1, "_id": 0}}
         ]
@@ -281,6 +282,8 @@ class MongoMetricsDBI:
         match_filter = {"del": False,
                         "meta": {"$elemMatch":
                                  {"k": "is_temporary", "v": "false"}}}
+        match_filter["cloning"] = {"$exists": False}
+
         if wsid_list:
             match_filter['ws'] = {"$in": wsid_list}
         if owner_list:
@@ -307,8 +310,10 @@ class MongoMetricsDBI:
                                  {"$or":
                                   [{"k": "narrative"},
                                    {"k": "narrative_nice_name"}]}}}
+        match_filter["cloning"] = {"$exists": False}
+
         if not include_del:
-            match_filter['del'] = False
+            match_filter["del"] = False
 
         if minT > 0 and maxT > 0:
             minTime = min(minT, maxT)
@@ -333,8 +338,7 @@ class MongoMetricsDBI:
                           "last_saved_at": "$moddate", "_id": 0}}
         ]
         # grab handle(s) to the db collection
-        kbworkspaces = self.metricsDBs['workspace'][
-            MongoMetricsDBI._WS_WORKSPACES]
+        kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
@@ -587,7 +591,10 @@ class MongoMetricsDBI:
     # BEGIN putting the deleted functions back for reporting
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_logins_from_ws(self, userIds, minTime, maxTime):
+
         match_filter = {"moddate": {"$gte": minTime, "$lte": maxTime}}
+        match_filter["cloning"] = {"$exists": False}
+
         if userIds:
             match_filter["owner"] = {"$in": userIds}
 
@@ -610,7 +617,10 @@ class MongoMetricsDBI:
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_total_logins(self, userIds, minTime, maxTime, excluded_users=[]):
+
         match_cond = {"moddate": {"$gte": minTime, "$lte": maxTime}}
+        match_cond["cloning"] = {"$exists": False}
+
         if not userIds:
             match_cond["owner"] = {"$nin": excluded_users}
         else:
@@ -639,7 +649,10 @@ class MongoMetricsDBI:
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_numObjs(self, userIds, minTime, maxTime):
+
         match_filter = {"moddate": {"$gte": minTime, "$lte": maxTime}}
+        match_filter["cloning"] = {"$exists": False}
+
         if userIds:
             match_filter["owner"] = {"$in": userIds}
 
@@ -665,6 +678,8 @@ class MongoMetricsDBI:
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_ws(self, userIds, minTime, maxTime):
         match_filter = {"moddate": {"$gte": minTime, "$lte": maxTime}}
+        match_filter["cloning"] = {"$exists": False}
+
         if userIds:
             match_filter["owner"] = {"$in": userIds}
 
