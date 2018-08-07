@@ -392,7 +392,7 @@ class MetricsMongoDBController:
         # 1. get the ws_narrative data to start, including deleted ones
         if self.ws_narratives is None:
             self.ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
-
+        print(self.ws_narratives[:11])
         # 2. loop through all self.ws_narratives
         narrative_name_map = {}
         for wsnarr in self.ws_narratives:
