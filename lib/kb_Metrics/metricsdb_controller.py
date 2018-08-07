@@ -392,12 +392,11 @@ class MetricsMongoDBController:
         # 1. get the ws_narrative data to start, including deleted ones
         if self.ws_narratives is None:
             self.ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
-        print(self.ws_narratives[:11])
+
         # 2. loop through all self.ws_narratives
         narrative_name_map = {}
-        '''
         for wsnarr in self.ws_narratives:
-            ws_nm = wsnarr['name']  # workspace_name
+            ws_nm = wsnarr.get('name', '')  # workspace_name or ''
             narr_nm = ws_nm  # default narrative_name
             narr_ver = '1'  # default narrative_objNo
             n_keys = wsnarr['narr_keys']
@@ -408,7 +407,7 @@ class MetricsMongoDBController:
                 if n_keys[i] == 'narrative':
                     narr_ver = n_vals[i]
             narrative_name_map[wsnarr['workspace_id']] = (ws_nm, narr_nm, narr_ver)
-        '''
+
         return narrative_name_map
 
     @cache_it_json(limit=1024, expire=60 * 60 * 1)
