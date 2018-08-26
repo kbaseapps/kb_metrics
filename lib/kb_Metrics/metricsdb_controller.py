@@ -171,7 +171,7 @@ class MetricsMongoDBController:
     def _get_narratives_from_wsobjs(self, params, token):
         """
         _get_narratives_from_wsobjs--Given a time period, fetch the narrative
-        information from workspace.workspaces and workspace.workspaceObjects./
+        information from workspace.workspaces and workspace.workspaceObjects.
         Based on the narratives in workspace.workspaceObjects, if additional
         info available then add to existing data from workspace.workspaces.
         """
@@ -190,26 +190,26 @@ class MetricsMongoDBController:
             for obj in wsobjs:
                 if wsn['workspace_id'] == obj['workspace_id']:
                     if wsn['name'] == obj['object_name']:
-                        wsn[u'object_id'] = obj['object_id']
-                        wsn[u'object_version'] = obj['object_version']
-                        break
+                        wsn['object_id'] = obj['object_id']
+                        wsn['object_version'] = obj['object_version']
                     elif ':' in wsn['name']:
                         wts = wsn['name'].split(':')[1]
                         if '_' in wts:
                             wts = wts.split('_')[1]
                         p = re.compile(wts, re.IGNORECASE)
                         if p.search(obj['object_name']):
-                            wsn[u'object_id'] = obj['object_id']
-                            wsn[u'object_version'] = obj['object_version']
-                        break
+                            wsn['object_id'] = obj['object_id']
+                            wsn['object_version'] = obj['object_version']
 
-            if wsn.get('object_id'):
-                wsn[u'last_saved_by'] = wsn.pop('username')
-                ws_nm, wsn[u'nice_name'], wsn[u'n_ver'] = self._map_ws_narr_names(
-                                                                wsn['workspace_id'])
-                wsn.pop('narr_keys')
-                wsn.pop('narr_values')
-                ws_narrs1.append(wsn)
+                    wsn['last_saved_by'] = wsn.pop('username')
+                    ws_nm, wsn['nice_name'], wsn['n_ver'] = self._map_ws_narr_names(wsn['workspace_id'])
+                    if wsn.get('object_id', None) is None:
+                        wsn['object_id'] = 1
+                        wsn['object_version'] = int(wsn['n_ver'])
+                    wsn.pop('narr_keys')
+                    wsn.pop('narr_values')
+                    ws_narrs1.append(wsn)
+                    break
 
         return {'metrics_result': ws_narrs1}
 
@@ -600,14 +600,6 @@ class MetricsMongoDBController:
             params['user_ids'], params['minTime'], params['maxTime'])
 
         return {'metrics_result': db_ret}
-
-    def get_narratives(self, requesting_user, params, token):
-        # just a wrap around a method with permission checking
-        # should be pointing to the metrics db eventually
-        if not self._is_admin(requesting_user):
-                raise ValueError('You do not have permisson to '
-                                 'invoke this action.')
-        return self._get_narratives_from_wsobjs(requesting_user, params, token)
 
     def get_user_ws_stats(self, requesting_user, params, token):
         if not self._is_admin(requesting_user):
