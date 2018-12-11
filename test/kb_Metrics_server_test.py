@@ -1352,17 +1352,16 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("test_MetricsMongoDBController_constructor2")
     def test_MetricsMongoDBController_constructor2(self):
-
-        expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson',
-                               'nlharris', 'dylan', 'chenry', 'ciservices',
-                               'wjriehl', 'sychan', 'jjeffryes', 'drakemm2', 'allenbh',
-                               'thomasoniii', 'eapearson', 'qzhang', 'tgu2']
+        expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson', 'dylan',
+                               'chenry', 'ciservices', 'wjriehl', 'sychan', 'jjeffryes',
+                               'drakemm2', 'allenbh', 'eapearson', 'qzhang', 'tgu2',
+                               'bsadkhin', 'bobcottingham', 'janakabase', 'jplfaria',
+                               'marcin', 'royk', 'sunita', 'aparkin']
         self.assertItemsEqual(self.db_controller.adminList,
                               expected_admin_list)
 
         expected_metrics_admin_list = ['scanon', 'psdehal', 'dolson', 'chenry',
-                                       'wjriehl', 'sychan', 'qzhang', 'tgu2',
-                                       'eapearson', 'drakemm2', 'allenbh',]
+                                       'wjriehl', 'sychan', 'qzhang', 'tgu2', 'eapearson']
         self.assertItemsEqual(self.db_controller.metricsAdmins,
                               expected_metrics_admin_list)
 
