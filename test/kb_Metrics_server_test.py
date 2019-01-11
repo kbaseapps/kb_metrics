@@ -755,7 +755,7 @@ class kb_MetricsTest(unittest.TestCase):
         with self.assertRaises(WriteError) as context_manager:
             dbi.update_user_records(upd_filter_set,
                                     upd_data_set, isKBstaff)
-        self.assertEqual(err_msg, str(context_manager.exception.message))
+            self.assertEqual(err_msg, str(context_manager.exception.message))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_update_user_records")
@@ -938,7 +938,7 @@ class kb_MetricsTest(unittest.TestCase):
     @patch('pymongo.collection.Collection.update_one')
     def test_MetricsMongoDBs_update_activity_records_WriteError(
                                                 self, mock_upd):
-        err_msg = 'activity write error thrown from mock'
+        err_msg = 'My activity write error thrown from mock'
         mock_upd.side_effect = WriteError(err_msg, 99999)
 
         upd_filter_set = {'_id.username': 'joe',
@@ -951,7 +951,7 @@ class kb_MetricsTest(unittest.TestCase):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         with self.assertRaises(WriteError) as context_manager:
             dbi.update_activity_records(upd_filter_set, upd_data_set)
-        self.assertEqual(err_msg, str(context_manager.exception.message))
+            self.assertEqual(err_msg, str(context_manager.exception.message))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_update_activity_records")
@@ -1024,7 +1024,7 @@ class kb_MetricsTest(unittest.TestCase):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         with self.assertRaises(WriteError) as context_manager:
             dbi.update_narrative_records(upd_narr_filter, upd_narr_data)
-        self.assertEqual(err_msg, str(context_manager.exception.message))
+            self.assertEqual(err_msg, str(context_manager.exception.message))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_update_narrative_records")
