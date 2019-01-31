@@ -230,7 +230,7 @@ class kb_MetricsTest(unittest.TestCase):
         wsobj_cur = dbi.metricsDBs['workspace']['workspaceObjects'].find()
         self.assertEqual(len(list(wsobj_cur)), 41)
         ujs_cur = dbi.metricsDBs['userjobstate']['jobstate'].find()
-        self.assertEqual(len(list(ujs_cur)), 37)
+        self.assertEqual(len(list(ujs_cur)), 38)
         a_users_cur = dbi.metricsDBs['auth2']['users'].find()
         self.assertEqual(len(list(a_users_cur)), 37)
         m_users_cur = dbi.metricsDBs['metrics']['users'].find()
@@ -938,7 +938,7 @@ class kb_MetricsTest(unittest.TestCase):
     @patch('pymongo.collection.Collection.update_one')
     def test_MetricsMongoDBs_update_activity_records_WriteError(
                                                 self, mock_upd):
-        err_msg = 'My activity write error thrown from mock'
+        err_msg = 'activity write error thrown from mock'
         mock_upd.side_effect = WriteError(err_msg, 99999)
 
         upd_filter_set = {'_id.username': 'joe',
@@ -1247,6 +1247,15 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(ujs), 8)
         ujs = dbi.list_ujs_results([], 1500052541065, 1500074641912)
         self.assertEqual(len(ujs), 14)
+
+        # testing list_ujs_results with a different min_tiem & without userIds
+        # checking for job id (i.e., '_id') existence
+        min_time = 1414192660700
+        ujs = dbi.list_ujs_results([], min_time, max_time)
+        self.assertEqual(len(ujs), 17)
+        self.assertEqual(ujs[0]['status'], 'queued')
+        for uj in ujs:
+            self.assertIn('_id', uj)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_narrative_info")
@@ -2351,6 +2360,22 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertFalse(ujs[0].get('workspace_name'))
         self.assertEqual(ujs[0]['user'], requesting_user3)
         self.assertEqual(params['user_ids'], [requesting_user3])
+
+        # testing if a queued data has 'job_id' returned
+        user_list1 = ['nardevuser1']
+        params1 = {'user_ids': user_list1}
+        start_datetime1 = datetime.datetime.strptime('2014-10-24T02:55:32+0000',
+                                                     '%Y-%m-%dT%H:%M:%S+0000')
+        end_datetime1 = datetime.datetime.strptime('2014-10-25T16:08:53.956Z',
+                                                   '%Y-%m-%dT%H:%M:%S.%fZ')
+        params1['epoch_range'] = (start_datetime1, end_datetime1)
+        input_params1 = self.db_controller._process_parameters(params1)
+        ujs_ret1 = self.db_controller.get_user_job_states(
+            requesting_user1, input_params1, self.getContext()['token'])
+        ujs1 = ujs_ret1['job_states']
+        self.assertEqual(len(ujs1), 1)
+        self.assertIn('job_id', ujs1[0])
+        self.assertEqual(ujs1[0]['status'], 'queued')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsMongoDBController_get_total_logins_from_ws")

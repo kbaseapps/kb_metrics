@@ -202,7 +202,8 @@ class MetricsMongoDBController:
                             wsn['object_version'] = obj['object_version']
 
                     wsn['last_saved_by'] = wsn.pop('username')
-                    ws_nm, wsn['nice_name'], wsn['n_ver'] = self._map_ws_narr_names(wsn['workspace_id'])
+                    ws_nm, wsn['nice_name'], wsn['n_ver'] = self._map_ws_narr_names(
+                                                            wsn['workspace_id'])
                     if wsn.get('object_id', None) is None:
                         wsn['object_id'] = 1
                         wsn['object_version'] = int(wsn['n_ver'])
@@ -228,11 +229,13 @@ class MetricsMongoDBController:
             w_nm, n_nm, n_ver = self.narrative_name_map[int(ws_id)]
         except ValueError as ve:
             # e.g.,ws_id == "srividya22:1447279981090"
+            print(ve)
             w_nm = ws_id
             n_nm = ws_id
         except KeyError as ke:
             # no match, simply pass
             # print('No workspace/narrative_name matched key {}'.format(ws_id))
+            print(ke)
             pass
         return (w_nm, n_nm, n_ver)
 

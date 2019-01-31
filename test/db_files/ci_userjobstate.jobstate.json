@@ -1,5 +1,26 @@
 	[
 		{
+			"_id" : "544ade14e4b0d82af0eaf31d",
+			"authparam" : "DEFAULT",
+			"authstrat" : "DEFAULT",
+			"complete" : true,
+			"created" : 1414192660700,
+			"desc" : "Narrative application runner",
+			"error" : true,
+			"errormsg" : null,
+			"estcompl" : null,
+			"maxprog" : null,
+			"meta" : [ ],
+			"prog" : 0,
+			"progtype" : "none",
+			"results" : null,
+			"service" : "nardevuser1",
+			"started" : 1414192660701,
+			"status" : "queued",
+			"updated" : 1414192660701,
+			"user" : "nardevuser1"
+		},
+		{
 			"_id" : "596832a4e4b08b65f9ff5d6f",
 			"user" : "tgu2",
 			"authstrat" : "kbaseworkspace",
