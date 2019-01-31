@@ -1,15 +1,15 @@
-import warnings
-import time
-import datetime
 import copy
+import datetime
 import re
+import time
+import warnings
 
 from redis_cache import cache_it_json
 
-from kb_Metrics.metrics_dbi import MongoMetricsDBI
+from installed_clients.CatalogClient import Catalog
 from kb_Metrics.Util import (_unix_time_millis_from_datetime,
                              _convert_to_datetime)
-from installed_clients.CatalogClient import Catalog
+from kb_Metrics.metrics_dbi import MongoMetricsDBI
 
 
 def log(message, prefix_newline=False):
@@ -84,7 +84,7 @@ class MetricsMongoDBController:
 
         up_dated = 0
         up_serted = 0
-        print('Retrieved {} user record(s) for update!'.format(len(auth2_ret)))
+        print(f'Retrieved {len(auth2_ret)} user record(s) for update!')
         id_keys = ['username', 'email']
         data_keys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
         for u_data in auth2_ret:
@@ -97,7 +97,7 @@ class MetricsMongoDBController:
                 up_dated += update_ret.raw_result['nModified']
             elif update_ret.raw_result.get('upserted'):
                 up_serted += 1
-        print('updated {} and upserted {} users.'.format(up_dated, up_serted))
+        print(f'updated {up_dated} and upserted {up_serted} users.')
         return up_dated + up_serted
 
     def _update_daily_activities(self, params, token):
@@ -113,8 +113,7 @@ class MetricsMongoDBController:
 
         up_dated = 0
         up_serted = 0
-        print('Retrieved {} activity record(s) for '
-              'update!'.format(len(act_list)))
+        print(f'Retrieved {len(act_list)} activity record(s) for update!')
         id_keys = ['_id']
         count_keys = ['obj_numModified']
         for a_data in act_list:
@@ -127,8 +126,7 @@ class MetricsMongoDBController:
             elif update_ret.raw_result.get('upserted'):
                 up_serted += 1
 
-        print('updated {} and upserted {} '
-              'activities.'.format(up_dated, up_serted))
+        print(f'updated {up_dated} and upserted {up_serted} activities.')
         return up_dated + up_serted
 
     def _update_narratives(self, params, token):
@@ -144,8 +142,7 @@ class MetricsMongoDBController:
             print("No narrative records returned for update!")
             return 0
 
-        print('Retrieved {} narratives record(s) for '
-              'update!'.format(len(narr_list)))
+        print(f'Retrieved {len(narr_list)} narratives record(s) for update!')
         id_keys = ['object_id', 'object_version', 'workspace_id']
         other_keys = ['name', 'last_saved_at', 'last_saved_by', 'numObj',
                       'deleted', 'nice_name', 'desc']
@@ -160,8 +157,7 @@ class MetricsMongoDBController:
             elif update_ret.raw_result['upserted']:
                 up_serted += 1
 
-        print('updated {} and upserted {} '
-              'narratives.'.format(up_dated, up_serted))
+        print(f'updated {up_dated} and upserted {up_serted} narratives.')
         return up_dated + up_serted
 
     # End functions to write to the metrics database

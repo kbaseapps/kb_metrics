@@ -10,6 +10,12 @@ This Module implements various metrics for KBase.  To compile and run the kb_Met
     cd kb_Metrics
     make          (required after making changes to $module_name.spec)
     kb-sdk test   (will require setting test user account credentials in test_local/test.cfg)
+    
+After to run the tests successfully, modify your `run_tests.sh` to include the following environmental variables:
+
+    $script_dir/run_docker.sh run -v $script_dir/workdir:/kb/module/work -e SDK_CALLBACK_URL=$1 -e KBASE_SECURE_CONFIG_PARAM_appdev_mongodb_host=localhost -e KBASE_SECURE_CONFIG_PARAM_mongodb_host=localhost -e KBASE_SECURE_CONFIG_PARAM_mongodb_user=admin -e KBASE_SECURE_CONFIG_PARAM_mongodb_pwd=password test/kb_metrics:latest test
+
+You also must be a metrics-admin in deploy.cfg to successfully run the tests.
 
 For more help on how to modify, register and deploy the example to KBase, see the
 [KBase SDK documentation](https://github.com/kbase/kb_sdk).

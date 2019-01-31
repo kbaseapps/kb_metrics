@@ -108,8 +108,7 @@ class MongoMetricsDBI:
             insert_ret = mt_act.insert_many(mt_docs, ordered=False)
         except BulkWriteError as bwe:
             # skip duplicate key error (code=11000)
-            panic = filter(lambda x: x['code'] != 11000,
-                           bwe.details['writeErrors'])
+            panic = [x for x in bwe.details['writeErrors'] if x['code'] != 11000]
             if panic:
                 print("really panic")
                 raise bwe
@@ -117,8 +116,7 @@ class MongoMetricsDBI:
                 return bwe.details['nInserted']
         else:
             # insert_ret.inserted_ids is a list
-            print('Inserted {} activity records.'.format(
-                len(insert_ret.inserted_ids)))
+            print(f'Inserted {len(insert_ret.inserted_ids)} activity records.')
         return len(insert_ret.inserted_ids)
 
     def update_narrative_records(self, upd_filter, upd_data):
