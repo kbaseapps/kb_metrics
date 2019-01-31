@@ -3152,8 +3152,10 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_app_metrics")
     def test_run_MetricsImpl_get_app_metrics(self):
-        user_list = ['psdehal', 'umaganapathyswork', 'arfath']
-        start_datetime = datetime.datetime.strptime('2017-07-14T02:55:32+0000',
+        user_list = ['psdehal', 'umaganapathyswork', 'arfath', 'nardevuser1']
+        # start_datetime = datetime.datetime.strptime('2017-07-14T02:55:32+0000',
+        #                                             '%Y-%m-%dT%H:%M:%S+0000')
+        start_datetime = datetime.datetime.strptime('2014-10-24T02:55:32+0000',
                                                     '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-01-24T19:35:24.247Z',
                                                   '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -3164,7 +3166,9 @@ class kb_MetricsTest(unittest.TestCase):
         # call your implementation
         ret = self.getImpl().get_app_metrics(self.getContext(), m_params)
         app_metrics_ret = ret[0]['job_states']
-        self.assertEqual(len(app_metrics_ret), 5)
+        self.assertEqual(len(app_metrics_ret), 6)
+        for ap in app_metrics_ret:
+            self.assertIn('job_id', ap)
 
         # call implementation with only one user
         user_list = ['psdehal']
