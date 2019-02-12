@@ -9,7 +9,7 @@ from redis_cache import cache_it_json
 from kb_Metrics.metrics_dbi import MongoMetricsDBI
 from kb_Metrics.Util import (_unix_time_millis_from_datetime,
                              _convert_to_datetime)
-from Catalog.CatalogClient import Catalog
+from installed_clients.CatalogClient import Catalog
 
 
 def log(message, prefix_newline=False):
