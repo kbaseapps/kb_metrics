@@ -192,6 +192,7 @@ class MetricsMongoDBController:
                     if wsn['name'] == obj['object_name']:
                         wsn['object_id'] = obj['object_id']
                         wsn['object_version'] = obj['object_version']
+                        break
                     elif ':' in wsn['name']:
                         wts = wsn['name'].split(':')[1]
                         if '_' in wts:
@@ -200,17 +201,15 @@ class MetricsMongoDBController:
                         if p.search(obj['object_name']):
                             wsn['object_id'] = obj['object_id']
                             wsn['object_version'] = obj['object_version']
+                            break
 
-                    wsn['last_saved_by'] = wsn.pop('username')
-                    ws_nm, wsn['nice_name'], wsn['n_ver'] = self._map_ws_narr_names(
-                                                            wsn['workspace_id'])
-                    if wsn.get('object_id', None) is None:
-                        wsn['object_id'] = 1
-                        wsn['object_version'] = int(wsn['n_ver'])
-                    wsn.pop('narr_keys')
-                    wsn.pop('narr_values')
-                    ws_narrs1.append(wsn)
-                    break
+            if wsn.get('object_id'):
+                wsn['last_saved_by'] = wsn.pop('username')
+                ws_nm, wsn['nice_name'], wsn['n_ver'] = \
+                    self._map_ws_narr_names(wsn['workspace_id'])
+                wsn.pop('narr_keys')
+                wsn.pop('narr_values')
+                ws_narrs1.append(wsn)
 
         return {'metrics_result': ws_narrs1}
 

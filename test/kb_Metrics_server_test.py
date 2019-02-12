@@ -2086,7 +2086,7 @@ class kb_MetricsTest(unittest.TestCase):
             params, self.getContext()['token'])
         narrs = narr_ret['metrics_result']
 
-        self.assertEqual(len(narrs), 3)
+        self.assertEqual(len(narrs), 2)
         self.assertEqual(narrs[0]['workspace_id'], 6824)
         self.assertEqual(narrs[0]['object_id'], 1)
         self.assertEqual(narrs[0]['object_version'], 38)
@@ -2098,27 +2098,16 @@ class kb_MetricsTest(unittest.TestCase):
                          datetime.datetime(2016, 7, 15, 18, 49, 12, 709000))
         self.assertFalse(narrs[0]['deleted'])
 
-        self.assertEqual(narrs[1]['workspace_id'], 8768)
+        self.assertEqual(narrs[1]['workspace_id'], 27834)
         self.assertEqual(narrs[1]['object_id'], 1)
-        self.assertEqual(narrs[1]['object_version'], 22)
-        self.assertEqual(narrs[1]['name'], 'vkumar:1468592344827')
-        self.assertEqual(narrs[1]['nice_name'], 'test_Ecoli_after_update - trimmed - Copy')
-        self.assertEqual(narrs[1]['numObj'], 23)
-        self.assertEqual(narrs[1]['last_saved_by'], 'vkumar')
+        self.assertEqual(narrs[1]['object_version'], 11)
+        self.assertEqual(narrs[1]['name'], 'psdehal:narrative_1513709108341')
+        self.assertEqual(narrs[1]['nice_name'], 'Staging Test')
+        self.assertEqual(narrs[1]['numObj'], 4)
+        self.assertEqual(narrs[1]['last_saved_by'], 'psdehal')
         self.assertEqual(narrs[1]['last_saved_at'],
-                         datetime.datetime(2016, 7, 15, 14, 50, 12, 145000))
-        self.assertFalse(narrs[1]['deleted'])
-
-        self.assertEqual(narrs[2]['workspace_id'], 27834)
-        self.assertEqual(narrs[2]['object_id'], 1)
-        self.assertEqual(narrs[2]['object_version'], 11)
-        self.assertEqual(narrs[2]['name'], 'psdehal:narrative_1513709108341')
-        self.assertEqual(narrs[2]['nice_name'], 'Staging Test')
-        self.assertEqual(narrs[2]['numObj'], 4)
-        self.assertEqual(narrs[2]['last_saved_by'], 'psdehal')
-        self.assertEqual(narrs[2]['last_saved_at'],
                          datetime.datetime(2018, 1, 24, 19, 35, 30, 1000))
-        self.assertFalse(narrs[2]['deleted'])
+        self.assertFalse(narrs[1]['deleted'])
 
     # Uncomment to skip this test
     # @unittest.skip("skipped _get_narrative_name_map")
@@ -3188,7 +3177,7 @@ class kb_MetricsTest(unittest.TestCase):
         if 'ci' in self.cfg['kbase-endpoint']:
             self.assertIn('njs', app_metrics_ret[0]['client_groups'])
         else:
-            self.assertIn('bigmemlong', app_metrics_ret[0]['client_groups'])
+            self.assertIn('bigmem', app_metrics_ret[0]['client_groups'])
         self.assertEqual(app_metrics_ret[0]['narrative_name'], 'Staging Test')
         self.assertEqual(app_metrics_ret[0]['workspace_name'],
                          'psdehal:narrative_1513709108341')
