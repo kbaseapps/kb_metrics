@@ -12,14 +12,6 @@ from kb_Metrics.Util import (_unix_time_millis_from_datetime,
 from kb_Metrics.metrics_dbi import MongoMetricsDBI
 
 
-def log(message, prefix_newline=False):
-    """
-    Logging function, provides a hook to suppress or redirect log messages.
-    """
-    print(('\n' if prefix_newline else '') +
-          '{0:.2f}'.format(time.time()) + ': ' + str(message))
-
-
 class MetricsMongoDBController:
 
     def _config_str_to_list(self, list_str):
@@ -224,7 +216,6 @@ class MetricsMongoDBController:
             w_nm, n_nm, n_ver = self.narrative_name_map[int(ws_id)]
         except ValueError as ve:
             # e.g.,ws_id == "srividya22:1447279981090"
-            print(ve)
             w_nm = ws_id
             n_nm = ws_id
         except KeyError as ke:
