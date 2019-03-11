@@ -617,7 +617,7 @@ class MongoMetricsDBI:
             {"$group": {"_id": {"username": "$owner",
                                 "year": "$year",
                                 "month": "$month"},
-                        "year_mon_user_logins": {"$sum": 1}}},
+                        "year_mon_user_logins": {"$sum": 1}}}
         ]
 
         # grab handle(s) to the database collection
@@ -652,7 +652,7 @@ class MongoMetricsDBI:
             {"$group": {"_id": {"year": "$_id.year",
                                 "month": "$_id.month"},
                         "year_mon_total_logins": {
-                            "$sum": "$count_user_ws_logins"}}},
+                            "$sum": "$count_user_ws_logins"}}}
         ]
         # grab handle(s) to the database collection
         kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
@@ -678,7 +678,7 @@ class MongoMetricsDBI:
             {"$group": {"_id": {"username": "$owner",
                                 "year": "$year",
                                 "month": "$month"},
-                        "count_user_numObjs": {"$sum": "$numObj"}}},
+                        "count_user_numObjs": {"$sum": "$numObj"}}}
         ]
 
         # grab handle(s) to the database collection
@@ -703,7 +703,7 @@ class MongoMetricsDBI:
             {"$group": {"_id": {"username": "$owner",
                                 "year": "$year",
                                 "month": "$month"},
-                        "count_user_ws": {"$sum": 1}}},
+                        "count_user_ws": {"$sum": 1}}}
         ]
 
         # grab handle(s) to the database collection
