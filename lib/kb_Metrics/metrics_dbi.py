@@ -1,6 +1,5 @@
 import datetime
 from pymongo import MongoClient
-from pymongo import ASCENDING
 from pymongo.errors import BulkWriteError, WriteError, ConfigurationError
 from redis_cache import cache_it_json
 
@@ -67,7 +66,7 @@ class MongoMetricsDBI:
             update_ret = mt_users.update_one(upd_filter,
                                              upd_op, upsert=True)
         except WriteError as we:
-            print('WriteError caught')
+            print(f'WriteError caught: {we}')
             raise we
         return update_ret
 
@@ -87,7 +86,7 @@ class MongoMetricsDBI:
             update_ret = mt_coll.update_one(upd_filter,
                                             upd_op, upsert=True)
         except WriteError as e:
-            print('WriteError caught')
+            print(f'WriteError caught: {e}')
             raise e
         return update_ret
 
@@ -108,8 +107,7 @@ class MongoMetricsDBI:
             insert_ret = mt_act.insert_many(mt_docs, ordered=False)
         except BulkWriteError as bwe:
             # skip duplicate key error (code=11000)
-            panic = filter(lambda x: x['code'] != 11000,
-                           bwe.details['writeErrors'])
+            panic = [x for x in bwe.details['writeErrors'] if x['code'] != 11000]
             if panic:
                 print("really panic")
                 raise bwe
@@ -117,8 +115,7 @@ class MongoMetricsDBI:
                 return bwe.details['nInserted']
         else:
             # insert_ret.inserted_ids is a list
-            print('Inserted {} activity records.'.format(
-                len(insert_ret.inserted_ids)))
+            print(f'Inserted {len(insert_ret.inserted_ids)} activity records.')
         return len(insert_ret.inserted_ids)
 
     def update_narrative_records(self, upd_filter, upd_data):
@@ -139,7 +136,7 @@ class MongoMetricsDBI:
             update_ret = mt_narrs.update_one(upd_filter,
                                              upd_op, upsert=True)
         except WriteError as we:
-            print('WriteError caught')
+            print(f'WriteError caught: {we}')
             raise we
         else:
             # re-touch the newly inserted records
@@ -248,9 +245,8 @@ class MongoMetricsDBI:
                                 "day_mod": "$date_mod"},
                         "obj_numModified": {"$sum": 1}}}]
 
-        return sorted(
-            list(self.metricsDBs['workspace'][MongoMetricsDBI._WS_WSOBJECTS].aggregate(pipeline)),
-            key=itemgetter('_id'))
+        activities = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WSOBJECTS]
+        return list(activities.aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ws_owners(self):
@@ -562,9 +558,7 @@ class MongoMetricsDBI:
                         "user_signups": {"$sum": 1},
                         "returning_user_count": {"$sum": "$returning"}}}]
 
-        # grab handle(s) to the db collection
-        mtusers = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
-        return sorted(list(mtusers.aggregate(pipeline)), key=itemgetter('_id'))
+        return list(self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS].aggregate(pipeline))
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ujs_results(self, userIds, minTime, maxTime):
@@ -624,7 +618,6 @@ class MongoMetricsDBI:
                                 "year": "$year",
                                 "month": "$month"},
                         "year_mon_user_logins": {"$sum": 1}}},
-            {"$sort": {"_id": ASCENDING}}
         ]
 
         # grab handle(s) to the database collection
@@ -660,7 +653,6 @@ class MongoMetricsDBI:
                                 "month": "$_id.month"},
                         "year_mon_total_logins": {
                             "$sum": "$count_user_ws_logins"}}},
-            {"$sort": {"_id": ASCENDING}}
         ]
         # grab handle(s) to the database collection
         kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
@@ -687,7 +679,6 @@ class MongoMetricsDBI:
                                 "year": "$year",
                                 "month": "$month"},
                         "count_user_numObjs": {"$sum": "$numObj"}}},
-            {"$sort": {"_id": ASCENDING}}
         ]
 
         # grab handle(s) to the database collection
@@ -713,7 +704,6 @@ class MongoMetricsDBI:
                                 "year": "$year",
                                 "month": "$month"},
                         "count_user_ws": {"$sum": 1}}},
-            {"$sort": {"_id": ASCENDING}}
         ]
 
         # grab handle(s) to the database collection
