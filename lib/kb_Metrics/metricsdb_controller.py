@@ -14,14 +14,13 @@ from kb_Metrics.metrics_dbi import MongoMetricsDBI
 
 class MetricsMongoDBController:
 
-    def _config_str_to_list(self, list_str):
-
+    def _config_str_to_list(self, config, config_key):
+        list_str = config.get(config_key)
         user_list = list()
         if list_str:
             user_list = [x.strip() for x in list_str.split(',') if x.strip()]
         else:
-            warnings.warn('no {} are set in config of'
-                          ' MetricsMongoDBController'.format(list_str))
+            warnings.warn('no configuration found for "{}" in config of MetricsMongoDBController'.format(config_key))
 
         return user_list
 
@@ -207,13 +206,14 @@ class MetricsMongoDBController:
         _map_ws_narr_names-returns the workspace/narrative name
         and version with given ws_id
         """
-        if self.narrative_name_map == {}:
-            self.narrative_name_map = self._get_narrative_name_map()
+
+        narrative_name_map = self._get_narrative_name_map()
+
         w_nm = ''
         n_nm = ''
         n_ver = '1'
         try:
-            w_nm, n_nm, n_ver = self.narrative_name_map[int(ws_id)]
+            w_nm, n_nm, n_ver = narrative_name_map[int(ws_id)]
         except ValueError as ve:
             # e.g.,ws_id == "srividya22:1447279981090"
             w_nm = ws_id
@@ -423,12 +423,9 @@ class MetricsMongoDBController:
 
     def __init__(self, config):
         # grab config lists
-        self.adminList = self._config_str_to_list(
-            config.get('admin-users'))
-        self.metricsAdmins = self._config_str_to_list(
-            config.get('metrics-admins'))
-        self.mongodb_dbList = self._config_str_to_list(
-            config.get('mongodb-databases'))
+        self.adminList = self._config_str_to_list(config, 'admin-users')
+        self.metricsAdmins = self._config_str_to_list(config, 'metrics-admins')
+        self.mongodb_dbList = self._config_str_to_list(config, 'mongodb-databases')
 
         # check for required parameters
         for p in ['mongodb-host', 'mongodb-databases',
@@ -453,7 +450,6 @@ class MetricsMongoDBController:
         self.ws_narratives = None
         self.client_groups = None
         self.cat_client = None
-        self.narrative_name_map = {}
 
     def map_ws_narrative_names(self, requesting_user, ws_ids, token):
         """
