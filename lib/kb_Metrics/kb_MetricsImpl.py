@@ -21,9 +21,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "1.2.0"
-    GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "c6fd471fb9ef1786937e53e110a701c633f0f4ca"
+    VERSION = "1.3.0"
+    GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
+    GIT_COMMIT_HASH = "f4b51ba9746254fb9e7cfa2fa93d8c63fabb1814"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
