@@ -36,6 +36,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # Any configuration parameters that are important should be parsed and
         # saved in the constructor.
+        self.config = config
         self.mdb_controller = MetricsMongoDBController(config)
         #END_CONSTRUCTOR
         pass
@@ -56,7 +57,8 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # ctx is the context object
         # return variables are: return_records
         #BEGIN get_app_metrics
-        return_records = self.mdb_controller.get_user_job_states(ctx['user_id'],
+        controller = MetricsMongoDBController(self.config)
+        return_records = controller.get_user_job_states(ctx['user_id'],
                                                                  params,
                                                                  ctx['token'])
         #END get_app_metrics
