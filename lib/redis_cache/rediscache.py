@@ -92,9 +92,9 @@ class SimpleCache(object):
                                            port=self.port,
                                            db=self.db,
                                            password=password).connect()
-            print('SimpleCache: connected: {} {} {} {}'.format(self.host, self.port, self.db,password))
+            # print('SimpleCache: connected: {} {} {} {}'.format(self.host, self.port, self.db,password))
         except RedisNoConnException as e:
-            print('SimpleCache: connection error: {}'.format(str(e)))
+            # print('SimpleCache: connection error: {}'.format(str(e)))
             self.connection = None
             pass
 

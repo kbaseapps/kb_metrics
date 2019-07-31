@@ -5,7 +5,7 @@ import time
 import warnings
 from pprint import pprint
 
-from redis_cache import cache_it_json
+from redis_cache import (cache_it_json, cache_expire)
 
 from installed_clients.CatalogClient import Catalog
 from kb_Metrics.Util import (_unix_time_millis_from_datetime,
@@ -205,7 +205,7 @@ class MetricsMongoDBController:
 
         return {'metrics_result': ws_narrs1}
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
+    # @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _map_ws_narr_names(self, ws_id):
         """
         _map_ws_narr_names-returns the workspace/narrative name
@@ -214,21 +214,40 @@ class MetricsMongoDBController:
 
         narrative_name_map = self._get_narrative_name_map()
 
-        w_nm = ''
-        n_nm = ''
-        n_ver = '1'
+        # w_nm = ''
+        # n_nm = ''
+        # n_ver = '1'
+        
         try:
-            w_nm, n_nm, n_ver = narrative_name_map[int(ws_id)]
+            workspace_id = int(ws_id)
         except ValueError as ve:
-            # e.g.,ws_id == "srividya22:1447279981090"
-            w_nm = ws_id
-            n_nm = ws_id
-        except KeyError as ke:
-            # no match, simply pass
-            # print('No workspace/narrative_name matched key {}'.format(ws_id))
-            print_debug(ke)
-            pass
-        return (w_nm, n_nm, n_ver)
+            return ws_id, ws_id, '1'
+
+        narrative_name_map = self._get_narrative_name_map()
+        if workspace_id in narrative_name_map:
+            w_nm, n_nm, n_ver = narrative_name_map[workspace_id]
+            return (w_nm, n_nm, n_ver)
+
+        # cache_expire(namespace="narrative_names", prefix=self.__module__)
+        # narrative_name_map = self._get_narrative_name_map()
+        # if workspace_id in narrative_name_map:
+        #     w_nm, n_nm, n_ver = narrative_name_map[workspace_id]
+        #     return (w_nm, n_nm, n_ver)
+
+        return '', '', '1'
+
+        # try:
+        #     w_nm, n_nm, n_ver = narrative_name_map[int(ws_id)]
+        # except ValueError as ve:
+        #     # e.g.,ws_id == "srividya22:1447279981090"
+        #     w_nm = ws_id
+        #     n_nm = ws_id
+        # except KeyError as ke:
+        #     # no match, simply pass
+        #     # print('No workspace/narrative_name matched key {}'.format(ws_id))
+        #     print_debug(ke)
+        #     pass
+        # return (w_nm, n_nm, n_ver)
 
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _get_activities_from_wsobjs(self, params, token):
@@ -376,6 +395,8 @@ class MetricsMongoDBController:
 
         return params
 
+    
+
     @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _get_narrative_name_map(self):
         """
@@ -385,7 +406,10 @@ class MetricsMongoDBController:
         """
         # 1. get the ws_narrative data to start, including deleted ones
         if self.ws_narratives is None:
+            # print('GET NAR NAME MAP - no ws_narratives, fetching')
             self.ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
+        # else:
+        #     print('GET NAR NAME MAP - have ws_narratives')
 
         # 2. loop through all self.ws_narratives
         narrative_name_map = {}
@@ -428,7 +452,6 @@ class MetricsMongoDBController:
 
     def __init__(self, config):
         print_debug('CONTROLLER - init')
-        # print(config)
         # grab config lists
         self.adminList = self.get_config_list(config, 'admin-users')
         self.metricsAdmins = self.get_config_list(config, 'metrics-admins')
