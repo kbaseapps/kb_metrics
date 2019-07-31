@@ -38,16 +38,12 @@ class MongoMetricsDBI:
         self.mongo_clients = dict()
         self.metricsDBs = dict()
         for m_db in mongo_dbs:
-            try:
-                # create the client and authenticate
-                self.mongo_clients[m_db] = MongoClient(
-                    "mongodb://" + mongo_user + ":" + mongo_psswd +
-                    "@" + mongo_host + "/" + m_db)
-                # grab a handle to the database
-                self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
-            except ConfigurationError as ce:
-                print(ce)
-                raise ce
+            # create the client and authenticate
+            self.mongo_clients[m_db] = MongoClient(
+                "mongodb://" + mongo_user + ":" + mongo_psswd +
+                "@" + mongo_host + "/" + m_db)
+            # grab a handle to the database
+            self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
 
     # Begin functions to write to the metrics database...
     def update_user_records(self, upd_filter, upd_data, kbstaff):
@@ -61,13 +57,11 @@ class MongoMetricsDBI:
         # grab handle(s) to the database collection(s) targeted
         mt_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
         update_ret = None
-        try:
-            # return an instance of UpdateResult(raw_result, acknowledged)
-            update_ret = mt_users.update_one(upd_filter,
-                                             upd_op, upsert=True)
-        except WriteError as we:
-            print(f'WriteError caught: {we}')
-            raise we
+
+        # return an instance of UpdateResult(raw_result, acknowledged)
+        update_ret = mt_users.update_one(upd_filter,
+                                            upd_op, upsert=True)
+
         return update_ret
 
     def update_activity_records(self, upd_filter, upd_data):
@@ -81,13 +75,11 @@ class MongoMetricsDBI:
         mt_coll = self.metricsDBs['metrics'][
             MongoMetricsDBI._MT_DAILY_ACTIVITIES]
         update_ret = None
-        try:
-            # return an instance of UpdateResult(raw_result, acknowledged)
-            update_ret = mt_coll.update_one(upd_filter,
-                                            upd_op, upsert=True)
-        except WriteError as e:
-            print(f'WriteError caught: {e}')
-            raise e
+
+        # return an instance of UpdateResult(raw_result, acknowledged)
+        update_ret = mt_coll.update_one(upd_filter,
+                                        upd_op, upsert=True)
+
         return update_ret
 
     def insert_activity_records(self, mt_docs):
@@ -131,18 +123,16 @@ class MongoMetricsDBI:
         mt_narrs = self.metricsDBs['metrics'][
             MongoMetricsDBI._MT_NARRATIVES]
         update_ret = None
-        try:
-            # return an instance of UpdateResult(raw_result, acknowledged)
-            update_ret = mt_narrs.update_one(upd_filter,
-                                             upd_op, upsert=True)
-        except WriteError as we:
-            print(f'WriteError caught: {we}')
-            raise we
-        else:
-            # re-touch the newly inserted records
-            mt_narrs.update({'access_count': {'$exists': False}},
-                            {'$set': {'access_count': 1}},
-                            upsert=True, multi=True)
+
+        # return an instance of UpdateResult(raw_result, acknowledged)
+        update_ret = mt_narrs.update_one(upd_filter,
+                                            upd_op, upsert=True)
+
+        # re-touch the newly inserted records
+        mt_narrs.update({'access_count': {'$exists': False}},
+                        {'$set': {'access_count': 1}},
+                        upsert=True, multi=True)
+
         return update_ret
     # End functions to write to the metrics database
 

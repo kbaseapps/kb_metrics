@@ -3,6 +3,7 @@ import datetime
 import re
 import time
 import warnings
+from pprint import pprint
 
 from redis_cache import cache_it_json
 
@@ -11,18 +12,22 @@ from kb_Metrics.Util import (_unix_time_millis_from_datetime,
                              _convert_to_datetime)
 from kb_Metrics.metrics_dbi import MongoMetricsDBI
 
+debug = False
+def print_debug(msg):
+    if not debug:
+        return
+    t = str(datetime.datetime.now())
+    print("{}:{}".format(t, msg))
 
 class MetricsMongoDBController:
 
-    def _config_str_to_list(self, config, config_key):
+    def get_config_list(self, config, config_key):
         list_str = config.get(config_key)
-        user_list = list()
-        if list_str:
-            user_list = [x.strip() for x in list_str.split(',') if x.strip()]
-        else:
-            warnings.warn('no configuration found for "{}" in config of MetricsMongoDBController'.format(config_key))
-
-        return user_list
+        if not list_str:
+            error_msg = 'Required key "{}" not found in config'.format(config_key)
+            error_msg += ' of MetricsMongoDBController'
+            raise ValueError(error_msg)
+        return [x.strip() for x in list_str.split(',') if x.strip()]
 
     def _is_admin(self, username):
         return username in self.adminList
@@ -70,12 +75,12 @@ class MetricsMongoDBController:
         auth2_ret = self.metrics_dbi.aggr_user_details(
             params['user_ids'], params['minTime'], params['maxTime'])
         if not auth2_ret:
-            print("No user records returned for update!")
+            print_debug("No user records returned for update!")
             return 0
 
         up_dated = 0
         up_serted = 0
-        print(f'Retrieved {len(auth2_ret)} user record(s) for update!')
+        print_debug(f'Retrieved {len(auth2_ret)} user record(s) for update!')
         id_keys = ['username', 'email']
         data_keys = ['full_name', 'signup_at', 'last_signin_at', 'roles']
         for u_data in auth2_ret:
@@ -88,7 +93,7 @@ class MetricsMongoDBController:
                 up_dated += update_ret.raw_result['nModified']
             elif update_ret.raw_result.get('upserted'):
                 up_serted += 1
-        print(f'updated {up_dated} and upserted {up_serted} users.')
+        print_debug(f'updated {up_dated} and upserted {up_serted} users.')
         return up_dated + up_serted
 
     def _update_daily_activities(self, params, token):
@@ -99,12 +104,12 @@ class MetricsMongoDBController:
         ws_ret = self._get_activities_from_wsobjs(params, token)
         act_list = ws_ret['metrics_result']
         if not act_list:
-            print("No daily activity records returned for update!")
+            print_debug("No daily activity records returned for update!")
             return 0
 
         up_dated = 0
         up_serted = 0
-        print(f'Retrieved {len(act_list)} activity record(s) for update!')
+        print_debug(f'Retrieved {len(act_list)} activity record(s) for update!')
         id_keys = ['_id']
         count_keys = ['obj_numModified']
         for a_data in act_list:
@@ -117,7 +122,7 @@ class MetricsMongoDBController:
             elif update_ret.raw_result.get('upserted'):
                 up_serted += 1
 
-        print(f'updated {up_dated} and upserted {up_serted} activities.')
+        print_debug(f'updated {up_dated} and upserted {up_serted} activities.')
         return up_dated + up_serted
 
     def _update_narratives(self, params, token):
@@ -130,10 +135,10 @@ class MetricsMongoDBController:
         up_dated = 0
         up_serted = 0
         if not narr_list:
-            print("No narrative records returned for update!")
+            print_debug("No narrative records returned for update!")
             return 0
 
-        print(f'Retrieved {len(narr_list)} narratives record(s) for update!')
+        print_debug(f'Retrieved {len(narr_list)} narratives record(s) for update!')
         id_keys = ['object_id', 'object_version', 'workspace_id']
         other_keys = ['name', 'last_saved_at', 'last_saved_by', 'numObj',
                       'deleted', 'nice_name', 'desc']
@@ -148,7 +153,7 @@ class MetricsMongoDBController:
             elif update_ret.raw_result['upserted']:
                 up_serted += 1
 
-        print(f'updated {up_dated} and upserted {up_serted} narratives.')
+        print_debug(f'updated {up_dated} and upserted {up_serted} narratives.')
         return up_dated + up_serted
 
     # End functions to write to the metrics database
@@ -221,7 +226,7 @@ class MetricsMongoDBController:
         except KeyError as ke:
             # no match, simply pass
             # print('No workspace/narrative_name matched key {}'.format(ws_id))
-            print(ke)
+            print_debug(ke)
             pass
         return (w_nm, n_nm, n_ver)
 
@@ -422,17 +427,19 @@ class MetricsMongoDBController:
                 for client_group in client_groups]
 
     def __init__(self, config):
+        print_debug('CONTROLLER - init')
+        # print(config)
         # grab config lists
-        self.adminList = self._config_str_to_list(config, 'admin-users')
-        self.metricsAdmins = self._config_str_to_list(config, 'metrics-admins')
-        self.mongodb_dbList = self._config_str_to_list(config, 'mongodb-databases')
+        self.adminList = self.get_config_list(config, 'admin-users')
+        self.metricsAdmins = self.get_config_list(config, 'metrics-admins')
+        self.mongodb_dbList = self.get_config_list(config, 'mongodb-databases')
 
         # check for required parameters
         for p in ['mongodb-host', 'mongodb-databases',
                   'mongodb-user', 'mongodb-pwd']:
             if p not in config:
-                error_msg = '"{}" config variable must be defined '.format(p)
-                error_msg += 'to start a MetricsMongoDBController!'
+                error_msg = 'Required key "{}" not found in config'.format(p)
+                error_msg += ' of MetricsMongoDBController'
                 raise ValueError(error_msg)
 
         # instantiate the mongo client
