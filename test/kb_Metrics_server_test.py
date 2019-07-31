@@ -8,6 +8,7 @@ import unittest
 from configparser import ConfigParser
 from os import environ
 from unittest.mock import patch
+import copy
 
 from bson.objectid import ObjectId
 from pymongo import MongoClient
@@ -21,18 +22,29 @@ from kb_Metrics.kb_MetricsServer import MethodContext
 from kb_Metrics.metrics_dbi import MongoMetricsDBI
 from kb_Metrics.metricsdb_controller import MetricsMongoDBController
 
+debug = False
+def print_debug(msg):
+    if not debug:
+        return
+    t = str(datetime.datetime.now())
+    print("{}:{}".format(t, msg))
+
 
 class kb_MetricsTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print_debug("SETUP CLASS")
         token = environ.get('KB_AUTH_TOKEN', None)
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
         cls.cfg = {}
         config = ConfigParser()
         config.read(config_file)
+        print_debug('CFG STARTING')
         for nameval in config.items('kb_Metrics'):
+            print_debug('CFG: {} = {}'.format(nameval[0], nameval[1]))
             cls.cfg[nameval[0]] = nameval[1]
+        print_debug('CFG FINISHED')
         # Getting username from Auth profile for token
         authServiceUrl = cls.cfg['auth-service-url']
         auth_client = _KBaseAuth(authServiceUrl)
@@ -50,11 +62,14 @@ class kb_MetricsTest(unittest.TestCase):
                         'authenticated': 1})
         cls.wsURL = cls.cfg['workspace-url']
         cls.wsClient = workspaceService(cls.wsURL)
+        print_debug('SETUP CLASS - about to create a new kb_Metrics')
         cls.serviceImpl = kb_Metrics(cls.cfg)
         cls.scratch = cls.cfg['scratch']
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
+        print_debug('SETUP CLASS - about to create a new controller')
         cls.db_controller = MetricsMongoDBController(cls.cfg)
         cls.client = MongoClient(port=27017)
+        print_debug("MONGO - about to start")
         cls.init_mongodb()
 
     @classmethod
@@ -65,12 +80,15 @@ class kb_MetricsTest(unittest.TestCase):
 
     @classmethod
     def init_mongodb(cls):
-        print('starting to build local mongoDB')
+        print_debug("MONGO - starting")
+        print_debug('starting to build local mongoDB')
 
         os.system("sudo service mongodb start")
         os.system("mongod --version")
         os.system("cat /var/log/mongodb/mongodb.log "
                   "| grep 'waiting for connections on port 27017'")
+
+        print_debug("MONGO - ready")
 
         cls._insert_data(cls.client, 'workspace', 'workspaces')
         cls._insert_data(cls.client, 'exec_engine', 'exec_tasks')
@@ -185,7 +203,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         db[table].drop()
         db[table].insert_many(records)
-        print(f'Inserted {len(records)} records for {db_name}.{table}')
+        print_debug(f'Inserted {len(records)} records for {db_name}.{table}')
 
     def getWsClient(self):
         return self.__class__.wsClient
@@ -366,7 +384,7 @@ class kb_MetricsTest(unittest.TestCase):
     def test_MetricsMongoDBs_aggr_signup_retn_users(self):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         m_users_cur = dbi.metricsDBs['metrics']['users'].find()
-        print(f'There are {len(list(m_users_cur))} users in metrics.users before dbi call')
+        print_debug(f'There are {len(list(m_users_cur))} users in metrics.users before dbi call')
 
         min_time = 1468454614192
         max_time = 1585259588883
@@ -978,8 +996,12 @@ class kb_MetricsTest(unittest.TestCase):
             2019, 1, 24, 19, 35, 48, 1000), 'numObj': 7}
 
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        print_debug('DB NAMES')
+        print_debug(self.db_names)
         with self.assertRaises(WriteError) as context_manager:
             dbi.update_narrative_records(upd_narr_filter, upd_narr_data)
+            print('WRITE ERROR')
+            print(str(context_manager.exception.message))
             self.assertEqual(err_msg, str(context_manager.exception.message))
 
     # Uncomment to skip this test
@@ -1273,7 +1295,7 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_constructor")
     def test_MetricsMongoDBController_constructor(self):
-        cfg_arr = self.cfg
+        # print_debug('TEST - controller constructor')
         # testing if all the required parameters are given
         # if yes, no error is raised
         with self.assertRaises(ValueError):
@@ -1287,7 +1309,7 @@ class kb_MetricsTest(unittest.TestCase):
         # testing if all the required parameters are given, with an empty host
         with self.assertRaises(ConfigurationError):
             try:
-                cfg_arr = self.cfg
+                cfg_arr = copy.deepcopy(self.cfg)
                 cfg_arr['mongodb-host'] = ''
                 MetricsMongoDBController(cfg_arr)
             except ConfigurationError as e:
@@ -1298,8 +1320,8 @@ class kb_MetricsTest(unittest.TestCase):
         for k in ['mongodb-host', 'mongodb-databases',
                   'mongodb-user', 'mongodb-pwd']:
 
-            error_msg = '"{}" config variable must be defined '.format(k)
-            error_msg += 'to start a MetricsMongoDBController!'
+            error_msg = 'Required key "{}" not found in config'.format(k)
+            error_msg += ' of MetricsMongoDBController'
 
             cfg_arr = copy.deepcopy(self.cfg)
             cfg_arr.pop(k)
@@ -1312,14 +1334,14 @@ class kb_MetricsTest(unittest.TestCase):
         expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson', 'dylan',
                                'chenry', 'ciservices', 'wjriehl', 'sychan', 'jjeffryes',
                                'drakemm2', 'allenbh', 'eapearson', 'qzhang', 'tgu2',
-                               'bsadkhin', 'bobcottingham', 'janakabase', 'jplfaria',
-                               'marcin', 'royk', 'sunita', 'aparkin']
+                               'bsadkhin', 'bobcottingham', 'janakakbase', 'jplfaria',
+                               'marcin', 'royk', 'sunita', 'aparkin', 'cnelson']
         self.assertCountEqual(self.db_controller.adminList,
                               expected_admin_list)
 
         expected_metrics_admin_list = ['scanon', 'psdehal', 'dolson', 'chenry',
                                        'wjriehl', 'sychan', 'qzhang', 'tgu2', 'eapearson',
-                                       'jjeffryes']
+                                       'jjeffryes', 'cnelson']
         self.assertCountEqual(self.db_controller.metricsAdmins,
                               expected_metrics_admin_list)
 
@@ -1332,22 +1354,30 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped MetricsMongoDBController_config_str_to_list")
     def test_MetricsMongoDBController_config_str_to_list(self):
         # testing None config input
-        user_list_str = None
-        user_list = self.db_controller._config_str_to_list(user_list_str)
-        self.assertFalse(len(user_list))
+        config = {
+            'user-list': None
+        }
+        # user_list_str = None
+
+        error_msg = 'Required key "{}" not found in config'.format('user-list')
+        error_msg += ' of MetricsMongoDBController'
+        
+        with self.assertRaisesRegex(ValueError, error_msg):
+            user_list = self.db_controller.get_config_list(config, 'user-list')
+        # self.assertFalse(len(user_list))
 
         # testing normal list
-        user_list_str = 'user_1, user_2'
-        user_list = self.db_controller._config_str_to_list(user_list_str)
-        expected_list = ['user_1', 'user_2']
-        self.assertEqual(len(user_list), 2)
-        self.assertCountEqual(user_list, expected_list)
+        # user_list_str = 'user_1, user_2'
+        # user_list = self.db_controller._config_str_to_list(user_list_str)
+        # expected_list = ['user_1', 'user_2']
+        # self.assertEqual(len(user_list), 2)
+        # self.assertCountEqual(user_list, expected_list)
 
-        # testing list with spaces
-        user_list_str = '  user_1, user_2    ,   , '
-        user_list = self.db_controller._config_str_to_list(user_list_str)
-        self.assertEqual(len(user_list), 2)
-        self.assertCountEqual(user_list, expected_list)
+        # # testing list with spaces
+        # user_list_str = '  user_1, user_2    ,   , '
+        # user_list = self.db_controller._config_str_to_list(user_list_str)
+        # self.assertEqual(len(user_list), 2)
+        # self.assertCountEqual(user_list, expected_list)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBController_process_parameters")
@@ -1763,8 +1793,8 @@ class kb_MetricsTest(unittest.TestCase):
         }]
 
         # make sure the narratimve_name_map exists
-        if self.db_controller.narrative_name_map == {}:
-            self.db_controller.narrative_name_map = self.db_controller._get_narrative_name_map()
+        # if self.db_controller.narrative_name_map == {}:
+        #     self.db_controller.narrative_name_map = self.db_controller._get_narrative_name_map()
         # testing the correct data items appear in the assembled result
         joined_ujs0 = self.db_controller._assemble_ujs_state(ujs_jobs[0],
                                                              exec_tasks)
@@ -2424,7 +2454,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         m_users_cur = dbi.metricsDBs['metrics']['users'].find()
-        print(('There are {} users in metrics.users before dbctlr call'.format(
+        print_debug(('There are {} users in metrics.users before dbctlr call'.format(
             len(list(m_users_cur)))))
 
         user_list0 = []
@@ -3220,7 +3250,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         m_users_cur = dbi.metricsDBs['metrics']['users'].find()
-        print(('There are {} users in metrics.users before Impl call'.format(
+        print_debug(('There are {} users in metrics.users before Impl call'.format(
             len(list(m_users_cur)))))
 
         # testing (excluding kbstaff by default)
