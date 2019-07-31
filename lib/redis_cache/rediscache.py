@@ -92,7 +92,9 @@ class SimpleCache(object):
                                            port=self.port,
                                            db=self.db,
                                            password=password).connect()
+            print('SimpleCache: connected: {} {} {} {}'.format(self.host, self.port, self.db,password))
         except RedisNoConnException as e:
+            print('SimpleCache: connection error: {}'.format(str(e)))
             self.connection = None
             pass
 
@@ -302,6 +304,11 @@ class SimpleCache(object):
             key = pickle.dumps(args)
         return key
 
+def cache_expire(cache=None, limit=10000, expire=DEFAULT_EXPIRY, prefix=None, namespace=None):
+     cache = SimpleCache(limit, expire, hashkeys=True, namespace=prefix)
+    #  print('CONN?')
+    #  print(cache.connection)
+     cache.expire_namespace(namespace)
 
 def cache_it(limit=10000, expire=DEFAULT_EXPIRY, cache=None,
              use_json=False, namespace=None):
@@ -336,7 +343,9 @@ def cache_it(limit=10000, expire=DEFAULT_EXPIRY, cache=None,
 
             ## Key will be either a md5 hash or just pickle object,
             ## in the form of `function name`:`key`
-            key = cache.get_hash(serializer.dumps([args, kwargs]))
+            ## Note that we strip off the 'self' argument; otherwise different instances
+            ## will have different cache keys.
+            key = cache.get_hash(serializer.dumps([args[1:], kwargs]))
             cache_key = '{func_name}:{key}'.format(func_name=function.__name__,
                                                    key=key)
 
