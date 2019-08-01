@@ -1,7 +1,6 @@
 import datetime
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError, WriteError, ConfigurationError
-from redis_cache import cache_it_json
 
 from kb_Metrics.Util import _convert_to_datetime
 from operator import itemgetter
@@ -238,7 +237,6 @@ class MongoMetricsDBI:
         activities = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WSOBJECTS]
         return list(activities.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ws_owners(self):
         # Define the pipeline operations
         match_filter = {"cloning": {"$exists": False}}
@@ -252,7 +250,6 @@ class MongoMetricsDBI:
             MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 1)
     def list_narrative_info(self, wsid_list=None, owner_list=None, excluded_users=None):
         """
         list_narrative_info--retrieve the name/ws_id/owner of narratives
@@ -291,7 +288,6 @@ class MongoMetricsDBI:
             MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ws_narratives(self, minT=0, maxT=0, include_del=False):
         match_filter = {"meta": {"$elemMatch":
                                  {"$or":
@@ -328,7 +324,6 @@ class MongoMetricsDBI:
         kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_user_objects_from_wsobjs(self, minTime, maxTime, ws_list=None):
         """
         list_user_objects_from_wsobjs:
@@ -359,7 +354,6 @@ class MongoMetricsDBI:
             MongoMetricsDBI._WS_WSOBJECTS]
         return list(kbwsobjs.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 24)
     def list_ws_firstAccess(self, minTime, maxTime, ws_list=None):
         """
         list_ws_firstAccess--retrieve the ws_ids and first access month (yyyy-mm)
@@ -414,7 +408,6 @@ class MongoMetricsDBI:
         m_cursor = kbwsobjs.aggregate(pipeline)
         return list(m_cursor)
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 24)
     def list_ws_lastAccess(self, minTime, maxTime, ws_list=None):
         """
         list_ws_lastAccess--retrieve the ws_ids and last access month (yyyy-mm)
@@ -453,7 +446,6 @@ class MongoMetricsDBI:
         m_cursor = kbwsobjs.aggregate(pipeline)
         return list(m_cursor)
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 7 * 24)
     def list_kbstaff_usernames(self):
         kbstaff_filter = {'kbase_staff': {"$in": [True, 1]}}
         projection = {'_id': 0, 'username': 1}
@@ -462,7 +454,6 @@ class MongoMetricsDBI:
 
         return list(kbusers.find(kbstaff_filter, projection))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_exec_tasks(self, minTime, maxTime):
         qry_filter = {}
 
@@ -486,7 +477,6 @@ class MongoMetricsDBI:
         return sorted(list(kbtasks.find(qry_filter, projection)),
                       key=itemgetter('creation_time'))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_details(self, userIds, minTime, maxTime, excluded_users=None):
         # excluded_users has to be an array for '$nin'
         if excluded_users is None:
@@ -512,7 +502,6 @@ class MongoMetricsDBI:
         kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
         return sorted(list(kbusers.aggregate(pipeline)), key=itemgetter('signup_at'))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_signup_retn_users(self, userIds, minTime, maxTime, excluded_users=None):
         """
         aggr_signup_retn_users: count signup and returning users
@@ -550,7 +539,6 @@ class MongoMetricsDBI:
 
         return list(self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS].aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ujs_results(self, userIds, minTime, maxTime):
         qry_filter = {}
 
@@ -588,7 +576,6 @@ class MongoMetricsDBI:
         return list(jobstate.find(qry_filter, projection))
 
     # BEGIN putting the deleted functions back for reporting
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_logins_from_ws(self, userIds, minTime, maxTime):
 
         match_filter = {"moddate": {"$gte": minTime, "$lte": maxTime}}
@@ -614,7 +601,6 @@ class MongoMetricsDBI:
         kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_total_logins(self, userIds, minTime, maxTime, excluded_users=None):
         # excluded_users has to be an array for '$nin'
         if excluded_users is None:
@@ -648,7 +634,6 @@ class MongoMetricsDBI:
         kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_numObjs(self, userIds, minTime, maxTime):
 
         match_filter = {"moddate": {"$gte": minTime, "$lte": maxTime}}
@@ -675,7 +660,6 @@ class MongoMetricsDBI:
         kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_ws(self, userIds, minTime, maxTime):
         match_filter = {"moddate": {"$gte": minTime, "$lte": maxTime}}
         match_filter["cloning"] = {"$exists": False}

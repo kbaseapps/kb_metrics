@@ -17,7 +17,6 @@ RUN sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 \
     && sudo apt-get install -y mongodb
 
 RUN pip install pymongo
-RUN pip install redis
 RUN pip install python-dateutil
 # -----------------------------------------
 

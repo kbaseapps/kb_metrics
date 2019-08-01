@@ -5,8 +5,6 @@ import time
 import warnings
 from pprint import pprint
 
-from redis_cache import (cache_it_json, cache_expire)
-
 from installed_clients.CatalogClient import Catalog
 from kb_Metrics.Util import (_unix_time_millis_from_datetime,
                              _convert_to_datetime)
@@ -159,7 +157,6 @@ class MetricsMongoDBController:
     # End functions to write to the metrics database
 
     # functions to get the requested records from other dbs...
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _get_narratives_from_wsobjs(self, params, token):
         """
         _get_narratives_from_wsobjs--Given a time period, fetch the narrative
@@ -205,7 +202,6 @@ class MetricsMongoDBController:
 
         return {'metrics_result': ws_narrs1}
 
-    # @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _map_ws_narr_names(self, ws_id):
         """
         _map_ws_narr_names-returns the workspace/narrative name
@@ -249,7 +245,6 @@ class MetricsMongoDBController:
         #     pass
         # return (w_nm, n_nm, n_ver)
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _get_activities_from_wsobjs(self, params, token):
 
         params = self._process_parameters(params)
@@ -265,7 +260,6 @@ class MetricsMongoDBController:
                     break
         return {'metrics_result': wsobjs_act}
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _join_task_ujs(self, exec_tasks, ujs_jobs):
         """
         combine/join exec_tasks with ujs_jobs list to get the final return data
@@ -276,7 +270,6 @@ class MetricsMongoDBController:
             ujs_ret.append(u_j_s)
         return ujs_ret
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _assemble_ujs_state(self, ujs, exec_tasks):
         u_j_s = copy.deepcopy(ujs)
         u_j_s['job_id'] = str(u_j_s.pop('_id'))
@@ -395,9 +388,6 @@ class MetricsMongoDBController:
 
         return params
 
-    
-
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def _get_narrative_name_map(self):
         """
         _get_narrative_name_map: Fetch the narrative id and name
@@ -428,7 +418,6 @@ class MetricsMongoDBController:
 
         return narrative_name_map
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 1)
     def _get_client_groups_from_cat(self, token):
         """
         _get_client_groups_from_cat: Get the client_groups data from Catalog API
