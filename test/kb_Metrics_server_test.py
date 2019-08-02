@@ -1709,6 +1709,9 @@ class kb_MetricsTest(unittest.TestCase):
                 }]
             }
         }]
+        exec_task_map = dict()
+        for exec_task in exec_tasks:
+            exec_task_map[exec_task['ujs_job_id']] = exec_task
 
         ujs_jobs = [{
             "_id": ObjectId("596832a4e4b08b65f9ff5d6f"),
@@ -1797,7 +1800,7 @@ class kb_MetricsTest(unittest.TestCase):
         #     self.db_controller.narrative_name_map = self.db_controller._get_narrative_name_map()
         # testing the correct data items appear in the assembled result
         joined_ujs0 = self.db_controller._assemble_ujs_state(ujs_jobs[0],
-                                                             exec_tasks)
+                                                             exec_task_map)
         self.assertEqual(joined_ujs0['wsid'], '15206')
         self.assertNotIn('narrative_name', joined_ujs0)
         self.assertNotIn('narrative_objNo', joined_ujs0)
@@ -1812,7 +1815,7 @@ class kb_MetricsTest(unittest.TestCase):
                          ['workspace_name'])
 
         joined_ujs1 = self.db_controller._assemble_ujs_state(ujs_jobs[1],
-                                                             exec_tasks)
+                                                             exec_task_map)
         self.assertNotIn('wsid', joined_ujs1)
         self.assertEqual(joined_ujs1['app_id'], mthd.replace('.', '/'))
         self.assertEqual(joined_ujs1['method'], mthd)
@@ -1821,7 +1824,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertNotIn('workspace_name', joined_ujs1)
 
         joined_ujs2 = self.db_controller._assemble_ujs_state(ujs_jobs[2],
-                                                             exec_tasks)
+                                                             exec_task_map)
         self.assertEqual(joined_ujs2['wsid'], '23165')
         self.assertEqual(joined_ujs2['app_id'],
                          'kb_cufflinks/run_Cuffdiff')
@@ -1834,7 +1837,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('client_groups', joined_ujs2)
 
         joined_ujs3 = self.db_controller._assemble_ujs_state(ujs_jobs[3],
-                                                             exec_tasks)
+                                                             exec_task_map)
         et_job_input = exec_tasks[3]["job_input"]
         self.assertEqual(joined_ujs3['wsid'], et_job_input['wsid'])
         self.assertEqual(joined_ujs3['narrative_name'], 'Method Cell Refactor - UI Fixes')
@@ -1847,7 +1850,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('workspace_name', joined_ujs3)
 
         joined_ujs4 = self.db_controller._assemble_ujs_state(ujs_jobs[4],
-                                                             exec_tasks)
+                                                             exec_task_map)
         self.assertEqual(joined_ujs4['wsid'], ujs_jobs[4]['authparam'])
         self.assertEqual(joined_ujs4['narrative_name'], 'outx')
         self.assertEqual(joined_ujs4['narrative_objNo'], '1')
@@ -1858,7 +1861,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs4['workspace_name'], 'pranjan77:1466168703797')
 
         joined_ujs5 = self.db_controller._assemble_ujs_state(ujs_jobs[5],
-                                                             exec_tasks)
+                                                             exec_task_map)
         et_job_input = exec_tasks[5]["job_input"]
         etj_params = et_job_input["params"][0]
         etj_methd = et_job_input["method"]
@@ -2123,44 +2126,44 @@ class kb_MetricsTest(unittest.TestCase):
                           'narr_name_map': ('fakeusr:narrative_1513709108341', 'Faking Test', '1')})
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped _map_ws_narr_names")
-    def test_MetricsMongoDBController_map_ws_narr_names(self):
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(8781)
+    # @unittest.skip("skipped get_narrative_info")
+    def test_MetricsMongoDBController_get_narrative_info(self):
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(8781)
         self.assertEqual(w_nm, 'vkumar:1468639677500')
         self.assertEqual(n_nm, 'Ecoli refseq - July 15')
         self.assertEqual(n_ver, '45')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(27834)
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(27834)
         self.assertEqual(w_nm, 'psdehal:narrative_1513709108341')
         self.assertEqual(n_nm, 'Staging Test')
         self.assertEqual(n_ver, '1')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(8736)
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(8736)
         self.assertEqual(w_nm, 'rsutormin:1468453294248')
         self.assertEqual(n_nm, 'VisCellRefactor')
         self.assertEqual(n_ver, '1')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(8748)
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(8748)
         self.assertEqual(w_nm, 'bsadkhin:1468518477765')
         self.assertEqual(n_nm, 'Method Cell Refactor - UI Fixes')
         self.assertEqual(n_ver, '94')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(15206)
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(15206)
         self.assertEqual(w_nm, '')
         self.assertEqual(n_nm, '')
         self.assertEqual(n_ver, '1')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(23165)
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(23165)
         self.assertEqual(w_nm, '')
         self.assertEqual(n_nm, '')
         self.assertEqual(n_ver, '1')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names('qz:12345678')
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info('qz:12345678')
         self.assertEqual(w_nm, 'qz:12345678')
         self.assertEqual(n_nm, 'qz:12345678')
         self.assertEqual(n_ver, '1')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(33473)
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(33473)
         self.assertEqual(w_nm, 'qzhang:narrative_1529080473649')
         self.assertEqual(n_nm, 'test_ws_vs_narr_names')
         self.assertEqual(n_ver, '1')

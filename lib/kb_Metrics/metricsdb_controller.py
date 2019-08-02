@@ -19,6 +19,38 @@ def print_debug(msg):
 
 class MetricsMongoDBController:
 
+    def __init__(self, config):
+        print_debug('CONTROLLER - init')
+        # grab config lists
+        self.adminList = self.get_config_list(config, 'admin-users')
+        self.metricsAdmins = self.get_config_list(config, 'metrics-admins')
+        self.mongodb_dbList = self.get_config_list(config, 'mongodb-databases')
+
+        # check for required parameters
+        for p in ['mongodb-host', 'mongodb-databases',
+                  'mongodb-user', 'mongodb-pwd']:
+            if p not in config:
+                error_msg = 'Required key "{}" not found in config'.format(p)
+                error_msg += ' of MetricsMongoDBController'
+                raise ValueError(error_msg)
+
+        # instantiate the mongo client
+        self.metrics_dbi = MongoMetricsDBI(config.get('mongodb-host'),
+                                           self.mongodb_dbList,
+                                           config.get('mongodb-user', ''),
+                                           config.get('mongodb-pwd', ''))
+
+        # for access to the Catalog API
+        self.auth_service_url = config['auth-service-url']
+        self.catalog_url = config['kbase-endpoint'] + '/catalog'
+
+        # commonly used data
+        self.kbstaff_list = None
+        self.ws_narratives = None
+        self.narrative_map = None
+        self.client_groups = None
+        self.cat_client = None
+
     def get_config_list(self, config, config_key):
         list_str = config.get(config_key)
         if not list_str:
@@ -157,6 +189,10 @@ class MetricsMongoDBController:
     # End functions to write to the metrics database
 
     # functions to get the requested records from other dbs...
+
+    # Fetch narratives from the workspace.
+    # This is a costly operation, and should only be done once
+    # per server start...
     def _get_narratives_from_wsobjs(self, params, token):
         """
         _get_narratives_from_wsobjs--Given a time period, fetch the narrative
@@ -195,25 +231,22 @@ class MetricsMongoDBController:
             if wsn.get('object_id'):
                 wsn['last_saved_by'] = wsn.pop('username')
                 ws_nm, wsn['nice_name'], wsn['n_ver'] = \
-                    self._map_ws_narr_names(wsn['workspace_id'])
+                    self.get_narrative_info(wsn['workspace_id'])
                 wsn.pop('narr_keys')
                 wsn.pop('narr_values')
                 ws_narrs1.append(wsn)
 
         return {'metrics_result': ws_narrs1}
 
-    def _map_ws_narr_names(self, ws_id):
+    def get_narrative_info(self, ws_id):
         """
-        _map_ws_narr_names-returns the workspace/narrative name
+        get_narrative_info-returns the workspace/narrative name
         and version with given ws_id
         """
 
-        narrative_name_map = self._get_narrative_name_map()
-
-        # w_nm = ''
-        # n_nm = ''
-        # n_ver = '1'
-        
+        # This is a fall back for some a workspace id which is actually
+        # a workspace name ... but does that ever really happen
+        # in data returned from ujs / exec?
         try:
             workspace_id = int(ws_id)
         except ValueError as ve:
@@ -224,26 +257,7 @@ class MetricsMongoDBController:
             w_nm, n_nm, n_ver = narrative_name_map[workspace_id]
             return (w_nm, n_nm, n_ver)
 
-        # cache_expire(namespace="narrative_names", prefix=self.__module__)
-        # narrative_name_map = self._get_narrative_name_map()
-        # if workspace_id in narrative_name_map:
-        #     w_nm, n_nm, n_ver = narrative_name_map[workspace_id]
-        #     return (w_nm, n_nm, n_ver)
-
         return '', '', '1'
-
-        # try:
-        #     w_nm, n_nm, n_ver = narrative_name_map[int(ws_id)]
-        # except ValueError as ve:
-        #     # e.g.,ws_id == "srividya22:1447279981090"
-        #     w_nm = ws_id
-        #     n_nm = ws_id
-        # except KeyError as ke:
-        #     # no match, simply pass
-        #     # print('No workspace/narrative_name matched key {}'.format(ws_id))
-        #     print_debug(ke)
-        #     pass
-        # return (w_nm, n_nm, n_ver)
 
     def _get_activities_from_wsobjs(self, params, token):
 
@@ -265,12 +279,19 @@ class MetricsMongoDBController:
         combine/join exec_tasks with ujs_jobs list to get the final return data
         """
         ujs_ret = []
+
+        # build up a map of the exec tasks for consumption in the assembly
+        # method.
+        exec_task_map = dict()
+        for exec_task in exec_tasks:
+            exec_task_map[exec_task['ujs_job_id']] = exec_task
+            
         for j in ujs_jobs:
-            u_j_s = self._assemble_ujs_state(j, exec_tasks)
+            u_j_s = self._assemble_ujs_state(j, exec_task_map)
             ujs_ret.append(u_j_s)
         return ujs_ret
 
-    def _assemble_ujs_state(self, ujs, exec_tasks):
+    def _assemble_ujs_state(self, ujs, exec_task_map):
         u_j_s = copy.deepcopy(ujs)
         u_j_s['job_id'] = str(u_j_s.pop('_id'))
         u_j_s['exec_start_time'] = u_j_s.pop('started', None)
@@ -287,34 +308,33 @@ class MetricsMongoDBController:
             if '.' in desc:
                 u_j_s['method'] = desc
 
-        for exec_task in exec_tasks:
-            if str(exec_task['ujs_job_id']) == u_j_s['job_id']:
-                if 'job_input' in exec_task:
-                    et_job_in = exec_task['job_input']
-                    u_j_s['app_id'] = self._parse_app_id(et_job_in)
-                    if not u_j_s.get('method'):
-                        u_j_s['method'] = self._parse_method(et_job_in)
-                    if not u_j_s.get('wsid'):
-                        if 'wsid' in et_job_in:
-                            u_j_s['wsid'] = et_job_in['wsid']
-                        elif 'params' in et_job_in and et_job_in['params']:
-                            p_ws = et_job_in['params'][0]
-                            if isinstance(p_ws, dict) and 'ws_id' in p_ws:
-                                u_j_s['wsid'] = p_ws['ws_id']
+        if exec_task_map.get(u_j_s['job_id']):
+            exec_task = exec_task_map[u_j_s['job_id']]
+            if 'job_input' in exec_task:
+                et_job_in = exec_task['job_input']
+                u_j_s['app_id'] = self._parse_app_id(et_job_in)
+                if not u_j_s.get('method'):
+                    u_j_s['method'] = self._parse_method(et_job_in)
+                if not u_j_s.get('wsid'):
+                    if 'wsid' in et_job_in:
+                        u_j_s['wsid'] = et_job_in['wsid']
+                    elif 'params' in et_job_in and et_job_in['params']:
+                        p_ws = et_job_in['params'][0]
+                        if isinstance(p_ws, dict) and 'ws_id' in p_ws:
+                            u_j_s['wsid'] = p_ws['ws_id']
 
-                    # try to get workspace_name--first by wsid, then from 'job_input'
-                    if u_j_s.get('wsid') and not u_j_s.get('workspace_name'):
-                        ws_name = self._map_ws_narr_names(u_j_s['wsid'])[0]
-                        u_j_s['workspace_name'] = ws_name
-                    if not u_j_s.get('workspace_name') or u_j_s['workspace_name'] == '':
-                        if 'params' in et_job_in and et_job_in['params']:
-                            p_ws = et_job_in['params'][0]
-                            if isinstance(p_ws, dict):
-                                if 'workspace' in p_ws:
-                                    u_j_s['workspace_name'] = p_ws['workspace']
-                                elif 'workspace_name' in p_ws:
-                                    u_j_s['workspace_name'] = p_ws['workspace_name']
-                break
+                # try to get workspace_name--first by wsid, then from 'job_input'
+                if u_j_s.get('wsid') and not u_j_s.get('workspace_name'):
+                    ws_name = self.get_narrative_info(u_j_s['wsid'])[0]
+                    u_j_s['workspace_name'] = ws_name
+                if not u_j_s.get('workspace_name') or u_j_s['workspace_name'] == '':
+                    if 'params' in et_job_in and et_job_in['params']:
+                        p_ws = et_job_in['params'][0]
+                        if isinstance(p_ws, dict):
+                            if 'workspace' in p_ws:
+                                u_j_s['workspace_name'] = p_ws['workspace']
+                            elif 'workspace_name' in p_ws:
+                                u_j_s['workspace_name'] = p_ws['workspace_name']
 
         if not u_j_s.get('app_id') and u_j_s.get('method'):
             u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
@@ -331,7 +351,7 @@ class MetricsMongoDBController:
 
         # get the narrative name and version via u_j_s['wsid']
         if u_j_s.get('wsid'):
-            w_nm, n_name, n_ver = self._map_ws_narr_names(u_j_s['wsid'])
+            w_nm, n_name, n_ver = self.get_narrative_info(u_j_s['wsid'])
             if n_name != '':
                 u_j_s['narrative_name'] = n_name
                 u_j_s['narrative_objNo'] = n_ver
@@ -388,22 +408,30 @@ class MetricsMongoDBController:
 
         return params
 
+
+    def get_narratives(self):
+        if self.ws_narratives is None:
+            self.ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
+        return self.ws_narratives
+
     def _get_narrative_name_map(self):
         """
         _get_narrative_name_map: Fetch the narrative id and name
         (or narrative_nice_name if it exists) into a dictionary
         of {key=ws_id, value=(ws_nm, narr_nm, narr_ver)}
         """
+
+        # So we cache the narrative map in this controller instance.
+        if self.narrative_map is not None:
+            return self.narrative_map
+
         # 1. get the ws_narrative data to start, including deleted ones
-        if self.ws_narratives is None:
-            # print('GET NAR NAME MAP - no ws_narratives, fetching')
-            self.ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
-        # else:
-        #     print('GET NAR NAME MAP - have ws_narratives')
+       
+        ws_narratives = self.get_narratives()
 
         # 2. loop through all self.ws_narratives
         narrative_name_map = {}
-        for wsnarr in self.ws_narratives:
+        for wsnarr in ws_narratives:
             ws_nm = wsnarr.get('name', '')  # workspace_name or ''
             narr_nm = ws_nm  # default narrative_name
             narr_ver = '1'  # default narrative_objNo
@@ -416,6 +444,7 @@ class MetricsMongoDBController:
                     narr_ver = n_vals[i]
             narrative_name_map[wsnarr['workspace_id']] = (ws_nm, narr_nm, narr_ver)
 
+        self.narrative_map = narrative_name_map
         return narrative_name_map
 
     def _get_client_groups_from_cat(self, token):
@@ -439,37 +468,6 @@ class MetricsMongoDBController:
                  'client_groups': client_group.get('client_groups')}
                 for client_group in client_groups]
 
-    def __init__(self, config):
-        print_debug('CONTROLLER - init')
-        # grab config lists
-        self.adminList = self.get_config_list(config, 'admin-users')
-        self.metricsAdmins = self.get_config_list(config, 'metrics-admins')
-        self.mongodb_dbList = self.get_config_list(config, 'mongodb-databases')
-
-        # check for required parameters
-        for p in ['mongodb-host', 'mongodb-databases',
-                  'mongodb-user', 'mongodb-pwd']:
-            if p not in config:
-                error_msg = 'Required key "{}" not found in config'.format(p)
-                error_msg += ' of MetricsMongoDBController'
-                raise ValueError(error_msg)
-
-        # instantiate the mongo client
-        self.metrics_dbi = MongoMetricsDBI(config.get('mongodb-host'),
-                                           self.mongodb_dbList,
-                                           config.get('mongodb-user', ''),
-                                           config.get('mongodb-pwd', ''))
-
-        # for access to the Catalog API
-        self.auth_service_url = config['auth-service-url']
-        self.catalog_url = config['kbase-endpoint'] + '/catalog'
-
-        # commonly used data
-        self.kbstaff_list = None
-        self.ws_narratives = None
-        self.client_groups = None
-        self.cat_client = None
-
     def map_ws_narrative_names(self, requesting_user, ws_ids, token):
         """
         get_ws_narratives--Give the list of workspace ids, map ws_nm, narr_nm and narr_ver
@@ -482,12 +480,12 @@ class MetricsMongoDBController:
           'narr_name_map': (u'fakeusr:narrative_1513709108341', u'Faking Test', u'1')}]
         """
         if not self._is_admin(requesting_user):
-                raise ValueError('You do not have permisson to '
+                raise ValueError('You do not have permission to '
                                  'invoke this action.')
 
         map_results = []
         for w_id in ws_ids:
-            map_ret = self._map_ws_narr_names(w_id)
+            map_ret = self.get_narrative_info(w_id)
             map_results.append({'ws_id': w_id, 'narr_name_map': map_ret})
         return map_results
 
@@ -503,10 +501,7 @@ class MetricsMongoDBController:
         if not self._is_admin(requesting_user):
             params['user_ids'] = [requesting_user]
 
-        # 1. get the ws_narrative and client_groups data for lookups
-        if self.ws_narratives is None:
-            self.ws_narratives = self.metrics_dbi.list_ws_narratives(
-                include_del=True)
+        # 1. get the client_groups data for lookups
         if self.client_groups is None:
             self.client_groups = self._get_client_groups_from_cat(token)
 
