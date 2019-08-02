@@ -247,16 +247,33 @@ class MetricsMongoDBController:
         # This is a fall back for some a workspace id which is actually
         # a workspace name ... but does that ever really happen
         # in data returned from ujs / exec?
+        # TODO: Erik: This code path should not exist; can we determine if
+        # it really needs to be handled (I assume it did at some point)
+        # TODO: Erik: If this is a condition in, say, older jobs, which 
+        # needs to be handled, we should not return the workspace name
+        # as the narrative title, but rather look up the workspace by name
+        # and then use the associated workspace id.
         try:
             workspace_id = int(ws_id)
         except ValueError as ve:
-            return ws_id, ws_id, '1'
+            result = self.metrics_dbi.list_narrative_info(wsname_list=[ws_id])
+            if len(result) == 0:
+                return ws_id, ws_id, '1'
+            workspace_id = result[0]['ws']
+            
 
         narrative_name_map = self._get_narrative_name_map()
         if workspace_id in narrative_name_map:
             w_nm, n_nm, n_ver = narrative_name_map[workspace_id]
             return (w_nm, n_nm, n_ver)
 
+        #
+        # It is possible that a brand new narrative has not yet been "saved",
+        # Such narratives are referred to as "temporary". There are thousands
+        # of them, so the query for narratives in metrics_dbi omits them.
+        # Thus they will appear to be missing, which is how we get here.
+        # We leave the title empty (not a possible value for narrative_nice_name),
+        # which the consumer can handle however they wish.
         return '', '', '1'
 
     def _get_activities_from_wsobjs(self, params, token):
@@ -357,7 +374,11 @@ class MetricsMongoDBController:
                 u_j_s['narrative_objNo'] = n_ver
             elif (u_j_s.get('workspace_name', None) and
                   'narrative' in u_j_s['workspace_name']):
-                u_j_s['narrative_name'] = u_j_s['workspace_name']
+                # Note that an empty narrative name means that the the 
+                # narrative was not found, which really means that it 
+                # is a temporary narrative, which by tradition have the
+                # title 'Untitled'.
+                u_j_s['narrative_name'] = 'Untitled'
                 u_j_s['narrative_objNo'] = 1
 
         # get the client groups
@@ -433,7 +454,14 @@ class MetricsMongoDBController:
         narrative_name_map = {}
         for wsnarr in ws_narratives:
             ws_nm = wsnarr.get('name', '')  # workspace_name or ''
-            narr_nm = ws_nm  # default narrative_name
+            narr_nm = None
+            # narr_nm = ws_nm  # default narrative_name
+            # TODO: this is suspect, because the narrative metadata field
+            # should ALWAYS be available. 
+            # And we actually no longer need
+            # the narrative version; so we can skip this eventually
+            # and certainly shouldn't use it since a default object 
+            # number doesn't make any sense.
             narr_ver = '1'  # default narrative_objNo
             n_keys = wsnarr['narr_keys']
             n_vals = wsnarr['narr_values']
@@ -442,6 +470,13 @@ class MetricsMongoDBController:
                     narr_nm = n_vals[i]
                 if n_keys[i] == 'narrative':
                     narr_ver = n_vals[i]
+
+            # If the narrative nice name is not present, a temporary
+            # narrative, which by convention has the title 'Untitled'
+            # in the Narrative UI.
+            if narr_nm is None:
+                narr_nm = 'Untitled'
+
             narrative_name_map[wsnarr['workspace_id']] = (ws_nm, narr_nm, narr_ver)
 
         self.narrative_map = narrative_name_map

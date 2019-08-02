@@ -250,7 +250,7 @@ class MongoMetricsDBI:
             MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
-    def list_narrative_info(self, wsid_list=None, owner_list=None, excluded_users=None):
+    def list_narrative_info(self, wsid_list=None, wsname_list=None, owner_list=None, excluded_users=None, include_temporary=False):
         """
         list_narrative_info--retrieve the name/ws_id/owner of narratives
         of given owner/wsid filters
@@ -263,13 +263,17 @@ class MongoMetricsDBI:
         if excluded_users is None:
             excluded_users = []
 
-        match_filter = {"del": False,
-                        "meta": {"$elemMatch":
-                                 {"k": "is_temporary", "v": "false"}}}
+        match_filter = {"del": False}
+
+        if not include_temporary:
+            match_filter['meta'] =  {"$elemMatch":
+                                      {"k": "is_temporary", "v": "false"}}
         match_filter["cloning"] = {"$exists": False}
 
         if wsid_list:
             match_filter['ws'] = {"$in": wsid_list}
+        elif wsname_list is not None:
+            match_filter['name'] = {"$in": wsname_list}
         if owner_list:
             match_filter['owner'] = {"$in": owner_list}
         else:
