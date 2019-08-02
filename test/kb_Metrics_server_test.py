@@ -1231,7 +1231,6 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped test_MetricsMongoDBs_list_narrative_info")
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_narrative_info(self):
-
         o_list = ['fangfang', 'psdehal', 'jplfaria', 'pranjan77']
         ws_id_list = [8056, 8748, 1111]
 
@@ -1265,6 +1264,18 @@ class kb_MetricsTest(unittest.TestCase):
 
         narrs = dbi.list_narrative_info()
         self.assertEqual(len(narrs), 25)
+
+        narrs = dbi.list_narrative_info(include_temporary=True)
+        self.assertEqual(len(narrs), 28)
+
+        narrs = dbi.list_narrative_info(wsname_list=['pranjan77:1466168703797', 'bsadkhin:1468518477765'])
+        self.assertEqual(len(narrs), 2)
+        self.assertEqual(narrs[0]['ws'], 8056)
+        self.assertEqual(narrs[1]['ws'], 8748)
+
+        narrs = dbi.list_narrative_info(wsname_list=['srividya22:1468507655124'], include_temporary=True)
+        self.assertEqual(len(narrs), 1)
+        self.assertEqual(narrs[0]['ws'], 8739)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBs_list_ws_firstAccess")
@@ -2148,6 +2159,11 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(n_nm, 'Method Cell Refactor - UI Fixes')
         self.assertEqual(n_ver, '94')
 
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info('bsadkhin:1468518477765')
+        self.assertEqual(w_nm, 'bsadkhin:1468518477765')
+        self.assertEqual(n_nm, 'Method Cell Refactor - UI Fixes')
+        self.assertEqual(n_ver, '94')
+
         w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(15206)
         self.assertEqual(w_nm, '')
         self.assertEqual(n_nm, '')
@@ -2158,6 +2174,11 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(n_nm, '')
         self.assertEqual(n_ver, '1')
 
+        # Hmm, there is no narrative for 'qz:12345678'. 
+        # This should never occur (?), but if it does, it means a non-narrative 
+        # job, and the workspace name should be displayed.
+        # This is also a test of handling a workspace name passed instead of an 
+        # id. They should be separate tests.
         w_nm, n_nm, n_ver = self.db_controller.get_narrative_info('qz:12345678')
         self.assertEqual(w_nm, 'qz:12345678')
         self.assertEqual(n_nm, 'qz:12345678')
@@ -2166,6 +2187,12 @@ class kb_MetricsTest(unittest.TestCase):
         w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(33473)
         self.assertEqual(w_nm, 'qzhang:narrative_1529080473649')
         self.assertEqual(n_nm, 'test_ws_vs_narr_names')
+        self.assertEqual(n_ver, '1')
+
+        # A temporary narrative should have a title of 'Untitled'.
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(8739)
+        self.assertEqual(w_nm, 'srividya22:1468507655124')
+        self.assertEqual(n_nm, 'Untitled')
         self.assertEqual(n_ver, '1')
 
     # Uncomment to skip this test
