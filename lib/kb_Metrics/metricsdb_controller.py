@@ -19,6 +19,9 @@ def print_debug(msg):
 
 class MetricsMongoDBController:
 
+    narrative_map = None
+    narrative_map_max_time = None
+
     def __init__(self, config):
         print_debug('CONTROLLER - init')
         # grab config lists
@@ -47,8 +50,8 @@ class MetricsMongoDBController:
         # commonly used data
         self.kbstaff_list = None
         self.ws_narratives = None
-        self.narrative_map = None
-        self.narrative_map_max_time = None
+        self.narrative_map_cache = None
+        # self.narrative_map_max_time = None
         self.client_groups = None
         self.cat_client = None
 
@@ -436,23 +439,28 @@ class MetricsMongoDBController:
         of {key=ws_id, value=(ws_nm, narr_nm, narr_ver)}
         """
 
+        if self.narrative_map_cache is not None:
+            return self.narrative_map_cache
+
+        cls = MetricsMongoDBController
+
         # So we cache the narrative map in this controller instance.
-        if self.narrative_map is None:
-            self.narrative_map = dict()
+        if cls.narrative_map is None:
+            cls.narrative_map = dict()
             ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
             if len(ws_narratives) == 0:
-                return self.narrative_map
+                return cls.narrative_map
         else:
-            if self.narrative_map_max_time is None:
+            if cls.narrative_map_max_time is None:
                 ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
             else:
-                ws_narratives = self.metrics_dbi.list_more_ws_narratives(include_del=True, from_time=self.narrative_map_max_time)
+                ws_narratives = self.metrics_dbi.list_more_ws_narratives(include_del=True, from_time=cls.narrative_map_max_time)
 
             # print('SINCE GOT: ' + str(len(ws_narratives)))
             if len(ws_narratives) == 0:
-                return self.narrative_map
+                return cls.narrative_map
 
-        max_time = self.narrative_map_max_time or 0
+        max_time = cls.narrative_map_max_time or 0
         for wsnarr in ws_narratives:
             ws_nm = wsnarr.get('name', '')  # workspace_name or ''
             narr_nm = None
@@ -480,11 +488,12 @@ class MetricsMongoDBController:
             if narr_nm is None:
                 narr_nm = 'Untitled'
 
-            self.narrative_map[wsnarr['workspace_id']] = (ws_nm, narr_nm, narr_ver)
+            cls.narrative_map[wsnarr['workspace_id']] = (ws_nm, narr_nm, narr_ver)
 
-        self.narrative_map_max_time = max_time
+        cls.narrative_map_max_time = max_time
+        self.narrative_map_cache = cls.narrative_map
 
-        return self.narrative_map
+        return cls.narrative_map
 
     def _get_client_groups_from_cat(self, token):
         """
