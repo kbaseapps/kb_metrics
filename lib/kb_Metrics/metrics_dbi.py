@@ -328,6 +328,35 @@ class MongoMetricsDBI:
         kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
+    def list_more_ws_narratives(self, from_time=None, include_del=False):
+        if from_time is None:
+            raise(ValueError('Listing more narrativs requires a timestamp "from_time"'))
+
+        match_filter = {"meta": {"$elemMatch":
+                                 {"$or":
+                                  [{"k": "narrative"},
+                                   {"k": "narrative_nice_name"}]}}}
+        match_filter["cloning"] = {"$exists": False}
+
+        if not include_del:
+            match_filter["del"] = False
+
+        minTime = datetime.datetime.fromtimestamp(from_time / 1000.0)
+        match_filter['moddate'] = {"$gt": minTime}
+
+        # Define the pipeline operations
+        pipeline = [
+            {"$match": match_filter},
+            {"$project": {"username": "$owner", "workspace_id": "$ws",
+                          "name": 1, "narr_keys": "$meta.k",
+                          "narr_values": "$meta.v",
+                          "deleted": "$del", "desc": 1, "numObj": 1,
+                          "last_saved_at": "$moddate", "_id": 0}}
+        ]
+        # grab handle(s) to the db collection
+        kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+        return list(kbworkspaces.aggregate(pipeline))
+
     def list_user_objects_from_wsobjs(self, minTime, maxTime, ws_list=None):
         """
         list_user_objects_from_wsobjs:
