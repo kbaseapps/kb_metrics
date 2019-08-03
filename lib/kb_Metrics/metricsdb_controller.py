@@ -48,6 +48,7 @@ class MetricsMongoDBController:
         self.kbstaff_list = None
         self.ws_narratives = None
         self.narrative_map = None
+        self.narrative_map_max_time = None
         self.client_groups = None
         self.cat_client = None
 
@@ -260,7 +261,6 @@ class MetricsMongoDBController:
             if len(result) == 0:
                 return ws_id, ws_id, '1'
             workspace_id = result[0]['ws']
-            
 
         narrative_name_map = self._get_narrative_name_map()
         if workspace_id in narrative_name_map:
@@ -429,12 +429,6 @@ class MetricsMongoDBController:
 
         return params
 
-
-    def get_narratives(self):
-        if self.ws_narratives is None:
-            self.ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
-        return self.ws_narratives
-
     def _get_narrative_name_map(self):
         """
         _get_narrative_name_map: Fetch the narrative id and name
@@ -443,18 +437,27 @@ class MetricsMongoDBController:
         """
 
         # So we cache the narrative map in this controller instance.
-        if self.narrative_map is not None:
-            return self.narrative_map
+        if self.narrative_map is None:
+            self.narrative_map = dict()
+            ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
+            if len(ws_narratives) == 0:
+                return self.narrative_map
+        else:
+            if self.narrative_map_max_time is None:
+                ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
+            else:
+                ws_narratives = self.metrics_dbi.list_more_ws_narratives(include_del=True, from_time=self.narrative_map_max_time)
 
-        # 1. get the ws_narrative data to start, including deleted ones
-       
-        ws_narratives = self.get_narratives()
+            # print('SINCE GOT: ' + str(len(ws_narratives)))
+            if len(ws_narratives) == 0:
+                return self.narrative_map
 
-        # 2. loop through all self.ws_narratives
-        narrative_name_map = {}
+        max_time = self.narrative_map_max_time or 0
         for wsnarr in ws_narratives:
             ws_nm = wsnarr.get('name', '')  # workspace_name or ''
             narr_nm = None
+            last_saved_at = int(round(wsnarr['last_saved_at'].timestamp() * 1000))
+            max_time = max([max_time, last_saved_at])
             # narr_nm = ws_nm  # default narrative_name
             # TODO: this is suspect, because the narrative metadata field
             # should ALWAYS be available. 
@@ -477,10 +480,11 @@ class MetricsMongoDBController:
             if narr_nm is None:
                 narr_nm = 'Untitled'
 
-            narrative_name_map[wsnarr['workspace_id']] = (ws_nm, narr_nm, narr_ver)
+            self.narrative_map[wsnarr['workspace_id']] = (ws_nm, narr_nm, narr_ver)
 
-        self.narrative_map = narrative_name_map
-        return narrative_name_map
+        self.narrative_map_max_time = max_time
+
+        return self.narrative_map
 
     def _get_client_groups_from_cat(self, token):
         """
