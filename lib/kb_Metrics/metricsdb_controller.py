@@ -265,7 +265,10 @@ class MetricsMongoDBController:
                 return ws_id, ws_id, '1'
             workspace_id = result[0]['ws']
 
+        start = time.time()
         narrative_name_map = self._get_narrative_name_map()
+        elapsed = time.time() - start
+        print('GET MAP ELAPSED: ' + str(elapsed))
         if workspace_id in narrative_name_map:
             w_nm, n_nm, n_ver = narrative_name_map[workspace_id]
             return (w_nm, n_nm, n_ver)
@@ -439,7 +442,10 @@ class MetricsMongoDBController:
         of {key=ws_id, value=(ws_nm, narr_nm, narr_ver)}
         """
 
+        # Instance version of the cache does not chagnge once set.
+        # The lifetime of this cache is an individual request.
         if self.narrative_map_cache is not None:
+            print('GET MAP: using cache')
             return self.narrative_map_cache
 
         cls = MetricsMongoDBController
@@ -447,14 +453,25 @@ class MetricsMongoDBController:
         # So we cache the narrative map in this controller instance.
         if cls.narrative_map is None:
             cls.narrative_map = dict()
+            print('GET MAP: initialize')
+            start = time.time()
             ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
+            elapsed = time.time() - start
+            print('GET MAP: init elapsed ' + str(elapsed))
             if len(ws_narratives) == 0:
                 return cls.narrative_map
         else:
             if cls.narrative_map_max_time is None:
+                # This handles the case in which there were NO narratives initially,
+                # and thus the max time was not set.
+                print('GET MAP: no max time?')
                 ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
             else:
+                print('GET MAP: update')
+                start = time.time()
                 ws_narratives = self.metrics_dbi.list_more_ws_narratives(include_del=True, from_time=cls.narrative_map_max_time)
+                elapsed = time.time() - start
+                print('GET MAP: update elapsed ' + str(len(ws_narratives)) + ', ' + str(elapsed))
 
             # print('SINCE GOT: ' + str(len(ws_narratives)))
             if len(ws_narratives) == 0:
