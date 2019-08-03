@@ -57,8 +57,8 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # ctx is the context object
         # return variables are: return_records
         #BEGIN get_app_metrics
-        # controller = MetricsMongoDBController(self.config)
-        return_records = self.mdb_controller.get_user_job_states(ctx['user_id'],
+        controller = MetricsMongoDBController(self.config)
+        return_records = controller.get_user_job_states(ctx['user_id'],
                                                                  params,
                                                                  ctx['token'])
         #END get_app_metrics
