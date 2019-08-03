@@ -2,8 +2,8 @@
 #BEGIN_HEADER
 # The header block is where all import statments should live
 from kb_Metrics.metricsdb_controller import MetricsMongoDBController
+import time
 #END_HEADER
-
 
 class kb_Metrics:
     '''
@@ -57,10 +57,13 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # ctx is the context object
         # return variables are: return_records
         #BEGIN get_app_metrics
+        start = time.time()
         controller = MetricsMongoDBController(self.config)
         return_records = controller.get_user_job_states(ctx['user_id'],
                                                                  params,
                                                                  ctx['token'])
+        elapsed = time.time() - start
+        print('[get-app-metrics] elapsed ' + str(elapsed))
         #END get_app_metrics
 
         # At some point might do deeper type checking...
