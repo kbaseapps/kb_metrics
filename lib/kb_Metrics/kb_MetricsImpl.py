@@ -63,7 +63,6 @@ This KBase SDK module implements methods for generating various KBase metrics.
                                                                  params,
                                                                  ctx['token'])
         elapsed = time.time() - start
-        print('[get-app-metrics] elapsed ' + str(elapsed))
         #END get_app_metrics
 
         # At some point might do deeper type checking...
