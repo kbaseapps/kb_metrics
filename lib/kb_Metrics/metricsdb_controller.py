@@ -9,6 +9,7 @@ from installed_clients.CatalogClient import Catalog
 from kb_Metrics.Util import (_unix_time_millis_from_datetime,
                              _convert_to_datetime)
 from kb_Metrics.metrics_dbi import MongoMetricsDBI
+from kb_Metrics.NarrativeCache import NarrativeCache
 
 debug = False
 def print_debug(msg):
@@ -18,9 +19,6 @@ def print_debug(msg):
     print("{}:{}".format(t, msg))
 
 class MetricsMongoDBController:
-
-    narrative_map = None
-    narrative_map_max_time = None
 
     def __init__(self, config):
         # grab config lists
@@ -49,10 +47,9 @@ class MetricsMongoDBController:
         # commonly used data
         self.kbstaff_list = None
         self.ws_narratives = None
-        self.narrative_map_cache = None
-        # self.narrative_map_max_time = None
         self.client_groups = None
         self.cat_client = None
+        self.narrative_cache = NarrativeCache(config)
 
     def get_config_list(self, config, config_key):
         list_str = config.get(config_key)
@@ -264,7 +261,7 @@ class MetricsMongoDBController:
                 return ws_id, ws_id, '1'
             workspace_id = result[0]['ws']
 
-        narrative_name_map = self._get_narrative_name_map()
+        narrative_name_map = self.narrative_cache.get()
         if workspace_id in narrative_name_map:
             w_nm, n_nm, n_ver = narrative_name_map[workspace_id]
             return (w_nm, n_nm, n_ver)
@@ -430,74 +427,6 @@ class MetricsMongoDBController:
         params['maxTime'] = _unix_time_millis_from_datetime(end_time)
 
         return params
-
-    def _get_narrative_name_map(self):
-        """
-        _get_narrative_name_map: Fetch the narrative id and name
-        (or narrative_nice_name if it exists) into a dictionary
-        of {key=ws_id, value=(ws_nm, narr_nm, narr_ver)}
-        """
-
-        # Instance version of the cache does not change once set.
-        # The lifetime of this cache is an individual request.
-        if self.narrative_map_cache is not None:
-            return self.narrative_map_cache
-
-        cls = MetricsMongoDBController
-
-        # So we cache the narrative map in this controller instance.
-        if cls.narrative_map is None:
-            cls.narrative_map = dict()
-            ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
-            if len(ws_narratives) == 0:
-                return cls.narrative_map
-        else:
-            if cls.narrative_map_max_time is None:
-                # This handles the case in which there were NO narratives initially,
-                # and thus the max time was not set.
-                ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
-            else:
-
-                ws_narratives = self.metrics_dbi.list_more_ws_narratives(include_del=True, from_time=cls.narrative_map_max_time)
-
-            if len(ws_narratives) == 0:
-                self.narrative_map_cache = cls.narrative_map
-                return cls.narrative_map
-
-        max_time = cls.narrative_map_max_time or 0
-        for wsnarr in ws_narratives:
-            ws_nm = wsnarr.get('name', '')  # workspace_name or ''
-            narr_nm = None
-            last_saved_at = int(round(wsnarr['last_saved_at'].timestamp() * 1000))
-            max_time = max([max_time, last_saved_at])
-            # narr_nm = ws_nm  # default narrative_name
-            # TODO: this is suspect, because the narrative metadata field
-            # should ALWAYS be available. 
-            # And we actually no longer need
-            # the narrative version; so we can skip this eventually
-            # and certainly shouldn't use it since a default object 
-            # number doesn't make any sense.
-            narr_ver = '1'  # default narrative_objNo
-            n_keys = wsnarr['narr_keys']
-            n_vals = wsnarr['narr_values']
-            for i in range(0, len(n_keys)):
-                if n_keys[i] == 'narrative_nice_name':
-                    narr_nm = n_vals[i]
-                if n_keys[i] == 'narrative':
-                    narr_ver = n_vals[i]
-
-            # If the narrative nice name is not present, a temporary
-            # narrative, which by convention has the title 'Untitled'
-            # in the Narrative UI.
-            if narr_nm is None:
-                narr_nm = 'Untitled'
-
-            cls.narrative_map[wsnarr['workspace_id']] = (ws_nm, narr_nm, narr_ver)
-
-        cls.narrative_map_max_time = max_time
-        self.narrative_map_cache = cls.narrative_map
-
-        return cls.narrative_map
 
     def _get_client_groups_from_cat(self, token):
         """

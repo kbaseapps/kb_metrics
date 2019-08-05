@@ -21,6 +21,7 @@ from kb_Metrics.kb_MetricsImpl import kb_Metrics
 from kb_Metrics.kb_MetricsServer import MethodContext
 from kb_Metrics.metrics_dbi import MongoMetricsDBI
 from kb_Metrics.metricsdb_controller import MetricsMongoDBController
+from kb_Metrics.NarrativeCache import NarrativeCache
 
 debug = False
 def print_debug(msg):
@@ -68,6 +69,7 @@ class kb_MetricsTest(unittest.TestCase):
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
         print_debug('SETUP CLASS - about to create a new controller')
         cls.db_controller = MetricsMongoDBController(cls.cfg)
+        cls.narrative_cache = NarrativeCache(cls.cfg)
         cls.client = MongoClient(port=27017)
         print_debug("MONGO - about to start")
         cls.init_mongodb()
@@ -1806,9 +1808,6 @@ class kb_MetricsTest(unittest.TestCase):
             "authparam": "DEFAULT"
         }]
 
-        # make sure the narratimve_name_map exists
-        # if self.db_controller.narrative_name_map == {}:
-        #     self.db_controller.narrative_name_map = self.db_controller._get_narrative_name_map()
         # testing the correct data items appear in the assembled result
         joined_ujs0 = self.db_controller._assemble_ujs_state(ujs_jobs[0],
                                                              exec_task_map)
@@ -2104,7 +2103,7 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped _get_narrative_name_map")
     def test_MetricsMongoDBController_get_narrative_name_map(self):
         # testing with local db data
-        wnarr_map = self.db_controller._get_narrative_name_map()
+        wnarr_map = self.narrative_cache.get()
 
         self.assertEqual(len(wnarr_map), 30)
         self.assertEqual(wnarr_map.get(8781),

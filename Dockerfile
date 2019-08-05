@@ -6,18 +6,21 @@ MAINTAINER KBase Developer
 # install line here, a git checkout to download code, or run any other
 # installation scripts.
 
-# Update certs
-RUN apt-get update
-RUN apt-get install ca-certificates
+# Update system and certs
+RUN apt-get update && \
+    apt-get upgrade -y  && \
+    apt-get dist-upgrade -y && \
+    apt-get install ca-certificates
 
 # install mongodb
-RUN sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 \
-    && echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | tee /etc/apt/sources.list.d/mongodb.list  \
-    && sudo apt-get update \
-    && sudo apt-get install -y mongodb
+RUN sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 && \
+    echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | tee /etc/apt/sources.list.d/mongodb.list  && \
+    sudo apt-get update && \
+    sudo apt-get install -y mongodb
 
-RUN pip install pymongo
-RUN pip install python-dateutil
+# install python dependencies beyond the base image
+RUN pip install pymongo python-dateutil
+
 # -----------------------------------------
 
 COPY ./ /kb/module
