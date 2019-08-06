@@ -1,7 +1,6 @@
 import datetime
 from pymongo import MongoClient
 from pymongo.errors import BulkWriteError, WriteError, ConfigurationError
-from redis_cache import cache_it_json
 
 from kb_Metrics.Util import _convert_to_datetime
 from operator import itemgetter
@@ -38,16 +37,12 @@ class MongoMetricsDBI:
         self.mongo_clients = dict()
         self.metricsDBs = dict()
         for m_db in mongo_dbs:
-            try:
-                # create the client and authenticate
-                self.mongo_clients[m_db] = MongoClient(
-                    "mongodb://" + mongo_user + ":" + mongo_psswd +
-                    "@" + mongo_host + "/" + m_db)
-                # grab a handle to the database
-                self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
-            except ConfigurationError as ce:
-                print(ce)
-                raise ce
+            # create the client and authenticate
+            self.mongo_clients[m_db] = MongoClient(
+                "mongodb://" + mongo_user + ":" + mongo_psswd +
+                "@" + mongo_host + "/" + m_db)
+            # grab a handle to the database
+            self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
 
     # Begin functions to write to the metrics database...
     def update_user_records(self, upd_filter, upd_data, kbstaff):
@@ -61,13 +56,11 @@ class MongoMetricsDBI:
         # grab handle(s) to the database collection(s) targeted
         mt_users = self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS]
         update_ret = None
-        try:
-            # return an instance of UpdateResult(raw_result, acknowledged)
-            update_ret = mt_users.update_one(upd_filter,
-                                             upd_op, upsert=True)
-        except WriteError as we:
-            print(f'WriteError caught: {we}')
-            raise we
+
+        # return an instance of UpdateResult(raw_result, acknowledged)
+        update_ret = mt_users.update_one(upd_filter,
+                                            upd_op, upsert=True)
+
         return update_ret
 
     def update_activity_records(self, upd_filter, upd_data):
@@ -81,13 +74,11 @@ class MongoMetricsDBI:
         mt_coll = self.metricsDBs['metrics'][
             MongoMetricsDBI._MT_DAILY_ACTIVITIES]
         update_ret = None
-        try:
-            # return an instance of UpdateResult(raw_result, acknowledged)
-            update_ret = mt_coll.update_one(upd_filter,
-                                            upd_op, upsert=True)
-        except WriteError as e:
-            print(f'WriteError caught: {e}')
-            raise e
+
+        # return an instance of UpdateResult(raw_result, acknowledged)
+        update_ret = mt_coll.update_one(upd_filter,
+                                        upd_op, upsert=True)
+
         return update_ret
 
     def insert_activity_records(self, mt_docs):
@@ -131,18 +122,16 @@ class MongoMetricsDBI:
         mt_narrs = self.metricsDBs['metrics'][
             MongoMetricsDBI._MT_NARRATIVES]
         update_ret = None
-        try:
-            # return an instance of UpdateResult(raw_result, acknowledged)
-            update_ret = mt_narrs.update_one(upd_filter,
-                                             upd_op, upsert=True)
-        except WriteError as we:
-            print(f'WriteError caught: {we}')
-            raise we
-        else:
-            # re-touch the newly inserted records
-            mt_narrs.update({'access_count': {'$exists': False}},
-                            {'$set': {'access_count': 1}},
-                            upsert=True, multi=True)
+
+        # return an instance of UpdateResult(raw_result, acknowledged)
+        update_ret = mt_narrs.update_one(upd_filter,
+                                            upd_op, upsert=True)
+
+        # re-touch the newly inserted records
+        mt_narrs.update({'access_count': {'$exists': False}},
+                        {'$set': {'access_count': 1}},
+                        upsert=True, multi=True)
+
         return update_ret
     # End functions to write to the metrics database
 
@@ -248,7 +237,6 @@ class MongoMetricsDBI:
         activities = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WSOBJECTS]
         return list(activities.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ws_owners(self):
         # Define the pipeline operations
         match_filter = {"cloning": {"$exists": False}}
@@ -262,8 +250,7 @@ class MongoMetricsDBI:
             MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 1)
-    def list_narrative_info(self, wsid_list=None, owner_list=None, excluded_users=None):
+    def list_narrative_info(self, wsid_list=None, wsname_list=None, owner_list=None, excluded_users=None, include_temporary=False):
         """
         list_narrative_info--retrieve the name/ws_id/owner of narratives
         of given owner/wsid filters
@@ -276,13 +263,17 @@ class MongoMetricsDBI:
         if excluded_users is None:
             excluded_users = []
 
-        match_filter = {"del": False,
-                        "meta": {"$elemMatch":
-                                 {"k": "is_temporary", "v": "false"}}}
+        match_filter = {"del": False}
+
+        if not include_temporary:
+            match_filter['meta'] =  {"$elemMatch":
+                                      {"k": "is_temporary", "v": "false"}}
         match_filter["cloning"] = {"$exists": False}
 
         if wsid_list:
             match_filter['ws'] = {"$in": wsid_list}
+        elif wsname_list is not None:
+            match_filter['name'] = {"$in": wsname_list}
         if owner_list:
             match_filter['owner'] = {"$in": owner_list}
         else:
@@ -301,7 +292,6 @@ class MongoMetricsDBI:
             MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ws_narratives(self, minT=0, maxT=0, include_del=False):
         match_filter = {"meta": {"$elemMatch":
                                  {"$or":
@@ -338,7 +328,35 @@ class MongoMetricsDBI:
         kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
+    def list_more_ws_narratives(self, from_time=None, include_del=False):
+        if from_time is None:
+            raise(ValueError('Listing more narrativs requires a timestamp "from_time"'))
+
+        match_filter = {"meta": {"$elemMatch":
+                                 {"$or":
+                                  [{"k": "narrative"},
+                                   {"k": "narrative_nice_name"}]}}}
+        match_filter["cloning"] = {"$exists": False}
+
+        if not include_del:
+            match_filter["del"] = False
+
+        minTime = datetime.datetime.fromtimestamp(from_time / 1000.0)
+        match_filter['moddate'] = {"$gt": minTime}
+
+        # Define the pipeline operations
+        pipeline = [
+            {"$match": match_filter},
+            {"$project": {"username": "$owner", "workspace_id": "$ws",
+                          "name": 1, "narr_keys": "$meta.k",
+                          "narr_values": "$meta.v",
+                          "deleted": "$del", "desc": 1, "numObj": 1,
+                          "last_saved_at": "$moddate", "_id": 0}}
+        ]
+        # grab handle(s) to the db collection
+        kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
+        return list(kbworkspaces.aggregate(pipeline))
+
     def list_user_objects_from_wsobjs(self, minTime, maxTime, ws_list=None):
         """
         list_user_objects_from_wsobjs:
@@ -369,7 +387,6 @@ class MongoMetricsDBI:
             MongoMetricsDBI._WS_WSOBJECTS]
         return list(kbwsobjs.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 24)
     def list_ws_firstAccess(self, minTime, maxTime, ws_list=None):
         """
         list_ws_firstAccess--retrieve the ws_ids and first access month (yyyy-mm)
@@ -424,7 +441,6 @@ class MongoMetricsDBI:
         m_cursor = kbwsobjs.aggregate(pipeline)
         return list(m_cursor)
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 24)
     def list_ws_lastAccess(self, minTime, maxTime, ws_list=None):
         """
         list_ws_lastAccess--retrieve the ws_ids and last access month (yyyy-mm)
@@ -463,7 +479,6 @@ class MongoMetricsDBI:
         m_cursor = kbwsobjs.aggregate(pipeline)
         return list(m_cursor)
 
-    @cache_it_json(limit=1024, expire=60 * 60 * 7 * 24)
     def list_kbstaff_usernames(self):
         kbstaff_filter = {'kbase_staff': {"$in": [True, 1]}}
         projection = {'_id': 0, 'username': 1}
@@ -472,7 +487,6 @@ class MongoMetricsDBI:
 
         return list(kbusers.find(kbstaff_filter, projection))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_exec_tasks(self, minTime, maxTime):
         qry_filter = {}
 
@@ -496,7 +510,6 @@ class MongoMetricsDBI:
         return sorted(list(kbtasks.find(qry_filter, projection)),
                       key=itemgetter('creation_time'))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_details(self, userIds, minTime, maxTime, excluded_users=None):
         # excluded_users has to be an array for '$nin'
         if excluded_users is None:
@@ -522,7 +535,6 @@ class MongoMetricsDBI:
         kbusers = self.metricsDBs['auth2'][MongoMetricsDBI._AUTH2_USERS]
         return sorted(list(kbusers.aggregate(pipeline)), key=itemgetter('signup_at'))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_signup_retn_users(self, userIds, minTime, maxTime, excluded_users=None):
         """
         aggr_signup_retn_users: count signup and returning users
@@ -560,7 +572,6 @@ class MongoMetricsDBI:
 
         return list(self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS].aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def list_ujs_results(self, userIds, minTime, maxTime):
         qry_filter = {}
 
@@ -598,7 +609,6 @@ class MongoMetricsDBI:
         return list(jobstate.find(qry_filter, projection))
 
     # BEGIN putting the deleted functions back for reporting
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_logins_from_ws(self, userIds, minTime, maxTime):
 
         match_filter = {"moddate": {"$gte": minTime, "$lte": maxTime}}
@@ -624,7 +634,6 @@ class MongoMetricsDBI:
         kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_total_logins(self, userIds, minTime, maxTime, excluded_users=None):
         # excluded_users has to be an array for '$nin'
         if excluded_users is None:
@@ -658,7 +667,6 @@ class MongoMetricsDBI:
         kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_numObjs(self, userIds, minTime, maxTime):
 
         match_filter = {"moddate": {"$gte": minTime, "$lte": maxTime}}
@@ -685,7 +693,6 @@ class MongoMetricsDBI:
         kbworkspaces = self.metricsDBs['workspace'][MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
-    @cache_it_json(limit=1024, expire=60 * 60 / 2)
     def aggr_user_ws(self, userIds, minTime, maxTime):
         match_filter = {"moddate": {"$gte": minTime, "$lte": maxTime}}
         match_filter["cloning"] = {"$exists": False}

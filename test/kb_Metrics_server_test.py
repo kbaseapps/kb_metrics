@@ -8,6 +8,7 @@ import unittest
 from configparser import ConfigParser
 from os import environ
 from unittest.mock import patch
+import copy
 
 from bson.objectid import ObjectId
 from pymongo import MongoClient
@@ -20,19 +21,31 @@ from kb_Metrics.kb_MetricsImpl import kb_Metrics
 from kb_Metrics.kb_MetricsServer import MethodContext
 from kb_Metrics.metrics_dbi import MongoMetricsDBI
 from kb_Metrics.metricsdb_controller import MetricsMongoDBController
+from kb_Metrics.NarrativeCache import NarrativeCache
+
+debug = False
+def print_debug(msg):
+    if not debug:
+        return
+    t = str(datetime.datetime.now())
+    print("{}:{}".format(t, msg))
 
 
 class kb_MetricsTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print_debug("SETUP CLASS")
         token = environ.get('KB_AUTH_TOKEN', None)
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
         cls.cfg = {}
         config = ConfigParser()
         config.read(config_file)
+        print_debug('CFG STARTING')
         for nameval in config.items('kb_Metrics'):
+            print_debug('CFG: {} = {}'.format(nameval[0], nameval[1]))
             cls.cfg[nameval[0]] = nameval[1]
+        print_debug('CFG FINISHED')
         # Getting username from Auth profile for token
         authServiceUrl = cls.cfg['auth-service-url']
         auth_client = _KBaseAuth(authServiceUrl)
@@ -50,11 +63,15 @@ class kb_MetricsTest(unittest.TestCase):
                         'authenticated': 1})
         cls.wsURL = cls.cfg['workspace-url']
         cls.wsClient = workspaceService(cls.wsURL)
+        print_debug('SETUP CLASS - about to create a new kb_Metrics')
         cls.serviceImpl = kb_Metrics(cls.cfg)
         cls.scratch = cls.cfg['scratch']
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
+        print_debug('SETUP CLASS - about to create a new controller')
         cls.db_controller = MetricsMongoDBController(cls.cfg)
+        cls.narrative_cache = NarrativeCache(cls.cfg)
         cls.client = MongoClient(port=27017)
+        print_debug("MONGO - about to start")
         cls.init_mongodb()
 
     @classmethod
@@ -65,12 +82,15 @@ class kb_MetricsTest(unittest.TestCase):
 
     @classmethod
     def init_mongodb(cls):
-        print('starting to build local mongoDB')
+        print_debug("MONGO - starting")
+        print_debug('starting to build local mongoDB')
 
         os.system("sudo service mongodb start")
         os.system("mongod --version")
         os.system("cat /var/log/mongodb/mongodb.log "
                   "| grep 'waiting for connections on port 27017'")
+
+        print_debug("MONGO - ready")
 
         cls._insert_data(cls.client, 'workspace', 'workspaces')
         cls._insert_data(cls.client, 'exec_engine', 'exec_tasks')
@@ -185,7 +205,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         db[table].drop()
         db[table].insert_many(records)
-        print(f'Inserted {len(records)} records for {db_name}.{table}')
+        print_debug(f'Inserted {len(records)} records for {db_name}.{table}')
 
     def getWsClient(self):
         return self.__class__.wsClient
@@ -366,7 +386,7 @@ class kb_MetricsTest(unittest.TestCase):
     def test_MetricsMongoDBs_aggr_signup_retn_users(self):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         m_users_cur = dbi.metricsDBs['metrics']['users'].find()
-        print(f'There are {len(list(m_users_cur))} users in metrics.users before dbi call')
+        print_debug(f'There are {len(list(m_users_cur))} users in metrics.users before dbi call')
 
         min_time = 1468454614192
         max_time = 1585259588883
@@ -978,8 +998,12 @@ class kb_MetricsTest(unittest.TestCase):
             2019, 1, 24, 19, 35, 48, 1000), 'numObj': 7}
 
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        print_debug('DB NAMES')
+        print_debug(self.db_names)
         with self.assertRaises(WriteError) as context_manager:
             dbi.update_narrative_records(upd_narr_filter, upd_narr_data)
+            print('WRITE ERROR')
+            print(str(context_manager.exception.message))
             self.assertEqual(err_msg, str(context_manager.exception.message))
 
     # Uncomment to skip this test
@@ -1209,7 +1233,6 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped test_MetricsMongoDBs_list_narrative_info")
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_narrative_info(self):
-
         o_list = ['fangfang', 'psdehal', 'jplfaria', 'pranjan77']
         ws_id_list = [8056, 8748, 1111]
 
@@ -1244,6 +1267,18 @@ class kb_MetricsTest(unittest.TestCase):
         narrs = dbi.list_narrative_info()
         self.assertEqual(len(narrs), 25)
 
+        narrs = dbi.list_narrative_info(include_temporary=True)
+        self.assertEqual(len(narrs), 28)
+
+        narrs = dbi.list_narrative_info(wsname_list=['pranjan77:1466168703797', 'bsadkhin:1468518477765'])
+        self.assertEqual(len(narrs), 2)
+        self.assertEqual(narrs[0]['ws'], 8056)
+        self.assertEqual(narrs[1]['ws'], 8748)
+
+        narrs = dbi.list_narrative_info(wsname_list=['srividya22:1468507655124'], include_temporary=True)
+        self.assertEqual(len(narrs), 1)
+        self.assertEqual(narrs[0]['ws'], 8739)
+
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBs_list_ws_firstAccess")
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
@@ -1273,7 +1308,7 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_constructor")
     def test_MetricsMongoDBController_constructor(self):
-        cfg_arr = self.cfg
+        # print_debug('TEST - controller constructor')
         # testing if all the required parameters are given
         # if yes, no error is raised
         with self.assertRaises(ValueError):
@@ -1287,7 +1322,7 @@ class kb_MetricsTest(unittest.TestCase):
         # testing if all the required parameters are given, with an empty host
         with self.assertRaises(ConfigurationError):
             try:
-                cfg_arr = self.cfg
+                cfg_arr = copy.deepcopy(self.cfg)
                 cfg_arr['mongodb-host'] = ''
                 MetricsMongoDBController(cfg_arr)
             except ConfigurationError as e:
@@ -1298,8 +1333,8 @@ class kb_MetricsTest(unittest.TestCase):
         for k in ['mongodb-host', 'mongodb-databases',
                   'mongodb-user', 'mongodb-pwd']:
 
-            error_msg = '"{}" config variable must be defined '.format(k)
-            error_msg += 'to start a MetricsMongoDBController!'
+            error_msg = 'Required key "{}" not found in config'.format(k)
+            error_msg += ' of MetricsMongoDBController'
 
             cfg_arr = copy.deepcopy(self.cfg)
             cfg_arr.pop(k)
@@ -1312,14 +1347,14 @@ class kb_MetricsTest(unittest.TestCase):
         expected_admin_list = ['kkeller', 'scanon', 'psdehal', 'dolson', 'dylan',
                                'chenry', 'ciservices', 'wjriehl', 'sychan', 'jjeffryes',
                                'drakemm2', 'allenbh', 'eapearson', 'qzhang', 'tgu2',
-                               'bsadkhin', 'bobcottingham', 'janakabase', 'jplfaria',
-                               'marcin', 'royk', 'sunita', 'aparkin']
+                               'bsadkhin', 'bobcottingham', 'janakakbase', 'jplfaria',
+                               'marcin', 'royk', 'sunita', 'aparkin', 'cnelson']
         self.assertCountEqual(self.db_controller.adminList,
                               expected_admin_list)
 
         expected_metrics_admin_list = ['scanon', 'psdehal', 'dolson', 'chenry',
                                        'wjriehl', 'sychan', 'qzhang', 'tgu2', 'eapearson',
-                                       'jjeffryes']
+                                       'jjeffryes', 'cnelson']
         self.assertCountEqual(self.db_controller.metricsAdmins,
                               expected_metrics_admin_list)
 
@@ -1332,22 +1367,30 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped MetricsMongoDBController_config_str_to_list")
     def test_MetricsMongoDBController_config_str_to_list(self):
         # testing None config input
-        user_list_str = None
-        user_list = self.db_controller._config_str_to_list(user_list_str)
-        self.assertFalse(len(user_list))
+        config = {
+            'user-list': None
+        }
+        # user_list_str = None
+
+        error_msg = 'Required key "{}" not found in config'.format('user-list')
+        error_msg += ' of MetricsMongoDBController'
+        
+        with self.assertRaisesRegex(ValueError, error_msg):
+            user_list = self.db_controller.get_config_list(config, 'user-list')
+        # self.assertFalse(len(user_list))
 
         # testing normal list
-        user_list_str = 'user_1, user_2'
-        user_list = self.db_controller._config_str_to_list(user_list_str)
-        expected_list = ['user_1', 'user_2']
-        self.assertEqual(len(user_list), 2)
-        self.assertCountEqual(user_list, expected_list)
+        # user_list_str = 'user_1, user_2'
+        # user_list = self.db_controller._config_str_to_list(user_list_str)
+        # expected_list = ['user_1', 'user_2']
+        # self.assertEqual(len(user_list), 2)
+        # self.assertCountEqual(user_list, expected_list)
 
-        # testing list with spaces
-        user_list_str = '  user_1, user_2    ,   , '
-        user_list = self.db_controller._config_str_to_list(user_list_str)
-        self.assertEqual(len(user_list), 2)
-        self.assertCountEqual(user_list, expected_list)
+        # # testing list with spaces
+        # user_list_str = '  user_1, user_2    ,   , '
+        # user_list = self.db_controller._config_str_to_list(user_list_str)
+        # self.assertEqual(len(user_list), 2)
+        # self.assertCountEqual(user_list, expected_list)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBController_process_parameters")
@@ -1679,6 +1722,9 @@ class kb_MetricsTest(unittest.TestCase):
                 }]
             }
         }]
+        exec_task_map = dict()
+        for exec_task in exec_tasks:
+            exec_task_map[exec_task['ujs_job_id']] = exec_task
 
         ujs_jobs = [{
             "_id": ObjectId("596832a4e4b08b65f9ff5d6f"),
@@ -1762,12 +1808,9 @@ class kb_MetricsTest(unittest.TestCase):
             "authparam": "DEFAULT"
         }]
 
-        # make sure the narratimve_name_map exists
-        if self.db_controller.narrative_name_map == {}:
-            self.db_controller.narrative_name_map = self.db_controller._get_narrative_name_map()
         # testing the correct data items appear in the assembled result
         joined_ujs0 = self.db_controller._assemble_ujs_state(ujs_jobs[0],
-                                                             exec_tasks)
+                                                             exec_task_map)
         self.assertEqual(joined_ujs0['wsid'], '15206')
         self.assertNotIn('narrative_name', joined_ujs0)
         self.assertNotIn('narrative_objNo', joined_ujs0)
@@ -1782,7 +1825,7 @@ class kb_MetricsTest(unittest.TestCase):
                          ['workspace_name'])
 
         joined_ujs1 = self.db_controller._assemble_ujs_state(ujs_jobs[1],
-                                                             exec_tasks)
+                                                             exec_task_map)
         self.assertNotIn('wsid', joined_ujs1)
         self.assertEqual(joined_ujs1['app_id'], mthd.replace('.', '/'))
         self.assertEqual(joined_ujs1['method'], mthd)
@@ -1791,7 +1834,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertNotIn('workspace_name', joined_ujs1)
 
         joined_ujs2 = self.db_controller._assemble_ujs_state(ujs_jobs[2],
-                                                             exec_tasks)
+                                                             exec_task_map)
         self.assertEqual(joined_ujs2['wsid'], '23165')
         self.assertEqual(joined_ujs2['app_id'],
                          'kb_cufflinks/run_Cuffdiff')
@@ -1804,7 +1847,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('client_groups', joined_ujs2)
 
         joined_ujs3 = self.db_controller._assemble_ujs_state(ujs_jobs[3],
-                                                             exec_tasks)
+                                                             exec_task_map)
         et_job_input = exec_tasks[3]["job_input"]
         self.assertEqual(joined_ujs3['wsid'], et_job_input['wsid'])
         self.assertEqual(joined_ujs3['narrative_name'], 'Method Cell Refactor - UI Fixes')
@@ -1817,7 +1860,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('workspace_name', joined_ujs3)
 
         joined_ujs4 = self.db_controller._assemble_ujs_state(ujs_jobs[4],
-                                                             exec_tasks)
+                                                             exec_task_map)
         self.assertEqual(joined_ujs4['wsid'], ujs_jobs[4]['authparam'])
         self.assertEqual(joined_ujs4['narrative_name'], 'outx')
         self.assertEqual(joined_ujs4['narrative_objNo'], '1')
@@ -1828,7 +1871,7 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs4['workspace_name'], 'pranjan77:1466168703797')
 
         joined_ujs5 = self.db_controller._assemble_ujs_state(ujs_jobs[5],
-                                                             exec_tasks)
+                                                             exec_task_map)
         et_job_input = exec_tasks[5]["job_input"]
         etj_params = et_job_input["params"][0]
         etj_methd = et_job_input["method"]
@@ -2060,7 +2103,7 @@ class kb_MetricsTest(unittest.TestCase):
     # @unittest.skip("skipped _get_narrative_name_map")
     def test_MetricsMongoDBController_get_narrative_name_map(self):
         # testing with local db data
-        wnarr_map = self.db_controller._get_narrative_name_map()
+        wnarr_map = self.narrative_cache.get()
 
         self.assertEqual(len(wnarr_map), 30)
         self.assertEqual(wnarr_map.get(8781),
@@ -2093,46 +2136,62 @@ class kb_MetricsTest(unittest.TestCase):
                           'narr_name_map': ('fakeusr:narrative_1513709108341', 'Faking Test', '1')})
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped _map_ws_narr_names")
-    def test_MetricsMongoDBController_map_ws_narr_names(self):
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(8781)
+    # @unittest.skip("skipped get_narrative_info")
+    def test_MetricsMongoDBController_get_narrative_info(self):
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(8781)
         self.assertEqual(w_nm, 'vkumar:1468639677500')
         self.assertEqual(n_nm, 'Ecoli refseq - July 15')
         self.assertEqual(n_ver, '45')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(27834)
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(27834)
         self.assertEqual(w_nm, 'psdehal:narrative_1513709108341')
         self.assertEqual(n_nm, 'Staging Test')
         self.assertEqual(n_ver, '1')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(8736)
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(8736)
         self.assertEqual(w_nm, 'rsutormin:1468453294248')
         self.assertEqual(n_nm, 'VisCellRefactor')
         self.assertEqual(n_ver, '1')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(8748)
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(8748)
         self.assertEqual(w_nm, 'bsadkhin:1468518477765')
         self.assertEqual(n_nm, 'Method Cell Refactor - UI Fixes')
         self.assertEqual(n_ver, '94')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(15206)
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info('bsadkhin:1468518477765')
+        self.assertEqual(w_nm, 'bsadkhin:1468518477765')
+        self.assertEqual(n_nm, 'Method Cell Refactor - UI Fixes')
+        self.assertEqual(n_ver, '94')
+
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(15206)
         self.assertEqual(w_nm, '')
         self.assertEqual(n_nm, '')
         self.assertEqual(n_ver, '1')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(23165)
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(23165)
         self.assertEqual(w_nm, '')
         self.assertEqual(n_nm, '')
         self.assertEqual(n_ver, '1')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names('qz:12345678')
+        # Hmm, there is no narrative for 'qz:12345678'. 
+        # This should never occur (?), but if it does, it means a non-narrative 
+        # job, and the workspace name should be displayed.
+        # This is also a test of handling a workspace name passed instead of an 
+        # id. They should be separate tests.
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info('qz:12345678')
         self.assertEqual(w_nm, 'qz:12345678')
         self.assertEqual(n_nm, 'qz:12345678')
         self.assertEqual(n_ver, '1')
 
-        w_nm, n_nm, n_ver = self.db_controller._map_ws_narr_names(33473)
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(33473)
         self.assertEqual(w_nm, 'qzhang:narrative_1529080473649')
         self.assertEqual(n_nm, 'test_ws_vs_narr_names')
+        self.assertEqual(n_ver, '1')
+
+        # A temporary narrative should have a title of 'Untitled'.
+        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(8739)
+        self.assertEqual(w_nm, 'srividya22:1468507655124')
+        self.assertEqual(n_nm, 'Untitled')
         self.assertEqual(n_ver, '1')
 
     # Uncomment to skip this test
@@ -2424,7 +2483,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         m_users_cur = dbi.metricsDBs['metrics']['users'].find()
-        print(('There are {} users in metrics.users before dbctlr call'.format(
+        print_debug(('There are {} users in metrics.users before dbctlr call'.format(
             len(list(m_users_cur)))))
 
         user_list0 = []
@@ -3220,7 +3279,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         m_users_cur = dbi.metricsDBs['metrics']['users'].find()
-        print(('There are {} users in metrics.users before Impl call'.format(
+        print_debug(('There are {} users in metrics.users before Impl call'.format(
             len(list(m_users_cur)))))
 
         # testing (excluding kbstaff by default)

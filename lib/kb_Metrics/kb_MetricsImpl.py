@@ -2,8 +2,8 @@
 #BEGIN_HEADER
 # The header block is where all import statments should live
 from kb_Metrics.metricsdb_controller import MetricsMongoDBController
+import time
 #END_HEADER
-
 
 class kb_Metrics:
     '''
@@ -21,9 +21,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "1.2.0"
-    GIT_URL = "https://github.com/kbaseapps/kb_Metrics.git"
-    GIT_COMMIT_HASH = "c6fd471fb9ef1786937e53e110a701c633f0f4ca"
+    VERSION = "1.3.0"
+    GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
+    GIT_COMMIT_HASH = "f4b51ba9746254fb9e7cfa2fa93d8c63fabb1814"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -36,6 +36,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # Any configuration parameters that are important should be parsed and
         # saved in the constructor.
+        self.config = config
         self.mdb_controller = MetricsMongoDBController(config)
         #END_CONSTRUCTOR
         pass
@@ -56,9 +57,12 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # ctx is the context object
         # return variables are: return_records
         #BEGIN get_app_metrics
-        return_records = self.mdb_controller.get_user_job_states(ctx['user_id'],
+        start = time.time()
+        controller = MetricsMongoDBController(self.config)
+        return_records = controller.get_user_job_states(ctx['user_id'],
                                                                  params,
                                                                  ctx['token'])
+        elapsed = time.time() - start
         #END get_app_metrics
 
         # At some point might do deeper type checking...
