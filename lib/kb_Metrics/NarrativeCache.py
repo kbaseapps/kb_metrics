@@ -45,7 +45,6 @@ class NarrativeCache:
                 # and thus the max time was not set.
                 ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
             else:
-
                 ws_narratives = self.metrics_dbi.list_more_ws_narratives(include_del=True, from_time=cls.narrative_map_max_time)
 
             if len(ws_narratives) == 0:
