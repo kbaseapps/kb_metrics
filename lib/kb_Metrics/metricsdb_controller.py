@@ -230,7 +230,7 @@ class MetricsMongoDBController:
 
             if wsn.get('object_id'):
                 wsn['last_saved_by'] = wsn.pop('username')
-                ws_nm, wsn['nice_name'], wsn['n_ver'] = \
+                ws_nm, wsn['nice_name'], wsn['n_ver'], is_deleted = \
                     self.get_narrative_info(wsn['workspace_id'])
                 wsn.pop('narr_keys')
                 wsn.pop('narr_values')
@@ -256,24 +256,21 @@ class MetricsMongoDBController:
         try:
             workspace_id = int(ws_id)
         except ValueError as ve:
-            result = self.metrics_dbi.list_narrative_info(wsname_list=[ws_id])
+            result = self.metrics_dbi.list_narrative_info(wsname_list=[ws_id], include_temporary=True)
             if len(result) == 0:
-                return ws_id, ws_id, '1'
+                return ws_id, ws_id, '1', False
             workspace_id = result[0]['ws']
 
         narrative_name_map = self.narrative_cache.get()
         if workspace_id in narrative_name_map:
-            w_nm, n_nm, n_ver = narrative_name_map[workspace_id]
-            return (w_nm, n_nm, n_ver)
+            w_nm, n_nm, n_ver, deleted = narrative_name_map[workspace_id]
+            return (w_nm, n_nm, n_ver, deleted)
 
         #
-        # It is possible that a brand new narrative has not yet been "saved",
-        # Such narratives are referred to as "temporary". There are thousands
-        # of them, so the query for narratives in metrics_dbi omits them.
-        # Thus they will appear to be missing, which is how we get here.
-        # We leave the title empty (not a possible value for narrative_nice_name),
-        # which the consumer can handle however they wish.
-        return '', '', '1'
+        # We can only get here if the narrative lookup by id failed.
+        # This can happen currently for export jobs.
+        #
+        return None, None, None, None
 
     def _get_activities_from_wsobjs(self, params, token):
 
@@ -366,19 +363,37 @@ class MetricsMongoDBController:
             u_j_s.pop('workspace_name')
 
         # get the narrative name and version via u_j_s['wsid']
+        has_narrative = False
+        job_type = None
         if u_j_s.get('wsid'):
-            w_nm, n_name, n_ver = self.get_narrative_info(u_j_s['wsid'])
-            if n_name != '':
+            w_nm, n_name, n_ver, is_deleted = self.get_narrative_info(u_j_s['wsid'])
+            if w_nm is None:
+                # not found
+                job_type = 'workspace'
+            else:
+                job_type = 'narrative'
+                u_j_s['narrative_is_deleted'] = is_deleted
                 u_j_s['narrative_name'] = n_name
                 u_j_s['narrative_objNo'] = n_ver
-            elif (u_j_s.get('workspace_name', None) and
-                  'narrative' in u_j_s['workspace_name']):
-                # Note that an empty narrative name means that the the 
-                # narrative was not found, which really means that it 
-                # is a temporary narrative, which by tradition have the
-                # title 'Untitled'.
-                u_j_s['narrative_name'] = 'Untitled'
-                u_j_s['narrative_objNo'] = 1
+            # elif (u_j_s.get('workspace_name', None) and
+            #       'narrative' in u_j_s['workspace_name']):
+            #     # Note that an empty narrative name means that the the 
+            #     # narrative was not found, which really means that it 
+            #     # is a temporary narrative, which by tradition have the
+            #     # title 'Untitled'.
+            #     # Not quite true - export jobs launched from the data panel
+            #     # in the narrative currently do not carry a narrative wsid.
+            #     u_j_s['narrative_name'] = 'Untitled'
+            #     u_j_s['narrative_objNo'] = 1
+        else:
+            if 'app_id' in u_j_s:
+                if 'export' in u_j_s['app_id']:
+                    job_type = 'export'
+                else:
+                    job_type = 'unknown'
+
+        u_j_s['job_type'] = job_type
+                    
 
         # get the client groups
         u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
@@ -482,21 +497,50 @@ class MetricsMongoDBController:
         if not self._is_admin(requesting_user):
             params['user_ids'] = [requesting_user]
 
+        perf = dict()
+        start = round(time.time() * 1000)
+
         # 1. get the client_groups data for lookups
         if self.client_groups is None:
             self.client_groups = self._get_client_groups_from_cat(token)
+
+        now = round(time.time() * 1000)
+        perf['client_groups'] = now - start
+        start = now
 
         # 2. query dbs to get lists of tasks and jobs
         params = self._process_parameters(params)
         exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'],
                                                       params['maxTime'])
+        now = round(time.time() * 1000)
+        perf['list_exec_tasks'] = now - start
+        start = now
+
         ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'],
                                                      params['minTime'],
                                                      params['maxTime'])
+
+        now = round(time.time() * 1000)
+        perf['list_ujs_results'] = now - start
+        start = now
+                                                     
         ujs_jobs = self._convert_isodate_to_milis(
             ujs_jobs, ['created', 'started', 'updated'])
 
-        return {'job_states': self._join_task_ujs(exec_tasks, ujs_jobs)}
+
+        now = round(time.time() * 1000)
+        perf['_convert_isodate_to_milis'] = now - start
+        start = now
+
+        job_states = self._join_task_ujs(exec_tasks, ujs_jobs)
+
+        now = round(time.time() * 1000)
+        perf['_join_task_ujs'] = now - start
+        start = now
+
+        # print(str(perf))
+
+        return {'job_states': job_states, 'stats': {'perf': perf}}
 
     def get_narrative_stats(self, requesting_user, params, token, exclude_kbstaff=True):
         """

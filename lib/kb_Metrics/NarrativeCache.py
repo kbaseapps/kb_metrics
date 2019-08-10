@@ -2,6 +2,8 @@ from kb_Metrics.metrics_dbi import MongoMetricsDBI
 import threading
 import time
 
+LOCK_TIMEOUT = 5
+
 def get_config_list(config, config_key):
     list_str = config.get(config_key)
     if not list_str:
@@ -78,7 +80,7 @@ class NarrativeCache:
             if narr_nm is None:
                 narr_nm = 'Untitled'
 
-            cls.narrative_map[wsnarr['workspace_id']] = (ws_nm, narr_nm, narr_ver)
+            cls.narrative_map[wsnarr['workspace_id']] = (ws_nm, narr_nm, narr_ver, wsnarr['deleted'])
 
         cls.narrative_map_max_time = max_time
         self.narrative_map_cache = cls.narrative_map
@@ -94,7 +96,7 @@ class NarrativeCache:
 
         start = time.time()
         self.id = self.id + 1
-        if self.lock.acquire(blocking=True, timeout=5):
+        if self.lock.acquire(blocking=True, timeout=LOCK_TIMEOUT):
             try:
                 return self._get()
             finally:

@@ -1823,6 +1823,8 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs0['workspace_name'],
                          exec_tasks[1]['job_input']['params'][0]
                          ['workspace_name'])
+        self.assertEqual(joined_ujs0['job_type'], 'workspace')
+        # print('UJS 0 ' + str(joined_ujs0['job_type']))
 
         joined_ujs1 = self.db_controller._assemble_ujs_state(ujs_jobs[1],
                                                              exec_task_map)
@@ -1832,6 +1834,9 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs1['finish_time'], ujs_jobs[1]['updated'])
         self.assertIn('client_groups', joined_ujs1)
         self.assertNotIn('workspace_name', joined_ujs1)
+        # self.assertEqual(joined_ujs1['narrative_name', 'Export Job'])
+        self.assertEqual(joined_ujs1['job_type'], 'export')
+        # print('UJS 1 ' + str(joined_ujs1['job_type']))
 
         joined_ujs2 = self.db_controller._assemble_ujs_state(ujs_jobs[2],
                                                              exec_task_map)
@@ -1845,6 +1850,8 @@ class kb_MetricsTest(unittest.TestCase):
                          ['workspace_name'])
         self.assertEqual(joined_ujs2['finish_time'],  ujs_jobs[2]['updated'])
         self.assertIn('client_groups', joined_ujs2)
+        self.assertEqual(joined_ujs2['job_type'], 'workspace')
+        # print('UJS 2 ' + str(joined_ujs2['job_type']))
 
         joined_ujs3 = self.db_controller._assemble_ujs_state(ujs_jobs[3],
                                                              exec_task_map)
@@ -1858,6 +1865,8 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs3['creation_time'], ujs_jobs[3]['created'])
         self.assertIn('client_groups', joined_ujs3)
         self.assertIn('workspace_name', joined_ujs3)
+        self.assertEqual(joined_ujs3['job_type'], 'narrative')
+        # print('UJS 3 ' + str(joined_ujs3['job_type']))
 
         joined_ujs4 = self.db_controller._assemble_ujs_state(ujs_jobs[4],
                                                              exec_task_map)
@@ -1869,6 +1878,8 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs4['finish_time'], ujs_jobs[4]['updated'])
         self.assertIn('client_groups', joined_ujs4)
         self.assertEqual(joined_ujs4['workspace_name'], 'pranjan77:1466168703797')
+        self.assertEqual(joined_ujs4['job_type'], 'narrative')
+        # print('UJS 4 ' + str(joined_ujs4['job_type']))
 
         joined_ujs5 = self.db_controller._assemble_ujs_state(ujs_jobs[5],
                                                              exec_task_map)
@@ -1883,6 +1894,8 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs5['modification_time'], ujs_jobs[5]['updated'])
         self.assertIn('client_groups', joined_ujs5)
         self.assertEqual(joined_ujs5['workspace_name'], 'srividya22:1447279981090')
+        self.assertEqual(joined_ujs5['job_type'], 'narrative')
+        # print('UJS 5 ' + str(joined_ujs5['job_type']))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_join_task_ujs")
@@ -2107,15 +2120,15 @@ class kb_MetricsTest(unittest.TestCase):
 
         self.assertEqual(len(wnarr_map), 30)
         self.assertEqual(wnarr_map.get(8781),
-                         ('vkumar:1468639677500', 'Ecoli refseq - July 15', '45'))
+                         ('vkumar:1468639677500', 'Ecoli refseq - July 15', '45', False))
         self.assertEqual(wnarr_map.get(27834),
-                         ('psdehal:narrative_1513709108341', 'Staging Test', '1'))
+                         ('psdehal:narrative_1513709108341', 'Staging Test', '1', False))
         self.assertEqual(wnarr_map.get(8736),
-                         ('rsutormin:1468453294248', 'VisCellRefactor', '1'))
+                         ('rsutormin:1468453294248', 'VisCellRefactor', '1', False))
         self.assertEqual(wnarr_map.get(8748), ('bsadkhin:1468518477765',
-                         'Method Cell Refactor - UI Fixes', '94'))
+                         'Method Cell Refactor - UI Fixes', '94', False))
         self.assertEqual(wnarr_map.get(33473), ('qzhang:narrative_1529080473649',
-                         'test_ws_vs_narr_names', '1'))
+                         'test_ws_vs_narr_names', '1', False))
         self.assertTrue(wnarr_map.get(15206) is None)
         self.assertTrue(wnarr_map.get(23165) is None)
 
@@ -2127,72 +2140,92 @@ class kb_MetricsTest(unittest.TestCase):
         wnarr_map_results = self.db_controller.map_ws_narrative_names(
             'qzhang', ws_ids, self.getContext()['token'])
         self.assertEqual(wnarr_map_results[0],
-                         {'ws_id': 8276, 'narr_name_map': ('', '', '1')})
+                         {'ws_id': 8276, 'narr_name_map': (None, None, None, None)})
         self.assertEqual(wnarr_map_results[1],
                          {'ws_id': 8726,
-                          'narr_name_map': ('wjriehl:1468439004137', 'Updater Testing', '1')})
+                          'narr_name_map': ('wjriehl:1468439004137', 'Updater Testing', '1', False)})
         self.assertEqual(wnarr_map_results[2],
                          {'ws_id': 99991,
-                          'narr_name_map': ('fakeusr:narrative_1513709108341', 'Faking Test', '1')})
+                          'narr_name_map': ('fakeusr:narrative_1513709108341', 'Faking Test', '1', True)})
 
     # Uncomment to skip this test
     # @unittest.skip("skipped get_narrative_info")
     def test_MetricsMongoDBController_get_narrative_info(self):
-        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(8781)
+        w_nm, n_nm, n_ver, is_deleted = self.db_controller.get_narrative_info(8781)
         self.assertEqual(w_nm, 'vkumar:1468639677500')
         self.assertEqual(n_nm, 'Ecoli refseq - July 15')
         self.assertEqual(n_ver, '45')
+        self.assertEqual(is_deleted, False)
 
-        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(27834)
+        w_nm, n_nm, n_ver, is_deleted = self.db_controller.get_narrative_info(27834)
         self.assertEqual(w_nm, 'psdehal:narrative_1513709108341')
         self.assertEqual(n_nm, 'Staging Test')
         self.assertEqual(n_ver, '1')
+        self.assertEqual(is_deleted, False)
 
-        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(8736)
+        w_nm, n_nm, n_ver, is_deleted = self.db_controller.get_narrative_info(8736)
         self.assertEqual(w_nm, 'rsutormin:1468453294248')
         self.assertEqual(n_nm, 'VisCellRefactor')
         self.assertEqual(n_ver, '1')
+        self.assertEqual(is_deleted, False)
 
-        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(8748)
+        w_nm, n_nm, n_ver, is_deleted = self.db_controller.get_narrative_info(8748)
         self.assertEqual(w_nm, 'bsadkhin:1468518477765')
         self.assertEqual(n_nm, 'Method Cell Refactor - UI Fixes')
         self.assertEqual(n_ver, '94')
+        self.assertEqual(is_deleted, False)
 
-        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info('bsadkhin:1468518477765')
+        w_nm, n_nm, n_ver, is_deleted = self.db_controller.get_narrative_info('bsadkhin:1468518477765')
         self.assertEqual(w_nm, 'bsadkhin:1468518477765')
         self.assertEqual(n_nm, 'Method Cell Refactor - UI Fixes')
         self.assertEqual(n_ver, '94')
+        self.assertEqual(is_deleted, False)
 
-        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(15206)
-        self.assertEqual(w_nm, '')
-        self.assertEqual(n_nm, '')
-        self.assertEqual(n_ver, '1')
+        # Does not exist
+        w_nm, n_nm, n_ver, is_deleted = self.db_controller.get_narrative_info(15206)
+        self.assertEqual(w_nm, None)
+        self.assertEqual(n_nm, None)
+        self.assertEqual(n_ver, None)
+        self.assertEqual(is_deleted, None)
 
-        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(23165)
-        self.assertEqual(w_nm, '')
-        self.assertEqual(n_nm, '')
-        self.assertEqual(n_ver, '1')
+        # Does not exist.
+        w_nm, n_nm, n_ver, is_deleted = self.db_controller.get_narrative_info(23165)
+        self.assertEqual(w_nm, None)
+        self.assertEqual(n_nm, None)
+        self.assertEqual(n_ver, None)
+        self.assertEqual(is_deleted, None)
 
         # Hmm, there is no narrative for 'qz:12345678'. 
         # This should never occur (?), but if it does, it means a non-narrative 
         # job, and the workspace name should be displayed.
         # This is also a test of handling a workspace name passed instead of an 
         # id. They should be separate tests.
-        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info('qz:12345678')
+        w_nm, n_nm, n_ver, is_deleted = self.db_controller.get_narrative_info('qz:12345678')
         self.assertEqual(w_nm, 'qz:12345678')
         self.assertEqual(n_nm, 'qz:12345678')
         self.assertEqual(n_ver, '1')
+        self.assertEqual(is_deleted, False)
 
-        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(33473)
+        w_nm, n_nm, n_ver, is_deleted = self.db_controller.get_narrative_info(33473)
         self.assertEqual(w_nm, 'qzhang:narrative_1529080473649')
         self.assertEqual(n_nm, 'test_ws_vs_narr_names')
         self.assertEqual(n_ver, '1')
+        self.assertEqual(is_deleted, False)
 
         # A temporary narrative should have a title of 'Untitled'.
-        w_nm, n_nm, n_ver = self.db_controller.get_narrative_info(8739)
+        w_nm, n_nm, n_ver, is_deleted = self.db_controller.get_narrative_info(8739)
         self.assertEqual(w_nm, 'srividya22:1468507655124')
         self.assertEqual(n_nm, 'Untitled')
         self.assertEqual(n_ver, '1')
+        self.assertEqual(is_deleted, False)
+
+        # A deleted narrative should indicate so
+        w_nm, n_nm, n_ver, is_deleted = self.db_controller.get_narrative_info(99999)
+        self.assertEqual(w_nm, 'joedoe:narrative_1513709108341')
+        self.assertEqual(n_nm, 'Staging Test1')
+        self.assertEqual(n_ver, '1')
+        self.assertEqual(is_deleted, True)
+        
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_update_user_info")
@@ -2800,13 +2833,13 @@ class kb_MetricsTest(unittest.TestCase):
         wnarr_map_results = self.getImpl().map_ws_narrative_names(
             self.getContext(), ws_ids)[0]
         self.assertEqual(wnarr_map_results[0],
-                         {'ws_id': 8276, 'narr_name_map': ('', '', '1')})
+                         {'ws_id': 8276, 'narr_name_map': (None, None, None     , None)})
         self.assertEqual(wnarr_map_results[1],
                          {'ws_id': 8726,
-                          'narr_name_map': ('wjriehl:1468439004137', 'Updater Testing', '1')})
+                          'narr_name_map': ('wjriehl:1468439004137', 'Updater Testing', '1', False)})
         self.assertEqual(wnarr_map_results[2],
                          {'ws_id': 99991,
-                          'narr_name_map': ('fakeusr:narrative_1513709108341', 'Faking Test', '1')})
+                          'narr_name_map': ('fakeusr:narrative_1513709108341', 'Faking Test', '1', True)})
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_total_logins")
