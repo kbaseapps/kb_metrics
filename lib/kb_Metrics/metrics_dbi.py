@@ -294,9 +294,7 @@ class MongoMetricsDBI:
 
     def list_ws_narratives(self, minT=0, maxT=0, include_del=False):
         match_filter = {"meta": {"$elemMatch":
-                                 {"$or":
-                                  [{"k": "narrative"},
-                                   {"k": "narrative_nice_name"}]}}}
+                                  {"k": "narrative"}}}
         match_filter["cloning"] = {"$exists": False}
 
         if not include_del:
@@ -333,9 +331,7 @@ class MongoMetricsDBI:
             raise(ValueError('Listing more narrativs requires a timestamp "from_time"'))
 
         match_filter = {"meta": {"$elemMatch":
-                                 {"$or":
-                                  [{"k": "narrative"},
-                                   {"k": "narrative_nice_name"}]}}}
+                                  {"k": "narrative"}}}
         match_filter["cloning"] = {"$exists": False}
 
         if not include_del:
