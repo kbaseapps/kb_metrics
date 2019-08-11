@@ -37,10 +37,13 @@ module kb_Metrics {
     typedef structure {
         list<user_id> user_ids;
         epoch_range epoch_range;
+        int offset;
+        int limit;
     } AppMetricsParams;
 
     typedef structure {
         UnspecifiedObject job_states;
+        int total_count;
     } AppMetricsResult;
 
     typedef structure {
