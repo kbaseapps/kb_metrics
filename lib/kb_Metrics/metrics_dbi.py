@@ -580,7 +580,7 @@ class MongoMetricsDBI:
 
         return list(self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS].aggregate(pipeline))
 
-    def list_ujs_results(self, userIds, minTime, maxTime, offset=0, limit=None):
+    def list_ujs_results(self, userIds, minTime, maxTime, offset=None, limit=None):
         qry_filter = {}
 
         user_filter = {}
@@ -614,7 +614,9 @@ class MongoMetricsDBI:
 
         # grab handle(s) to the database collections needed
         jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
-        cursor = jobstate.find(qry_filter, projection).skip(offset)
+        cursor = jobstate.find(qry_filter, projection)
+        if offset is not None:
+            cursor.skip(offset)
         if limit is not None:
             cursor.limit(limit)
         total_count = cursor.count()
