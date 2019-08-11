@@ -84,18 +84,14 @@ class MetricsMongoDBController:
         return src_list
 
     def _parse_app_id(self, et_jobinput):
-        app_id = ''
         if 'app_id' in et_jobinput:
-            app_id = et_jobinput['app_id'].replace('.', '/')
-
-        return app_id
+            return et_jobinput['app_id'].replace('.', '/')
+        return ''
 
     def _parse_method(self, et_jobinput):
-        method_id = ''
         if 'method' in et_jobinput:
-            method_id = et_jobinput['method'].replace('/', '.')
-
-        return method_id
+            return et_jobinput['method'].replace('/', '.')
+        return ''
 
     def _update_user_info(self, params, token):
         """
@@ -300,8 +296,8 @@ class MetricsMongoDBController:
         for exec_task in exec_tasks:
             exec_task_map[exec_task['ujs_job_id']] = exec_task
             
-        for j in ujs_jobs:
-            u_j_s = self._assemble_ujs_state(j, exec_task_map)
+        for ujs_job in ujs_jobs:
+            u_j_s = self._assemble_ujs_state(ujs_job, exec_task_map)
             ujs_ret.append(u_j_s)
         return ujs_ret
 
@@ -322,33 +318,36 @@ class MetricsMongoDBController:
             if '.' in desc:
                 u_j_s['method'] = desc
 
+        debug = u_j_s['job_id'] == '596832a4e4b08b65f9ff5d6f'
+        
         exec_task = exec_task_map.get(u_j_s['job_id'], None)
-        if exec_task is not None:
-            if 'job_input' in exec_task:
-                et_job_in = exec_task['job_input']
-                u_j_s['app_id'] = self._parse_app_id(et_job_in)
-                if not u_j_s.get('method'):
-                    u_j_s['method'] = self._parse_method(et_job_in)
-                if not u_j_s.get('wsid'):
-                    if 'wsid' in et_job_in:
-                        u_j_s['wsid'] = et_job_in['wsid']
-                    elif 'params' in et_job_in and et_job_in['params']:
-                        p_ws = et_job_in['params'][0]
-                        if isinstance(p_ws, dict) and 'ws_id' in p_ws:
-                            u_j_s['wsid'] = p_ws['ws_id']
+        if exec_task is not None and 'job_input' in exec_task:
+            et_job_in = exec_task['job_input']
 
-                # try to get workspace_name--first by wsid, then from 'job_input'
-                if u_j_s.get('wsid') and not u_j_s.get('workspace_name'):
-                    ws_name = self.get_narrative_info(u_j_s['wsid'])[0]
-                    u_j_s['workspace_name'] = ws_name
-                if not u_j_s.get('workspace_name') or u_j_s['workspace_name'] == '':
-                    if 'params' in et_job_in and et_job_in['params']:
-                        p_ws = et_job_in['params'][0]
-                        if isinstance(p_ws, dict):
-                            if 'workspace' in p_ws:
-                                u_j_s['workspace_name'] = p_ws['workspace']
-                            elif 'workspace_name' in p_ws:
-                                u_j_s['workspace_name'] = p_ws['workspace_name']
+            u_j_s['app_id'] = self._parse_app_id(et_job_in)
+            if not u_j_s.get('method'):
+                u_j_s['method'] = self._parse_method(et_job_in)
+
+            if not u_j_s.get('wsid'):
+                if 'wsid' in et_job_in:
+                    u_j_s['wsid'] = et_job_in['wsid']
+                elif 'params' in et_job_in and et_job_in['params']:
+                    p_ws = et_job_in['params'][0]
+                    if isinstance(p_ws, dict) and 'ws_id' in p_ws:
+                        u_j_s['wsid'] = p_ws['ws_id']
+
+            # try to get workspace_name--first by wsid, then from 'job_input'
+            if u_j_s.get('wsid') and not u_j_s.get('workspace_name'):
+                ws_name = self.get_narrative_info(u_j_s['wsid'])[0]
+                u_j_s['workspace_name'] = ws_name
+            if not u_j_s.get('workspace_name') or u_j_s['workspace_name'] == '':
+                if 'params' in et_job_in and et_job_in['params']:
+                    p_ws = et_job_in['params'][0]
+                    if isinstance(p_ws, dict):
+                        if 'workspace' in p_ws:
+                            u_j_s['workspace_name'] = p_ws['workspace']
+                        elif 'workspace_name' in p_ws:
+                            u_j_s['workspace_name'] = p_ws['workspace_name']
 
         if not u_j_s.get('app_id') and u_j_s.get('method'):
             u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
@@ -382,6 +381,9 @@ class MetricsMongoDBController:
                     job_type = 'export'
                 else:
                     job_type = 'unknown'
+
+        if not u_j_s.get('app_id'):
+            print('NO APP??', str(ujs), str(exec_task), str(u_j_s))
 
         u_j_s['job_type'] = job_type
                     
@@ -514,12 +516,18 @@ class MetricsMongoDBController:
         perf['list_ujs_results_count'] = ujs_jobs_count
         start = now
 
-        ujs_job_ids = list(map(lambda x: x['_id'], ujs_jobs))
+        ujs_job_ids = list(map(lambda x: str(x['_id']), ujs_jobs))
 
-        if len(ujs_jobs) > 1000:
-            exec_tasks = self.metrics_dbi.list_exec_tasks(minTime=params['minTime'], maxTime=params['maxTime'])
-        else:
-            exec_tasks = self.metrics_dbi.list_exec_tasks(jobIDs=ujs_job_ids)
+        # print("UJS JOBS: " + str(len(ujs_job_ids)))
+
+        # if len(ujs_jobs) > 1000:
+        #     exec_tasks = self.metrics_dbi.list_exec_tasks(minTime=params['minTime'], maxTime=params['maxTime'])
+        # else:
+        exec_tasks = self.metrics_dbi.list_exec_tasks(jobIDs=ujs_job_ids)
+
+        # if len(ujs_jobs) > len(exec_tasks):
+        #     print('\n!! JOBS: ' + str(len(exec_tasks)) + '!==' + str(len(ujs_jobs)) + ' : ' + str(len(ujs_job_ids)) + ":" + str(len(exec_tasks2)) + "\n" + str(ujs_job_ids) + "\n")
+        
 
         now = round(time.time() * 1000)
         perf['list_exec_tasks'] = now - start
