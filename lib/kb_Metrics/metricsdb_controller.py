@@ -498,16 +498,16 @@ class MetricsMongoDBController:
         perf['client_groups'] = now - start
         start = now
 
-        offset = params.get('offset', 0)
-        limit = params.get('limit', 20)
+        offset = params.get('offset', None)
+        limit = params.get('limit', None)
 
         # 2. query dbs to get lists of tasks and jobs
         params = self._process_parameters(params)
 
         ujs_jobs, ujs_jobs_count = self.metrics_dbi.list_ujs_results(params['user_ids'],
-        params['minTime'],
-        params['maxTime'], 
-        offset, limit)
+                                                                    params['minTime'],
+                                                                    params['maxTime'], 
+                                                                    offset, limit)
 
         now = round(time.time() * 1000)
         perf['list_ujs_results'] = now - start
