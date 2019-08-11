@@ -7,6 +7,7 @@ from pprint import pprint
 
 from installed_clients.CatalogClient import Catalog
 from kb_Metrics.Util import (_unix_time_millis_from_datetime,
+                             _unix_time_millis_from_datetime_trusted,
                              _convert_to_datetime)
 from kb_Metrics.metrics_dbi import MongoMetricsDBI
 from kb_Metrics.NarrativeCache import NarrativeCache
@@ -79,7 +80,7 @@ class MetricsMongoDBController:
         for src in src_list:
             for ldt in dt_list:
                 if ldt in src and isinstance(src[ldt], datetime.datetime):
-                    src[ldt] = _unix_time_millis_from_datetime(src[ldt])
+                    src[ldt] = _unix_time_millis_from_datetime_trusted(src[ldt])
         return src_list
 
     def _parse_app_id(self, et_jobinput):
@@ -321,8 +322,8 @@ class MetricsMongoDBController:
             if '.' in desc:
                 u_j_s['method'] = desc
 
-        if exec_task_map.get(u_j_s['job_id']):
-            exec_task = exec_task_map[u_j_s['job_id']]
+        exec_task = exec_task_map.get(u_j_s['job_id'], None)
+        if exec_task is not None:
             if 'job_input' in exec_task:
                 et_job_in = exec_task['job_input']
                 u_j_s['app_id'] = self._parse_app_id(et_job_in)
@@ -375,16 +376,6 @@ class MetricsMongoDBController:
                 u_j_s['narrative_is_deleted'] = is_deleted
                 u_j_s['narrative_name'] = n_name
                 u_j_s['narrative_objNo'] = n_ver
-            # elif (u_j_s.get('workspace_name', None) and
-            #       'narrative' in u_j_s['workspace_name']):
-            #     # Note that an empty narrative name means that the the 
-            #     # narrative was not found, which really means that it 
-            #     # is a temporary narrative, which by tradition have the
-            #     # title 'Untitled'.
-            #     # Not quite true - export jobs launched from the data panel
-            #     # in the narrative currently do not carry a narrative wsid.
-            #     u_j_s['narrative_name'] = 'Untitled'
-            #     u_j_s['narrative_objNo'] = 1
         else:
             if 'app_id' in u_j_s:
                 if 'export' in u_j_s['app_id']:
@@ -394,7 +385,6 @@ class MetricsMongoDBController:
 
         u_j_s['job_type'] = job_type
                     
-
         # get the client groups
         u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
         if self.client_groups:
@@ -508,25 +498,35 @@ class MetricsMongoDBController:
         perf['client_groups'] = now - start
         start = now
 
+        offset = params.get('offset', 0)
+        limit = params.get('limit', 20)
+
         # 2. query dbs to get lists of tasks and jobs
         params = self._process_parameters(params)
-        exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'],
-                                                      params['maxTime'])
-        now = round(time.time() * 1000)
-        perf['list_exec_tasks'] = now - start
-        start = now
 
-        ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'],
-                                                     params['minTime'],
-                                                     params['maxTime'])
+        ujs_jobs, ujs_jobs_count = self.metrics_dbi.list_ujs_results(params['user_ids'],
+        params['minTime'],
+        params['maxTime'], 
+        offset, limit)
 
         now = round(time.time() * 1000)
         perf['list_ujs_results'] = now - start
+        perf['list_ujs_results_count'] = ujs_jobs_count
+        start = now
+
+        ujs_job_ids = list(map(lambda x: x['_id'], ujs_jobs))
+
+        if len(ujs_jobs) > 1000:
+            exec_tasks = self.metrics_dbi.list_exec_tasks(minTime=params['minTime'], maxTime=params['maxTime'])
+        else:
+            exec_tasks = self.metrics_dbi.list_exec_tasks(jobIDs=ujs_job_ids)
+
+        now = round(time.time() * 1000)
+        perf['list_exec_tasks'] = now - start
         start = now
                                                      
         ujs_jobs = self._convert_isodate_to_milis(
             ujs_jobs, ['created', 'started', 'updated'])
-
 
         now = round(time.time() * 1000)
         perf['_convert_isodate_to_milis'] = now - start
@@ -540,7 +540,7 @@ class MetricsMongoDBController:
 
         # print(str(perf))
 
-        return {'job_states': job_states, 'stats': {'perf': perf}}
+        return {'job_states': job_states, 'total_count': ujs_jobs_count, 'stats': {'perf': perf}}
 
     def get_narrative_stats(self, requesting_user, params, token, exclude_kbstaff=True):
         """

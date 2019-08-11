@@ -483,16 +483,28 @@ class MongoMetricsDBI:
 
         return list(kbusers.find(kbstaff_filter, projection))
 
-    def list_exec_tasks(self, minTime, maxTime):
-        qry_filter = {}
+    def list_exec_tasks(self, minTime=None, maxTime=None, jobIDs=None):
+        match_cond = {}
 
+        # Conditionally add filtering by creation time.
+        # This should be avoided - the scope of the results is determined by
+        # the ujs query, not this one, and that one is scoped by user - this one is not
+        # so the result set over all users may be very large.
+        # TODO: This should also incorporate modified time - if a job was started a while ago
+        # but is still queued or running, should it be included? Perhaps that is another 
+        # query specification - currently active jobs
         creation_time_filter = {}
         if minTime:
             creation_time_filter['$gte'] = minTime
         if maxTime:
             creation_time_filter['$lte'] = maxTime
         if creation_time_filter:
-            qry_filter['creation_time'] = creation_time_filter
+            match_cond['creation_time'] = creation_time_filter
+
+        # Conditionally filter by job id. This is the preferred method when using
+        # paging.
+        if jobIDs:
+            match_cond['ujs_job_id'] = {'$in': jobIDs}
 
         projection = {
             '_id': 0,
@@ -502,9 +514,9 @@ class MongoMetricsDBI:
             'job_input': 1
         }
         # grab handle(s) to the database collection
-        kbtasks = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_TASKS]
-        return sorted(list(kbtasks.find(qry_filter, projection)),
-                      key=itemgetter('creation_time'))
+        exec_engine_db = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_TASKS]
+        cursor = exec_engine_db.find(match_cond, projection)
+        return list(cursor)
 
     def aggr_user_details(self, userIds, minTime, maxTime, excluded_users=None):
         # excluded_users has to be an array for '$nin'
@@ -568,7 +580,7 @@ class MongoMetricsDBI:
 
         return list(self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS].aggregate(pipeline))
 
-    def list_ujs_results(self, userIds, minTime, maxTime):
+    def list_ujs_results(self, userIds, minTime, maxTime, offset=0, limit=None):
         qry_filter = {}
 
         user_filter = {}
@@ -602,7 +614,11 @@ class MongoMetricsDBI:
 
         # grab handle(s) to the database collections needed
         jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
-        return list(jobstate.find(qry_filter, projection))
+        cursor = jobstate.find(qry_filter, projection).skip(offset)
+        if limit is not None:
+            cursor.limit(limit)
+        total_count = cursor.count()
+        return list(cursor), total_count
 
     # BEGIN putting the deleted functions back for reporting
     def aggr_user_logins_from_ws(self, userIds, minTime, maxTime):

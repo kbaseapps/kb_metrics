@@ -5,6 +5,7 @@ from kb_Metrics.metricsdb_controller import MetricsMongoDBController
 import time
 #END_HEADER
 
+
 class kb_Metrics:
     '''
     Module Name:
@@ -23,7 +24,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "1.3.0"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "f4b51ba9746254fb9e7cfa2fa93d8c63fabb1814"
+    GIT_COMMIT_HASH = "1e031bd6c9b4410df8765231ccfa3a4359266b31"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -50,9 +51,10 @@ This KBase SDK module implements methods for generating various KBase metrics.
            of size 2: parameter "e_lowerbound" of type "epoch" (A Unix epoch
            (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
            parameter "e_upperbound" of type "epoch" (A Unix epoch (the time
-           since 00:00:00 1/1/1970 UTC) in milliseconds.)
+           since 00:00:00 1/1/1970 UTC) in milliseconds.), parameter "offset"
+           of Long, parameter "limit" of Long
         :returns: instance of type "AppMetricsResult" -> structure: parameter
-           "job_states" of unspecified object
+           "job_states" of unspecified object, parameter "total_count" of Long
         """
         # ctx is the context object
         # return variables are: return_records

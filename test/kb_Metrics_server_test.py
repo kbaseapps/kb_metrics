@@ -9,6 +9,7 @@ from configparser import ConfigParser
 from os import environ
 from unittest.mock import patch
 import copy
+from operator import itemgetter
 
 from bson.objectid import ObjectId
 from pymongo import MongoClient
@@ -269,15 +270,16 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(exec_tasks), 3)
         for tsk in exec_tasks:
             self.assertTrue(min_time <= tsk['creation_time'] <= max_time)
-        self.assertEqual(exec_tasks[0]['ujs_job_id'],
+        sorted_exec_tasks = sorted(exec_tasks, key=itemgetter('creation_time'))
+        self.assertEqual(sorted_exec_tasks[0]['ujs_job_id'],
                          '596832a4e4b08b65f9ff5d6f')
-        self.assertEqual(exec_tasks[0]['job_input']['wsid'], 15206)
-        self.assertEqual(exec_tasks[1]['ujs_job_id'],
+        self.assertEqual(sorted_exec_tasks[0]['job_input']['wsid'], 15206)
+        self.assertEqual(sorted_exec_tasks[1]['ujs_job_id'],
                          '5968cd75e4b08b65f9ff5d7c')
-        self.assertNotIn('wsid', exec_tasks[1]['job_input'])
-        self.assertEqual(exec_tasks[2]['ujs_job_id'],
+        self.assertNotIn('wsid', sorted_exec_tasks[1]['job_input'])
+        self.assertEqual(sorted_exec_tasks[2]['ujs_job_id'],
                          '5968e5fde4b08b65f9ff5d7d')
-        self.assertEqual(exec_tasks[2]['job_input']['wsid'], 23165)
+        self.assertEqual(sorted_exec_tasks[2]['job_input']['wsid'], 23165)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped MetricsMongoDBs_list_user_objects_from_wsobjs")
@@ -1186,9 +1188,9 @@ class kb_MetricsTest(unittest.TestCase):
         epoch = datetime.datetime.utcfromtimestamp(0)
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing list_ujs_results return data, with userIds
-        ujs = dbi.list_ujs_results(user_list1, min_time, max_time)
+        ujs, count = dbi.list_ujs_results(user_list1, min_time, max_time)
         self.assertEqual(len(ujs), 14)
-        ujs = dbi.list_ujs_results(user_list2, min_time, max_time)
+        ujs, count = dbi.list_ujs_results(user_list2, min_time, max_time)
         self.assertEqual(len(ujs), 3)
         for uj in ujs:
             self.assertIn(uj.get('user'), user_list2)
@@ -1197,11 +1199,20 @@ class kb_MetricsTest(unittest.TestCase):
             self.assertTrue(min_time <= uj_creation_time <= max_time)
 
         # testing list_ujs_results return data, without userIds
-        ujs = dbi.list_ujs_results([], min_time, max_time)
+        ujs, count = dbi.list_ujs_results([], min_time, max_time)
         self.assertEqual(len(ujs), 15)
 
+        # testing list_ujs_results return data, with offset and limit
+        ujs, count = dbi.list_ujs_results([], min_time, max_time, offset=2, limit=10)
+        self.assertEqual(len(ujs), 10)
+        self.assertEqual(count, 15)
+
+        ujs, count = dbi.list_ujs_results([], min_time, max_time, offset=10, limit=10)
+        self.assertEqual(len(ujs), 5)
+        self.assertEqual(count, 15)
+
         # testing list_ujs_results return data, check 'started' existence
-        ujs = dbi.list_ujs_results(['jobnotstarted'], min_time, max_time)
+        ujs, count = dbi.list_ujs_results(['jobnotstarted'], min_time, max_time)
         self.assertEqual(len(ujs), 1)
         self.assertNotIn('started', ujs[0])
         self.assertNotIn('status', ujs[0])
@@ -1214,16 +1225,16 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(ujs[0]['authparam'], '15208')
 
         # testing list_ujs_results return data, different userIds and times
-        ujs = dbi.list_ujs_results(['wjriehl'],
+        ujs, count = dbi.list_ujs_results(['wjriehl'],
                                    1500052541065, 1500074641912)
         self.assertEqual(len(ujs), 8)
-        ujs = dbi.list_ujs_results([], 1500052541065, 1500074641912)
+        ujs, count = dbi.list_ujs_results([], 1500052541065, 1500074641912)
         self.assertEqual(len(ujs), 14)
 
         # testing list_ujs_results with a different min_tiem & without userIds
         # checking for job id (i.e., '_id') existence
         min_time = 1414192660700
-        ujs = dbi.list_ujs_results([], min_time, max_time)
+        ujs, count = dbi.list_ujs_results([], min_time, max_time)
         self.assertEqual(len(ujs), 17)
         self.assertEqual(ujs[0]['status'], 'queued')
         for uj in ujs:
@@ -2353,7 +2364,9 @@ class kb_MetricsTest(unittest.TestCase):
         ujs_ret = self.db_controller.get_user_job_states(
             requesting_user1, input_params, self.getContext()['token'])
         ujs = ujs_ret['job_states']
+        total_count = ujs_ret['total_count']
         self.assertEqual(len(ujs), 16)
+        self.assertEqual(total_count, 16)
 
         self.assertEqual(ujs[0]['wsid'], '15206')
         self.assertEqual(ujs[0]['app_id'], 'kb_deseq/run_DESeq2')
@@ -2363,6 +2376,30 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('njs', ujs[0]['client_groups'])
         self.assertEqual(ujs[0]['workspace_name'], 'tgu2:1481170361822')
         self.assertEqual(params['user_ids'], user_list)
+
+        # testing offset and limit
+        params['offset'] = 0
+        params['limit'] = 10
+
+        ujs_ret = self.db_controller.get_user_job_states(
+            requesting_user1, input_params, self.getContext()['token'])
+        ujs = ujs_ret['job_states']
+        total_count = ujs_ret['total_count']
+        self.assertEqual(len(ujs), 10)
+        self.assertEqual(total_count, 16)
+
+        params['offset'] = 10
+        params['limit'] = 10
+        
+        ujs_ret = self.db_controller.get_user_job_states(
+            requesting_user1, input_params, self.getContext()['token'])
+        ujs = ujs_ret['job_states']
+        total_count = ujs_ret['total_count']
+        self.assertEqual(len(ujs), 6)
+        self.assertEqual(total_count, 16)
+
+        params.pop('offset')
+        params.pop('limit')
 
         # testing the requesting user is not an admin and with no data
         ujs_ret = self.db_controller.get_user_job_states(
@@ -2404,6 +2441,8 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(len(ujs1), 1)
         self.assertIn('job_id', ujs1[0])
         self.assertEqual(ujs1[0]['status'], 'queued')
+
+        
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsMongoDBController_get_total_logins_from_ws")
