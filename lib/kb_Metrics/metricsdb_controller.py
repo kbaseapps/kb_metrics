@@ -382,9 +382,6 @@ class MetricsMongoDBController:
                 else:
                     job_type = 'unknown'
 
-        if not u_j_s.get('app_id'):
-            print('NO APP??', str(ujs), str(exec_task), str(u_j_s))
-
         u_j_s['job_type'] = job_type
                     
         # get the client groups
