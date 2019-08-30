@@ -342,6 +342,14 @@ class Application(object):
                              name='kb_Metrics.get_app_metrics',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_app_metrics'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_jobs,
+                             name='kb_Metrics.get_jobs',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_jobs'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_job,
+                             name='kb_Metrics.get_job',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_job'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.map_ws_narrative_names,
                              name='kb_Metrics.map_ws_narrative_names',
                              types=[list])

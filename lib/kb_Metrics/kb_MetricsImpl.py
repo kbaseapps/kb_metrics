@@ -24,7 +24,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "1.3.0"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "0de46e184a2ec10e13c20c6dd1a12c2f392af3b1"
+    GIT_COMMIT_HASH = "99fdafb6e6024b3894d302149ed64974ae60e6c7"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -73,6 +73,78 @@ This KBase SDK module implements methods for generating various KBase metrics.
                              'return_records is not type dict as required.')
         # return the results
         return [return_records]
+
+    def get_jobs(self, ctx, params):
+        """
+        :param params: instance of type "GetJobsParams" -> structure:
+           parameter "user_ids" of list of type "user_id" (A string for the
+           user id), parameter "epoch_range" of type "epoch_range" -> tuple
+           of size 2: parameter "e_lowerbound" of type "epoch" (A Unix epoch
+           (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "e_upperbound" of type "epoch" (A Unix epoch (the time
+           since 00:00:00 1/1/1970 UTC) in milliseconds.), parameter "offset"
+           of Long, parameter "limit" of Long
+        :returns: instance of type "GetJobsResult" -> structure: parameter
+           "job_states" of list of type "JobState" -> structure: parameter
+           "app_id" of String, parameter "client_groups" of list of String,
+           parameter "user" of String, parameter "complete" of type "bool",
+           parameter "error" of type "bool", parameter "status" of String,
+           parameter "creation_time" of Long, parameter "exec_start_time" of
+           Long, parameter "modification_time" of Long, parameter
+           "finish_time" of Long, parameter "job_id" of type "JobID",
+           parameter "method" of String, parameter "wsid" of String,
+           parameter "narrative_objNo" of Long, parameter "narrative_name" of
+           String, parameter "workspace_name" of String, parameter
+           "total_count" of Long
+        """
+        # ctx is the context object
+        # return variables are: result
+        #BEGIN get_jobs
+        controller = MetricsMongoDBController(self.config)
+        result = controller.get_user_job_states(ctx['user_id'],
+                                                                 params,
+                                                                 ctx['token'])
+        #END get_jobs
+
+        # At some point might do deeper type checking...
+        if not isinstance(result, dict):
+            raise ValueError('Method get_jobs return value ' +
+                             'result is not type dict as required.')
+        # return the results
+        return [result]
+
+    def get_job(self, ctx, params):
+        """
+        :param params: instance of type "GetJobParams" -> structure:
+           parameter "job_id" of type "JobID", parameter "user_id" of type
+           "user_id" (A string for the user id)
+        :returns: instance of type "GetJobResult" -> structure: parameter
+           "job_state" of type "JobState" -> structure: parameter "app_id" of
+           String, parameter "client_groups" of list of String, parameter
+           "user" of String, parameter "complete" of type "bool", parameter
+           "error" of type "bool", parameter "status" of String, parameter
+           "creation_time" of Long, parameter "exec_start_time" of Long,
+           parameter "modification_time" of Long, parameter "finish_time" of
+           Long, parameter "job_id" of type "JobID", parameter "method" of
+           String, parameter "wsid" of String, parameter "narrative_objNo" of
+           Long, parameter "narrative_name" of String, parameter
+           "workspace_name" of String
+        """
+        # ctx is the context object
+        # return variables are: result
+        #BEGIN get_job
+        controller = MetricsMongoDBController(self.config)
+        result = controller.get_user_job_state(ctx['user_id'],
+                                                    params,
+                                                    ctx['token'])
+        #END get_job
+
+        # At some point might do deeper type checking...
+        if not isinstance(result, dict):
+            raise ValueError('Method get_job return value ' +
+                             'result is not type dict as required.')
+        # return the results
+        return [result]
 
     def map_ws_narrative_names(self, ctx, ws_ids):
         """
