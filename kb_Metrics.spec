@@ -26,6 +26,10 @@ module kb_Metrics {
         A Unix epoch (the time since 00:00:00 1/1/1970 UTC) in milliseconds.
     */
     typedef int epoch;
+
+    typedef string JobID;
+
+    typedef int bool;
  
     /*
         A time range defined by its lower and upper bound.
@@ -53,6 +57,52 @@ module kb_Metrics {
   
     funcdef get_app_metrics(AppMetricsParams params)
         returns (AppMetricsResult return_records) authentication required;
+
+    typedef structure {
+        string app_id;
+        list<string> client_groups;
+        string user;
+        bool complete;
+        bool error;
+        string status;
+        int creation_time;
+        int exec_start_time;
+        int modification_time;
+        int finish_time;
+        JobID job_id;
+        string method;
+        string wsid;
+        int narrative_objNo;
+        string narrative_name;
+        string workspace_name;
+    } JobState;
+
+    typedef structure {
+        list<user_id> user_ids;
+        epoch_range epoch_range;
+        int offset;
+        int limit;
+    } GetJobsParams;
+
+    typedef structure {
+        list<JobState> job_states;
+        int total_count;
+    } GetJobsResult;
+
+    funcdef get_jobs(GetJobsParams params)
+        returns (GetJobsResult result) authentication required;
+
+    typedef structure {
+        JobID job_id;
+        user_id user_id;
+    } GetJobParams;
+
+    typedef structure {
+        JobState job_state;
+    } GetJobResult;
+
+    funcdef get_job(GetJobParams params) 
+        returns (GetJobResult result) authentication required;
 
     funcdef map_ws_narrative_names(list<int> ws_ids)
         returns (list<MapWsNarrNamesResult> return_records) authentication optional;

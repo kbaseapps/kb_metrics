@@ -503,10 +503,12 @@ class MetricsMongoDBController:
         # 2. query dbs to get lists of tasks and jobs
         params = self._process_parameters(params)
 
+        sort = params.get('sort', None)
+
         ujs_jobs, ujs_jobs_count = self.metrics_dbi.list_ujs_results(params['user_ids'],
                                                                     params['minTime'],
                                                                     params['maxTime'], 
-                                                                    offset, limit)
+                                                                    offset, limit, sort)
 
         now = round(time.time() * 1000)
         perf['list_ujs_results'] = now - start
@@ -546,6 +548,39 @@ class MetricsMongoDBController:
         # print(str(perf))
 
         return {'job_states': job_states, 'total_count': ujs_jobs_count, 'stats': {'perf': perf}}
+    
+    def get_user_job_state(self, requesting_user, params, token):
+        """
+        get_user_job_states--generate data for appcatalog/stats from querying
+        execution_engine, userjobstates, catalog and workspace
+        ----------------------
+        To get the job's 'status', 'complete'=true/false, etc.,
+        we can do joining as follows
+        --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
+        """
+        if not self._is_admin(requesting_user):
+            params['user_id'] = [requesting_user]
+
+        # 1. get the client_groups data for lookups
+        if self.client_groups is None:
+            self.client_groups = self._get_client_groups_from_cat(token)
+
+        # 2. query dbs to get lists of tasks and jobs
+        # params = self._process_parameters(params)
+
+        ujs_job = self.metrics_dbi.get_ujs_result(params['user_id'], params['job_id'])
+
+        if ujs_job is None:
+            return {'job_state': None}
+
+        exec_tasks = self.metrics_dbi.list_exec_tasks(jobIDs=[ujs_job['_id']])
+
+        ujs_jobs = self._convert_isodate_to_milis(
+            [ujs_job], ['created', 'started', 'updated'])
+
+        job_states = self._join_task_ujs(exec_tasks, ujs_jobs)
+
+        return {'job_state': job_states[0]}
 
     def get_narrative_stats(self, requesting_user, params, token, exclude_kbstaff=True):
         """

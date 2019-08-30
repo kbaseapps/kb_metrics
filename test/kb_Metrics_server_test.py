@@ -1187,11 +1187,14 @@ class kb_MetricsTest(unittest.TestCase):
 
         epoch = datetime.datetime.utcfromtimestamp(0)
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
+        
         # testing list_ujs_results return data, with userIds
         ujs, count = dbi.list_ujs_results(user_list1, min_time, max_time)
         self.assertEqual(len(ujs), 14)
+
         ujs, count = dbi.list_ujs_results(user_list2, min_time, max_time)
         self.assertEqual(len(ujs), 3)
+
         for uj in ujs:
             self.assertIn(uj.get('user'), user_list2)
             uj_creation_time = int((uj.get('created') -
@@ -1239,6 +1242,22 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(ujs[0]['status'], 'queued')
         for uj in ujs:
             self.assertIn('_id', uj)
+
+        # testing list_ujs_results with a sort by job_id
+        # checking for job id (i.e., '_id') existence
+        min_time = 1414192660700
+        ujs, count = dbi.list_ujs_results([], min_time, max_time, sort=[{'field': 'job_id', 'direction': 'ascending'}])
+        self.assertEqual(len(ujs), 17)
+        job = ujs[0]
+        self.assertEqual(job['status'], 'queued')
+        self.assertEqual(str(job['_id']), '544ade14e4b0d82af0eaf31d')
+
+        min_time = 1414192660700
+        ujs, count = dbi.list_ujs_results([], min_time, max_time, sort=[{'field': 'job_id', 'direction': 'descending'}])
+        self.assertEqual(len(ujs), 17)
+        job = ujs[0]
+        self.assertEqual(job['status'], 'queued')
+        self.assertEqual(str(job['_id']), '544ade14e4b0d82af0eaf31d')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBs_list_narrative_info")
@@ -1835,7 +1854,6 @@ class kb_MetricsTest(unittest.TestCase):
                          exec_tasks[1]['job_input']['params'][0]
                          ['workspace_name'])
         self.assertEqual(joined_ujs0['job_type'], 'workspace')
-        # print('UJS 0 ' + str(joined_ujs0['job_type']))
 
         joined_ujs1 = self.db_controller._assemble_ujs_state(ujs_jobs[1],
                                                              exec_task_map)
@@ -1847,7 +1865,6 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertNotIn('workspace_name', joined_ujs1)
         # self.assertEqual(joined_ujs1['narrative_name', 'Export Job'])
         self.assertEqual(joined_ujs1['job_type'], 'export')
-        # print('UJS 1 ' + str(joined_ujs1['job_type']))
 
         joined_ujs2 = self.db_controller._assemble_ujs_state(ujs_jobs[2],
                                                              exec_task_map)
@@ -1862,7 +1879,6 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs2['finish_time'],  ujs_jobs[2]['updated'])
         self.assertIn('client_groups', joined_ujs2)
         self.assertEqual(joined_ujs2['job_type'], 'workspace')
-        # print('UJS 2 ' + str(joined_ujs2['job_type']))
 
         joined_ujs3 = self.db_controller._assemble_ujs_state(ujs_jobs[3],
                                                              exec_task_map)
@@ -1877,7 +1893,6 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('client_groups', joined_ujs3)
         self.assertIn('workspace_name', joined_ujs3)
         self.assertEqual(joined_ujs3['job_type'], 'narrative')
-        # print('UJS 3 ' + str(joined_ujs3['job_type']))
 
         joined_ujs4 = self.db_controller._assemble_ujs_state(ujs_jobs[4],
                                                              exec_task_map)
@@ -1890,7 +1905,6 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('client_groups', joined_ujs4)
         self.assertEqual(joined_ujs4['workspace_name'], 'pranjan77:1466168703797')
         self.assertEqual(joined_ujs4['job_type'], 'narrative')
-        # print('UJS 4 ' + str(joined_ujs4['job_type']))
 
         joined_ujs5 = self.db_controller._assemble_ujs_state(ujs_jobs[5],
                                                              exec_task_map)
@@ -1906,7 +1920,6 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIn('client_groups', joined_ujs5)
         self.assertEqual(joined_ujs5['workspace_name'], 'srividya22:1447279981090')
         self.assertEqual(joined_ujs5['job_type'], 'narrative')
-        # print('UJS 5 ' + str(joined_ujs5['job_type']))
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_join_task_ujs")
@@ -3186,6 +3199,97 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(app_metrics_ret[0]['narrative_name'], 'Staging Test')
         self.assertEqual(app_metrics_ret[0]['workspace_name'],
                          'psdehal:narrative_1513709108341')
+
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_get_jobs")
+    def test_run_MetricsImpl_get_jobs(self):
+        user_list = ['psdehal', 'umaganapathyswork', 'arfath', 'nardevuser1']
+        # start_datetime = datetime.datetime.strptime('2017-07-14T02:55:32+0000',
+        #                                             '%Y-%m-%dT%H:%M:%S+0000')
+        start_datetime = datetime.datetime.strptime('2014-10-24T02:55:32+0000',
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
+        end_datetime = datetime.datetime.strptime('2018-01-24T19:35:24.247Z',
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
+        m_params = {
+            'user_ids': user_list,
+            'epoch_range': (start_datetime, end_datetime)
+        }
+        # call your implementation
+        ret = self.getImpl().get_jobs(self.getContext(), m_params)
+        app_metrics_ret = ret[0]['job_states']
+        self.assertEqual(len(app_metrics_ret), 6)
+        for ap in app_metrics_ret:
+            self.assertIn('job_id', ap)
+
+        # call implementation with only one user
+        user_list = ['psdehal']
+        m_params = {
+            'user_ids': user_list,
+            'epoch_range': (start_datetime, end_datetime)
+        }
+        ret = self.getImpl().get_jobs(self.getContext(), m_params)
+        app_metrics_ret = ret[0]['job_states']
+        self.assertEqual(len(app_metrics_ret), 1)
+        self.assertIn(app_metrics_ret[0]['user'], user_list)
+        self.assertEqual(app_metrics_ret[0]['wsid'], '27834')
+        self.assertEqual(app_metrics_ret[0]['app_id'], 'kb_SPAdes/run_SPAdes')
+        self.assertEqual(app_metrics_ret[0]['method'], 'kb_SPAdes.run_SPAdes')
+        self.assertNotIn('finish_time', app_metrics_ret[0])
+        self.assertIn('client_groups', app_metrics_ret[0])
+        if 'ci' in self.cfg['kbase-endpoint']:
+            self.assertIn('njs', app_metrics_ret[0]['client_groups'])
+        else:
+            self.assertIn('bigmem', app_metrics_ret[0]['client_groups'])
+        self.assertEqual(app_metrics_ret[0]['narrative_name'], 'Staging Test')
+        self.assertEqual(app_metrics_ret[0]['workspace_name'],
+                         'psdehal:narrative_1513709108341')
+
+    def assertIsResult_get_job(self, ret):
+        self.assertIsInstance(ret, list)
+        self.assertEqual(len(ret), 1)
+        result = ret[0]
+        self.assertIsInstance(result, dict)
+        self.assertIn('job_state', result)
+        job_state = result['job_state']
+        return job_state
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_get_job")
+    def test_run_MetricsImpl_get_job(self):
+        job_id = '544ade14e4b0d82af0eaf31d'
+        user_id = 'nardevuser1'
+
+        m_params = {
+            'job_id': job_id,
+            'user_id': user_id
+        }
+        # call your implementation
+        ret = self.getImpl().get_job(self.getContext(), m_params)
+
+        # this should be a single job
+        job_state = self.assertIsResult_get_job(ret)
+        self.assertIsInstance(job_state, dict)
+        self.assertEqual(job_state['job_id'], '544ade14e4b0d82af0eaf31d')
+
+        # This one has an accompanying exec task, so check app info
+        m_params = {
+            'job_id': '596832a4e4b08b65f9ff5d6f',
+            'user_id': 'tgu2'
+        }
+        # call your implementation
+        ret = self.getImpl().get_job(self.getContext(), m_params)
+
+        # this should be a single job
+        job_state = self.assertIsResult_get_job(ret)
+        self.assertIsInstance(job_state, dict)
+        self.assertEqual(job_state['job_id'], '596832a4e4b08b65f9ff5d6f')
+        # Note that if the started time is available in ujs, that is used rather
+        # than in from exec. The times _should_ be the same, but they are not
+        # exactly. E.g. in this case the actual exec_start_time is 1500000937699,
+        # 4 ms ahead. 
+        self.assertEqual(job_state['exec_start_time'], 1500000937695)
+
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_get_user_details")

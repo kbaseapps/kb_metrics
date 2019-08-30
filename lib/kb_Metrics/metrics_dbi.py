@@ -1,5 +1,5 @@
 import datetime
-from pymongo import MongoClient
+from pymongo import MongoClient, DESCENDING, ASCENDING
 from pymongo.errors import BulkWriteError, WriteError, ConfigurationError
 
 from kb_Metrics.Util import _convert_to_datetime
@@ -580,7 +580,7 @@ class MongoMetricsDBI:
 
         return list(self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS].aggregate(pipeline))
 
-    def list_ujs_results(self, userIds, minTime, maxTime, offset=None, limit=None):
+    def list_ujs_results(self, userIds, minTime, maxTime, offset=None, limit=None, sort=None):
         qry_filter = {}
 
         user_filter = {}
@@ -619,8 +619,50 @@ class MongoMetricsDBI:
             cursor.skip(offset)
         if limit is not None:
             cursor.limit(limit)
+
+        if sort is not None and len(sort) > 0:
+            first_sort = sort[0]
+            if first_sort.get('direction', None) and first_sort['direction'].startswith('desc'):
+                sort_direction = DESCENDING
+            else:
+                sort_direction = ASCENDING
+            print('sorting by', first_sort['field'], sort_direction, first_sort.get('direction', None))
+            cursor.sort(first_sort['field'], sort_direction)
         total_count = cursor.count()
+
         return list(cursor), total_count
+
+    def get_ujs_result(self, userId, jobID):
+        qry_filter = {}
+
+        qry_filter['user'] = userId
+        qry_filter['_id'] = jobID
+
+        projection = {
+            'user': 1,
+            'created': 1,  # datetime.datetime(2015, 1, 9, 19, 36, 8, 561000)
+            'started': 1,
+            'updated': 1,
+            'status': 1,
+            'authparam': 1,  # "DEFAULT" or workspace_id
+            'authstrat': 1,  # "DEFAULT" or "kbaseworkspace"
+            'complete': 1,
+            'desc': 1,
+            'error': 1
+        }
+
+        # grab handle(s) to the database collections needed
+        jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
+        cursor = jobstate.find(qry_filter, projection)
+
+        total_count = cursor.count()
+
+        results = list(cursor)
+
+        if len(results) == 0:
+            return None
+        else:
+            return results[0]
 
     # BEGIN putting the deleted functions back for reporting
     def aggr_user_logins_from_ws(self, userIds, minTime, maxTime):
