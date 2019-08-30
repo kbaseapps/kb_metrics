@@ -10,11 +10,11 @@ MAINTAINER KBase Developer
 RUN apt-get update && \
     apt-get upgrade -y  && \
     apt-get dist-upgrade -y && \
-    apt-get install ca-certificates
+    apt-get install -y ca-certificates wget
 
 # install mongodb
-RUN sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 && \
-    echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | tee /etc/apt/sources.list.d/mongodb.list  && \
+RUN wget -qO - https://www.mongodb.org/static/pgp/server-3.6.asc | sudo apt-key add - && \
+    echo "deb [ arch=amd64 ] http://repo.mongodb.com/apt/ubuntu trusty/mongodb-enterprise/3.6 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-enterprise.list && \
     sudo apt-get update && \
     sudo apt-get install -y mongodb
 
