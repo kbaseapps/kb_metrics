@@ -3265,8 +3265,7 @@ class kb_MetricsTest(unittest.TestCase):
         user_id = 'nardevuser1'
 
         m_params = {
-            'job_id': job_id,
-            'user_id': user_id
+            'job_id': job_id
         }
         # call your implementation
         ret = self.getImpl().get_job(self.getContext(), m_params)
@@ -3278,8 +3277,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         # This one has an accompanying exec task, so check app info
         m_params = {
-            'job_id': '596832a4e4b08b65f9ff5d6f',
-            'user_id': 'tgu2'
+            'job_id': '596832a4e4b08b65f9ff5d6f'
         }
         # call your implementation
         ret = self.getImpl().get_job(self.getContext(), m_params)
