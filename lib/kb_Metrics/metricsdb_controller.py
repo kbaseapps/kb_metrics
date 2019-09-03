@@ -560,8 +560,12 @@ class MetricsMongoDBController:
         perf = dict()
         start = round(time.time() * 1000)
 
+        # If a regular user, we filter by user_id, with user_id set to the 
+        # username of the current user
         if not self._is_admin(requesting_user):
-            params['user_id'] = [requesting_user]
+            user_id = requesting_user
+        else:
+            user_id = None
 
         # 1. get the client_groups data for lookups
         if self.client_groups is None:
@@ -572,9 +576,7 @@ class MetricsMongoDBController:
         start = now
 
         # 2. query dbs to get lists of tasks and jobs
-        # params = self._process_parameters(params)
-
-        ujs_job = self.metrics_dbi.get_ujs_result(params['user_id'], params['job_id'])
+        ujs_job = self.metrics_dbi.get_ujs_result(params['job_id'], user_id = user_id)
 
         now = round(time.time() * 1000)
         perf['get_ujs_result'] = now - start
