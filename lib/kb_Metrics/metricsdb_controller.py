@@ -556,6 +556,10 @@ class MetricsMongoDBController:
         we can do joining as follows
         --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
         """
+
+        perf = dict()
+        start = round(time.time() * 1000)
+
         if not self._is_admin(requesting_user):
             params['user_id'] = [requesting_user]
 
@@ -563,22 +567,38 @@ class MetricsMongoDBController:
         if self.client_groups is None:
             self.client_groups = self._get_client_groups_from_cat(token)
 
+        now = round(time.time() * 1000)
+        perf['client_groups'] = now - start
+        start = now
+
         # 2. query dbs to get lists of tasks and jobs
         # params = self._process_parameters(params)
 
         ujs_job = self.metrics_dbi.get_ujs_result(params['user_id'], params['job_id'])
+
+        now = round(time.time() * 1000)
+        perf['get_ujs_result'] = now - start
+        start = now
 
         if ujs_job is None:
             return {'job_state': None}
 
         exec_tasks = self.metrics_dbi.list_exec_tasks(jobIDs=[ujs_job['_id']])
 
+        now = round(time.time() * 1000)
+        perf['list_exec_tasks'] = now - start
+        start = now
+
         ujs_jobs = self._convert_isodate_to_milis(
             [ujs_job], ['created', 'started', 'updated'])
 
         job_states = self._join_task_ujs(exec_tasks, ujs_jobs)
 
-        return {'job_state': job_states[0]}
+        now = round(time.time() * 1000)
+        perf['_join_task_ujs'] = now - start
+        start = now
+
+        return {'job_state': job_states[0], 'stats': {'perf': perf}}
 
     def get_narrative_stats(self, requesting_user, params, token, exclude_kbstaff=True):
         """
