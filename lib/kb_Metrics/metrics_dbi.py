@@ -634,11 +634,13 @@ class MongoMetricsDBI:
 
         return list(cursor), total_count
 
-    def get_ujs_result(self, userID, jobID):
+    def get_ujs_result(self, job_id, user_id = None):
         qry_filter = {}
 
-        qry_filter['user'] = userID
-        qry_filter['_id'] = ObjectId(jobID)
+        qry_filter['_id'] = ObjectId(job_id)
+
+        if user_id is not None:
+            qry_filter['user'] = user_id
 
         projection = {
             'user': 1,
