@@ -1,6 +1,7 @@
 import datetime
 from pymongo import MongoClient, DESCENDING, ASCENDING
 from pymongo.errors import BulkWriteError, WriteError, ConfigurationError
+from bson.objectid import ObjectId
 
 from kb_Metrics.Util import _convert_to_datetime
 from operator import itemgetter
@@ -636,7 +637,7 @@ class MongoMetricsDBI:
         qry_filter = {}
 
         qry_filter['user'] = userID
-        qry_filter['_id'] = jobID
+        qry_filter['_id'] = ObjectId(jobID)
 
         projection = {
             'user': 1,

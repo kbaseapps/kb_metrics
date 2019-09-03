@@ -204,6 +204,10 @@ class kb_MetricsTest(unittest.TestCase):
         json_data = open(record_file).read()
         records = json.loads(json_data)
 
+        if table == 'jobstate':
+            for record in records:
+                record['_id'] = ObjectId(record['_id'])
+
         db[table].drop()
         db[table].insert_many(records)
         print_debug(f'Inserted {len(records)} records for {db_name}.{table}')
