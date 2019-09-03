@@ -566,10 +566,10 @@ class MetricsMongoDBController:
         # 2. query dbs to get lists of tasks and jobs
         # params = self._process_parameters(params)
 
-        ujs_job, d = self.metrics_dbi.get_ujs_result(params['user_id'], params['job_id'])
+        ujs_job = self.metrics_dbi.get_ujs_result(params['user_id'], params['job_id'])
 
         if ujs_job is None:
-            return {'job_state': None, 'd': d}
+            return {'job_state': None}
 
         exec_tasks = self.metrics_dbi.list_exec_tasks(jobIDs=[ujs_job['_id']])
 
@@ -578,7 +578,7 @@ class MetricsMongoDBController:
 
         job_states = self._join_task_ujs(exec_tasks, ujs_jobs)
 
-        return {'job_state': job_states[0], 'd': d}
+        return {'job_state': job_states[0]}
 
     def get_narrative_stats(self, requesting_user, params, token, exclude_kbstaff=True):
         """

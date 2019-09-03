@@ -657,24 +657,14 @@ class MongoMetricsDBI:
         jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
         cursor = jobstate.find(qry_filter, projection)
 
-        total_count = cursor.count()
-
-        d = {
-            'total_count': total_count
-        }
-
         results = json.loads(json_util.dumps(list(cursor)))
         for r in results:
             r['_id'] = r['_id']['$oid']
 
-        d['results'] = results
-        d['user_id'] = userID
-        d['job_id'] = jobID
-
         if len(results) == 0:
-            return None, d
+            return None
         else:
-            return results[0], d
+            return results[0]
 
     # BEGIN putting the deleted functions back for reporting
     def aggr_user_logins_from_ws(self, userIds, minTime, maxTime):
