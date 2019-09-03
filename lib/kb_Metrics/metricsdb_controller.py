@@ -318,8 +318,6 @@ class MetricsMongoDBController:
             if '.' in desc:
                 u_j_s['method'] = desc
 
-        debug = u_j_s['job_id'] == '596832a4e4b08b65f9ff5d6f'
-        
         exec_task = exec_task_map.get(u_j_s['job_id'], None)
         if exec_task is not None and 'job_input' in exec_task:
             et_job_in = exec_task['job_input']
@@ -568,7 +566,7 @@ class MetricsMongoDBController:
         # 2. query dbs to get lists of tasks and jobs
         # params = self._process_parameters(params)
 
-        ujs_job = self.metrics_dbi.get_ujs_result(params['user_id'], params['job_id'])
+        ujs_job, d = self.metrics_dbi.get_ujs_result(params['user_id'], params['job_id'])
 
         if ujs_job is None:
             return {'job_state': None}
@@ -580,7 +578,7 @@ class MetricsMongoDBController:
 
         job_states = self._join_task_ujs(exec_tasks, ujs_jobs)
 
-        return {'job_state': job_states[0]}
+        return {'job_state': job_states[0], 'd': d}
 
     def get_narrative_stats(self, requesting_user, params, token, exclude_kbstaff=True):
         """

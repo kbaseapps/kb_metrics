@@ -632,10 +632,10 @@ class MongoMetricsDBI:
 
         return list(cursor), total_count
 
-    def get_ujs_result(self, userId, jobID):
+    def get_ujs_result(self, userID, jobID):
         qry_filter = {}
 
-        qry_filter['user'] = userId
+        qry_filter['user'] = userID
         qry_filter['_id'] = jobID
 
         projection = {
@@ -657,12 +657,20 @@ class MongoMetricsDBI:
 
         total_count = cursor.count()
 
+        d = {
+            'total_count': total_count
+        }
+
         results = list(cursor)
 
+        d['results'] = results
+        d['user_id'] = userID
+        d['job_id'] = jobID
+
         if len(results) == 0:
-            return None
+            return None, d
         else:
-            return results[0]
+            return results[0], d
 
     # BEGIN putting the deleted functions back for reporting
     def aggr_user_logins_from_ws(self, userIds, minTime, maxTime):
