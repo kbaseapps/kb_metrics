@@ -569,7 +569,7 @@ class MetricsMongoDBController:
         ujs_job, d = self.metrics_dbi.get_ujs_result(params['user_id'], params['job_id'])
 
         if ujs_job is None:
-            return {'job_state': None}
+            return {'job_state': None, 'd': d}
 
         exec_tasks = self.metrics_dbi.list_exec_tasks(jobIDs=[ujs_job['_id']])
 
