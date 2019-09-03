@@ -2,6 +2,8 @@ import datetime
 from pymongo import MongoClient, DESCENDING, ASCENDING
 from pymongo.errors import BulkWriteError, WriteError, ConfigurationError
 from bson.objectid import ObjectId
+from bson import json_util
+import json
 
 from kb_Metrics.Util import _convert_to_datetime
 from operator import itemgetter
@@ -627,7 +629,6 @@ class MongoMetricsDBI:
                 sort_direction = DESCENDING
             else:
                 sort_direction = ASCENDING
-            print('sorting by', first_sort['field'], sort_direction, first_sort.get('direction', None))
             cursor.sort(first_sort['field'], sort_direction)
         total_count = cursor.count()
 
@@ -662,7 +663,9 @@ class MongoMetricsDBI:
             'total_count': total_count
         }
 
-        results = list(cursor)
+        results = json.loads(json_util.dumps(list(cursor)))
+        for r in results:
+            r['_id'] = r['_id']['$oid']
 
         d['results'] = results
         d['user_id'] = userID

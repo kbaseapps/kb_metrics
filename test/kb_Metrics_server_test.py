@@ -3286,7 +3286,7 @@ class kb_MetricsTest(unittest.TestCase):
 
         # this should be a single job
         job_state = self.assertIsResult_get_job(ret)
-        print(ret)
+
         self.assertIsInstance(job_state, dict)
         self.assertEqual(job_state['job_id'], '596832a4e4b08b65f9ff5d6f')
         # Note that if the started time is available in ujs, that is used rather
