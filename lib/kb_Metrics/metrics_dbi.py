@@ -8,6 +8,15 @@ import json
 from kb_Metrics.Util import _convert_to_datetime
 from operator import itemgetter
 
+def unwrap_date(obj, prop):
+    if not prop in obj:
+        return None
+    date_value = obj[prop]
+    if not isinstance(date_value, dict):
+        return date_value
+    if '$date' in date_value:
+        return date_value['$date']
+    raise ValueError('Invalid value for date "' + prop + '"')
 
 class MongoMetricsDBI:
     '''
@@ -662,6 +671,9 @@ class MongoMetricsDBI:
         results = json.loads(json_util.dumps(list(cursor)))
         for r in results:
             r['_id'] = r['_id']['$oid']
+            r['created'] = unwrap_date(r, 'created')
+            r['updated'] = unwrap_date(r, 'updated')
+            r['started'] = unwrap_date(r, 'started')
 
         if len(results) == 0:
             return None

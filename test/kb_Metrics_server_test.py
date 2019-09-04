@@ -3274,6 +3274,9 @@ class kb_MetricsTest(unittest.TestCase):
         job_state = self.assertIsResult_get_job(ret)
         self.assertIsInstance(job_state, dict)
         self.assertEqual(job_state['job_id'], '544ade14e4b0d82af0eaf31d')
+        self.assertEqual(job_state['creation_time'], 1414192660700)
+        self.assertEqual(job_state['exec_start_time'], 1414192660701)
+        self.assertEqual(job_state['modification_time'], 1414192660701)
 
         # This one has an accompanying exec task, so check app info
         m_params = {
