@@ -309,23 +309,23 @@ class MetricsMongoDBController:
 
         # determine true job state
         job_state = None
-        if u_j_s['complete']:
-            if u_j_s['error']:
-                if u_j_s['status'] == 'queued':
+        if u_j_s.get('complete', False):
+            if u_j_s.get('error', False):
+                if u_j_s.get('status', None) == 'queued':
                     job_state = 'QUEUE_ERRORED'
                 else:
                     job_state = 'ERRORED'
             else:
-                if u_j_s['status'] == 'done':
+                if u_j_s.get('status', None) == 'done':
                     job_state = 'FINISHED'
-                elif u_j_s['status'].startswith('canceled'):
+                elif u_j_s.get('status', '').startswith('canceled'):
                     job_state = 'CANCELED'
-                elif u_j_s['status'] == 'Unknown error':
+                elif u_j_s.get('status', None) == 'Unknown error':
                     job_state = 'ERRORED'
                 else:
                     job_state = 'ERRORED'
         else:
-            if 'status' not in u_j_s or u_j_s['status'] == 'queued':
+            if 'status' not in u_j_s or u_j_s.get('status', None) == 'queued':
                 job_state = 'QUEUED'
             else:
                 job_state = 'RUNNING'
