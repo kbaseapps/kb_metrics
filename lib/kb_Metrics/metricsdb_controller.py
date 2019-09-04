@@ -306,7 +306,33 @@ class MetricsMongoDBController:
     def _assemble_ujs_state(self, ujs, exec_task_map):
         u_j_s = copy.deepcopy(ujs)
         u_j_s['job_id'] = str(u_j_s.pop('_id'))
-        u_j_s['exec_start_time'] = u_j_s.pop('started', None)
+
+        # determine true job state
+        job_state = None
+        if u_j_s['complete']:
+            if u_j_s['error']:
+                if u_j_s['status'] == 'queued':
+                    job_state = 'QUEUE_ERRORED'
+                else:
+                    job_state = 'ERRORED'
+            else:
+                if u_j_s['status'] == 'done':
+                    job_state = 'FINISHED'
+                elif u_j_s['status'].startswith('canceled'):
+                    job_state = 'CANCELED'
+                elif u_j_s['status'] == 'Unknown error':
+                    job_state = 'ERRORED'
+                else:
+                    job_state = 'ERRORED'
+        else:
+            if 'status' not in u_j_s or u_j_s['status'] == 'queued':
+                job_state = 'QUEUED'
+            else:
+                job_state = 'RUNNING'
+        u_j_s['state'] = job_state
+
+        if job_state != 'QUEUE_ERRORED':
+            u_j_s['exec_start_time'] = u_j_s.pop('started', None)
         u_j_s['creation_time'] = u_j_s.pop('created')
         u_j_s['modification_time'] = u_j_s.pop('updated')
 
@@ -352,8 +378,10 @@ class MetricsMongoDBController:
         if not u_j_s.get('app_id') and u_j_s.get('method'):
             u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
 
+        # hmm, is finish_time sometimes populated and sometimes not?
+        # It should be present for any non-running job state -
+        # success, error, canceled
         if (not u_j_s.get('finish_time') and
-                not u_j_s.get('error') and
                 u_j_s.get('complete')):
             u_j_s['finish_time'] = u_j_s.pop('modification_time')
 
