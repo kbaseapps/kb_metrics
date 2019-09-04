@@ -19,6 +19,8 @@ def print_debug(msg):
     t = str(datetime.datetime.now())
     print("{}:{}".format(t, msg))
 
+
+
 class MetricsMongoDBController:
 
     def __init__(self, config):
@@ -391,7 +393,6 @@ class MetricsMongoDBController:
                 if str(clnt_id).lower() == ujs_a_id.lower():
                     u_j_s['client_groups'] = clnt['client_groups']
                     break
-
         return u_j_s
 
     def _process_parameters(self, params):
