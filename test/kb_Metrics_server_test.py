@@ -1920,10 +1920,11 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(joined_ujs5['narrative_objNo'], '1')
         self.assertEqual(joined_ujs5['app_id'], etj_methd.replace('.', '/'))
         self.assertEqual(joined_ujs5['method'], etj_methd)
-        self.assertEqual(joined_ujs5['modification_time'], ujs_jobs[5]['updated'])
+        self.assertEqual(joined_ujs5['finish_time'], ujs_jobs[5]['updated'])
         self.assertIn('client_groups', joined_ujs5)
         self.assertEqual(joined_ujs5['workspace_name'], 'srividya22:1447279981090')
         self.assertEqual(joined_ujs5['job_type'], 'narrative')
+        self.assertEqual(joined_ujs5['state'], 'ERRORED')
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_MetricsMongoDBController_join_task_ujs")
@@ -3190,18 +3191,20 @@ class kb_MetricsTest(unittest.TestCase):
         ret = self.getImpl().get_app_metrics(self.getContext(), m_params)
         app_metrics_ret = ret[0]['job_states']
         self.assertEqual(len(app_metrics_ret), 1)
-        self.assertIn(app_metrics_ret[0]['user'], user_list)
-        self.assertEqual(app_metrics_ret[0]['wsid'], '27834')
-        self.assertEqual(app_metrics_ret[0]['app_id'], 'kb_SPAdes/run_SPAdes')
-        self.assertEqual(app_metrics_ret[0]['method'], 'kb_SPAdes.run_SPAdes')
-        self.assertNotIn('finish_time', app_metrics_ret[0])
-        self.assertIn('client_groups', app_metrics_ret[0])
+        job_info = app_metrics_ret[0]
+        self.assertIn(job_info['user'], user_list)
+        self.assertEqual(job_info['wsid'], '27834')
+        self.assertEqual(job_info['app_id'], 'kb_SPAdes/run_SPAdes')
+        self.assertEqual(job_info['method'], 'kb_SPAdes.run_SPAdes')
+        self.assertEqual(job_info['finish_time'], 1516822657338)
+        # self.assertNotIn('finish_time', app_metrics_ret[0])
+        self.assertIn('client_groups', job_info)
         if 'ci' in self.cfg['kbase-endpoint']:
-            self.assertIn('njs', app_metrics_ret[0]['client_groups'])
+            self.assertIn('njs', job_info['client_groups'])
         else:
-            self.assertIn('bigmem', app_metrics_ret[0]['client_groups'])
-        self.assertEqual(app_metrics_ret[0]['narrative_name'], 'Staging Test')
-        self.assertEqual(app_metrics_ret[0]['workspace_name'],
+            self.assertIn('bigmem', job_info['client_groups'])
+        self.assertEqual(job_info['narrative_name'], 'Staging Test')
+        self.assertEqual(job_info['workspace_name'],
                          'psdehal:narrative_1513709108341')
 
 
@@ -3235,18 +3238,20 @@ class kb_MetricsTest(unittest.TestCase):
         ret = self.getImpl().get_jobs(self.getContext(), m_params)
         app_metrics_ret = ret[0]['job_states']
         self.assertEqual(len(app_metrics_ret), 1)
-        self.assertIn(app_metrics_ret[0]['user'], user_list)
-        self.assertEqual(app_metrics_ret[0]['wsid'], '27834')
-        self.assertEqual(app_metrics_ret[0]['app_id'], 'kb_SPAdes/run_SPAdes')
-        self.assertEqual(app_metrics_ret[0]['method'], 'kb_SPAdes.run_SPAdes')
-        self.assertNotIn('finish_time', app_metrics_ret[0])
-        self.assertIn('client_groups', app_metrics_ret[0])
+        job_info = app_metrics_ret[0]
+        self.assertIn(job_info['user'], user_list)
+        self.assertEqual(job_info['wsid'], '27834')
+        self.assertEqual(job_info['app_id'], 'kb_SPAdes/run_SPAdes')
+        self.assertEqual(job_info['method'], 'kb_SPAdes.run_SPAdes')
+        self.assertEqual(job_info['finish_time'], 1516822657338)
+        # self.assertNotIn('finish_time', app_metrics_ret[0])
+        self.assertIn('client_groups', job_info)
         if 'ci' in self.cfg['kbase-endpoint']:
-            self.assertIn('njs', app_metrics_ret[0]['client_groups'])
+            self.assertIn('njs', job_info['client_groups'])
         else:
-            self.assertIn('bigmem', app_metrics_ret[0]['client_groups'])
-        self.assertEqual(app_metrics_ret[0]['narrative_name'], 'Staging Test')
-        self.assertEqual(app_metrics_ret[0]['workspace_name'],
+            self.assertIn('bigmem', job_info['client_groups'])
+        self.assertEqual(job_info['narrative_name'], 'Staging Test')
+        self.assertEqual(job_info['workspace_name'],
                          'psdehal:narrative_1513709108341')
 
     def assertIsResult_get_job(self, ret):
@@ -3275,8 +3280,12 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertIsInstance(job_state, dict)
         self.assertEqual(job_state['job_id'], '544ade14e4b0d82af0eaf31d')
         self.assertEqual(job_state['creation_time'], 1414192660700)
-        self.assertEqual(job_state['exec_start_time'], 1414192660701)
-        self.assertEqual(job_state['modification_time'], 1414192660701)
+        # this oddly enough errored out in the queue state, so there
+        # is no start time...
+        self.assertNotIn('exec_start_time', job_state)
+        # self.assertEqual(job_state['exec_start_time'], 1414192660701)
+        self.assertEqual(job_state['state'], 'QUEUE_ERRORED')
+        self.assertEqual(job_state['finish_time'], 1414192660701)
 
         # This one has an accompanying exec task, so check app info
         m_params = {
@@ -3295,6 +3304,7 @@ class kb_MetricsTest(unittest.TestCase):
         # exactly. E.g. in this case the actual exec_start_time is 1500000937699,
         # 4 ms ahead. 
         self.assertEqual(job_state['exec_start_time'], 1500000937695)
+        self.assertEqual(job_state['state'], 'FINISHED')
 
 
 
