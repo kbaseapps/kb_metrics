@@ -319,7 +319,10 @@ class MetricsMongoDBController:
                 if u_j_s.get('status', None) == 'done':
                     job_state = 'FINISHED'
                 elif u_j_s.get('status', '').startswith('canceled'):
-                    job_state = 'CANCELED'
+                    if 'started' in u_j_s:
+                        job_state = 'CANCELED_RUNNING'
+                    else:
+                        job_state = 'CANCELED_QUEUED'
                 elif u_j_s.get('status', None) == 'Unknown error':
                     job_state = 'ERRORED'
                 else:
