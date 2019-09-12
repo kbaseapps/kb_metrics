@@ -24,7 +24,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "1.3.0"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "fe8ed3da0adc44924398ff392bbbfab7f9dbf1e3"
+    GIT_COMMIT_HASH = "f1a22fd66495739c2d2a8ac9694981b782830d19"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -523,6 +523,24 @@ This KBase SDK module implements methods for generating various KBase metrics.
                              'return_records is not type dict as required.')
         # return the results
         return [return_records]
+
+    def is_admin(self, ctx, user_id):
+        """
+        :param user_id: instance of String
+        :returns: instance of type "bool"
+        """
+        # ctx is the context object
+        # return variables are: result
+        #BEGIN is_admin
+        result = self.mdb_controller._is_admin(user_id)
+        #END is_admin
+
+        # At some point might do deeper type checking...
+        if not isinstance(result, int):
+            raise ValueError('Method is_admin return value ' +
+                             'result is not type int as required.')
+        # return the results
+        return [result]
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",

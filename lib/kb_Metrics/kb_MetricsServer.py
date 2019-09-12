@@ -406,6 +406,10 @@ class Application(object):
                              name='kb_Metrics.get_user_ws_stats',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_user_ws_stats'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.is_admin,
+                             name='kb_Metrics.is_admin',
+                             types=[str])
+        self.method_authentication['kb_Metrics.is_admin'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.status,
                              name='kb_Metrics.status',
                              types=[dict])

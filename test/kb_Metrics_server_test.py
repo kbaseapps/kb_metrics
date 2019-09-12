@@ -10,6 +10,7 @@ from os import environ
 from unittest.mock import patch
 import copy
 from operator import itemgetter
+import io
 
 from bson.objectid import ObjectId
 from pymongo import MongoClient
@@ -74,6 +75,16 @@ class kb_MetricsTest(unittest.TestCase):
         cls.client = MongoClient(port=27017)
         print_debug("MONGO - about to start")
         cls.init_mongodb()
+
+        test_cfg_file = '/kb/module/work/test.cfg'
+        test_cfg_text = "[test]\n"
+        with open(test_cfg_file, "r") as f:
+            test_cfg_text += f.read()
+        config = ConfigParser()
+        # config.readfp(io.StringIO.StringIO(test_cfg_text))
+        config.read_string(test_cfg_text)
+        test_cfg_dict = dict(config.items("test"))
+        cls.test_cfg = test_cfg_dict
 
     @classmethod
     def tearDownClass(cls):
@@ -3521,3 +3532,12 @@ class kb_MetricsTest(unittest.TestCase):
         self.assertEqual(upds['user_updates'], 37)
         self.assertEqual(upds['activity_updates'], 8)
         self.assertEqual(upds['narrative_updates'], 1)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_is_admin")
+    def test_run_MetricsImpl_is_admin(self):
+        ret = self.getImpl().is_admin(self.getContext(), self.test_cfg['test_username'])
+        self.assertEqual(ret[0], True)
+
+        ret = self.getImpl().is_admin(self.getContext(), 'abc')
+        self.assertEqual(ret[0], False)
