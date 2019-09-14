@@ -158,6 +158,14 @@ module kb_Metrics {
     funcdef get_user_ws_stats(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
 
-    funcdef is_admin(string user_id)
-        returns (bool result) authentication required;
+    typedef structure {
+        string username;
+    } IsAdminParams;
+
+    typedef structure {
+        bool is_admin;
+    } IsAdminResult;
+
+    funcdef is_admin(IsAdminParams params)
+        returns (IsAdminResult result) authentication required;
 };

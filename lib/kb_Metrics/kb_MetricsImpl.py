@@ -24,7 +24,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "1.3.0"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "f1a22fd66495739c2d2a8ac9694981b782830d19"
+    GIT_COMMIT_HASH = "e85f388cce3cb26965aff3fdfdb55f381c4fd1f0"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -524,21 +524,32 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # return the results
         return [return_records]
 
-    def is_admin(self, ctx, user_id):
+    def is_admin(self, ctx, params):
         """
-        :param user_id: instance of String
-        :returns: instance of type "bool"
+        :param params: instance of type "IsAdminParams" -> structure:
+           parameter "username" of String
+        :returns: instance of type "IsAdminResult" -> structure: parameter
+           "is_admin" of type "bool"
         """
         # ctx is the context object
         # return variables are: result
         #BEGIN is_admin
-        result = self.mdb_controller._is_admin(user_id)
+        current_user_is_admin = self.mdb_controller._is_admin(ctx['user_id'])
+        if 'username' in params:
+            if current_user_is_admin:
+                is_admin = self.mdb_controller._is_admin(params['username'])
+            else:
+                raise ValueError('Non-admin may not inquire into the admin status of another user')
+        else:
+            is_admin = current_user_is_admin
+        result = {'is_admin': is_admin}
+        
         #END is_admin
 
         # At some point might do deeper type checking...
-        if not isinstance(result, int):
+        if not isinstance(result, dict):
             raise ValueError('Method is_admin return value ' +
-                             'result is not type int as required.')
+                             'result is not type dict as required.')
         # return the results
         return [result]
     def status(self, ctx):
