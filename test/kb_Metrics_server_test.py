@@ -3536,8 +3536,16 @@ class kb_MetricsTest(unittest.TestCase):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_is_admin")
     def test_run_MetricsImpl_is_admin(self):
-        ret = self.getImpl().is_admin(self.getContext(), self.test_cfg['test_username'])
-        self.assertEqual(ret[0], True)
+        ret = self.getImpl().is_admin(self.getContext(), {
+            'username': self.test_cfg['test_username']
+        })
+        self.assertEqual(ret[0]['is_admin'], True)
 
-        ret = self.getImpl().is_admin(self.getContext(), 'abc')
-        self.assertEqual(ret[0], False)
+        ret = self.getImpl().is_admin(self.getContext(), {})
+        self.assertEqual(ret[0]['is_admin'], True)
+
+        ret = self.getImpl().is_admin(self.getContext(), {
+            'username': 'abc'
+        })
+        self.assertEqual(ret[0]['is_admin'], False)
+
