@@ -24,7 +24,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "1.3.0"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "e85f388cce3cb26965aff3fdfdb55f381c4fd1f0"
+    GIT_COMMIT_HASH = "631ab353f58ca2229ff7c5750b57a80d35689a10"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -95,7 +95,8 @@ This KBase SDK module implements methods for generating various KBase metrics.
            parameter "method" of String, parameter "wsid" of String,
            parameter "narrative_objNo" of Long, parameter "narrative_name" of
            String, parameter "workspace_name" of String, parameter
-           "total_count" of Long
+           "narrative_is_deleted" of type "bool", parameter "total_count" of
+           Long
         """
         # ctx is the context object
         # return variables are: result
@@ -113,11 +114,47 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # return the results
         return [result]
 
+    def query_jobs(self, ctx, params):
+        """
+        :param params: instance of type "QueryJobsParams" -> structure:
+           parameter "user_ids" of list of type "user_id" (A string for the
+           user id), parameter "epoch_range" of type "epoch_range" -> tuple
+           of size 2: parameter "e_lowerbound" of type "epoch" (A Unix epoch
+           (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "e_upperbound" of type "epoch" (A Unix epoch (the time
+           since 00:00:00 1/1/1970 UTC) in milliseconds.), parameter "offset"
+           of Long, parameter "limit" of Long
+        :returns: instance of type "QueryJobsResult" -> structure: parameter
+           "job_states" of list of type "JobStateMinimal" (Query jobs) ->
+           structure: parameter "job_id" of type "JobID", parameter "app_id"
+           of String, parameter "method" of String, parameter "workspace_id"
+           of Long, parameter "object_id" of Long, parameter "object_version"
+           of Long, parameter "user" of String, parameter "status" of String,
+           parameter "complete" of type "bool", parameter "error" of type
+           "bool", parameter "creation_time" of Long, parameter
+           "exec_start_time" of Long, parameter "finish_time" of Long,
+           parameter "modification_time" of Long, parameter "client_groups"
+           of list of String, parameter "total_count" of Long
+        """
+        # ctx is the context object
+        # return variables are: result
+        #BEGIN query_jobs
+        controller = MetricsMongoDBController(self.config)
+        result = controller.query_jobs(ctx['user_id'], params, ctx['token'])
+        #END query_jobs
+
+        # At some point might do deeper type checking...
+        if not isinstance(result, dict):
+            raise ValueError('Method query_jobs return value ' +
+                             'result is not type dict as required.')
+        # return the results
+        return [result]
+
     def get_job(self, ctx, params):
         """
-        :param params: instance of type "GetJobParams" -> structure:
-           parameter "job_id" of type "JobID", parameter "user_id" of type
-           "user_id" (A string for the user id)
+        :param params: instance of type "GetJobParams" (Get an individual job
+           by id) -> structure: parameter "job_id" of type "JobID", parameter
+           "user_id" of type "user_id" (A string for the user id)
         :returns: instance of type "GetJobResult" -> structure: parameter
            "job_state" of type "JobState" -> structure: parameter "app_id" of
            String, parameter "client_groups" of list of String, parameter
@@ -128,7 +165,8 @@ This KBase SDK module implements methods for generating various KBase metrics.
            Long, parameter "job_id" of type "JobID", parameter "method" of
            String, parameter "wsid" of String, parameter "narrative_objNo" of
            Long, parameter "narrative_name" of String, parameter
-           "workspace_name" of String
+           "workspace_name" of String, parameter "narrative_is_deleted" of
+           type "bool"
         """
         # ctx is the context object
         # return variables are: result
