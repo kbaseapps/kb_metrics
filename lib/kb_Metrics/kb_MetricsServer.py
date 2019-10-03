@@ -346,6 +346,10 @@ class Application(object):
                              name='kb_Metrics.get_jobs',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_jobs'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.query_jobs,
+                             name='kb_Metrics.query_jobs',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.query_jobs'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.get_job,
                              name='kb_Metrics.get_job',
                              types=[dict])

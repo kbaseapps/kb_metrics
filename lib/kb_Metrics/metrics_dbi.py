@@ -304,6 +304,33 @@ class MongoMetricsDBI:
             MongoMetricsDBI._WS_WORKSPACES]
         return list(kbworkspaces.aggregate(pipeline))
 
+    def get_workspace_info(self, wsid_list=None, wsname_list=None):
+        """
+        list_workspade_info--retrieve the name/ws_id/owner of a list of workspaces provided by        
+        workspace id and/or name
+        """
+        # match_filter = {"del": True}
+        match_filter = {}
+        match_filter["cloning"] = {"$exists": False}
+
+        if wsid_list:
+            match_filter['ws'] = {"$in": wsid_list}
+        elif wsname_list is not None:
+            match_filter['name'] = {"$in": wsname_list}
+
+        # Define the pipeline operations
+        pipeline = [
+            {"$match": match_filter},
+            {"$project": {"name": 1, "owner": 1, "ws": 1, "_id": 0,
+                          "meta_keys": "$meta.k", "meta_values": "$meta.v",
+                          "del": 1}}
+        ]
+
+        # grab handle(s) to the db collection
+        workspaces = self.metricsDBs['workspace'][
+            MongoMetricsDBI._WS_WORKSPACES]
+        return list(workspaces.aggregate(pipeline))
+
     def list_ws_narratives(self, minT=0, maxT=0, include_del=False):
         match_filter = {"meta": {"$elemMatch":
                                   {"k": "narrative"}}}

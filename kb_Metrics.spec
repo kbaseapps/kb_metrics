@@ -75,6 +75,7 @@ module kb_Metrics {
         int narrative_objNo;
         string narrative_name;
         string workspace_name;
+        bool narrative_is_deleted;
     } JobState;
 
     typedef structure {
@@ -91,6 +92,48 @@ module kb_Metrics {
 
     funcdef get_jobs(GetJobsParams params)
         returns (GetJobsResult result) authentication required;
+
+    /* Query jobs */
+
+     typedef structure {
+        JobID job_id;
+
+        string app_id;
+        string method; /* TODO: not sure why app and method */
+
+        int workspace_id;
+        int object_id;
+        int object_version;
+
+        string user;
+
+        string status;
+        bool complete;
+        bool error;
+        int creation_time;
+        int exec_start_time;
+        int finish_time;
+        int modification_time;
+
+        list<string> client_groups;
+    } JobStateMinimal;
+
+    typedef structure {
+        list<user_id> user_ids;
+        epoch_range epoch_range;
+        int offset;
+        int limit;
+    } QueryJobsParams;
+
+    typedef structure {
+        list<JobStateMinimal> job_states;
+        int total_count;
+    } QueryJobsResult;
+
+    funcdef query_jobs(QueryJobsParams params)
+        returns (QueryJobsResult result) authentication required;
+
+    /* Get an individual job by id */
 
     typedef structure {
         JobID job_id;

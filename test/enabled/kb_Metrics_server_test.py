@@ -1475,7 +1475,7 @@ class kb_MetricsTest(unittest.TestCase):
         # testing epoch_range size 3
         params = {'epoch_range': (1, 2, 3)}
         with self.assertRaisesRegex(ValueError,
-                                     'Invalide epoch_range. Size must be 2.'):
+                                     'Invalid epoch_range. Size must be 2.'):
             self.db_controller._process_parameters(params)
 
         # testing epoch_range

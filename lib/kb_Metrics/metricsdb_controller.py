@@ -256,8 +256,11 @@ class MetricsMongoDBController:
             workspace_id = int(ws_id)
         except ValueError as ve:
             result = self.metrics_dbi.list_narrative_info(wsname_list=[ws_id], include_temporary=True)
+            # This would be weird - ws doesn't exist?
+            # TODO: document why the result is structured this way.
             if len(result) == 0:
                 return ws_id, ws_id, '1', False
+
             workspace_id = result[0]['ws']
 
         narrative_name_map = self.narrative_cache.get()
@@ -270,6 +273,35 @@ class MetricsMongoDBController:
         # This can happen currently for export jobs.
         #
         return None, None, None, None
+
+    # Given a workspace id, look it up in the workspace, returning the found id and name
+    def get_workspace_info(self, ws_id):
+        """
+        get_workspace_info-returns the id and name for a given ws id
+        """
+
+        # This is a fall back for some a workspace id which is actually
+        # a workspace name ... but does that ever really happen
+        # in data returned from ujs / exec?
+        # TODO: Erik: This code path should not exist; can we determine if
+        # it really needs to be handled (I assume it did at some point)
+        # TODO: Erik: If this is a condition in, say, older jobs, which 
+        # needs to be handled, we should not return the workspace name
+        # as the narrative title, but rather look up the workspace by name
+        # and then use the associated workspace id.
+        try:
+            workspace_id = int(ws_id)
+            result = self.metrics_dbi.get_workspace_info(wsid_list=[workspace_id])
+
+        except ValueError as ve:
+            result = self.metrics_dbi.get_workspace_info(wsname_list=[ws_id])
+            # This would be weird - ws doesn't exist?
+
+        if len(result) == 0:
+            return None, None
+        wsinfo = result[0]
+
+        return [str(wsinfo['ws']), wsinfo['name']]
 
     def _get_activities_from_wsobjs(self, params, token):
 
@@ -426,6 +458,127 @@ class MetricsMongoDBController:
                     break
         return u_j_s
 
+    def join_jobs(self, exec_tasks, ujs_jobs):
+        """
+        combine/join exec_tasks with ujs_jobs list to get the final return data
+        """
+        ujs_ret = []
+
+        # build up a map of the exec tasks for consumption in the assembly
+        # method.
+        exec_task_map = dict()
+        for exec_task in exec_tasks:
+            exec_task_map[exec_task['ujs_job_id']] = exec_task
+            
+        for ujs_job in ujs_jobs:
+            ujs = self.assemble_job(ujs_job, exec_task_map)
+            ujs_ret.append(ujs)
+        return ujs_ret
+
+    def assemble_job(self, ujs, exec_task_map):
+        job = copy.deepcopy(ujs)
+        job['job_id'] = str(job.pop('_id'))
+
+        # determine true job state
+        job_state = None
+        if job.get('complete', False):
+            if job.get('error', False):
+                job_state = 'error'
+            else:
+                if job.get('status', None) == 'done':
+                    job_state = 'complete'
+                elif job.get('status', '').startswith('canceled'):
+                    job_state = 'cancel'
+                elif job.get('status', None) == 'Unknown error':
+                    job_state = 'error'
+                else:
+                    job_state = 'error'
+        else:
+            if 'status' not in job or job.get('status', None) == 'queue':
+                job_state = 'queue'
+            else:
+                job_state = 'run'
+
+        job['state'] = job_state
+
+        # TODO: I don't know what is happening here. This section needs lots of docs to 
+        # explain the workarounds.
+        if job_state != 'error':
+            job['exec_start_time'] = job.pop('started', None)
+
+        job['creation_time'] = job.pop('created')
+        job['modification_time'] = job.pop('updated')
+
+        authparam = job.pop('authparam')
+        authstrat = job.pop('authstrat')
+        if authstrat == 'kbaseworkspace':
+            job['wsid'] = authparam
+
+        if job.get('desc'):
+            desc = job.pop('desc').split()[-1]
+            if '.' in desc:
+                job['method'] = desc
+
+        exec_task = exec_task_map.get(job['job_id'], None)
+        if exec_task is not None and 'job_input' in exec_task:
+            et_job_in = exec_task['job_input']
+
+            job['app_id'] = self._parse_app_id(et_job_in)
+            if not job.get('method'):
+                job['method'] = self._parse_method(et_job_in)
+
+            if not job.get('wsid'):
+                if 'wsid' in et_job_in:
+                    job['wsid'] = job['wsid']
+                elif 'params' in et_job_in and et_job_in['params']:
+                    p_ws = et_job_in['params'][0]
+                    if isinstance(p_ws, dict) and 'ws_id' in p_ws:
+                        job['wsid'] = p_ws['ws_id']
+
+            # try to get workspace_name--first by wsid, then from 'job_input'
+            if job.get('wsid') and not job.get('workspace_name'):
+                ws_id, ws_name = self.get_workspace_info(job['wsid'])
+                job['workspace_name'] = ws_name
+                job['wsid'] = ws_id
+
+            # If we _still_ don't have a workspace name (due to not having a wsid??)
+            # get it out of the params
+            if not job.get('workspace_name') or job['workspace_name'] == '':
+                if 'params' in et_job_in and et_job_in['params']:
+                    p_ws = et_job_in['params'][0]
+                    if isinstance(p_ws, dict):
+                        if 'workspace' in p_ws:
+                            job['workspace_name'] = p_ws['workspace']
+                        elif 'workspace_name' in p_ws:
+                            job['workspace_name'] = p_ws['workspace_name']
+
+        if not job.get('app_id') and job.get('method'):
+            job['app_id'] = job['method'].replace('.', '/')
+
+        # hmm, is finish_time sometimes populated and sometimes not?
+        # It should be present for any non-running job state -
+        # success, error, canceled
+        if (not job.get('finish_time') and
+                job.get('complete')):
+            job['finish_time'] = job.pop('modification_time')
+
+        # remove empty workspace name in job['workspace_name']
+        if ('workspace_name' in job and (job['workspace_name'] is None
+                                           or job['workspace_name'] == '')):
+            job.pop('workspace_name')
+                    
+        # get the client groups
+        job['client_groups'] = ['njs']  # default client groups to 'njs'
+        if self.client_groups:
+            for clnt in self.client_groups:
+                clnt_id = clnt['app_id']
+                ujs_a_id = str(job.get('app_id'))
+                if str(clnt_id).lower() == ujs_a_id.lower():
+                    job['client_groups'] = clnt['client_groups']
+                    break
+                
+        return job
+
     def _process_parameters(self, params):
         params['user_ids'] = params.get('user_ids', [])
 
@@ -439,21 +592,33 @@ class MetricsMongoDBController:
         epoch_range = params.get('epoch_range')
         if epoch_range:
             if len(epoch_range) != 2:
-                raise ValueError('Invalide epoch_range. Size must be 2.')
+                raise ValueError('Invalid epoch_range. Size must be 2.')
             start_time, end_time = epoch_range
-            if start_time and end_time:
-                start_time = _convert_to_datetime(start_time)
-                end_time = _convert_to_datetime(end_time)
-            elif start_time and not end_time:
-                start_time = _convert_to_datetime(start_time)
-                end_time = start_time + datetime.timedelta(hours=48)
-            elif not start_time and end_time:
-                end_time = _convert_to_datetime(end_time)
-                start_time = end_time - datetime.timedelta(hours=48)
+
+            # TODO: Not sure about this logic (it is going away soon, so
+            # doesn't really matter.)
+            if start_time is None or start_time ==  '':
+                if end_time is None or end_time ==  '':
+                    # Same as providing no time range -- constrain to the
+                    # most recent 48 hours.
+                    end_time = datetime.datetime.utcnow()
+                    start_time = end_time - datetime.timedelta(hours=48)
+                else:
+                    # No begin time, just end - the previous 48 hours before the
+                    # end time.
+                    end_time = _convert_to_datetime(end_time)
+                    start_time = end_time - datetime.timedelta(hours=48)
             else:
-                end_time = datetime.datetime.utcnow()
-                start_time = end_time - datetime.timedelta(hours=48)
-        else:  # set the most recent 48 hours range
+                if end_time is None or end_time ==  '':
+                    # No end time? Constrain to 48 hours after the start time
+                    start_time = _convert_to_datetime(start_time)
+                    end_time = start_time + datetime.timedelta(hours=48)
+                else:
+                    # Both times valid, just use them.
+                    start_time = _convert_to_datetime(start_time)
+                    end_time = _convert_to_datetime(end_time)
+        else:
+            # set the most recent 48 hours range
             end_time = datetime.datetime.utcnow()
             start_time = end_time - datetime.timedelta(hours=48)
 
@@ -500,8 +665,8 @@ class MetricsMongoDBController:
 
         map_results = []
         for w_id in ws_ids:
-            map_ret = self.get_narrative_info(w_id)
-            map_results.append({'ws_id': w_id, 'narr_name_map': map_ret})
+            w_nm, n_name, n_ver, is_deleted = self.get_narrative_info(w_id)
+            map_results.append({'ws_id': w_id, 'narr_name_map': (w_nm, n_name, n_ver, is_deleted)})
         return map_results
 
     def get_user_job_states(self, requesting_user, params, token):
@@ -573,6 +738,72 @@ class MetricsMongoDBController:
 
         now = round(time.time() * 1000)
         perf['_join_task_ujs'] = now - start
+        start = now
+
+        # print(str(perf))
+
+        return {'job_states': job_states, 'total_count': ujs_jobs_count, 'stats': {'perf': perf}}
+
+    def query_jobs(self, requesting_user, params, token):
+        """
+        query_jobs--generate data for appcatalog/stats from querying
+        execution_engine, userjobstates, catalog and workspace
+        ----------------------
+        To get the job's 'status', 'complete'=true/false, etc.,
+        we can do joining as follows
+        --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
+        """
+        if not self._is_admin(requesting_user):
+            params['user_ids'] = [requesting_user]
+
+        perf = dict()
+        start = round(time.time() * 1000)
+
+        # 1. get the client_groups data for lookups
+        if self.client_groups is None:
+            self.client_groups = self._get_client_groups_from_cat(token)
+
+        now = round(time.time() * 1000)
+        perf['client_groups'] = now - start
+        start = now
+
+        offset = params.get('offset', None)
+        limit = params.get('limit', None)
+
+        # 2. query dbs to get lists of tasks and jobs
+        params = self._process_parameters(params)
+
+        sort = params.get('sort', None)
+
+        ujs_jobs, ujs_jobs_count = self.metrics_dbi.list_ujs_results(params['user_ids'],
+                                                                    params['minTime'],
+                                                                    params['maxTime'], 
+                                                                    offset, limit, sort)
+
+        now = round(time.time() * 1000)
+        perf['list_ujs_results'] = now - start
+        perf['list_ujs_results_count'] = ujs_jobs_count
+        start = now
+
+        ujs_job_ids = list(map(lambda x: str(x['_id']), ujs_jobs))
+
+        exec_tasks = self.metrics_dbi.list_exec_tasks(jobIDs=ujs_job_ids)
+
+        now = round(time.time() * 1000)
+        perf['list_exec_tasks'] = now - start
+        start = now
+                                                     
+        ujs_jobs = self._convert_isodate_to_milis(
+            ujs_jobs, ['created', 'started', 'updated'])
+
+        now = round(time.time() * 1000)
+        perf['_convert_isodate_to_milis'] = now - start
+        start = now
+
+        job_states = self.join_jobs(exec_tasks, ujs_jobs)
+
+        now = round(time.time() * 1000)
+        perf['join_jobs'] = now - start
         start = now
 
         # print(str(perf))
