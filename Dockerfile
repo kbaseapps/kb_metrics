@@ -10,13 +10,14 @@ MAINTAINER KBase Developer
 RUN apt-get update && \
     apt-get upgrade -y  && \
     apt-get dist-upgrade -y && \
-    apt-get install -y ca-certificates wget
-
-# install mongodb
-RUN wget -qO - https://www.mongodb.org/static/pgp/server-3.6.asc | sudo apt-key add - && \
+    apt-get install -y ca-certificates wget && \
+    wget -qO - https://www.mongodb.org/static/pgp/server-3.6.asc | sudo apt-key add - && \
     echo "deb [ arch=amd64 ] http://repo.mongodb.com/apt/ubuntu trusty/mongodb-enterprise/3.6 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-enterprise.list && \
-    sudo apt-get update && \
-    sudo apt-get install -y mongodb
+    apt-get update && \
+    apt-get install -y mongodb && \
+    apt-get clean && \
+    rm -f /var/lib/apt/lists/*_*
+
 
 # install python dependencies beyond the base image
 RUN pip install pymongo python-dateutil

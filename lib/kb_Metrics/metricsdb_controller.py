@@ -19,8 +19,6 @@ def print_debug(msg):
     t = str(datetime.datetime.now())
     print("{}:{}".format(t, msg))
 
-
-
 class MetricsMongoDBController:
 
     def __init__(self, config):
@@ -85,14 +83,14 @@ class MetricsMongoDBController:
                     src[ldt] = _unix_time_millis_from_datetime_trusted(src[ldt])
         return src_list
 
-    def _parse_app_id(self, et_jobinput):
-        if 'app_id' in et_jobinput:
-            return et_jobinput['app_id'].replace('.', '/')
+    def _parse_app_id(self, job_input):
+        if 'app_id' in job_input:
+            return job_input['app_id'].replace('.', '/')
         return ''
 
-    def _parse_method(self, et_jobinput):
-        if 'method' in et_jobinput:
-            return et_jobinput['method'].replace('/', '.')
+    def _parse_method(self, job_input):
+        if 'method' in job_input:
+            return job_input['method'].replace('/', '.')
         return ''
 
     def _update_user_info(self, params, token):
@@ -383,17 +381,17 @@ class MetricsMongoDBController:
 
         exec_task = exec_task_map.get(u_j_s['job_id'], None)
         if exec_task is not None and 'job_input' in exec_task:
-            et_job_in = exec_task['job_input']
+            job_input = exec_task['job_input']
 
-            u_j_s['app_id'] = self._parse_app_id(et_job_in)
+            u_j_s['app_id'] = self._parse_app_id(job_input)
             if not u_j_s.get('method'):
-                u_j_s['method'] = self._parse_method(et_job_in)
+                u_j_s['method'] = self._parse_method(job_input)
 
             if not u_j_s.get('wsid'):
-                if 'wsid' in et_job_in:
-                    u_j_s['wsid'] = et_job_in['wsid']
-                elif 'params' in et_job_in and et_job_in['params']:
-                    p_ws = et_job_in['params'][0]
+                if 'wsid' in job_input:
+                    u_j_s['wsid'] = job_input['wsid']
+                elif 'params' in job_input and job_input['params']:
+                    p_ws = job_input['params'][0]
                     if isinstance(p_ws, dict) and 'ws_id' in p_ws:
                         u_j_s['wsid'] = p_ws['ws_id']
 
@@ -402,8 +400,8 @@ class MetricsMongoDBController:
                 ws_name = self.get_narrative_info(u_j_s['wsid'])[0]
                 u_j_s['workspace_name'] = ws_name
             if not u_j_s.get('workspace_name') or u_j_s['workspace_name'] == '':
-                if 'params' in et_job_in and et_job_in['params']:
-                    p_ws = et_job_in['params'][0]
+                if 'params' in job_input and job_input['params']:
+                    p_ws = job_input['params'][0]
                     if isinstance(p_ws, dict):
                         if 'workspace' in p_ws:
                             u_j_s['workspace_name'] = p_ws['workspace']
@@ -462,7 +460,7 @@ class MetricsMongoDBController:
         """
         combine/join exec_tasks with ujs_jobs list to get the final return data
         """
-        ujs_ret = []
+        jobs = []
 
         # build up a map of the exec tasks for consumption in the assembly
         # method.
@@ -472,11 +470,14 @@ class MetricsMongoDBController:
             
         for ujs_job in ujs_jobs:
             ujs = self.assemble_job(ujs_job, exec_task_map)
-            ujs_ret.append(ujs)
-        return ujs_ret
+            jobs.append(ujs)
 
-    def assemble_job(self, ujs, exec_task_map):
-        job = copy.deepcopy(ujs)
+        return jobs
+
+    def assemble_job(self, ujs_job, exec_task_map):
+        # TODO: clean this up by using a new dict, not doing a copy and
+        # popping and overwriting!!!
+        job = copy.deepcopy(ujs_job)
         job['job_id'] = str(job.pop('_id'))
 
         # determine true job state
@@ -519,19 +520,23 @@ class MetricsMongoDBController:
             if '.' in desc:
                 job['method'] = desc
 
+        # Now merge in info from the exec_task, if available.
         exec_task = exec_task_map.get(job['job_id'], None)
         if exec_task is not None and 'job_input' in exec_task:
-            et_job_in = exec_task['job_input']
+            job_input = exec_task['job_input']
 
-            job['app_id'] = self._parse_app_id(et_job_in)
+            # Attempt to extract the app id from the job input.
+            job['app_id'] = self._parse_app_id(job_input)
+
+            # Attempt to get the method from the job input.
             if not job.get('method'):
-                job['method'] = self._parse_method(et_job_in)
+                job['method'] = self._parse_method(job_input)
 
             if not job.get('wsid'):
-                if 'wsid' in et_job_in:
+                if 'wsid' in job_input:
                     job['wsid'] = job['wsid']
-                elif 'params' in et_job_in and et_job_in['params']:
-                    p_ws = et_job_in['params'][0]
+                elif 'params' in job_input and job_input['params']:
+                    p_ws = job_input['params'][0]
                     if isinstance(p_ws, dict) and 'ws_id' in p_ws:
                         job['wsid'] = p_ws['ws_id']
 
@@ -542,16 +547,19 @@ class MetricsMongoDBController:
                 job['wsid'] = ws_id
 
             # If we _still_ don't have a workspace name (due to not having a wsid??)
-            # get it out of the params
+            # get it out of the params.
             if not job.get('workspace_name') or job['workspace_name'] == '':
-                if 'params' in et_job_in and et_job_in['params']:
-                    p_ws = et_job_in['params'][0]
+                if 'params' in job_input and job_input['params']:
+                    p_ws = job_input['params'][0]
                     if isinstance(p_ws, dict):
                         if 'workspace' in p_ws:
                             job['workspace_name'] = p_ws['workspace']
                         elif 'workspace_name' in p_ws:
                             job['workspace_name'] = p_ws['workspace_name']
 
+        # If we don't have an app id but we do have a method, we munge the
+        # method into the app id.
+        # TODO: not sure this is safe.
         if not job.get('app_id') and job.get('method'):
             job['app_id'] = job['method'].replace('.', '/')
 
@@ -571,9 +579,9 @@ class MetricsMongoDBController:
         job['client_groups'] = ['njs']  # default client groups to 'njs'
         if self.client_groups:
             for clnt in self.client_groups:
-                clnt_id = clnt['app_id']
-                ujs_a_id = str(job.get('app_id'))
-                if str(clnt_id).lower() == ujs_a_id.lower():
+                clnt_app_id = clnt['app_id']
+                ujs_app_id = str(job.get('app_id'))
+                if str(clnt_app_id).lower() == ujs_app_id.lower():
                     job['client_groups'] = clnt['client_groups']
                     break
                 
@@ -722,7 +730,6 @@ class MetricsMongoDBController:
         # if len(ujs_jobs) > len(exec_tasks):
         #     print('\n!! JOBS: ' + str(len(exec_tasks)) + '!==' + str(len(ujs_jobs)) + ' : ' + str(len(ujs_job_ids)) + ":" + str(len(exec_tasks2)) + "\n" + str(ujs_job_ids) + "\n")
         
-
         now = round(time.time() * 1000)
         perf['list_exec_tasks'] = now - start
         start = now
@@ -739,8 +746,6 @@ class MetricsMongoDBController:
         now = round(time.time() * 1000)
         perf['_join_task_ujs'] = now - start
         start = now
-
-        # print(str(perf))
 
         return {'job_states': job_states, 'total_count': ujs_jobs_count, 'stats': {'perf': perf}}
 
@@ -805,8 +810,6 @@ class MetricsMongoDBController:
         now = round(time.time() * 1000)
         perf['join_jobs'] = now - start
         start = now
-
-        # print(str(perf))
 
         return {'job_states': job_states, 'total_count': ujs_jobs_count, 'stats': {'perf': perf}}
     
