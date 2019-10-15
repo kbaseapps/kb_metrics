@@ -8,8 +8,6 @@ MAINTAINER KBase Developer
 
 # Update system and certs
 RUN apt-get update && \
-    apt-get upgrade -y  && \
-    apt-get dist-upgrade -y && \
     apt-get install -y ca-certificates wget && \
     wget -qO - https://www.mongodb.org/static/pgp/server-3.6.asc | sudo apt-key add - && \
     echo "deb [ arch=amd64 ] http://repo.mongodb.com/apt/ubuntu trusty/mongodb-enterprise/3.6 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-enterprise.list && \
