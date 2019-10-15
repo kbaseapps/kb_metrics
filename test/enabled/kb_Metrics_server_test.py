@@ -281,6 +281,9 @@ class kb_MetricsTest(unittest.TestCase):
         max_time = 1500046845591
 
         # testing list_exec_tasks return data
+        # TODO: no code actually uses a time range; all extant code uses
+        #  a list of job ids. This test needs to be modified to do
+        # that.
         exec_tasks = dbi.list_exec_tasks(min_time, max_time)
         self.assertEqual(len(exec_tasks), 3)
         for tsk in exec_tasks:
@@ -3228,6 +3231,52 @@ class kb_MetricsTest(unittest.TestCase):
         start_datetime = datetime.datetime.strptime('2014-10-24T02:55:32+0000',
                                                     '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('2018-01-24T19:35:24.247Z',
+                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
+        m_params = {
+            'user_ids': user_list,
+            'epoch_range': (start_datetime, end_datetime)
+        }
+        # call your implementation
+        ret = self.getImpl().get_jobs(self.getContext(), m_params)
+        app_metrics_ret = ret[0]['job_states']
+        self.assertEqual(len(app_metrics_ret), 6)
+        for ap in app_metrics_ret:
+            self.assertIn('job_id', ap)
+
+        # call implementation with only one user
+        user_list = ['psdehal']
+        m_params = {
+            'user_ids': user_list,
+            'epoch_range': (start_datetime, end_datetime)
+        }
+        ret = self.getImpl().get_jobs(self.getContext(), m_params)
+        app_metrics_ret = ret[0]['job_states']
+        self.assertEqual(len(app_metrics_ret), 1)
+        job_info = app_metrics_ret[0]
+        self.assertIn(job_info['user'], user_list)
+        self.assertEqual(job_info['wsid'], '27834')
+        self.assertEqual(job_info['app_id'], 'kb_SPAdes/run_SPAdes')
+        self.assertEqual(job_info['method'], 'kb_SPAdes.run_SPAdes')
+        self.assertEqual(job_info['finish_time'], 1516822657338)
+        # self.assertNotIn('finish_time', app_metrics_ret[0])
+        self.assertIn('client_groups', job_info)
+        if 'ci' in self.cfg['kbase-endpoint']:
+            self.assertIn('njs', job_info['client_groups'])
+        else:
+            self.assertIn('bigmem', job_info['client_groups'])
+        self.assertEqual(job_info['narrative_name'], 'Staging Test')
+        self.assertEqual(job_info['workspace_name'],
+                         'psdehal:narrative_1513709108341')
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_get_jobs")
+    def test_run_MetricsImpl_get_jobs_no_results(self):
+        user_list = ['psdehal', 'umaganapathyswork', 'arfath', 'nardevuser1']
+        # start_datetime = datetime.datetime.strptime('2017-07-14T02:55:32+0000',
+        #                                             '%Y-%m-%dT%H:%M:%S+0000')
+        start_datetime = datetime.datetime.strptime('1980-01-01T00:00:00+0000',
+                                                    '%Y-%m-%dT%H:%M:%S+0000')
+        end_datetime = datetime.datetime.strptime('1980-01-01T00:00:00+0000',
                                                   '%Y-%m-%dT%H:%M:%S.%fZ')
         m_params = {
             'user_ids': user_list,
