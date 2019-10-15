@@ -532,7 +532,7 @@ class MongoMetricsDBI:
             return []
 
         match_cond = {
-            'ujs_job_id': {'$in': JobIDs}
+            'ujs_job_id': {'$in': jobIDs}
         }
 
         projection = {
