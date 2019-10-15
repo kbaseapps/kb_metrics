@@ -440,6 +440,7 @@ class MetricsMongoDBController:
             if 'app_id' in u_j_s:
                 if 'export' in u_j_s['app_id']:
                     job_type = 'export'
+                    u_j_s['narrative_name'] = 'Narrative Unknown for Export Job'
                 else:
                     job_type = 'unknown'
 
@@ -716,6 +717,16 @@ class MetricsMongoDBController:
         now = round(time.time() * 1000)
         perf['list_ujs_results'] = now - start
         perf['list_ujs_results_count'] = ujs_jobs_count
+
+        if len(ujs_jobs) == 0:
+            return {
+                'job_states': [],
+                'total_count': ujs_jobs_count,
+                'stats': {
+                    'perf': perf
+                }
+            }
+
         start = now
 
         ujs_job_ids = list(map(lambda x: str(x['_id']), ujs_jobs))
@@ -747,7 +758,11 @@ class MetricsMongoDBController:
         perf['_join_task_ujs'] = now - start
         start = now
 
-        return {'job_states': job_states, 'total_count': ujs_jobs_count, 'stats': {'perf': perf}}
+        return {
+            'job_states': job_states,
+            'total_count': ujs_jobs_count,
+            'stats': {'perf': perf}
+        }
 
     def query_jobs(self, requesting_user, params, token):
         """
@@ -788,6 +803,16 @@ class MetricsMongoDBController:
         now = round(time.time() * 1000)
         perf['list_ujs_results'] = now - start
         perf['list_ujs_results_count'] = ujs_jobs_count
+
+        if len(ujs_jobs) == 0:
+            return {
+                'job_states': [],
+                'total_count': ujs_jobs_count,
+                'stats': {
+                    'perf': perf
+                }
+            }
+
         start = now
 
         ujs_job_ids = list(map(lambda x: str(x['_id']), ujs_jobs))
