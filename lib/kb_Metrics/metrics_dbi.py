@@ -522,28 +522,18 @@ class MongoMetricsDBI:
 
         return list(kbusers.find(kbstaff_filter, projection))
 
-    def list_exec_tasks(self, minTime=None, maxTime=None, jobIDs=None):
-        match_cond = {}
+    def list_exec_tasks(self, jobIDs=None):
+        # Must filter by job id. If job ids are left missing, it is
+        # programming error
+        if jobIDs is None:
+            raise ValueError('Must supply JobIDs')
+            
+        if len(jobIDs) == 0:
+            return []
 
-        # Conditionally add filtering by creation time.
-        # This should be avoided - the scope of the results is determined by
-        # the ujs query, not this one, and that one is scoped by user - this one is not
-        # so the result set over all users may be very large.
-        # TODO: This should also incorporate modified time - if a job was started a while ago
-        # but is still queued or running, should it be included? Perhaps that is another 
-        # query specification - currently active jobs
-        creation_time_filter = {}
-        if minTime:
-            creation_time_filter['$gte'] = minTime
-        if maxTime:
-            creation_time_filter['$lte'] = maxTime
-        if creation_time_filter:
-            match_cond['creation_time'] = creation_time_filter
-
-        # Conditionally filter by job id. This is the preferred method when using
-        # paging.
-        if jobIDs:
-            match_cond['ujs_job_id'] = {'$in': jobIDs}
+        match_cond = {
+            'ujs_job_id': {'$in': JobIDs}
+        }
 
         projection = {
             '_id': 0,
@@ -552,7 +542,7 @@ class MongoMetricsDBI:
             'creation_time': 1,
             'job_input': 1
         }
-        # grab handle(s) to the database collection
+
         exec_engine_db = self.metricsDBs['exec_engine'][MongoMetricsDBI._EXEC_TASKS]
         cursor = exec_engine_db.find(match_cond, projection)
         return list(cursor)
