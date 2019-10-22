@@ -119,6 +119,7 @@ module kb_Metrics {
     } JobStateMinimal;
 
     typedef structure {
+        list<string> job_ids;
         list<user_id> user_ids;
         epoch_range epoch_range;
         int offset;
