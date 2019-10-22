@@ -609,26 +609,26 @@ class MongoMetricsDBI:
 
         return list(self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS].aggregate(pipeline))
 
-    def list_ujs_results(self, userIds, minTime, maxTime, job_ids=None, offset=None, limit=None, sort=None):
+    def list_ujs_results(self, user_ids=None, start_time=None, end_time=None, job_ids=None, offset=None, limit=None, sort=None):
         filter = {}
 
-        if userIds:
+        if user_ids:
             filter['user'] = {
-                '$in': userIds
+                '$in': user_ids
             }
 
         created_filter = {}
-        if minTime:
-            created_filter['$gte'] = _convert_to_datetime(minTime)
-        if maxTime:
-            created_filter['$lte'] = _convert_to_datetime(maxTime)
+        if start_time is not None:
+            created_filter['$gte'] = _convert_to_datetime(start_time)
+        if end_time is not None:
+            created_filter['$lte'] = _convert_to_datetime(end_time)
 
         if created_filter:
             filter['created'] = created_filter
 
         if job_ids is not None:
-            filter['ujs_job_id'] = {'$in': job_ids}
-        
+            filter['_id'] = {'$in': list(map(lambda id: ObjectId(id), job_ids))}
+
         # qry_filter['desc'] = {'$exists': True}
         # qry_filter['status'] = {'$exists': True}
 

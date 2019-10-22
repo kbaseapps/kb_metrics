@@ -704,9 +704,9 @@ class MetricsMongoDBController:
         # 2. query dbs to get lists of tasks and jobs
         params = self._process_parameters(params)
 
-        ujs_jobs, ujs_jobs_count = self.metrics_dbi.list_ujs_results(params['user_ids'],
-                                                                    params['minTime'],
-                                                                    params['maxTime'], 
+        ujs_jobs, ujs_jobs_count = self.metrics_dbi.list_ujs_results(user_ids=params.get('user_ids', None),
+                                                                    start_time=params['minTime'],
+                                                                    end_time=params['maxTime'], 
                                                                     offset=params.get('offset', None),
                                                                     limit=params.get('limit', None),
                                                                     sort=params.get('sort', None))
@@ -785,11 +785,17 @@ class MetricsMongoDBController:
         start = now
 
         # 2. query dbs to get lists of tasks and jobs
-        params = self._process_parameters(params)
+        # params = self._process_parameters(params)
 
-        ujs_jobs, ujs_jobs_count = self.metrics_dbi.list_ujs_results(params['user_ids'],
-                                                                    params['minTime'],
-                                                                    params['maxTime'],
+        if 'epoch_range' in params:
+            start_time_param, end_time_param = params.get('epoch_range')
+        else:
+            start_time_param = None
+            end_time_param = None
+
+        ujs_jobs, ujs_jobs_count = self.metrics_dbi.list_ujs_results(user_ids=params.get('user_ids', None),
+                                                                    end_time=end_time_param,
+                                                                    start_time=start_time_param,
                                                                     job_ids=params.get('job_ids', None),
                                                                     offset=params.get('offset', None),
                                                                     limit=params.get('limit', None),

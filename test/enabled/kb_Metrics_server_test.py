@@ -317,19 +317,19 @@ class kb_MetricsMainTest(unittest.TestCase):
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_user_objects_from_wsobjs(self):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        min_time = 1468592344887
-        max_time = 1519768865840
+        start_time = 1468592344887
+        end_time = 1519768865840
         ws_narrs = dbi.list_ws_narratives()
         ws_list = [wn['workspace_id'] for wn in ws_narrs]
 
         # test list_user_objects_from_wsobjs return count without wsid
         user_objs = dbi.list_user_objects_from_wsobjs(
-                        min_time, max_time)
+                        start_time, end_time)
         self.assertEqual(len(user_objs), 37)
 
         # test list_user_objects_from_wsobjs returned values with wsid filter
         user_objs = dbi.list_user_objects_from_wsobjs(
-                        min_time, max_time, ws_list)
+                        start_time, end_time, ws_list)
         self.assertEqual(len(user_objs), 22)
 
         self.assertIn('workspace_id', user_objs[0])
@@ -385,13 +385,13 @@ class kb_MetricsMainTest(unittest.TestCase):
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_aggr_user_details(self):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        min_time = 1516307704700
-        max_time = 1520549345000
+        start_time = 1516307704700
+        end_time = 1520549345000
         user_list0 = []
         user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'bsadkhin']
 
         # testing aggr_user_details returned data structure
-        users = dbi.aggr_user_details(user_list, min_time, max_time)
+        users = dbi.aggr_user_details(user_list, start_time, end_time)
         self.assertEqual(len(users), 4)
         self.assertIn('username', users[0])
         self.assertIn('email', users[0])
@@ -410,7 +410,7 @@ class kb_MetricsMainTest(unittest.TestCase):
                          datetime.datetime(2018, 3, 8, 21, 30, 58, 604000))
         self.assertEqual(users[1]['roles'], ['DevToken'])
 
-        users = dbi.aggr_user_details(user_list0, min_time, max_time)
+        users = dbi.aggr_user_details(user_list0, start_time, end_time)
         self.assertEqual(len(users), 37)
 
     # Uncomment to skip this test
@@ -421,13 +421,13 @@ class kb_MetricsMainTest(unittest.TestCase):
         m_users_cur = dbi.metricsDBs['metrics']['users'].find()
         print_debug(f'There are {len(list(m_users_cur))} users in metrics.users before dbi call')
 
-        min_time = 1468454614192
-        max_time = 1585259588883
+        start_time = 1468454614192
+        end_time = 1585259588883
         user_list0 = []
         user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'boris']
 
         # testing aggr_signup_retn_users returned data structure and values
-        users = dbi.aggr_signup_retn_users(user_list0, min_time, max_time)
+        users = dbi.aggr_signup_retn_users(user_list0, start_time, end_time)
         self.assertEqual(len(users), 6)
         for u in users:
             if u['_id'] == {'year': 2018, 'month': 1}:
@@ -450,7 +450,7 @@ class kb_MetricsMainTest(unittest.TestCase):
                 self.assertEqual(u['returning_user_count'], 1)
 
         # testing with user exclusions
-        users = dbi.aggr_signup_retn_users(user_list0, min_time, max_time,
+        users = dbi.aggr_signup_retn_users(user_list0, start_time, end_time,
                                            excluded_users=['takuro'])
         self.assertEqual(len(users), 6)
         for u in users:
@@ -478,7 +478,7 @@ class kb_MetricsMainTest(unittest.TestCase):
                 self.assertEqual(u['returning_user_count'], 1)
 
         # testing with user inclusion
-        users = dbi.aggr_signup_retn_users(user_list, min_time, max_time)
+        users = dbi.aggr_signup_retn_users(user_list, start_time, end_time)
         self.assertEqual(len(users), 3)
         # testing the sorting (ordered by '_id')
         self.assertCountEqual(users, [{'_id': {'year': 2018, 'month': 1}, 'user_signups': 1,
@@ -493,8 +493,8 @@ class kb_MetricsMainTest(unittest.TestCase):
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_run_MetricsMongoDBs_aggr_total_logins(self):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        min_time = datetime.datetime(2015, 1, 1)
-        max_time = datetime.datetime(2018, 4, 30)
+        start_time = datetime.datetime(2015, 1, 1)
+        end_time = datetime.datetime(2018, 4, 30)
         user_list = []
         users_coll = self.client.metrics.users
         kbstaff_in_coll = list(users_coll.find(
@@ -503,7 +503,7 @@ class kb_MetricsMainTest(unittest.TestCase):
         excl_usrs = [usr['username'] for usr in kbstaff_in_coll]
 
         # testing with time range when there are login records
-        tot_logins = dbi.aggr_total_logins(user_list, min_time, max_time)
+        tot_logins = dbi.aggr_total_logins(user_list, start_time, end_time)
         self.assertCountEqual(tot_logins, [{'_id': {'year': 2018, 'month': 1},
                                             'year_mon_total_logins': 1},
                                            {'_id': {'year': 2018, 'month': 2},
@@ -515,7 +515,7 @@ class kb_MetricsMainTest(unittest.TestCase):
                                            ])
 
         # testing with excluded user list
-        tot_logins = dbi.aggr_total_logins(user_list, min_time, max_time,
+        tot_logins = dbi.aggr_total_logins(user_list, start_time, end_time,
                                            excluded_users=excl_usrs)
         self.assertCountEqual(tot_logins, [{'_id': {'year': 2018, 'month': 2},
                                             'year_mon_total_logins': 1},
@@ -526,9 +526,9 @@ class kb_MetricsMainTest(unittest.TestCase):
                                            ])
 
         # testing with time range when there is fewer login records
-        min_time = datetime.datetime(2015, 1, 1)
-        max_time = datetime.datetime(2017, 9, 20)
-        tot_logins = dbi.aggr_total_logins(user_list, min_time, max_time)
+        start_time = datetime.datetime(2015, 1, 1)
+        end_time = datetime.datetime(2017, 9, 20)
+        tot_logins = dbi.aggr_total_logins(user_list, start_time, end_time)
         self.assertCountEqual(tot_logins, [{'_id': {'year': 2017, 'month': 5},
                                             'year_mon_total_logins': 1},
                                            {'_id': {'year': 2016, 'month': 7},
@@ -536,9 +536,9 @@ class kb_MetricsMainTest(unittest.TestCase):
                                            ])
 
         # testing with time range when there is even fewer login records
-        min_time = datetime.datetime(2016, 9, 30)
-        max_time = datetime.datetime(2017, 6, 30)
-        tot_logins = dbi.aggr_total_logins(user_list, min_time, max_time)
+        start_time = datetime.datetime(2016, 9, 30)
+        end_time = datetime.datetime(2017, 6, 30)
+        tot_logins = dbi.aggr_total_logins(user_list, start_time, end_time)
         self.assertEqual(len(tot_logins), 1)
         self.assertEqual(tot_logins[0]['_id'], {'year': 2017, 'month': 5})
         self.assertEqual(tot_logins[0]['year_mon_total_logins'], 1)
@@ -548,14 +548,14 @@ class kb_MetricsMainTest(unittest.TestCase):
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_aggr_user_logins_from_ws(self):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        min_time = datetime.datetime(2016, 1, 1)
-        max_time = datetime.datetime(2018, 4, 30)
+        start_time = datetime.datetime(2016, 1, 1)
+        end_time = datetime.datetime(2018, 4, 30)
         user_list0 = []
         user_list1 = ['vkumar', 'psdehal', 'wjriehl', 'qzhang']
         user_list2 = ['shahmaneshb', 'laramyenders', 'allmon', 'bsadkhin']
 
         # testing aggr_user_logins_from_ws returned data structure and values
-        usr_logins = dbi.aggr_user_logins_from_ws(user_list0, min_time, max_time)
+        usr_logins = dbi.aggr_user_logins_from_ws(user_list0, start_time, end_time)
         self.assertEqual(len(usr_logins), 16)
 
         self.assertIn({'_id': {'username': 'bsadkhin', 'year': 2016, 'month': 7},
@@ -566,9 +566,9 @@ class kb_MetricsMainTest(unittest.TestCase):
                        'year_mon_user_logins': 1}, usr_logins)
 
         # with time range when there are fewer user login records
-        min_time = datetime.datetime(2016, 1, 1)
-        max_time = datetime.datetime(2017, 9, 30)
-        usr_logins = dbi.aggr_user_logins_from_ws(user_list0, min_time, max_time)
+        start_time = datetime.datetime(2016, 1, 1)
+        end_time = datetime.datetime(2017, 9, 30)
+        usr_logins = dbi.aggr_user_logins_from_ws(user_list0, start_time, end_time)
         self.assertEqual(len(usr_logins), 14)
         self.assertIn({'_id': {'username': 'jplfaria', 'year': 2016, 'month': 7},
                        'year_mon_user_logins': 1}, usr_logins)
@@ -576,18 +576,18 @@ class kb_MetricsMainTest(unittest.TestCase):
                        'year_mon_user_logins': 1}, usr_logins)
 
         # with time range when there are even fewer user login records
-        min_time = datetime.datetime(2015, 1, 1)
-        max_time = datetime.datetime(2017, 9, 20)
-        usr_logins = dbi.aggr_user_logins_from_ws(user_list0, min_time, max_time)
+        start_time = datetime.datetime(2015, 1, 1)
+        end_time = datetime.datetime(2017, 9, 20)
+        usr_logins = dbi.aggr_user_logins_from_ws(user_list0, start_time, end_time)
         self.assertEqual(len(usr_logins), 14)
         self.assertIn({'_id': {'username': 'jplfaria', 'year': 2016, 'month': 7},
                        'year_mon_user_logins': 1}, usr_logins)
         self.assertIn({'_id': {'username': 'rsutormin', 'year': 2016, 'month': 7},
                        'year_mon_user_logins': 1}, usr_logins)
 
-        min_time = datetime.datetime(2017, 9, 30)
-        max_time = datetime.datetime(2018, 4, 30)
-        usr_logins = dbi.aggr_user_logins_from_ws(user_list0, min_time, max_time)
+        start_time = datetime.datetime(2017, 9, 30)
+        end_time = datetime.datetime(2018, 4, 30)
+        usr_logins = dbi.aggr_user_logins_from_ws(user_list0, start_time, end_time)
         self.assertCountEqual(usr_logins,
                               [{'_id': {'username': 'joedoe', 'year': 2018, 'month': 2},
                                 'year_mon_user_logins': 1},
@@ -595,13 +595,13 @@ class kb_MetricsMainTest(unittest.TestCase):
                                 'year_mon_user_logins': 1}])
 
         # testing with given parameter values with user_ids given
-        usr_logins1 = dbi.aggr_user_logins_from_ws(user_list1, min_time, max_time)
+        usr_logins1 = dbi.aggr_user_logins_from_ws(user_list1, start_time, end_time)
         self.assertEqual(len(usr_logins1), 1)
         self.assertEqual(usr_logins1[0]['_id'],
                          {'username': 'psdehal', 'year': 2018, 'month': 1})
         self.assertEqual(usr_logins1[0]['year_mon_user_logins'], 1)
 
-        usr_logins2 = dbi.aggr_user_logins_from_ws(user_list2, min_time, max_time)
+        usr_logins2 = dbi.aggr_user_logins_from_ws(user_list2, start_time, end_time)
         self.assertEqual(len(usr_logins2), 0)
 
     # Uncomment to skip this test
@@ -609,14 +609,14 @@ class kb_MetricsMainTest(unittest.TestCase):
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_run_MetricsMongoDBs_aggr_user_numObjs(self):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        min_time = datetime.datetime(2016, 1, 1)
-        max_time = datetime.datetime(2018, 4, 30)
+        start_time = datetime.datetime(2016, 1, 1)
+        end_time = datetime.datetime(2018, 4, 30)
         user_list0 = []
         user_list1 = ['vkumar', 'psdehal', 'wjriehl', 'qzhang']
         user_list2 = ['shahmaneshb', 'laramyenders', 'allmon', 'bsadkhin']
 
         # testing with time range only
-        usr_objNum = dbi.aggr_user_numObjs(user_list0, min_time, max_time)
+        usr_objNum = dbi.aggr_user_numObjs(user_list0, start_time, end_time)
         self.assertEqual(len(usr_objNum), 16)
         self.assertCountEqual(usr_objNum[0],
                               {'_id': {'username': 'eapearson',
@@ -644,7 +644,7 @@ class kb_MetricsMainTest(unittest.TestCase):
                                'count_user_numObjs': 48})
 
         # testing with given parameter values with user_ids given
-        usr_objNum = dbi.aggr_user_numObjs(user_list1, min_time, max_time)
+        usr_objNum = dbi.aggr_user_numObjs(user_list1, start_time, end_time)
         self.assertEqual(len(usr_objNum), 3)
         self.assertEqual(usr_objNum[0]['_id'],
                          {'username': 'psdehal', 'year': 2018, 'month': 1}),
@@ -657,7 +657,7 @@ class kb_MetricsMainTest(unittest.TestCase):
         self.assertEqual(usr_objNum[2]['count_user_numObjs'], 48)
 
         # testing with given parameter values with user_ids given
-        usr_objNum = dbi.aggr_user_numObjs(user_list2, min_time, max_time)
+        usr_objNum = dbi.aggr_user_numObjs(user_list2, start_time, end_time)
         self.assertEqual(len(usr_objNum), 1)
         self.assertEqual(usr_objNum[0]['_id'], {'username': 'bsadkhin', 'year': 2016, 'month': 7})
         self.assertEqual(usr_objNum[0]['count_user_numObjs'], 105)
@@ -667,14 +667,14 @@ class kb_MetricsMainTest(unittest.TestCase):
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_run_MetricsMongoDBs_aggr_user_ws(self):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        min_time = datetime.datetime(2016, 1, 1)
-        max_time = datetime.datetime(2018, 4, 30)
+        start_time = datetime.datetime(2016, 1, 1)
+        end_time = datetime.datetime(2018, 4, 30)
         user_list0 = []
         user_list1 = ['vkumar', 'psdehal', 'wjriehl', 'qzhang']
         user_list2 = ['shahmaneshb', 'laramyenders', 'allmon', 'bsadkhin']
 
         # testing with given parameter values without user_ids
-        usr_ws = dbi.aggr_user_ws(user_list0, min_time, max_time)
+        usr_ws = dbi.aggr_user_ws(user_list0, start_time, end_time)
         self.assertEqual(len(usr_ws), 16)
         for uw in usr_ws:
             if uw['_id'] == {'username': 'eapearson', 'year': 2016, 'month': 7}:
@@ -707,7 +707,7 @@ class kb_MetricsMainTest(unittest.TestCase):
                 self.assertEqual(uw['count_user_ws'], 3)
 
         # testing with given parameter values with user_ids given
-        usr_ws = dbi.aggr_user_ws(user_list1, min_time, max_time)
+        usr_ws = dbi.aggr_user_ws(user_list1, start_time, end_time)
         self.assertEqual(len(usr_ws), 3)
         self.assertEqual(usr_ws[0]['_id'],
                          {'username': 'psdehal', 'year': 2018, 'month': 1})
@@ -720,7 +720,7 @@ class kb_MetricsMainTest(unittest.TestCase):
         self.assertEqual(usr_ws[2]['count_user_ws'], 3)
 
         # testing with given parameter values with another user_ids
-        usr_ws = dbi.aggr_user_ws(user_list2, min_time, max_time)
+        usr_ws = dbi.aggr_user_ws(user_list2, start_time, end_time)
         self.assertEqual(len(usr_ws), 1)
         self.assertEqual(usr_ws[0]['_id'],
                          {'username': 'bsadkhin', 'year': 2016, 'month': 7})
@@ -731,11 +731,11 @@ class kb_MetricsMainTest(unittest.TestCase):
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_aggr_unique_users_per_day(self):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        min_time = 1514764800000
-        max_time = 1522454400000
+        start_time = 1514764800000
+        end_time = 1522454400000
 
         # testing aggr_unique_users_per_day return data
-        users = dbi.aggr_unique_users_per_day(min_time, max_time)
+        users = dbi.aggr_unique_users_per_day(start_time, end_time)
         self.assertEqual(len(users), 57)
         self.assertIn('numOfUsers', users[0])
         self.assertIn('yyyy-mm-dd', users[0])
@@ -1114,16 +1114,16 @@ class kb_MetricsMainTest(unittest.TestCase):
     # @unittest.skip("skipped test_MetricsMongoDBs_get_user_info")
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_get_user_info(self):
-        min_time = 1516307704700
-        max_time = 1520549345000
+        start_time = 1516307704700
+        end_time = 1520549345000
         user_list0 = []
         user_list = ['shahmaneshb', 'laramyenders', 'allmon', 'bsadkhin']
 
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # testing get_user_info return data
-        users = dbi.get_user_info(user_list0, min_time, max_time)
+        users = dbi.get_user_info(user_list0, start_time, end_time)
         self.assertEqual(len(users), 37)
-        users = dbi.get_user_info(user_list, min_time, max_time)
+        users = dbi.get_user_info(user_list, start_time, end_time)
         self.assertEqual(len(users), 4)
         self.assertIn('username', users[0])
         self.assertIn('email', users[0])
@@ -1137,11 +1137,11 @@ class kb_MetricsMainTest(unittest.TestCase):
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_aggr_activities_from_wsobjs(self):
         # testing aggr_activities_from_wsobjs return data
-        min_time = 1468540813000
-        max_time = 1519768865840
+        start_time = 1468540813000
+        end_time = 1519768865840
 
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        user_acts = dbi.aggr_activities_from_wsobjs(min_time, max_time)
+        user_acts = dbi.aggr_activities_from_wsobjs(start_time, end_time)
         self.assertEqual(len(user_acts), 11)
         self.assertIn({'_id': {'ws_id': 29824, 'year_mod': 2018, 'month_mod': 2, 'day_mod': 27},
                        'obj_numModified': 1}, user_acts)
@@ -1150,12 +1150,12 @@ class kb_MetricsMainTest(unittest.TestCase):
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ws_narratives")
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_ws_narratives(self):
-        min_time = 1468592344887
-        max_time = 1519768865840
+        start_time = 1468592344887
+        end_time = 1519768865840
 
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         # Testing with time limit
-        ws_narrs = dbi.list_ws_narratives(min_time, max_time)
+        ws_narrs = dbi.list_ws_narratives(start_time, end_time)
         self.assertEqual(len(ws_narrs), 12)
 
         # Testing ws/narratives with deleted ones
@@ -1211,8 +1211,8 @@ class kb_MetricsMainTest(unittest.TestCase):
     # @unittest.skip("skipped test_MetricsMongoDBs_list_ujs_results")
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_ujs_results(self):
-        min_time = 1500000932952
-        max_time = 1500046845591
+        start_time = 1500000932952
+        end_time = 1500046845591
         user_list1 = ['tgu2', 'umaganapathyswork', 'arfath']
         user_list2 = ['umaganapathyswork', 'arfath']
 
@@ -1220,33 +1220,33 @@ class kb_MetricsMainTest(unittest.TestCase):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
         
         # testing list_ujs_results return data, with userIds
-        ujs, count = dbi.list_ujs_results(user_list1, min_time, max_time)
+        ujs, count = dbi.list_ujs_results(user_list1, start_time=start_time, end_time=end_time)
         self.assertEqual(len(ujs), 14)
 
-        ujs, count = dbi.list_ujs_results(user_list2, min_time, max_time)
+        ujs, count = dbi.list_ujs_results(user_list2, start_time=start_time, end_time=end_time)
         self.assertEqual(len(ujs), 3)
 
         for uj in ujs:
             self.assertIn(uj.get('user'), user_list2)
             uj_creation_time = int((uj.get('created') -
                                     epoch).total_seconds() * 1000.0)
-            self.assertTrue(min_time <= uj_creation_time <= max_time)
+            self.assertTrue(start_time <= uj_creation_time <= end_time)
 
         # testing list_ujs_results return data, without userIds
-        ujs, count = dbi.list_ujs_results([], min_time, max_time)
+        ujs, count = dbi.list_ujs_results([], start_time=start_time, end_time=end_time)
         self.assertEqual(len(ujs), 15)
 
         # testing list_ujs_results return data, with offset and limit
-        ujs, count = dbi.list_ujs_results([], min_time, max_time, offset=2, limit=10)
+        ujs, count = dbi.list_ujs_results([], start_time=start_time, end_time=end_time, offset=2, limit=10)
         self.assertEqual(len(ujs), 10)
         self.assertEqual(count, 15)
 
-        ujs, count = dbi.list_ujs_results([], min_time, max_time, offset=10, limit=10)
+        ujs, count = dbi.list_ujs_results([], start_time=start_time, end_time=end_time, offset=10, limit=10)
         self.assertEqual(len(ujs), 5)
         self.assertEqual(count, 15)
 
         # testing list_ujs_results return data, check 'started' existence
-        ujs, count = dbi.list_ujs_results(['jobnotstarted'], min_time, max_time)
+        ujs, count = dbi.list_ujs_results(['jobnotstarted'], start_time=start_time, end_time=end_time)
         self.assertEqual(len(ujs), 1)
         self.assertNotIn('started', ujs[0])
         self.assertNotIn('status', ujs[0])
@@ -1260,15 +1260,15 @@ class kb_MetricsMainTest(unittest.TestCase):
 
         # testing list_ujs_results return data, different userIds and times
         ujs, count = dbi.list_ujs_results(['wjriehl'],
-                                   1500052541065, 1500074641912)
+                                   start_time=1500052541065, end_time=1500074641912)
         self.assertEqual(len(ujs), 8)
-        ujs, count = dbi.list_ujs_results([], 1500052541065, 1500074641912)
+        ujs, count = dbi.list_ujs_results([], start_time=1500052541065, end_time=1500074641912)
         self.assertEqual(len(ujs), 14)
 
         # testing list_ujs_results with a different min_tiem & without userIds
         # checking for job id (i.e., '_id') existence
-        min_time = 1414192660700
-        ujs, count = dbi.list_ujs_results([], min_time, max_time)
+        start_time = 1414192660700
+        ujs, count = dbi.list_ujs_results([], start_time=start_time, end_time=end_time)
         self.assertEqual(len(ujs), 17)
         self.assertEqual(ujs[0]['status'], 'queued')
         for uj in ujs:
@@ -1276,15 +1276,15 @@ class kb_MetricsMainTest(unittest.TestCase):
 
         # testing list_ujs_results with a sort by job_id
         # checking for job id (i.e., '_id') existence
-        min_time = 1414192660700
-        ujs, count = dbi.list_ujs_results([], min_time, max_time, sort=[{'field': 'job_id', 'direction': 'ascending'}])
+        start_time = 1414192660700
+        ujs, count = dbi.list_ujs_results([], start_time=start_time, end_time=end_time, sort=[{'field': 'job_id', 'direction': 'ascending'}])
         self.assertEqual(len(ujs), 17)
         job = ujs[0]
         self.assertEqual(job['status'], 'queued')
         self.assertEqual(str(job['_id']), '544ade14e4b0d82af0eaf31d')
 
-        min_time = 1414192660700
-        ujs, count = dbi.list_ujs_results([], min_time, max_time, sort=[{'field': 'job_id', 'direction': 'descending'}])
+        start_time = 1414192660700
+        ujs, count = dbi.list_ujs_results([], start_time=start_time, end_time=end_time, sort=[{'field': 'job_id', 'direction': 'descending'}])
         self.assertEqual(len(ujs), 17)
         job = ujs[0]
         self.assertEqual(job['status'], 'queued')
@@ -1345,19 +1345,19 @@ class kb_MetricsMainTest(unittest.TestCase):
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_ws_firstAccess(self):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        min_time = 1468592344887
-        max_time = 1519768865840
+        start_time = 1468592344887
+        end_time = 1519768865840
         ws_narrs = dbi.list_narrative_info()
         ws_list = [wn['ws'] for wn in ws_narrs]
 
         # test list_ws_firstAccess returned values with wsid filter
-        ws_objs = dbi.list_ws_firstAccess(min_time, max_time, ws_list=ws_list)
+        ws_objs = dbi.list_ws_firstAccess(start_time, end_time, ws_list=ws_list)
         self.assertEqual(len(ws_objs), 1)
         self.assertEqual(ws_objs[0]['yyyy-mm'], '2017-12')
         self.assertEqual(ws_objs[0]['ws_count'], 1)
 
         # test list_ws_firstAccess return count without wsid
-        ws_objs = dbi.list_ws_firstAccess(min_time, max_time)
+        ws_objs = dbi.list_ws_firstAccess(start_time, end_time)
         self.assertEqual(len(ws_objs), 2)
         for wobj in ws_objs:
             self.assertTrue('2016-7' <= wobj['yyyy-mm'] < '2018-3')
@@ -1528,26 +1528,26 @@ class kb_MetricsMainTest(unittest.TestCase):
         params = {'epoch_range': (None, None)}
         ret_params = self.db_controller._process_parameters(params)
         today = datetime.date.today()
-        min_time = ret_params.get('minTime')
-        max_time = ret_params.get('maxTime')
-        min_time_from_today = (datetime.date(*time.localtime(min_time/1000.0)
+        start_time = ret_params.get('minTime')
+        end_time = ret_params.get('maxTime')
+        start_time_from_today = (datetime.date(*time.localtime(start_time/1000.0)
                                              [:3]) - today).days
-        max_time_from_today = (datetime.date(*time.localtime(max_time/1000.0)
+        end_time_from_today = (datetime.date(*time.localtime(end_time/1000.0)
                                              [:3]) - today).days
-        self.assertEqual(min_time_from_today, -2)
-        self.assertEqual(max_time_from_today, 0)
+        self.assertEqual(start_time_from_today, -2)
+        self.assertEqual(end_time_from_today, 0)
 
         params = {}
         ret_params = self.db_controller._process_parameters(params)
         today = datetime.date.today()
-        min_time = ret_params.get('minTime')
-        max_time = ret_params.get('maxTime')
-        min_time_from_today = (datetime.date(*time.localtime(min_time/1000.0)
+        start_time = ret_params.get('minTime')
+        end_time = ret_params.get('maxTime')
+        start_time_from_today = (datetime.date(*time.localtime(start_time/1000.0)
                                              [:3]) - today).days
-        max_time_from_today = (datetime.date(*time.localtime(max_time/1000.0)
+        end_time_from_today = (datetime.date(*time.localtime(end_time/1000.0)
                                              [:3]) - today).days
-        self.assertEqual(min_time_from_today, -2)
-        self.assertEqual(max_time_from_today, 0)
+        self.assertEqual(start_time_from_today, -2)
+        self.assertEqual(end_time_from_today, 0)
 
     # Uncomment to skip this test
     # @unittest.skip("test _is_admin")
@@ -2112,13 +2112,13 @@ class kb_MetricsMainTest(unittest.TestCase):
 
         # Testing with mock db data
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        min_time = _unix_time_millis_from_datetime(start_datetime)
-        max_time = _unix_time_millis_from_datetime(end_datetime)
-        ws_narrs = dbi.list_ws_narratives(min_time, max_time)
+        start_time = _unix_time_millis_from_datetime(start_datetime)
+        end_time = _unix_time_millis_from_datetime(end_datetime)
+        ws_narrs = dbi.list_ws_narratives(start_time, end_time)
         ws_ids = [wnarr['workspace_id'] for wnarr in ws_narrs]
 
         wsobjs = dbi.list_user_objects_from_wsobjs(
-            min_time, max_time, ws_ids)
+            start_time, end_time, ws_ids)
         obj_wsids = list(set([wsobj['workspace_id'] for wsobj in wsobjs]))
 
         # Only 3 workspaces matched with wsobjs modified within conditions in params

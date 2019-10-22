@@ -272,7 +272,7 @@ class kb_Metrics_query_jobs_Test(unittest.TestCase):
         self.assertIsInstance(result, dict) 
         self.assertIn('job_states', result)
         self.assertIn('total_count', result)
-        self.assertEqual(result['total_count'], 0)
+        self.assertEqual(result['total_count'], 38)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_max_time_range")
@@ -316,6 +316,22 @@ class kb_Metrics_query_jobs_Test(unittest.TestCase):
         ret = self.getImpl().query_jobs(self.getContext(), {
             'epoch_range': [0, now],
             'user_ids': ['psdehal']
+        })
+
+        self.assertEqual(len(ret), 1)
+        self.assertIsInstance(ret[0], dict)
+        result = ret[0]
+        self.assertIsInstance(result, dict) 
+        self.assertIn('job_states', result)
+        self.assertIn('total_count', result)
+        self.assertEqual(result['total_count'], 1)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_one_job")
+    def test_run_MetricsImpl_query_jobs_one_job(self):
+        now = int(round(time.time() * 1000))
+        ret = self.getImpl().query_jobs(self.getContext(), {
+            'job_ids': ['5a68dffce4b0ace8f870f586']
         })
 
         self.assertEqual(len(ret), 1)
