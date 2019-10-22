@@ -609,22 +609,26 @@ class MongoMetricsDBI:
 
         return list(self.metricsDBs['metrics'][MongoMetricsDBI._MT_USERS].aggregate(pipeline))
 
-    def list_ujs_results(self, userIds, minTime, maxTime, offset=None, limit=None, sort=None):
-        qry_filter = {}
+    def list_ujs_results(self, userIds, minTime, maxTime, job_ids=None, offset=None, limit=None, sort=None):
+        filter = {}
 
-        user_filter = {}
         if userIds:
-            user_filter['$in'] = userIds
-        if user_filter:
-            qry_filter['user'] = user_filter
+            filter['user'] = {
+                '$in': userIds
+            }
 
         created_filter = {}
         if minTime:
             created_filter['$gte'] = _convert_to_datetime(minTime)
         if maxTime:
             created_filter['$lte'] = _convert_to_datetime(maxTime)
+
         if created_filter:
-            qry_filter['created'] = created_filter
+            filter['created'] = created_filter
+
+        if job_ids is not None:
+            filter['ujs_job_id'] = {'$in': job_ids}
+        
         # qry_filter['desc'] = {'$exists': True}
         # qry_filter['status'] = {'$exists': True}
 
@@ -643,7 +647,7 @@ class MongoMetricsDBI:
 
         # grab handle(s) to the database collections needed
         jobstate = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
-        cursor = jobstate.find(qry_filter, projection)
+        cursor = jobstate.find(filter, projection)
         if offset is not None:
             cursor.skip(offset)
         if limit is not None:

@@ -701,18 +701,15 @@ class MetricsMongoDBController:
         perf['client_groups'] = now - start
         start = now
 
-        offset = params.get('offset', None)
-        limit = params.get('limit', None)
-
         # 2. query dbs to get lists of tasks and jobs
         params = self._process_parameters(params)
-
-        sort = params.get('sort', None)
 
         ujs_jobs, ujs_jobs_count = self.metrics_dbi.list_ujs_results(params['user_ids'],
                                                                     params['minTime'],
                                                                     params['maxTime'], 
-                                                                    offset, limit, sort)
+                                                                    offset=params.get('offset', None),
+                                                                    limit=params.get('limit', None),
+                                                                    sort=params.get('sort', None))
 
         now = round(time.time() * 1000)
         perf['list_ujs_results'] = now - start
@@ -787,18 +784,16 @@ class MetricsMongoDBController:
         perf['client_groups'] = now - start
         start = now
 
-        offset = params.get('offset', None)
-        limit = params.get('limit', None)
-
         # 2. query dbs to get lists of tasks and jobs
         params = self._process_parameters(params)
 
-        sort = params.get('sort', None)
-
         ujs_jobs, ujs_jobs_count = self.metrics_dbi.list_ujs_results(params['user_ids'],
                                                                     params['minTime'],
-                                                                    params['maxTime'], 
-                                                                    offset, limit, sort)
+                                                                    params['maxTime'],
+                                                                    job_ids=params.get('job_ids', None),
+                                                                    offset=params.get('offset', None),
+                                                                    limit=params.get('limit', None),
+                                                                    sort=params.get('sort', None))
 
         now = round(time.time() * 1000)
         perf['list_ujs_results'] = now - start

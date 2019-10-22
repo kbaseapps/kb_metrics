@@ -33,7 +33,7 @@ def print_debug(msg):
     print("{}:{}".format(t, msg))
 
 
-class kb_MetricsTest(unittest.TestCase):
+class kb_Metrics_query_jobs_Test(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -88,9 +88,20 @@ class kb_MetricsTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        cls.clear_mongodb()
         if hasattr(cls, 'wsName'):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print('Test workspace was deleted')
+
+    @classmethod
+    def clear_mongodb(cls):
+        dbs = ['workspace', 'exec_engine', 'userjobstate', 'auth2', 'metrics']
+        for db in dbs:
+            try:
+                cls.client[db].command("dropUser", "admin")
+                cls.client.drop_database(db)
+            except Exception as ex:
+                print('ERROR dropping db: ' + str(ex))
 
     @classmethod
     def init_mongodb(cls):

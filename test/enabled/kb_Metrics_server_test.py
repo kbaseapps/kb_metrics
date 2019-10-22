@@ -33,7 +33,7 @@ def print_debug(msg):
     print("{}:{}".format(t, msg))
 
 
-class kb_MetricsTest(unittest.TestCase):
+class kb_MetricsMainTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -88,9 +88,20 @@ class kb_MetricsTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        cls.clear_mongodb()
         if hasattr(cls, 'wsName'):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print('Test workspace was deleted')
+
+    @classmethod
+    def clear_mongodb(cls):
+        dbs = ['workspace', 'exec_engine', 'userjobstate', 'auth2', 'metrics']
+        for db in dbs:
+            try:
+                cls.client[db].command("dropUser", "admin")
+                cls.client.drop_database(db)
+            except Exception as ex:
+                print('ERROR dropping db: ' + str(ex))
 
     @classmethod
     def init_mongodb(cls):
@@ -277,17 +288,19 @@ class kb_MetricsTest(unittest.TestCase):
     @patch.object(MongoMetricsDBI, '__init__', new=mock_MongoMetricsDBI)
     def test_MetricsMongoDBs_list_exec_tasks(self):
         dbi = MongoMetricsDBI('', self.db_names, 'admin', 'password')
-        min_time = 1500000932952
-        max_time = 1500046845591
 
         # testing list_exec_tasks return data
         # TODO: no code actually uses a time range; all extant code uses
         #  a list of job ids. This test needs to be modified to do
         # that.
-        exec_tasks = dbi.list_exec_tasks(min_time, max_time)
+        job_ids = [
+            '596832a4e4b08b65f9ff5d6f',
+            '5968cd75e4b08b65f9ff5d7c',
+            '5968e5fde4b08b65f9ff5d7d'
+        ]
+        exec_tasks = dbi.list_exec_tasks(job_ids)
         self.assertEqual(len(exec_tasks), 3)
-        for tsk in exec_tasks:
-            self.assertTrue(min_time <= tsk['creation_time'] <= max_time)
+
         sorted_exec_tasks = sorted(exec_tasks, key=itemgetter('creation_time'))
         self.assertEqual(sorted_exec_tasks[0]['ujs_job_id'],
                          '596832a4e4b08b65f9ff5d6f')
@@ -1396,7 +1409,7 @@ class kb_MetricsTest(unittest.TestCase):
                                'chenry', 'ciservices', 'wjriehl', 'sychan', 'jjeffryes',
                                'drakemm2', 'allenbh', 'eapearson', 'qzhang', 'tgu2',
                                'bsadkhin', 'bobcottingham', 'janakakbase', 'jplfaria',
-                               'marcin', 'royk', 'sunita', 'aparkin', 'cnelson']
+                               'marcin', 'royk', 'sunita', 'aparkin', 'cnelson', 'landml']
         self.assertCountEqual(self.db_controller.adminList,
                               expected_admin_list)
 
@@ -3277,7 +3290,7 @@ class kb_MetricsTest(unittest.TestCase):
         start_datetime = datetime.datetime.strptime('1980-01-01T00:00:00+0000',
                                                     '%Y-%m-%dT%H:%M:%S+0000')
         end_datetime = datetime.datetime.strptime('1980-01-01T00:00:00+0000',
-                                                  '%Y-%m-%dT%H:%M:%S.%fZ')
+                                                  '%Y-%m-%dT%H:%M:%S+0000')
         m_params = {
             'user_ids': user_list,
             'epoch_range': (start_datetime, end_datetime)
@@ -3285,34 +3298,20 @@ class kb_MetricsTest(unittest.TestCase):
         # call your implementation
         ret = self.getImpl().get_jobs(self.getContext(), m_params)
         app_metrics_ret = ret[0]['job_states']
-        self.assertEqual(len(app_metrics_ret), 6)
-        for ap in app_metrics_ret:
-            self.assertIn('job_id', ap)
+        self.assertEqual(len(app_metrics_ret), 0)
 
-        # call implementation with only one user
-        user_list = ['psdehal']
+        # call implementation with a non-existent user
+        end_datetime = datetime.datetime.strptime('2020-01-01T00:00:00+0000',
+                                                  '%Y-%m-%dT%H:%M:%S+0000')
+        user_list = ['__not_a_user__']
         m_params = {
             'user_ids': user_list,
             'epoch_range': (start_datetime, end_datetime)
         }
         ret = self.getImpl().get_jobs(self.getContext(), m_params)
         app_metrics_ret = ret[0]['job_states']
-        self.assertEqual(len(app_metrics_ret), 1)
-        job_info = app_metrics_ret[0]
-        self.assertIn(job_info['user'], user_list)
-        self.assertEqual(job_info['wsid'], '27834')
-        self.assertEqual(job_info['app_id'], 'kb_SPAdes/run_SPAdes')
-        self.assertEqual(job_info['method'], 'kb_SPAdes.run_SPAdes')
-        self.assertEqual(job_info['finish_time'], 1516822657338)
-        # self.assertNotIn('finish_time', app_metrics_ret[0])
-        self.assertIn('client_groups', job_info)
-        if 'ci' in self.cfg['kbase-endpoint']:
-            self.assertIn('njs', job_info['client_groups'])
-        else:
-            self.assertIn('bigmem', job_info['client_groups'])
-        self.assertEqual(job_info['narrative_name'], 'Staging Test')
-        self.assertEqual(job_info['workspace_name'],
-                         'psdehal:narrative_1513709108341')
+        self.assertEqual(len(app_metrics_ret), 0)
+        
 
     def assertIsResult_get_job(self, ret):
         self.assertIsInstance(ret, list)
