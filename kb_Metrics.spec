@@ -119,9 +119,28 @@ module kb_Metrics {
     } JobStateMinimal;
 
     typedef structure {
-        list<string> job_ids;
-        list<user_id> user_ids;
+        string field;
+        string direction;
+    } SortSpec;
+
+    typedef structure {
+        string term;
+        string type;
+    } SearchSpec;
+
+    typedef structure {
+        list<string> job_id;
+        list<user_id> user_id;
+        list<string> status;
+        list<int> workspace;
+        list<string> app; 
+    } FilterSpec;
+
+    typedef structure {
+        list<FilterSpec> filter;
         epoch_range epoch_range;
+        list<SortSpec> sort;
+        list<SearchSpec> search;
         int offset;
         int limit;
     } QueryJobsParams;

@@ -76,7 +76,7 @@ class MetricsMongoDBController:
             self.kbstaff_list = [kbs['username'] for kbs in kbstaff]
         return self.kbstaff_list
 
-    def _convert_isodate_to_milis(self, src_list, dt_list):
+    def _convert_isodate_to_millis(self, src_list, dt_list):
         for src in src_list:
             for ldt in dt_list:
                 if ldt in src and isinstance(src[ldt], datetime.datetime):
@@ -742,11 +742,11 @@ class MetricsMongoDBController:
         perf['list_exec_tasks'] = now - start
         start = now
                                                      
-        ujs_jobs = self._convert_isodate_to_milis(
+        ujs_jobs = self._convert_isodate_to_millis(
             ujs_jobs, ['created', 'started', 'updated'])
 
         now = round(time.time() * 1000)
-        perf['_convert_isodate_to_milis'] = now - start
+        perf['_convert_isodate_to_millis'] = now - start
         start = now
 
         job_states = self._join_task_ujs(exec_tasks, ujs_jobs)
@@ -771,7 +771,9 @@ class MetricsMongoDBController:
         --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
         """
         if not self._is_admin(requesting_user):
-            params['user_ids'] = [requesting_user]
+            restrict_user = requesting_user
+        else:
+            restrict_user = None
 
         perf = dict()
         start = round(time.time() * 1000)
@@ -793,22 +795,24 @@ class MetricsMongoDBController:
             start_time_param = None
             end_time_param = None
 
-        ujs_jobs, ujs_jobs_count = self.metrics_dbi.list_ujs_results(user_ids=params.get('user_ids', None),
-                                                                    end_time=end_time_param,
-                                                                    start_time=start_time_param,
-                                                                    job_ids=params.get('job_ids', None),
-                                                                    offset=params.get('offset', None),
-                                                                    limit=params.get('limit', None),
-                                                                    sort=params.get('sort', None))
+        ujs_jobs, ujs_jobs_found_count, ujs_jobs_total_count = self.metrics_dbi.query_ujs(restrict_user=restrict_user, 
+                                                                end_time=end_time_param,
+                                                                start_time=start_time_param,
+                                                                offset=params.get('offset', None),
+                                                                limit=params.get('limit', None),
+                                                                filter=params.get('filter', None),
+                                                                search=params.get('search', None),
+                                                                sort=params.get('sort', None))
 
         now = round(time.time() * 1000)
         perf['list_ujs_results'] = now - start
-        perf['list_ujs_results_count'] = ujs_jobs_count
+        perf['list_ujs_results_count'] = ujs_jobs_found_count
 
         if len(ujs_jobs) == 0:
             return {
                 'job_states': [],
-                'total_count': ujs_jobs_count,
+                'found_count': ujs_jobs_found_count,
+                'total_count': ujs_jobs_total_count,
                 'stats': {
                     'perf': perf
                 }
@@ -824,11 +828,11 @@ class MetricsMongoDBController:
         perf['list_exec_tasks'] = now - start
         start = now
                                                      
-        ujs_jobs = self._convert_isodate_to_milis(
+        ujs_jobs = self._convert_isodate_to_millis(
             ujs_jobs, ['created', 'started', 'updated'])
 
         now = round(time.time() * 1000)
-        perf['_convert_isodate_to_milis'] = now - start
+        perf['_convert_isodate_to_millis'] = now - start
         start = now
 
         job_states = self.join_jobs(exec_tasks, ujs_jobs)
@@ -837,7 +841,12 @@ class MetricsMongoDBController:
         perf['join_jobs'] = now - start
         start = now
 
-        return {'job_states': job_states, 'total_count': ujs_jobs_count, 'stats': {'perf': perf}}
+        return {
+            'job_states': job_states,
+            'found_count': ujs_jobs_found_count,
+            'total_count': ujs_jobs_total_count,
+            'stats': {'perf': perf}
+        }
     
     def get_user_job_state(self, requesting_user, params, token):
         """
@@ -883,7 +892,7 @@ class MetricsMongoDBController:
         perf['list_exec_tasks'] = now - start
         start = now
 
-        ujs_jobs = self._convert_isodate_to_milis(
+        ujs_jobs = self._convert_isodate_to_millis(
             [ujs_job], ['created', 'started', 'updated'])
 
         job_states = self._join_task_ujs(exec_tasks, ujs_jobs)
@@ -1059,7 +1068,7 @@ class MetricsMongoDBController:
         if not mt_ret:
             print("No user records returned!")
         else:
-            mt_ret = self._convert_isodate_to_milis(
+            mt_ret = self._convert_isodate_to_millis(
                 mt_ret, ['signup_at', 'last_signin_at'])
         return {'metrics_result': mt_ret}
 

@@ -4,6 +4,7 @@ from pymongo.errors import BulkWriteError, WriteError, ConfigurationError
 from bson.objectid import ObjectId
 from bson import json_util
 import json
+import re
 
 from kb_Metrics.Util import _convert_to_datetime
 from operator import itemgetter
@@ -663,6 +664,188 @@ class MongoMetricsDBI:
         total_count = cursor.count()
 
         return list(cursor), total_count
+
+    def query_ujs_total(self, users):
+        find_filter = {}
+        if users: 
+            find_filter['user'] = {'$in': users}
+
+        ujs_db = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
+        cursor = ujs_db.find(find_filter)
+        return cursor.count()
+
+    def query_ujs(self, restrict_user=None, start_time=None, end_time=None, filter=None, offset=None, limit=None, sort=None, search=None):
+        # Searching and filtering
+        find_filter = []
+
+        # Restrict to single user if not admin.
+        if restrict_user:
+            find_filter.append({'user': {'$eq': restrict_user}})
+
+        # Time range
+        # Time range is always considered and enforced. It is a search, but special.
+        # TODO: this won't catch jobs started before start_time but still running;
+        # I think the intention of the time range is to catch jobs from that time range,
+        # which doesn't just mean started during the time range.
+        # In ee2 there is an updated field which will reflect the most recent
+        # lifecycle timestamp, which would take care of this. As it is, we'll need to
+        # use a more complex filter.
+        created_filter = {}
+        if start_time is not None:
+            created_filter['$gte'] = _convert_to_datetime(start_time)
+        if end_time is not None:
+            created_filter['$lte'] = _convert_to_datetime(end_time)
+
+        if created_filter:
+            find_filter.append({'created': created_filter})
+
+        # Search
+        # Search is match of a set of regular expressions or strings against a set of fields.
+        search_filter = []
+        if search is not None:
+            for search_term in search:
+                comparison_type = search_term['type']
+                if comparison_type == 'regex':
+                    term = re.compile(search_term['term'])
+                    search_filter.append({'$or': [
+                        {'user': term},
+                        # {'app': term}
+                        # omit _id
+                    ]})
+                elif comparison_type == 'exact':
+                    term = search_term['term']
+                    search_filter.append({'$or': [
+                        {'user': {'$eq': term}},
+                        {'_id': {'$eq': ObjectId(term)}}
+                    ]})
+                else:
+                    raise ValueError('Invalid search term type: ' + comparison_type)
+            if len(search_filter):
+                find_filter.append({'$and': search_filter})
+
+        # Filters
+        # Filters are exact matches against a set of match values
+        if filter is not None:
+            if 'user_id' in filter:
+                find_filter.append({'user': {
+                    '$in': filter['user_id']
+                }})
+
+            if 'job_id' in filter:
+                find_filter.append({'_id': {
+                    '$in': list(map(lambda id: ObjectId(id), filter['job_id']))
+                }})
+
+            # This one is tricky - there is not usable status field, since it is used as a
+            # dumping ground for various status related values.
+            # That is, it does not stick to 'created', 'queued', 'running', 'error', 'cancel', 'finished'
+            # or some such set of strings.
+            if 'status' in filter:
+                status_filter = []
+                for status in filter['status']:
+                    if status == 'queue':
+                        # pretty minimal conditions
+                        status_filter.append({'$and': [{
+                            'created': {'$ne': None},
+                            'started': {'$not': {'$ne': None}}
+                        }]})
+                    elif status == 'run':
+                        status_filter.append({'$and': [{
+                            'started': {'$ne': None},
+                            'complete': {'$eq': False}
+                        }]})
+                    elif status == 'complete':
+                        status_filter.append({'$and': [{
+                            '$or': [{'complete': {'$eq': True}}, {'status': {'$eq': 'done'}}],
+                            'error': {'$ne': True},
+                            '$and': [
+                                {'status': {'$ne': 'Unknown error'}},
+                                {'status': {'$not': re.compile('^canceled')}}
+                            ]
+                        }]})
+                    elif status == 'error':
+                        status_filter.append({'$and': [{
+                            'complete': {'$eq': True},
+                            '$or': [
+                                {'error': {'$eq': True}},
+                                {'status': {'$eq': 'Unknown error'}},
+                                {'$and': [
+                                    {'status': {'$ne': 'done'}},
+                                    {'status': {'$not': re.compile('^canceled')}}
+                                ]}
+                            ]
+                        }]})
+                    elif status == 'cancel':
+                        status_filter.append({'$and': [{
+                            'complete': {'$eq': True},
+                            'status': re.compile('^canceled')
+                        }]})
+                    # TODO: more cases!
+                if len(status_filter):
+                    find_filter.append({'$or': status_filter})
+
+
+        # qry_filter['desc'] = {'$exists': True}
+        # qry_filter['status'] = {'$exists': True}
+
+        # print('filter', {'$and': find_filter})
+
+        projection = {
+            'user': 1,
+            'created': 1,  # datetime.datetime(2015, 1, 9, 19, 36, 8, 561000)
+            'started': 1,
+            'updated': 1,
+            'status': 1,
+            'authparam': 1,  # "DEFAULT" or workspace_id
+            'authstrat': 1,  # "DEFAULT" or "kbaseworkspace"
+            'complete': 1,
+            'desc': 1,
+            'error': 1
+        }
+
+        ujs_db = self.metricsDBs['userjobstate'][MongoMetricsDBI._JOBSTATE]
+        if len(find_filter):
+            cursor = ujs_db.find({'$and': find_filter}, projection)
+        else:
+            cursor = ujs_db.find({}, projection)
+
+        # Sorting.
+        if sort is not None and len(sort) > 0:
+            sorter = []
+            for sort_spec in sort:
+                if sort_spec.get('direction', None) and sort_spec['direction'].startswith('desc'):
+                    sort_direction = DESCENDING
+                else:
+                    sort_direction = ASCENDING
+
+                if sort_spec.get('field', None) in ['user', 'user_id']:
+                    field = 'user'
+                elif sort_spec.get('field', None) == ['job', 'job_id']:
+                    field = 'job_id'
+                elif sort_spec.get('field', None) == 'created':
+                    field = 'created'
+                elif sort_spec.get('field', None) == 'updated':
+                    field = 'updated'
+                else:
+                    raise ValueError('Unsupported sort field: ' + sort_spec.get('field', 'n/a'))
+                sorter.append( (field, sort_direction) )
+            cursor.sort(sorter)
+
+        found_count = cursor.count()
+
+        # Offset and limit implemented simply on the cursor.
+        if offset is not None:
+            cursor.skip(offset)
+        if limit is not None:
+            cursor.limit(limit)
+
+        # Total count.
+        if restrict_user:
+            total_count = self.query_ujs_total([restrict_user])
+        else:
+            total_count = self.query_ujs_total(None)
+
+        return list(cursor), found_count, total_count
 
     def get_ujs_result(self, job_id, user_id = None):
         qry_filter = {}
