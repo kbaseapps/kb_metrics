@@ -24,7 +24,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "1.3.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "468a83fcad34bc0b2364518135e7237449519641"
+    GIT_COMMIT_HASH = "9b8e8a2ace8cb089bd09f27fa388a40870ca9fd9"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -115,14 +115,20 @@ This KBase SDK module implements methods for generating various KBase metrics.
     def query_jobs(self, ctx, params):
         """
         :param params: instance of type "QueryJobsParams" -> structure:
-           parameter "job_ids" of list of String, parameter "user_ids" of
-           list of type "user_id" (A string for the user id), parameter
-           "epoch_range" of type "epoch_range" -> tuple of size 2: parameter
-           "e_lowerbound" of type "epoch" (A Unix epoch (the time since
-           00:00:00 1/1/1970 UTC) in milliseconds.), parameter "e_upperbound"
-           of type "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970
-           UTC) in milliseconds.), parameter "offset" of Long, parameter
-           "limit" of Long
+           parameter "filter" of list of type "FilterSpec" -> structure:
+           parameter "job_id" of list of String, parameter "user_id" of list
+           of type "user_id" (A string for the user id), parameter "status"
+           of list of String, parameter "workspace" of list of Long,
+           parameter "app" of list of String, parameter "epoch_range" of type
+           "epoch_range" -> tuple of size 2: parameter "e_lowerbound" of type
+           "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970 UTC) in
+           milliseconds.), parameter "e_upperbound" of type "epoch" (A Unix
+           epoch (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "sort" of list of type "SortSpec" -> structure:
+           parameter "field" of String, parameter "direction" of String,
+           parameter "search" of list of type "SearchSpec" -> structure:
+           parameter "term" of String, parameter "type" of String, parameter
+           "offset" of Long, parameter "limit" of Long
         :returns: instance of type "QueryJobsResult" -> structure: parameter
            "job_states" of list of type "JobStateMinimal" (Query jobs) ->
            structure: parameter "job_id" of type "JobID", parameter "app_id"

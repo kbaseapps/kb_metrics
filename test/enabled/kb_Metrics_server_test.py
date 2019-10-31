@@ -273,7 +273,7 @@ class kb_MetricsMainTest(unittest.TestCase):
         wsobj_cur = dbi.metricsDBs['workspace']['workspaceObjects'].find()
         self.assertEqual(len(list(wsobj_cur)), 41)
         ujs_cur = dbi.metricsDBs['userjobstate']['jobstate'].find()
-        self.assertEqual(len(list(ujs_cur)), 38)
+        self.assertEqual(len(list(ujs_cur)), 43)
         a_users_cur = dbi.metricsDBs['auth2']['users'].find()
         self.assertEqual(len(list(a_users_cur)), 37)
         m_users_cur = dbi.metricsDBs['metrics']['users'].find()
@@ -1656,8 +1656,8 @@ class kb_MetricsMainTest(unittest.TestCase):
             exec_tasks[4]["job_input"]), 'kb_deseq.run_deseq2_app')
 
     # Uncomment to skip this test
-    # @unittecst.skip("skipped test_db_controller_convert_isodate_to_milis")
-    def test_db_controller_convert_isodate_to_milis(self):
+    # @unittecst.skip("skipped test_db_controller_convert_isodate_to_millis")
+    def test_db_controller_convert_isodate_to_millis(self):
         cdt1 = {'milis': 1500040533893,
                 'date': datetime.datetime(2017, 7, 14, 13, 55, 33, 893000)}
         sdt1 = {'milis': 1500040545623,
@@ -1691,7 +1691,7 @@ class kb_MetricsMainTest(unittest.TestCase):
                           'updated': udt3['date'],
                           'user': 'user3'
                       }]
-        output_data = self.db_controller._convert_isodate_to_milis(
+        output_data = self.db_controller._convert_isodate_to_millis(
             input_data, ['created', 'started', 'updated'])
         for dt in output_data:
             if dt['user'] == 'user1':
