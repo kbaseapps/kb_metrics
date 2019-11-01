@@ -703,21 +703,28 @@ class MongoMetricsDBI:
         # Search is match of a set of regular expressions or strings against a set of fields.
         search_filter = []
         if search is not None:
-            for search_term in search:
-                comparison_type = search_term['type']
+            for search_expr in search:
+                comparison_type = search_expr['type']
                 if comparison_type == 'regex':
-                    term = re.compile(search_term['term'])
-                    search_filter.append({'$or': [
-                        {'user': term},
-                        # {'app': term}
-                        # omit _id
-                    ]})
+                    term = re.compile(search_expr['term'])
+                    term_filter = []
+                    term_filter.append({'user': term})
+                    try:
+                        oid = ObjectId(search_expr['term'])
+                        term_filter.append({'_id': {'$eq': oid}})
+                    except:
+                        pass
+                    search_filter.append({'$or': term_filter})
                 elif comparison_type == 'exact':
-                    term = search_term['term']
-                    search_filter.append({'$or': [
-                        {'user': {'$eq': term}},
-                        {'_id': {'$eq': ObjectId(term)}}
-                    ]})
+                    term = search_expr['term']
+                    term_filter = []
+                    term_filter.append({'user': {'$eq': term}})
+                    try:
+                        oid = ObjectId(term)
+                        term_filter.append({'_id': {'$eq': oid}})
+                    except:
+                        pass
+                    search_filter.append({'$or': term_filter})
                 else:
                     raise ValueError('Invalid search term type: ' + comparison_type)
             if len(search_filter):
