@@ -542,6 +542,19 @@ class kb_Metrics_query_jobs_Test(unittest.TestCase):
                     'found_count': 6
                 }
             },
+            {
+                'input': {
+                    'search': [
+                        {
+                            'term': 'eapearson',
+                            'type': 'exact'
+                        }
+                    ]
+                },
+                'expected': {
+                    'found_count': 6
+                }
+            },
             # this one should catch one job by id
             {
                 'input': {
@@ -549,6 +562,20 @@ class kb_Metrics_query_jobs_Test(unittest.TestCase):
                         {
                             'term': '5d4493a9aa5a4d298c5dc930',
                             'type': 'exact'
+                        }
+                    ]
+                },
+                'expected': {
+                    'found_count': 1
+                }
+            },
+            # this one should catch one job by id
+            {
+                'input': {
+                    'search': [
+                        {
+                            'term': '5d4493a9aa5a4d298c5dc930',
+                            'type': 'regex'
                         }
                     ]
                 },
