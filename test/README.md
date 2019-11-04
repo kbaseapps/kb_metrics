@@ -4,3 +4,11 @@ Sample client tests in Python, Perl, and Java have been provided and may be run
 using their respective client test files. Optionally, all tests can be run with
 the `run_all_client_tests.sh` script. Note that these require your module's 
 server code to be running.
+
+## Notes
+
+### Separating Tests
+
+I'm in the midst of using separate test files; the single test file is thousands of lines line and hard to use.
+
+Currently in order to run all tests, each one must be moved from disabled to enabled and run separately. 

@@ -791,12 +791,6 @@ class MongoMetricsDBI:
                 if len(status_filter):
                     find_filter.append({'$or': status_filter})
 
-
-        # qry_filter['desc'] = {'$exists': True}
-        # qry_filter['status'] = {'$exists': True}
-
-        # print('filter', {'$and': find_filter})
-
         projection = {
             'user': 1,
             'created': 1,  # datetime.datetime(2015, 1, 9, 19, 36, 8, 561000)

@@ -153,6 +153,23 @@ module kb_Metrics {
     funcdef query_jobs(QueryJobsParams params)
         returns (QueryJobsResult result) authentication required;
 
+    typedef structure {
+        list<FilterSpec> filter;
+        epoch_range epoch_range;
+        list<SortSpec> sort;
+        list<SearchSpec> search;
+        int offset;
+        int limit;
+    } QueryJobsAdminParams;
+
+    typedef structure {
+        list<JobStateMinimal> job_states;
+        int total_count;
+    } QueryJobsAdminResult;
+
+    funcdef query_jobs_admin(QueryJobsAdminParams params)
+        returns (QueryJobsAdminResult result) authentication required;
+
     /* Get an individual job by id */
 
     typedef structure {
