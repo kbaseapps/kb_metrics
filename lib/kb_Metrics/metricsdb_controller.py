@@ -341,10 +341,12 @@ class MetricsMongoDBController:
         job_state = None
         if u_j_s.get('complete', False):
             if u_j_s.get('error', False):
-                if u_j_s.get('status', None) == 'queued':
-                    job_state = 'QUEUE_ERRORED'
+                # hmm, this does not seem reliable
+                # if u_j_s.get('status', None) == 'queued':
+                if u_j_s.get('started'):
+                    job_state = 'ERRORED_RUNNING'
                 else:
-                    job_state = 'ERRORED'
+                    job_state = 'ERRORED_QUEUED'
             else:
                 if u_j_s.get('status', None) == 'done':
                     job_state = 'FINISHED'
@@ -354,9 +356,16 @@ class MetricsMongoDBController:
                     else:
                         job_state = 'CANCELED_QUEUED'
                 elif u_j_s.get('status', None) == 'Unknown error':
-                    job_state = 'ERRORED'
+                    if u_j_s.get('started'):
+                        job_state = 'ERRORED_RUNNING'
+                    else:
+                        job_state = 'ERRORED_QUEUED'
                 else:
                     job_state = 'ERRORED'
+                    if u_j_s.get('started'):
+                        job_state = 'ERRORED_RUNNING'
+                    else:
+                        job_state = 'ERRORED_QUEUED'
         else:
             if 'status' not in u_j_s or u_j_s.get('status', None) == 'queued':
                 job_state = 'QUEUED'
@@ -364,7 +373,7 @@ class MetricsMongoDBController:
                 job_state = 'RUNNING'
         u_j_s['state'] = job_state
 
-        if job_state != 'QUEUE_ERRORED':
+        if u_j_s.get('started'):
             u_j_s['exec_start_time'] = u_j_s.pop('started', None)
         u_j_s['creation_time'] = u_j_s.pop('created')
         u_j_s['modification_time'] = u_j_s.pop('updated')
@@ -761,7 +770,24 @@ class MetricsMongoDBController:
             'stats': {'perf': perf}
         }
 
-    def query_jobs(self, requesting_user, params, token):
+    def query_jobs_admin(self, requesting_user, params, token):
+        """
+        what it does
+        """
+        if not self._is_admin(requesting_user):
+            raise ValueError('Sorry, only admins allowed')
+        else:
+            restrict_user = None
+        return self.query_jobs(None, params, token)
+
+    def query_jobs_user(self, requesting_user, params, token):
+        """
+        what it does
+        """
+        return self.query_jobs(requesting_user, params, token)
+
+
+    def query_jobs(self, restrict_to_user, params, token):
         """
         query_jobs--generate data for appcatalog/stats from querying
         execution_engine, userjobstates, catalog and workspace
@@ -770,10 +796,7 @@ class MetricsMongoDBController:
         we can do joining as follows
         --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
         """
-        if not self._is_admin(requesting_user):
-            restrict_user = requesting_user
-        else:
-            restrict_user = None
+        
 
         perf = dict()
         start = round(time.time() * 1000)
@@ -795,7 +818,8 @@ class MetricsMongoDBController:
             start_time_param = None
             end_time_param = None
 
-        ujs_jobs, ujs_jobs_found_count, ujs_jobs_total_count = self.metrics_dbi.query_ujs(restrict_user=restrict_user, 
+        ujs_jobs, ujs_jobs_found_count, ujs_jobs_total_count = self.metrics_dbi.query_ujs(
+                                                                restrict_user=restrict_to_user, 
                                                                 end_time=end_time_param,
                                                                 start_time=start_time_param,
                                                                 offset=params.get('offset', None),

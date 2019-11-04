@@ -24,7 +24,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "1.3.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "9b8e8a2ace8cb089bd09f27fa388a40870ca9fd9"
+    GIT_COMMIT_HASH = "db75b77ad60616757321b664621430c7b664a3da"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -101,8 +101,8 @@ This KBase SDK module implements methods for generating various KBase metrics.
         #BEGIN get_jobs
         controller = MetricsMongoDBController(self.config)
         result = controller.get_user_job_states(ctx['user_id'],
-                                                                 params,
-                                                                 ctx['token'])
+                                                params,
+                                                ctx['token'])
         #END get_jobs
 
         # At some point might do deeper type checking...
@@ -145,12 +145,57 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # return variables are: result
         #BEGIN query_jobs
         controller = MetricsMongoDBController(self.config)
-        result = controller.query_jobs(ctx['user_id'], params, ctx['token'])
+        result = controller.query_jobs_user(ctx['user_id'],
+                                            params,
+                                            ctx['token'])
         #END query_jobs
 
         # At some point might do deeper type checking...
         if not isinstance(result, dict):
             raise ValueError('Method query_jobs return value ' +
+                             'result is not type dict as required.')
+        # return the results
+        return [result]
+
+    def query_jobs_admin(self, ctx, params):
+        """
+        :param params: instance of type "QueryJobsAdminParams" -> structure:
+           parameter "filter" of list of type "FilterSpec" -> structure:
+           parameter "job_id" of list of String, parameter "user_id" of list
+           of type "user_id" (A string for the user id), parameter "status"
+           of list of String, parameter "workspace" of list of Long,
+           parameter "app" of list of String, parameter "epoch_range" of type
+           "epoch_range" -> tuple of size 2: parameter "e_lowerbound" of type
+           "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970 UTC) in
+           milliseconds.), parameter "e_upperbound" of type "epoch" (A Unix
+           epoch (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "sort" of list of type "SortSpec" -> structure:
+           parameter "field" of String, parameter "direction" of String,
+           parameter "search" of list of type "SearchSpec" -> structure:
+           parameter "term" of String, parameter "type" of String, parameter
+           "offset" of Long, parameter "limit" of Long
+        :returns: instance of type "QueryJobsAdminResult" -> structure:
+           parameter "job_states" of list of type "JobStateMinimal" (Query
+           jobs) -> structure: parameter "job_id" of type "JobID", parameter
+           "app_id" of String, parameter "method" of String, parameter
+           "workspace_id" of Long, parameter "object_id" of Long, parameter
+           "object_version" of Long, parameter "user" of String, parameter
+           "status" of String, parameter "complete" of type "bool", parameter
+           "error" of type "bool", parameter "creation_time" of Long,
+           parameter "exec_start_time" of Long, parameter "finish_time" of
+           Long, parameter "modification_time" of Long, parameter
+           "client_groups" of list of String, parameter "total_count" of Long
+        """
+        # ctx is the context object
+        # return variables are: result
+        #BEGIN query_jobs_admin
+        controller = MetricsMongoDBController(self.config)
+        result = controller.query_jobs_admin(ctx['user_id'], params, ctx['token'])
+        #END query_jobs_admin
+
+        # At some point might do deeper type checking...
+        if not isinstance(result, dict):
+            raise ValueError('Method query_jobs_admin return value ' +
                              'result is not type dict as required.')
         # return the results
         return [result]
