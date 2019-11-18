@@ -24,7 +24,7 @@ This KBase SDK module implements methods for generating various KBase metrics.
     ######################################### noqa
     VERSION = "1.3.1"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "db75b77ad60616757321b664621430c7b664a3da"
+    GIT_COMMIT_HASH = "5b84cdaf5d619d20839a9288a07f6ba3e1a022ae"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -132,14 +132,15 @@ This KBase SDK module implements methods for generating various KBase metrics.
         :returns: instance of type "QueryJobsResult" -> structure: parameter
            "job_states" of list of type "JobStateMinimal" (Query jobs) ->
            structure: parameter "job_id" of type "JobID", parameter "app_id"
-           of String, parameter "method" of String, parameter "workspace_id"
-           of Long, parameter "object_id" of Long, parameter "object_version"
-           of Long, parameter "user" of String, parameter "status" of String,
-           parameter "complete" of type "bool", parameter "error" of type
-           "bool", parameter "creation_time" of Long, parameter
-           "exec_start_time" of Long, parameter "finish_time" of Long,
-           parameter "modification_time" of Long, parameter "client_groups"
-           of list of String, parameter "total_count" of Long
+           of String, parameter "method" of String, parameter "app_tag" of
+           String, parameter "workspace_id" of Long, parameter "object_id" of
+           Long, parameter "object_version" of Long, parameter "user" of
+           String, parameter "status" of String, parameter "complete" of type
+           "bool", parameter "error" of type "bool", parameter
+           "creation_time" of Long, parameter "exec_start_time" of Long,
+           parameter "finish_time" of Long, parameter "modification_time" of
+           Long, parameter "client_groups" of list of String, parameter
+           "total_count" of Long
         """
         # ctx is the context object
         # return variables are: result
@@ -178,13 +179,14 @@ This KBase SDK module implements methods for generating various KBase metrics.
            parameter "job_states" of list of type "JobStateMinimal" (Query
            jobs) -> structure: parameter "job_id" of type "JobID", parameter
            "app_id" of String, parameter "method" of String, parameter
-           "workspace_id" of Long, parameter "object_id" of Long, parameter
-           "object_version" of Long, parameter "user" of String, parameter
-           "status" of String, parameter "complete" of type "bool", parameter
-           "error" of type "bool", parameter "creation_time" of Long,
-           parameter "exec_start_time" of Long, parameter "finish_time" of
-           Long, parameter "modification_time" of Long, parameter
-           "client_groups" of list of String, parameter "total_count" of Long
+           "app_tag" of String, parameter "workspace_id" of Long, parameter
+           "object_id" of Long, parameter "object_version" of Long, parameter
+           "user" of String, parameter "status" of String, parameter
+           "complete" of type "bool", parameter "error" of type "bool",
+           parameter "creation_time" of Long, parameter "exec_start_time" of
+           Long, parameter "finish_time" of Long, parameter
+           "modification_time" of Long, parameter "client_groups" of list of
+           String, parameter "total_count" of Long
         """
         # ctx is the context object
         # return variables are: result

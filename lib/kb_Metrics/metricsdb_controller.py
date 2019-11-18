@@ -538,6 +538,14 @@ class MetricsMongoDBController:
             # Attempt to extract the app id from the job input.
             job['app_id'] = self._parse_app_id(job_input)
 
+            # The app tag used is stored mysteriously in the 'meta' property.
+            meta = job_input.get('meta')
+            
+            if meta:
+                job['app_tag'] = meta.get('tag')
+            else:
+                job['app_tag'] = None
+
             # Attempt to get the method from the job input.
             if not job.get('method'):
                 job['method'] = self._parse_method(job_input)
@@ -566,6 +574,8 @@ class MetricsMongoDBController:
                             job['workspace_name'] = p_ws['workspace']
                         elif 'workspace_name' in p_ws:
                             job['workspace_name'] = p_ws['workspace_name']
+        else:
+            job['app_tag'] = None
 
         # If we don't have an app id but we do have a method, we munge the
         # method into the app id.
@@ -573,6 +583,7 @@ class MetricsMongoDBController:
         if not job.get('app_id') and job.get('method'):
             job['app_id'] = job['method'].replace('.', '/')
 
+                
         # hmm, is finish_time sometimes populated and sometimes not?
         # It should be present for any non-running job state -
         # success, error, canceled
@@ -737,15 +748,7 @@ class MetricsMongoDBController:
 
         ujs_job_ids = list(map(lambda x: str(x['_id']), ujs_jobs))
 
-        # print("UJS JOBS: " + str(len(ujs_job_ids)))
-
-        # if len(ujs_jobs) > 1000:
-        #     exec_tasks = self.metrics_dbi.list_exec_tasks(minTime=params['minTime'], maxTime=params['maxTime'])
-        # else:
         exec_tasks = self.metrics_dbi.list_exec_tasks(jobIDs=ujs_job_ids)
-
-        # if len(ujs_jobs) > len(exec_tasks):
-        #     print('\n!! JOBS: ' + str(len(exec_tasks)) + '!==' + str(len(ujs_jobs)) + ' : ' + str(len(ujs_job_ids)) + ":" + str(len(exec_tasks2)) + "\n" + str(ujs_job_ids) + "\n")
         
         now = round(time.time() * 1000)
         perf['list_exec_tasks'] = now - start
@@ -796,7 +799,6 @@ class MetricsMongoDBController:
         we can do joining as follows
         --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
         """
-        
 
         perf = dict()
         start = round(time.time() * 1000)
