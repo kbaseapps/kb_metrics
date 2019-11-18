@@ -100,6 +100,7 @@ module kb_Metrics {
 
         string app_id;
         string method; /* TODO: not sure why app and method */
+        string app_tag;
 
         int workspace_id;
         int object_id;
