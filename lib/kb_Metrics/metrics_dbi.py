@@ -762,14 +762,7 @@ class MongoMetricsDBI:
                             'complete': {'$eq': False}
                         }]})
                     elif status == 'complete':
-                        status_filter.append({'$and': [{
-                            '$or': [{'complete': {'$eq': True}}, {'status': {'$eq': 'done'}}],
-                            'error': {'$ne': True},
-                            '$and': [
-                                {'status': {'$ne': 'Unknown error'}},
-                                {'status': {'$not': re.compile('^canceled')}}
-                            ]
-                        }]})
+                        status_filter.append({'$and': [{'complete': {'$eq': True}}, {'status': {'$eq': 'done'}}]})
                     elif status == 'error':
                         status_filter.append({'$and': [{
                             'complete': {'$eq': True},

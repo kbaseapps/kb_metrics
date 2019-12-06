@@ -204,7 +204,8 @@ class kb_Metrics_query_jobs_admin_Test(Test):
         self.assertIsInstance(result, dict) 
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
-        self.assertEqual(result['found_count'], 29)
+        # print('JOBS with complete filter', result)
+        self.assertEqual(result['found_count'], 27)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_one_job")
@@ -437,3 +438,38 @@ class kb_Metrics_query_jobs_admin_Test(Test):
             self.assertIn('found_count', result)
             for k,v in datum['expected'].items():
                 self.assertEqual(result[k], v)
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_one_job")
+    def test_run_MetricsImpl_query_jobs_filter_by_job_id_run(self):
+        now = int(round(time.time() * 1000))
+        ret = self.getImpl().query_jobs_admin(self.getContext(), {
+            'filter': {
+                'job_id': ['596832a4e4b08b65f9ff5d6f']
+            }
+        })
+        self.assertEqual(len(ret), 1)
+        self.assertIsInstance(ret[0], dict)
+        result = ret[0]
+        self.assertIsInstance(result, dict) 
+        self.assertIn('job_states', result)
+        self.assertIn('found_count', result)
+        self.assertEqual(result['found_count'], 1)
+        
+
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_one_job")
+    def test_run_MetricsImpl_query_jobs_filter_by_job_id_run(self):
+        now = int(round(time.time() * 1000))
+        ret = self.getImpl().query_jobs_admin(self.getContext(), {
+            'filter': {
+                'job_id': ['5d4493a9aa5a4d298c5dc930']
+            }
+        })
+        self.assertEqual(len(ret), 1)
+        self.assertIsInstance(ret[0], dict)
+        result = ret[0]
+        self.assertIsInstance(result, dict) 
+        self.assertIn('job_states', result)
+        self.assertIn('found_count', result)
+        self.assertEqual(result['found_count'], 1)
