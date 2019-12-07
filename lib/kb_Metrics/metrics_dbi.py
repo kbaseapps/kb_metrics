@@ -775,7 +775,7 @@ class MongoMetricsDBI:
                                 ]}
                             ]
                         }]})
-                    elif status == 'cancel':
+                    elif status == 'terminate':
                         status_filter.append({'$and': [{
                             'complete': {'$eq': True},
                             'status': re.compile('^canceled')
