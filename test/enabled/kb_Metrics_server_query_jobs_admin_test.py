@@ -29,14 +29,13 @@ from kb_Metrics.Test import Test
 debug = False
 
 TOTAL_COUNT = 46
+TIMEOUT = 10000
 
 def print_debug(msg):
     if not debug:
         return
     t = str(datetime.datetime.now())
     print ("{}:{}".format(t, msg))
-    
-
 
     def getWsClient(self):
         return self.__class__.wsClient
@@ -171,6 +170,7 @@ class kb_Metrics_query_jobs_admin_Test(Test):
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], 2)
+        # print('QUEUED', result)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_one_job")
@@ -188,12 +188,16 @@ class kb_Metrics_query_jobs_admin_Test(Test):
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], 2)
+        # print('RUN', result)
 
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_one_job")
     def test_run_MetricsImpl_query_jobs_filter_by_status_complete(self):
         now = int(round(time.time() * 1000))
         ret = self.getImpl().query_jobs_admin(self.getContext(), {
+            'offset': 0,
+            'limit': 10,
+            'timeout': TIMEOUT,
             'filter': {
                 'status': ['complete']
             }
@@ -230,7 +234,7 @@ class kb_Metrics_query_jobs_admin_Test(Test):
         now = int(round(time.time() * 1000))
         ret = self.getImpl().query_jobs_admin(self.getContext(), {
             'filter': {
-                'status': ['cancel']
+                'status': ['terminate']
             }
         })
         self.assertEqual(len(ret), 1)
@@ -248,7 +252,7 @@ class kb_Metrics_query_jobs_admin_Test(Test):
         now = int(round(time.time() * 1000))
         ret = self.getImpl().query_jobs_admin(self.getContext(), {
             'filter': {
-                'status': ['cancel', 'error']
+                'status': ['terminate', 'error']
             }
         })
         self.assertEqual(len(ret), 1)
