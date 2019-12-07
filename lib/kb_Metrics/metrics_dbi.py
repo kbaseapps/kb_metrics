@@ -747,42 +747,57 @@ class MongoMetricsDBI:
             # dumping ground for various status related values.
             # That is, it does not stick to 'created', 'queued', 'running', 'error', 'cancel', 'finished'
             # or some such set of strings.
+
+            queue_filter = {'$and': [
+                {'complete': {'$eq': False}},
+                {'created': {'$ne': None}},
+                {'started': {'$not': {'$ne': None}}}
+            ]}
+
+            run_filter = {'$and': [
+                {'complete': {'$eq': False}},
+                {'started': {'$ne': None}}
+            ]}
+
+            complete_filter = {'$and': [
+                {'complete': {'$eq': True}},
+                {'status': {'$eq': 'done'}}
+            ]}
+
+            error_filter = {'$and': [
+                {'complete': {'$eq': True}},
+                {'$or': [
+                    {'error': {'$eq': True}},
+                    {'status': {'$eq': 'Unknown error'}},
+                    {'$and': [
+                        {'status': {'$ne': 'done'}},
+                        {'status': {'$not': re.compile('^canceled')}}
+                    ]}
+                ]}
+            ]}
+
+            terminate_filter = {'$and': [
+                {'complete': {'$eq': True}},
+                {'status': re.compile('^canceled')}
+            ]}
+
             if 'status' in filter:
                 status_filter = []
                 for status in filter['status']:
                     if status == 'queue':
-                        # pretty minimal conditions
-                        status_filter.append({'$and': [{
-                            'created': {'$ne': None},
-                            'started': {'$not': {'$ne': None}}
-                        }]})
+                        status_filter.append(queue_filter)
                     elif status == 'run':
-                        status_filter.append({'$and': [{
-                            'started': {'$ne': None},
-                            'complete': {'$eq': False}
-                        }]})
+                        status_filter.append(run_filter)
                     elif status == 'complete':
-                        status_filter.append({'$and': [{'complete': {'$eq': True}}, {'status': {'$eq': 'done'}}]})
+                        status_filter.append(complete_filter)
                     elif status == 'error':
-                        status_filter.append({'$and': [{
-                            'complete': {'$eq': True},
-                            '$or': [
-                                {'error': {'$eq': True}},
-                                {'status': {'$eq': 'Unknown error'}},
-                                {'$and': [
-                                    {'status': {'$ne': 'done'}},
-                                    {'status': {'$not': re.compile('^canceled')}}
-                                ]}
-                            ]
-                        }]})
+                        status_filter.append(error_filter)
                     elif status == 'terminate':
-                        status_filter.append({'$and': [{
-                            'complete': {'$eq': True},
-                            'status': re.compile('^canceled')
-                        }]})
+                        status_filter.append(terminate_filter)
                     # TODO: more cases!
-                if len(status_filter):
-                    find_filter.append({'$or': status_filter})
+
+                    if len(status_filter):
+                        find_filter.append({'$or': status_filter})
 
         projection = {
             'user': 1,

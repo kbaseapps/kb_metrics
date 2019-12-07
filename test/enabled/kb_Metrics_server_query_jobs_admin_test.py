@@ -264,6 +264,8 @@ class kb_Metrics_query_jobs_admin_Test(Test):
         self.assertEqual(result['found_count'], 15)
 
 
+    # Uncomment to skip this test
+    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_queue_or_run")
     def test_run_MetricsImpl_query_jobs_filter_by_status_queue_or_run(self):
         now = int(round(time.time() * 1000))
         ret = self.getImpl().query_jobs_admin(self.getContext(), {
