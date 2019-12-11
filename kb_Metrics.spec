@@ -58,6 +58,14 @@ module kb_Metrics {
     funcdef get_app_metrics(AppMetricsParams params)
         returns (AppMetricsResult return_records) authentication required;
 
+    /* Get Jobs */
+
+    /* This method was added in order to provide an improved job browsing experience, prior
+       to EE2 taking over that core functionality. As such, it added offset and limit,
+       especially, and was expected to evolve further. However, when the EE2 effort was 
+       initiated, it's purpose became obsolete. It still exists, and is utilized by the
+       pre-EE2 form of the job browser. */
+
     typedef structure {
         string app_id;
         list<string> client_groups;
