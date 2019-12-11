@@ -35,7 +35,7 @@ from kb_Metrics.Test import Test, print_debug
 #             self.mongo_clients[m_db] = MongoClient()
 #             self.metricsDBs[m_db] = self.mongo_clients[m_db][m_db]
 
-class kb_MetricsMainTest(Test):
+class kb_Metrics_Main_Test(Test):
     def mock_MongoMetricsDBI(self, mongo_host, mongo_dbs,
                              mongo_user, mongo_psswd):
         self.mongo_clients = dict()
@@ -57,7 +57,7 @@ class kb_MetricsMainTest(Test):
         wsobj_cur = dbi.metricsDBs['workspace']['workspaceObjects'].find()
         self.assertEqual(len(list(wsobj_cur)), 41)
         ujs_cur = dbi.metricsDBs['userjobstate']['jobstate'].find()
-        self.assertEqual(len(list(ujs_cur)), 46)
+        self.assertEqual(len(list(ujs_cur)), 48)
         a_users_cur = dbi.metricsDBs['auth2']['users'].find()
         self.assertEqual(len(list(a_users_cur)), 37)
         m_users_cur = dbi.metricsDBs['metrics']['users'].find()
@@ -1018,16 +1018,16 @@ class kb_MetricsMainTest(Test):
 
         # testing list_ujs_results return data, without userIds
         ujs, count = dbi.list_ujs_results([], start_time=start_time, end_time=end_time)
-        self.assertEqual(len(ujs), 18)
+        self.assertEqual(len(ujs), 20)
 
         # testing list_ujs_results return data, with offset and limit
         ujs, count = dbi.list_ujs_results([], start_time=start_time, end_time=end_time, offset=2, limit=10)
         self.assertEqual(len(ujs), 10)
-        self.assertEqual(count, 18)
+        self.assertEqual(count, 20)
 
         ujs, count = dbi.list_ujs_results([], start_time=start_time, end_time=end_time, offset=10, limit=10)
-        self.assertEqual(len(ujs), 8)
-        self.assertEqual(count, 18)
+        self.assertEqual(len(ujs), 10)
+        self.assertEqual(count, 20)
 
         # testing list_ujs_results return data, check 'started' existence
         ujs, count = dbi.list_ujs_results(['jobnotstarted'], start_time=start_time, end_time=end_time)
@@ -1053,7 +1053,7 @@ class kb_MetricsMainTest(Test):
         # checking for job id (i.e., '_id') existence
         start_time = 1414192660700
         ujs, count = dbi.list_ujs_results([], start_time=start_time, end_time=end_time)
-        self.assertEqual(len(ujs), 20)
+        self.assertEqual(len(ujs), 22)
         self.assertEqual(ujs[0]['status'], 'queued')
         for uj in ujs:
             self.assertIn('_id', uj)
@@ -1062,14 +1062,14 @@ class kb_MetricsMainTest(Test):
         # checking for job id (i.e., '_id') existence
         start_time = 1414192660700
         ujs, count = dbi.list_ujs_results([], start_time=start_time, end_time=end_time, sort=[{'field': 'job_id', 'direction': 'ascending'}])
-        self.assertEqual(len(ujs), 20)
+        self.assertEqual(len(ujs), 22)
         job = ujs[0]
         self.assertEqual(job['status'], 'queued')
         self.assertEqual(str(job['_id']), '544ade14e4b0d82af0eaf31d')
 
         start_time = 1414192660700
         ujs, count = dbi.list_ujs_results([], start_time=start_time, end_time=end_time, sort=[{'field': 'job_id', 'direction': 'descending'}])
-        self.assertEqual(len(ujs), 20)
+        self.assertEqual(len(ujs), 22)
         job = ujs[0]
         self.assertEqual(job['status'], 'queued')
         self.assertEqual(str(job['_id']), '544ade14e4b0d82af0eaf31d')
@@ -1858,8 +1858,26 @@ class kb_MetricsMainTest(Test):
         self.assertIn('client_groups', clnt_ret[0])
         target_clnt = 'kb_upload'
         for clnt in clnt_ret:
-            if target_clnt in clnt['app_id']:
-                self.assertIn(target_clnt, clnt['client_groups'])
+            # print ('CLNT RET', clnt)
+            self.assertIsInstance(clnt, dict)
+            self.assertIn('app_id', clnt)
+            self.assertIn('client_groups', clnt)
+            self.assertIsInstance(clnt['app_id'], str)
+            client_groups = clnt['client_groups']
+            self.assertIsInstance(client_groups, list)
+            for client_group in client_groups:
+                self.assertIsInstance(client_group, str)
+
+            # Odd way to check if this is an upload app which should be
+            # in the kb_upload client group.
+            # And is this really a relevant test for this controller's method?
+            # It seems to me all we care about is the return structure, formats,
+            # and described ranges of values or other constraints. But at some
+            # point you are actually testing the service itself, not the
+            # performance of the method.
+            # if target_clnt in clnt['app_id']:
+            #     # print('RET', target_clnt, clnt['client_groups'], clnt['app_id'])
+            #     self.assertIn(target_clnt, clnt['client_groups'])
 
     # Uncomment to skip this test
     # @unittest.skip("skipped_get_activities_from_wsobjs")

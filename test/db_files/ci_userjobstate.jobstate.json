@@ -646,5 +646,33 @@
 			"desc": "A queued job",
 			"complete": false,
 			"error": false
+		},
+		{
+			"_id": "5d4493a9aa5a4d298c5dc970",
+			"user": "eapearson",
+			"authstrat": "kbaseworkspace",
+			"authparam": "15206",
+			"created": 1500004550060,
+			"updated": 1500004584594,
+			"estcompl": null,
+			"status": "done",
+			"desc": "A completed job",
+			"started": 1500004554670,
+			"complete": true,
+			"error": false
+		},
+		{
+			"_id": "5d4493a9aa5a4d298c5dd000",
+			"user": "eapearson",
+			"authstrat": "kbaseworkspace",
+			"authparam": "15206",
+			"created": 1500004550060,
+			"updated": 1500004584594,
+			"estcompl": null,
+			"status": "done",
+			"desc": "Another completed job",
+			"started": 1500004554670,
+			"complete": true,
+			"error": false
 		}
 	]
