@@ -831,8 +831,8 @@ class MetricsMongoDBController:
                                                                 sort=params.get('sort', None))
 
         now = round(time.time() * 1000)
-        perf['list_ujs_results'] = now - start
-        perf['list_ujs_results_count'] = ujs_jobs_found_count
+        perf['query_ujs_results'] = now - start
+        perf['query_ujs_results_count'] = ujs_jobs_found_count
 
         if len(ujs_jobs) == 0:
             return {

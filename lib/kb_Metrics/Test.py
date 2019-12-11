@@ -75,8 +75,7 @@ class Test(unittest.TestCase):
         cls.db_controller = MetricsMongoDBController(cls.cfg)
         cls.narrative_cache = NarrativeCache(cls.cfg)
         cls.client = MongoClient(port=27017)
-        print_debug("MONGO - about to start")
-        cls.init_mongodb()
+        cls.db_names = cls.client.database_names()
 
         test_cfg_file = '/kb/module/work/test.cfg'
         test_cfg_text = "[test]\n"
@@ -90,151 +89,9 @@ class Test(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.clear_mongodb()
         if hasattr(cls, 'wsName'):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print('Test workspace was deleted')
-
-    @classmethod
-    def clear_mongodb(cls):
-        dbs = ['workspace', 'exec_engine', 'userjobstate', 'auth2', 'metrics']
-        for db in dbs:
-            try:
-                cls.client[db].command("dropUser", "admin")
-                cls.client.drop_database(db)
-            except Exception as ex:
-                print('ERROR dropping db: ' + str(ex))
-
-    @classmethod
-    def init_mongodb(cls):
-        print_debug("MONGO - starting")
-        print_debug('starting to build local mongoDB')
-
-        os.system("sudo service mongodb start")
-        os.system("mongod --version")
-        os.system("cat /var/log/mongodb/mongodb.log "
-                  "| grep 'waiting for connections on port 27017'")
-
-        print_debug("MONGO - ready")
-
-        cls._insert_data(cls.client, 'workspace', 'workspaces')
-        cls._insert_data(cls.client, 'exec_engine', 'exec_tasks')
-        cls._insert_data(cls.client, 'userjobstate', 'jobstate')
-        cls._insert_data(cls.client, 'workspace', 'workspaceObjects')
-        cls._insert_data(cls.client, 'auth2', 'users')
-        cls._insert_data(cls.client, 'metrics', 'users')
-        cls._insert_data(cls.client, 'metrics', 'daily_activities')
-        cls._insert_data(cls.client, 'metrics', 'narratives')
-        cls.db_names = cls.client.database_names()
-
-        # updating created to timstamp field for userjobstate.jobstate
-        for jrecord in cls.client.userjobstate.jobstate.find():
-            created_str = jrecord.get('created')
-            updated_str = jrecord.get('updated')
-            cls.client.userjobstate.jobstate.update_many(
-                {"created": created_str},
-                {"$set": {"created": datetime.datetime.utcfromtimestamp(
-                                        int(created_str) / 1000.0),
-                          "updated": datetime.datetime.utcfromtimestamp(
-                                        int(updated_str) / 1000.0)}
-                }
-            )
-        # updating data fields from timstamp to datetime.datetime format
-        db_coll1 = cls.client.workspace.workspaceObjects
-        for wrecord in db_coll1.find():
-            moddate_str = wrecord.get('moddate')
-            if type(moddate_str) not in [datetime.date, datetime.datetime]:
-                moddate = datetime.datetime.utcfromtimestamp(
-                                        int(moddate_str) / 1000.0)
-                db_coll1.update_many(
-                    {"moddate": moddate_str},
-                    {"$set": {"moddate": moddate}},
-                    upsert=False
-                )
-
-        db_coll2 = cls.client.workspace.workspaces
-        for wrecord in db_coll2.find():
-            moddate_str = wrecord.get('moddate')
-            if type(moddate_str) not in [datetime.date, datetime.datetime]:
-                moddate = datetime.datetime.utcfromtimestamp(
-                                        int(moddate_str) / 1000.0)
-                db_coll2.update_many(
-                    {"moddate": moddate_str},
-                    {"$set": {"moddate": moddate}},
-                    upsert=False
-                )
-
-        db_coll3 = cls.client.metrics.users
-        for urecord in db_coll3.find():
-            signup_at_str = urecord.get('signup_at')
-            last_signin_at_str = urecord.get('last_signin_at')
-            if type(signup_at_str) not in [datetime.date, datetime.datetime]:
-                signup_date = datetime.datetime.utcfromtimestamp(
-                                    int(signup_at_str) / 1000.0)
-                signin_date = datetime.datetime.utcfromtimestamp(
-                                    int(last_signin_at_str) / 1000.0)
-                db_coll3.update_many(
-                    {"signup_at": signup_at_str,
-                     "last_signin_at": last_signin_at_str},
-                    {"$set": {"signup_at": signup_date,
-                              "last_signin_at": signin_date}},
-                    upsert=False
-                )
-
-        db_coll4 = cls.client.metrics.narratives
-        for urecord in db_coll4.find():
-            first_acc_str = urecord.get('first_access')
-            last_saved_at_str = urecord.get('last_saved_at')
-            if type(first_acc_str) not in [datetime.date, datetime.datetime]:
-                first_acc_date = datetime.datetime.utcfromtimestamp(
-                                    int(first_acc_str) / 1000.0)
-                last_saved_date = datetime.datetime.utcfromtimestamp(
-                                    int(last_saved_at_str) / 1000.0)
-                db_coll4.update_many(
-                    {"first_access": first_acc_str,
-                     "last_saved_at": last_saved_at_str},
-                    {"$set": {"first_access": first_acc_date,
-                              "last_saved_at": last_saved_date}},
-                    upsert=False
-                )
-
-        db_coll_au = cls.client.auth2.users
-        for urecord in db_coll_au.find():
-            create_str = urecord.get('create')
-            login_str = urecord.get('login')
-            if type(create_str) not in [datetime.date, datetime.datetime]:
-                db_coll_au.update_many(
-                    {"create": create_str, "login": login_str},
-                    {"$set": {"create": datetime.datetime.utcfromtimestamp(
-                                            int(create_str) / 1000.0),
-                              "login": datetime.datetime.utcfromtimestamp(
-                                            int(login_str) / 1000.0)}},
-                    upsert=False
-                )
-
-        cls.db_names = cls.client.database_names()
-        for db in cls.db_names:
-            if db != 'local':
-                cls.client[db].command("createUser", "admin",
-                                       pwd="password", roles=["readWrite"])
-
-    @classmethod
-    def _insert_data(cls, client, db_name, table):
-
-        db = client[db_name]
-
-        record_file = os.path.join('db_files',
-                                   f'ci_{db_name}.{table}.json')
-        json_data = open(record_file).read()
-        records = json.loads(json_data)
-
-        if table == 'jobstate':
-            for record in records:
-                record['_id'] = ObjectId(record['_id'])
-
-        db[table].drop()
-        db[table].insert_many(records)
-        print_debug(f'Inserted {len(records)} records for {db_name}.{table}')
 
     def getWsClient(self):
         return self.__class__.wsClient

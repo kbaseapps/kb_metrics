@@ -117,9 +117,9 @@ class MongoMetricsDBI:
                 raise bwe
             else:
                 return bwe.details['nInserted']
-        else:
-            # insert_ret.inserted_ids is a list
-            print(f'Inserted {len(insert_ret.inserted_ids)} activity records.')
+        #else:
+        #    # insert_ret.inserted_ids is a list
+        #    print(f'Inserted {len(insert_ret.inserted_ids)} activity records.')
         return len(insert_ret.inserted_ids)
 
     def update_narrative_records(self, upd_filter, upd_data):
