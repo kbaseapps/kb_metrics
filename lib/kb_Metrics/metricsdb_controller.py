@@ -2,21 +2,23 @@ import copy
 import datetime
 import re
 import time
-import warnings
-from pprint import pprint
 
 from installed_clients.CatalogClient import Catalog
 from kb_Metrics.Util import (_unix_time_millis_from_datetime,
+                             _unix_time_millis_from_datetime_trusted,
                              _convert_to_datetime)
 from kb_Metrics.metrics_dbi import MongoMetricsDBI
 from kb_Metrics.NarrativeCache import NarrativeCache
 
 debug = False
+
+
 def print_debug(msg):
     if not debug:
         return
     t = str(datetime.datetime.now())
     print("{}:{}".format(t, msg))
+
 
 class MetricsMongoDBController:
 
@@ -54,7 +56,8 @@ class MetricsMongoDBController:
     def get_config_list(self, config, config_key):
         list_str = config.get(config_key)
         if not list_str:
-            error_msg = 'Required key "{}" not found in config'.format(config_key)
+            error_msg = 'Required key "{}" not found in config'.format(
+                config_key)
             error_msg += ' of MetricsMongoDBController'
             raise ValueError(error_msg)
         return [x.strip() for x in list_str.split(',') if x.strip()]
@@ -75,26 +78,23 @@ class MetricsMongoDBController:
             self.kbstaff_list = [kbs['username'] for kbs in kbstaff]
         return self.kbstaff_list
 
-    def _convert_isodate_to_milis(self, src_list, dt_list):
+    def _convert_isodate_to_millis(self, src_list, dt_list):
         for src in src_list:
             for ldt in dt_list:
                 if ldt in src and isinstance(src[ldt], datetime.datetime):
-                    src[ldt] = _unix_time_millis_from_datetime(src[ldt])
+                    src[ldt] = _unix_time_millis_from_datetime_trusted(
+                        src[ldt])
         return src_list
 
-    def _parse_app_id(self, et_jobinput):
-        app_id = ''
-        if 'app_id' in et_jobinput:
-            app_id = et_jobinput['app_id'].replace('.', '/')
+    def _parse_app_id(self, job_input):
+        if 'app_id' in job_input:
+            return job_input['app_id'].replace('.', '/')
+        return ''
 
-        return app_id
-
-    def _parse_method(self, et_jobinput):
-        method_id = ''
-        if 'method' in et_jobinput:
-            method_id = et_jobinput['method'].replace('/', '.')
-
-        return method_id
+    def _parse_method(self, job_input):
+        if 'method' in job_input:
+            return job_input['method'].replace('/', '.')
+        return ''
 
     def _update_user_info(self, params, token):
         """
@@ -116,7 +116,8 @@ class MetricsMongoDBController:
         for u_data in auth2_ret:
             id_data = {x: u_data[x] for x in id_keys}
             user_data = {x: u_data[x] for x in data_keys}
-            is_kbstaff = True if self._is_kbstaff(id_data['username']) else False
+            is_kbstaff = True if self._is_kbstaff(
+                id_data['username']) else False
             update_ret = self.metrics_dbi.update_user_records(
                 id_data, user_data, is_kbstaff)
             if update_ret.raw_result['updatedExisting']:
@@ -139,7 +140,8 @@ class MetricsMongoDBController:
 
         up_dated = 0
         up_serted = 0
-        print_debug(f'Retrieved {len(act_list)} activity record(s) for update!')
+        print_debug(
+            f'Retrieved {len(act_list)} activity record(s) for update!')
         id_keys = ['_id']
         count_keys = ['obj_numModified']
         for a_data in act_list:
@@ -168,7 +170,8 @@ class MetricsMongoDBController:
             print_debug("No narrative records returned for update!")
             return 0
 
-        print_debug(f'Retrieved {len(narr_list)} narratives record(s) for update!')
+        print_debug(
+            f'Retrieved {len(narr_list)} narratives record(s) for update!')
         id_keys = ['object_id', 'object_version', 'workspace_id']
         other_keys = ['name', 'last_saved_at', 'last_saved_by', 'numObj',
                       'deleted', 'nice_name', 'desc']
@@ -230,7 +233,7 @@ class MetricsMongoDBController:
 
             if wsn.get('object_id'):
                 wsn['last_saved_by'] = wsn.pop('username')
-                ws_nm, wsn['nice_name'], wsn['n_ver'] = \
+                ws_nm, wsn['nice_name'], wsn['n_ver'], is_deleted = \
                     self.get_narrative_info(wsn['workspace_id'])
                 wsn.pop('narr_keys')
                 wsn.pop('narr_values')
@@ -249,31 +252,62 @@ class MetricsMongoDBController:
         # in data returned from ujs / exec?
         # TODO: Erik: This code path should not exist; can we determine if
         # it really needs to be handled (I assume it did at some point)
-        # TODO: Erik: If this is a condition in, say, older jobs, which 
+        # TODO: Erik: If this is a condition in, say, older jobs, which
         # needs to be handled, we should not return the workspace name
         # as the narrative title, but rather look up the workspace by name
         # and then use the associated workspace id.
         try:
             workspace_id = int(ws_id)
-        except ValueError as ve:
-            result = self.metrics_dbi.list_narrative_info(wsname_list=[ws_id])
+        except ValueError:
+            result = self.metrics_dbi.list_narrative_info(
+                wsname_list=[ws_id], include_temporary=True)
+            # This would be weird - ws doesn't exist?
+            # TODO: document why the result is structured this way.
             if len(result) == 0:
-                return ws_id, ws_id, '1'
+                return ws_id, ws_id, '1', False
+
             workspace_id = result[0]['ws']
 
         narrative_name_map = self.narrative_cache.get()
         if workspace_id in narrative_name_map:
-            w_nm, n_nm, n_ver = narrative_name_map[workspace_id]
-            return (w_nm, n_nm, n_ver)
+            w_nm, n_nm, n_ver, deleted = narrative_name_map[workspace_id]
+            return (w_nm, n_nm, n_ver, deleted)
 
         #
-        # It is possible that a brand new narrative has not yet been "saved",
-        # Such narratives are referred to as "temporary". There are thousands
-        # of them, so the query for narratives in metrics_dbi omits them.
-        # Thus they will appear to be missing, which is how we get here.
-        # We leave the title empty (not a possible value for narrative_nice_name),
-        # which the consumer can handle however they wish.
-        return '', '', '1'
+        # We can only get here if the narrative lookup by id failed.
+        # This can happen currently for export jobs.
+        #
+        return None, None, None, None
+
+    # Given a workspace id, look it up in the workspace, returning the found id
+    # and name
+    def get_workspace_info(self, ws_id):
+        """
+        get_workspace_info-returns the id and name for a given ws id
+        """
+
+        # This is a fall back for some a workspace id which is actually
+        # a workspace name ... but does that ever really happen
+        # in data returned from ujs / exec?
+        # TODO: Erik: This code path should not exist; can we determine if
+        # it really needs to be handled (I assume it did at some point)
+        # TODO: Erik: If this is a condition in, say, older jobs, which
+        # needs to be handled, we should not return the workspace name
+        # as the narrative title, but rather look up the workspace by name
+        # and then use the associated workspace id.
+        try:
+            workspace_id = int(ws_id)
+            result = self.metrics_dbi.get_workspace_info(
+                wsid_list=[workspace_id])
+        except ValueError:
+            result = self.metrics_dbi.get_workspace_info(wsname_list=[ws_id])
+            # This would be weird - ws doesn't exist?
+
+        if len(result) == 0:
+            return None, None
+        wsinfo = result[0]
+
+        return [str(wsinfo['ws']), wsinfo['name']]
 
     def _get_activities_from_wsobjs(self, params, token):
 
@@ -301,16 +335,54 @@ class MetricsMongoDBController:
         exec_task_map = dict()
         for exec_task in exec_tasks:
             exec_task_map[exec_task['ujs_job_id']] = exec_task
-            
-        for j in ujs_jobs:
-            u_j_s = self._assemble_ujs_state(j, exec_task_map)
+
+        for ujs_job in ujs_jobs:
+            u_j_s = self._assemble_ujs_state(ujs_job, exec_task_map)
             ujs_ret.append(u_j_s)
         return ujs_ret
 
     def _assemble_ujs_state(self, ujs, exec_task_map):
         u_j_s = copy.deepcopy(ujs)
         u_j_s['job_id'] = str(u_j_s.pop('_id'))
-        u_j_s['exec_start_time'] = u_j_s.pop('started', None)
+
+        # determine true job state
+        job_state = None
+        if u_j_s.get('complete', False):
+            if u_j_s.get('error', False):
+                # hmm, this does not seem reliable
+                # if u_j_s.get('status', None) == 'queued':
+                if u_j_s.get('started'):
+                    job_state = 'ERRORED_RUNNING'
+                else:
+                    job_state = 'ERRORED_QUEUED'
+            else:
+                if u_j_s.get('status', None) == 'done':
+                    job_state = 'FINISHED'
+                elif u_j_s.get('status', '').startswith('canceled'):
+                    if 'started' in u_j_s:
+                        job_state = 'CANCELED_RUNNING'
+                    else:
+                        job_state = 'CANCELED_QUEUED'
+                elif u_j_s.get('status', None) == 'Unknown error':
+                    if u_j_s.get('started'):
+                        job_state = 'ERRORED_RUNNING'
+                    else:
+                        job_state = 'ERRORED_QUEUED'
+                else:
+                    job_state = 'ERRORED'
+                    if u_j_s.get('started'):
+                        job_state = 'ERRORED_RUNNING'
+                    else:
+                        job_state = 'ERRORED_QUEUED'
+        else:
+            if 'status' not in u_j_s or u_j_s.get('status', None) == 'queued':
+                job_state = 'QUEUED'
+            else:
+                job_state = 'RUNNING'
+        u_j_s['state'] = job_state
+
+        if u_j_s.get('started'):
+            u_j_s['exec_start_time'] = u_j_s.pop('started', None)
         u_j_s['creation_time'] = u_j_s.pop('created')
         u_j_s['modification_time'] = u_j_s.pop('updated')
 
@@ -324,39 +396,43 @@ class MetricsMongoDBController:
             if '.' in desc:
                 u_j_s['method'] = desc
 
-        if exec_task_map.get(u_j_s['job_id']):
-            exec_task = exec_task_map[u_j_s['job_id']]
-            if 'job_input' in exec_task:
-                et_job_in = exec_task['job_input']
-                u_j_s['app_id'] = self._parse_app_id(et_job_in)
-                if not u_j_s.get('method'):
-                    u_j_s['method'] = self._parse_method(et_job_in)
-                if not u_j_s.get('wsid'):
-                    if 'wsid' in et_job_in:
-                        u_j_s['wsid'] = et_job_in['wsid']
-                    elif 'params' in et_job_in and et_job_in['params']:
-                        p_ws = et_job_in['params'][0]
-                        if isinstance(p_ws, dict) and 'ws_id' in p_ws:
-                            u_j_s['wsid'] = p_ws['ws_id']
+        exec_task = exec_task_map.get(u_j_s['job_id'], None)
+        if exec_task is not None and 'job_input' in exec_task:
+            job_input = exec_task['job_input']
 
-                # try to get workspace_name--first by wsid, then from 'job_input'
-                if u_j_s.get('wsid') and not u_j_s.get('workspace_name'):
-                    ws_name = self.get_narrative_info(u_j_s['wsid'])[0]
-                    u_j_s['workspace_name'] = ws_name
-                if not u_j_s.get('workspace_name') or u_j_s['workspace_name'] == '':
-                    if 'params' in et_job_in and et_job_in['params']:
-                        p_ws = et_job_in['params'][0]
-                        if isinstance(p_ws, dict):
-                            if 'workspace' in p_ws:
-                                u_j_s['workspace_name'] = p_ws['workspace']
-                            elif 'workspace_name' in p_ws:
-                                u_j_s['workspace_name'] = p_ws['workspace_name']
+            u_j_s['app_id'] = self._parse_app_id(job_input)
+            if not u_j_s.get('method'):
+                u_j_s['method'] = self._parse_method(job_input)
+
+            if not u_j_s.get('wsid'):
+                if 'wsid' in job_input:
+                    u_j_s['wsid'] = job_input['wsid']
+                elif 'params' in job_input and job_input['params']:
+                    p_ws = job_input['params'][0]
+                    if isinstance(p_ws, dict) and 'ws_id' in p_ws:
+                        u_j_s['wsid'] = p_ws['ws_id']
+
+            # try to get workspace_name--first by wsid, then from 'job_input'
+            if u_j_s.get('wsid') and not u_j_s.get('workspace_name'):
+                ws_name = self.get_narrative_info(u_j_s['wsid'])[0]
+                u_j_s['workspace_name'] = ws_name
+            if (not u_j_s.get('workspace_name') or
+                    u_j_s['workspace_name'] == ''):
+                if 'params' in job_input and job_input['params']:
+                    p_ws = job_input['params'][0]
+                    if isinstance(p_ws, dict):
+                        if 'workspace' in p_ws:
+                            u_j_s['workspace_name'] = p_ws['workspace']
+                        elif 'workspace_name' in p_ws:
+                            u_j_s['workspace_name'] = p_ws['workspace_name']
 
         if not u_j_s.get('app_id') and u_j_s.get('method'):
             u_j_s['app_id'] = u_j_s['method'].replace('.', '/')
 
+        # hmm, is finish_time sometimes populated and sometimes not?
+        # It should be present for any non-running job state -
+        # success, error, canceled
         if (not u_j_s.get('finish_time') and
-                not u_j_s.get('error') and
                 u_j_s.get('complete')):
             u_j_s['finish_time'] = u_j_s.pop('modification_time')
 
@@ -366,19 +442,28 @@ class MetricsMongoDBController:
             u_j_s.pop('workspace_name')
 
         # get the narrative name and version via u_j_s['wsid']
+        job_type = None
         if u_j_s.get('wsid'):
-            w_nm, n_name, n_ver = self.get_narrative_info(u_j_s['wsid'])
-            if n_name != '':
+            w_nm, n_name, n_ver, is_deleted = self.get_narrative_info(
+                u_j_s['wsid'])
+            if w_nm is None:
+                # not found
+                job_type = 'workspace'
+            else:
+                job_type = 'narrative'
+                u_j_s['narrative_is_deleted'] = is_deleted
                 u_j_s['narrative_name'] = n_name
                 u_j_s['narrative_objNo'] = n_ver
-            elif (u_j_s.get('workspace_name', None) and
-                  'narrative' in u_j_s['workspace_name']):
-                # Note that an empty narrative name means that the the 
-                # narrative was not found, which really means that it 
-                # is a temporary narrative, which by tradition have the
-                # title 'Untitled'.
-                u_j_s['narrative_name'] = 'Untitled'
-                u_j_s['narrative_objNo'] = 1
+        else:
+            if 'app_id' in u_j_s:
+                if 'export' in u_j_s['app_id']:
+                    job_type = 'export'
+                    u_j_s['narrative_name'] = \
+                        'Narrative Unknown for Export Job'
+                else:
+                    job_type = 'unknown'
+
+        u_j_s['job_type'] = job_type
 
         # get the client groups
         u_j_s['client_groups'] = ['njs']  # default client groups to 'njs'
@@ -389,8 +474,148 @@ class MetricsMongoDBController:
                 if str(clnt_id).lower() == ujs_a_id.lower():
                     u_j_s['client_groups'] = clnt['client_groups']
                     break
-
         return u_j_s
+
+    def join_jobs(self, exec_tasks, ujs_jobs):
+        """
+        combine/join exec_tasks with ujs_jobs list to get the final return data
+        """
+        jobs = []
+
+        # build up a map of the exec tasks for consumption in the assembly
+        # method.
+        exec_task_map = dict()
+        for exec_task in exec_tasks:
+            exec_task_map[exec_task['ujs_job_id']] = exec_task
+
+        for ujs_job in ujs_jobs:
+            ujs = self.assemble_job(ujs_job, exec_task_map)
+            jobs.append(ujs)
+
+        return jobs
+
+    def assemble_job(self, ujs_job, exec_task_map):
+        # TODO: clean this up by using a new dict, not doing a copy and
+        # popping and overwriting!!!
+        job = copy.deepcopy(ujs_job)
+        job['job_id'] = str(job.pop('_id'))
+
+        # determine true job state
+        job_state = None
+        if job.get('complete', False):
+            if job.get('error', False):
+                job_state = 'error'
+            else:
+                if job.get('status', None) == 'done':
+                    job_state = 'complete'
+                elif job.get('status', '').startswith('canceled'):
+                    job_state = 'cancel'
+                elif job.get('status', None) == 'Unknown error':
+                    job_state = 'error'
+                else:
+                    job_state = 'error'
+        else:
+            if 'status' not in job or job.get('status', None) == 'queue':
+                job_state = 'queue'
+            else:
+                job_state = 'run'
+
+        job['state'] = job_state
+
+        # TODO: I don't know what is happening here. This section needs lots of
+        # docs to explain the workarounds.
+        if job_state != 'error':
+            job['exec_start_time'] = job.pop('started', None)
+
+        job['creation_time'] = job.pop('created')
+        job['modification_time'] = job.pop('updated')
+
+        authparam = job.pop('authparam')
+        authstrat = job.pop('authstrat')
+        if authstrat == 'kbaseworkspace':
+            job['wsid'] = authparam
+
+        if job.get('desc'):
+            desc = job.pop('desc').split()[-1]
+            if '.' in desc:
+                job['method'] = desc
+
+        # Now merge in info from the exec_task, if available.
+        exec_task = exec_task_map.get(job['job_id'], None)
+        if exec_task is not None and 'job_input' in exec_task:
+            job_input = exec_task['job_input']
+
+            # Attempt to extract the app id from the job input.
+            job['app_id'] = self._parse_app_id(job_input)
+
+            # The app tag used is stored mysteriously in the 'meta' property.
+            meta = job_input.get('meta')
+
+            if meta:
+                job['app_tag'] = meta.get('tag')
+            else:
+                job['app_tag'] = None
+
+            # Attempt to get the method from the job input.
+            if not job.get('method'):
+                job['method'] = self._parse_method(job_input)
+
+            if not job.get('wsid'):
+                if 'wsid' in job_input:
+                    job['wsid'] = job['wsid']
+                elif 'params' in job_input and job_input['params']:
+                    p_ws = job_input['params'][0]
+                    if isinstance(p_ws, dict) and 'ws_id' in p_ws:
+                        job['wsid'] = p_ws['ws_id']
+
+            # try to get workspace_name--first by wsid, then from 'job_input'
+            if job.get('wsid') and not job.get('workspace_name'):
+                ws_id, ws_name = self.get_workspace_info(job['wsid'])
+                job['workspace_name'] = ws_name
+                job['wsid'] = ws_id
+
+            # If we _still_ don't have a workspace name (due to not having a
+            # wsid??) get it out of the params.
+            if not job.get('workspace_name') or job['workspace_name'] == '':
+                if 'params' in job_input and job_input['params']:
+                    p_ws = job_input['params'][0]
+                    if isinstance(p_ws, dict):
+                        if 'workspace' in p_ws:
+                            job['workspace_name'] = p_ws['workspace']
+                        elif 'workspace_name' in p_ws:
+                            job['workspace_name'] = p_ws['workspace_name']
+        else:
+            job['app_tag'] = None
+
+        # If we don't have an app id but we do have a method, we munge the
+        # method into the app id.
+        # TODO: not sure this is safe.
+        if not job.get('app_id') and job.get('method'):
+            job['app_id'] = job['method'].replace('.', '/')
+
+        # hmm, is finish_time sometimes populated and sometimes not?
+        # It should be present for any non-running job state -
+        # success, error, canceled
+        if (not job.get('finish_time') and
+                job.get('complete')):
+            job['finish_time'] = job.pop('modification_time')
+
+        # remove empty workspace name in job['workspace_name']
+        if ('workspace_name' in job and (job['workspace_name'] is None
+                                         or job['workspace_name'] == '')):
+            job.pop('workspace_name')
+
+        # get the client groups
+        job['client_groups'] = ['njs']  # default client groups to 'njs'
+        if self.client_groups:
+            for clnt in self.client_groups:
+                clnt_app_id = clnt['app_id']
+                ujs_app_id = str(job.get('app_id'))
+                if str(clnt_app_id).lower() == ujs_app_id.lower():
+                    job['client_groups'] = clnt['client_groups']
+                    break
+
+        return job
 
     def _process_parameters(self, params):
         params['user_ids'] = params.get('user_ids', [])
@@ -405,21 +630,33 @@ class MetricsMongoDBController:
         epoch_range = params.get('epoch_range')
         if epoch_range:
             if len(epoch_range) != 2:
-                raise ValueError('Invalide epoch_range. Size must be 2.')
+                raise ValueError('Invalid epoch_range. Size must be 2.')
             start_time, end_time = epoch_range
-            if start_time and end_time:
-                start_time = _convert_to_datetime(start_time)
-                end_time = _convert_to_datetime(end_time)
-            elif start_time and not end_time:
-                start_time = _convert_to_datetime(start_time)
-                end_time = start_time + datetime.timedelta(hours=48)
-            elif not start_time and end_time:
-                end_time = _convert_to_datetime(end_time)
-                start_time = end_time - datetime.timedelta(hours=48)
+
+            # TODO: Not sure about this logic (it is going away soon, so
+            # doesn't really matter.)
+            if start_time is None or start_time == '':
+                if end_time is None or end_time == '':
+                    # Same as providing no time range -- constrain to the
+                    # most recent 48 hours.
+                    end_time = datetime.datetime.utcnow()
+                    start_time = end_time - datetime.timedelta(hours=48)
+                else:
+                    # No begin time, just end - the previous 48 hours before
+                    # the end time.
+                    end_time = _convert_to_datetime(end_time)
+                    start_time = end_time - datetime.timedelta(hours=48)
             else:
-                end_time = datetime.datetime.utcnow()
-                start_time = end_time - datetime.timedelta(hours=48)
-        else:  # set the most recent 48 hours range
+                if end_time is None or end_time == '':
+                    # No end time? Constrain to 48 hours after the start time
+                    start_time = _convert_to_datetime(start_time)
+                    end_time = start_time + datetime.timedelta(hours=48)
+                else:
+                    # Both times valid, just use them.
+                    start_time = _convert_to_datetime(start_time)
+                    end_time = _convert_to_datetime(end_time)
+        else:
+            # set the most recent 48 hours range
             end_time = datetime.datetime.utcnow()
             start_time = end_time - datetime.timedelta(hours=48)
 
@@ -430,8 +667,8 @@ class MetricsMongoDBController:
 
     def _get_client_groups_from_cat(self, token):
         """
-        _get_client_groups_from_cat: Get the client_groups data from Catalog API
-        return an array of the following structure (example with data):
+        _get_client_groups_from_cat: Get the client_groups data from Catalog
+        API return an array of the following structure (example with data):
         {
             u'app_id': u'assemblyrast/run_arast',
             u'client_groups': [u'bigmemlong'],
@@ -451,23 +688,25 @@ class MetricsMongoDBController:
 
     def map_ws_narrative_names(self, requesting_user, ws_ids, token):
         """
-        get_ws_narratives--Give the list of workspace ids, map ws_nm, narr_nm and narr_ver
-        (or narrative_nice_name if it exists) into a dictionary
-        of {key=ws_id, value=(ws_nm, narr_nm, narr_ver)}
+        get_ws_narratives--Give the list of workspace ids, map ws_nm, narr_nm
+        and narr_ver (or narrative_nice_name if it exists) into a dictionary of
+        {key=ws_id, value=(ws_nm, narr_nm, narr_ver)}
         ----------------------
-        [{'ws_id': 8726,
-          'narr_name_map': (u'wjriehl:1468439004137', u'Updater Testing', u'1')},
-         {'ws_id': 99991,
-          'narr_name_map': (u'fakeusr:narrative_1513709108341', u'Faking Test', u'1')}]
+        [{'ws_id': 8726, 'narr_name_map': (u'wjriehl:1468439004137', u'Updater
+          Testing', u'1')}, {'ws_id': 99991, 'narr_name_map':
+          (u'fakeusr:narrative_1513709108341', u'Faking Test', u'1')}]
         """
         if not self._is_admin(requesting_user):
-                raise ValueError('You do not have permission to '
-                                 'invoke this action.')
+            raise ValueError('You do not have permission to '
+                             'invoke this action.')
 
         map_results = []
         for w_id in ws_ids:
-            map_ret = self.get_narrative_info(w_id)
-            map_results.append({'ws_id': w_id, 'narr_name_map': map_ret})
+            w_nm, n_name, n_ver, is_deleted = self.get_narrative_info(w_id)
+            map_results.append({
+                'ws_id': w_id,
+                'narr_name_map': (w_nm, n_name, n_ver, is_deleted)
+            })
         return map_results
 
     def get_user_job_states(self, requesting_user, params, token):
@@ -482,30 +721,234 @@ class MetricsMongoDBController:
         if not self._is_admin(requesting_user):
             params['user_ids'] = [requesting_user]
 
+        perf = dict()
+        start = round(time.time() * 1000)
+
         # 1. get the client_groups data for lookups
         if self.client_groups is None:
             self.client_groups = self._get_client_groups_from_cat(token)
 
+        now = round(time.time() * 1000)
+        perf['client_groups'] = now - start
+        start = now
+
         # 2. query dbs to get lists of tasks and jobs
         params = self._process_parameters(params)
-        exec_tasks = self.metrics_dbi.list_exec_tasks(params['minTime'],
-                                                      params['maxTime'])
-        ujs_jobs = self.metrics_dbi.list_ujs_results(params['user_ids'],
-                                                     params['minTime'],
-                                                     params['maxTime'])
-        ujs_jobs = self._convert_isodate_to_milis(
+
+        ujs_jobs, ujs_jobs_count = self.metrics_dbi.list_ujs_results(
+            user_ids=params.get('user_ids', None),
+            start_time=params['minTime'],
+            end_time=params['maxTime'],
+            offset=params.get('offset', None),
+            limit=params.get('limit', None),
+            sort=params.get('sort', None))
+
+        now = round(time.time() * 1000)
+        perf['list_ujs_results'] = now - start
+        perf['list_ujs_results_count'] = ujs_jobs_count
+
+        if len(ujs_jobs) == 0:
+            return {
+                'job_states': [],
+                'total_count': ujs_jobs_count,
+                'stats': {
+                    'perf': perf
+                }
+            }
+
+        start = now
+
+        ujs_job_ids = list(map(lambda x: str(x['_id']), ujs_jobs))
+
+        exec_tasks = self.metrics_dbi.list_exec_tasks(jobIDs=ujs_job_ids)
+
+        now = round(time.time() * 1000)
+        perf['list_exec_tasks'] = now - start
+        start = now
+
+        ujs_jobs = self._convert_isodate_to_millis(
             ujs_jobs, ['created', 'started', 'updated'])
 
-        return {'job_states': self._join_task_ujs(exec_tasks, ujs_jobs)}
+        now = round(time.time() * 1000)
+        perf['_convert_isodate_to_millis'] = now - start
+        start = now
 
-    def get_narrative_stats(self, requesting_user, params, token, exclude_kbstaff=True):
+        job_states = self._join_task_ujs(exec_tasks, ujs_jobs)
+
+        now = round(time.time() * 1000)
+        perf['_join_task_ujs'] = now - start
+        start = now
+
+        return {
+            'job_states': job_states,
+            'total_count': ujs_jobs_count,
+            'stats': {'perf': perf}
+        }
+
+    def query_jobs_admin(self, requesting_user, params, token):
         """
-        get_narrative_stats--generate narrative stats data for reporting purposes
-        [{'2016-7': 1}, {'2017-12': 1}]
+        what it does
         """
         if not self._is_admin(requesting_user):
-                raise ValueError('You do not have permisson to '
-                                 'invoke this action.')
+            raise ValueError('Sorry, only admins allowed')
+        return self.query_jobs(None, params, token)
+
+    def query_jobs_user(self, requesting_user, params, token):
+        """
+        what it does
+        """
+        return self.query_jobs(requesting_user, params, token)
+
+    def query_jobs(self, restrict_to_user, params, token):
+        """
+        query_jobs--generate data for appcatalog/stats from querying
+        execution_engine, userjobstates, catalog and workspace
+        ----------------------
+        To get the job's 'status', 'complete'=true/false, etc.,
+        we can do joining as follows
+        --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
+        """
+
+        perf = dict()
+        start = round(time.time() * 1000)
+
+        # 1. get the client_groups data for lookups
+        if self.client_groups is None:
+            self.client_groups = self._get_client_groups_from_cat(token)
+
+        now = round(time.time() * 1000)
+        perf['client_groups'] = now - start
+        start = now
+
+        # 2. query dbs to get lists of tasks and jobs
+        # params = self._process_parameters(params)
+
+        if 'epoch_range' in params:
+            start_time_param, end_time_param = params.get('epoch_range')
+        else:
+            start_time_param = None
+            end_time_param = None
+
+        ujs_jobs, ujs_jobs_found_count, ujs_jobs_total_count = \
+            self.metrics_dbi.query_ujs(
+                restrict_user=restrict_to_user,
+                end_time=end_time_param,
+                start_time=start_time_param,
+                offset=params.get('offset', None),
+                limit=params.get('limit', None),
+                filter=params.get('filter', None),
+                search=params.get('search', None),
+                sort=params.get('sort', None))
+
+        now = round(time.time() * 1000)
+        perf['query_ujs_results'] = now - start
+        perf['query_ujs_results_count'] = ujs_jobs_found_count
+
+        if len(ujs_jobs) == 0:
+            return {
+                'job_states': [],
+                'found_count': ujs_jobs_found_count,
+                'total_count': ujs_jobs_total_count,
+                'stats': {
+                    'perf': perf
+                }
+            }
+
+        start = now
+
+        ujs_job_ids = list(map(lambda x: str(x['_id']), ujs_jobs))
+
+        exec_tasks = self.metrics_dbi.list_exec_tasks(jobIDs=ujs_job_ids)
+
+        now = round(time.time() * 1000)
+        perf['list_exec_tasks'] = now - start
+        start = now
+
+        ujs_jobs = self._convert_isodate_to_millis(
+            ujs_jobs, ['created', 'started', 'updated'])
+
+        now = round(time.time() * 1000)
+        perf['_convert_isodate_to_millis'] = now - start
+        start = now
+
+        job_states = self.join_jobs(exec_tasks, ujs_jobs)
+
+        now = round(time.time() * 1000)
+        perf['join_jobs'] = now - start
+        start = now
+
+        return {
+            'job_states': job_states,
+            'found_count': ujs_jobs_found_count,
+            'total_count': ujs_jobs_total_count,
+            'stats': {'perf': perf}
+        }
+
+    def get_user_job_state(self, requesting_user, params, token):
+        """
+        get_user_job_states--generate data for appcatalog/stats from querying
+        execution_engine, userjobstates, catalog and workspace
+        ----------------------
+        To get the job's 'status', 'complete'=true/false, etc.,
+        we can do joining as follows
+        --userjobstate.jobstate['_id']==exec_engine.exec_tasks['ujs_job_id']
+        """
+
+        perf = dict()
+        start = round(time.time() * 1000)
+
+        # If a regular user, we filter by user_id, with user_id set to the
+        # username of the current user
+        if not self._is_admin(requesting_user):
+            user_id = requesting_user
+        else:
+            user_id = None
+
+        # 1. get the client_groups data for lookups
+        if self.client_groups is None:
+            self.client_groups = self._get_client_groups_from_cat(token)
+
+        now = round(time.time() * 1000)
+        perf['client_groups'] = now - start
+        start = now
+
+        # 2. query dbs to get lists of tasks and jobs
+        ujs_job = self.metrics_dbi.get_ujs_result(
+            params['job_id'], user_id=user_id)
+
+        now = round(time.time() * 1000)
+        perf['get_ujs_result'] = now - start
+        start = now
+
+        if ujs_job is None:
+            return {'job_state': None}
+
+        exec_tasks = self.metrics_dbi.list_exec_tasks(jobIDs=[ujs_job['_id']])
+
+        now = round(time.time() * 1000)
+        perf['list_exec_tasks'] = now - start
+        start = now
+
+        ujs_jobs = self._convert_isodate_to_millis(
+            [ujs_job], ['created', 'started', 'updated'])
+
+        job_states = self._join_task_ujs(exec_tasks, ujs_jobs)
+
+        now = round(time.time() * 1000)
+        perf['_join_task_ujs'] = now - start
+        start = now
+
+        return {'job_state': job_states[0], 'stats': {'perf': perf}}
+
+    def get_narrative_stats(self, requesting_user, params, token,
+                            exclude_kbstaff=True):
+        """
+        get_narrative_stats--generate narrative stats data for reporting
+        purposes [{'2016-7': 1}, {'2017-12': 1}]
+        """
+        if not self._is_admin(requesting_user):
+            raise ValueError('You do not have permisson to '
+                             'invoke this action.')
 
         params = self._process_parameters(params)
 
@@ -517,15 +960,16 @@ class MetricsMongoDBController:
             params['user_ids'] = []
 
         narr_data = self.metrics_dbi.list_narrative_info(
-                        owner_list=params['user_ids'],
-                        excluded_users=excludes)
+            owner_list=params['user_ids'],
+            excluded_users=excludes)
         n_ws = [nd['ws'] for nd in narr_data]
 
-        # 2. query db to get lists of narratives with ws_ids and first_access_date
+        # 2. query db to get lists of narratives with ws_ids and
+        #    first_access_date
         ws_firstAccs = self.metrics_dbi.list_ws_firstAccess(
-                            params['minTime'],
-                            params['maxTime'],
-                            ws_list=n_ws)
+            params['minTime'],
+            params['maxTime'],
+            ws_list=n_ws)
 
         narr_stats = {}
         # Futher counting the narratives by grouping into yyyy-mm
@@ -538,11 +982,13 @@ class MetricsMongoDBController:
     def get_total_logins_from_ws(self, requesting_user, params, token,
                                  exclude_kbstaff=False):
         if not self._is_admin(requesting_user):
-                raise ValueError('You do not have permisson to '
-                                 'invoke this action.')
+            raise ValueError('You do not have permisson to '
+                             'invoke this action.')
         params = self._process_parameters(params)
-        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+        params['minTime'] = datetime.datetime.fromtimestamp(
+            params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(
+            params['maxTime'] / 1000)
 
         if exclude_kbstaff:
             kb_list = self._get_kbstaff_list()
@@ -557,11 +1003,13 @@ class MetricsMongoDBController:
 
     def get_user_login_stats_from_ws(self, requesting_user, params, token):
         if not self._is_admin(requesting_user):
-                raise ValueError('You do not have permisson to '
-                                 'invoke this action.')
+            raise ValueError('You do not have permisson to '
+                             'invoke this action.')
         params = self._process_parameters(params)
-        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+        params['minTime'] = datetime.datetime.fromtimestamp(
+            params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(
+            params['maxTime'] / 1000)
 
         db_ret = self.metrics_dbi.aggr_user_logins_from_ws(
             params['user_ids'], params['minTime'], params['maxTime'])
@@ -569,12 +1017,14 @@ class MetricsMongoDBController:
 
     def get_user_numObjs_from_ws(self, requesting_user, params, token):
         if not self._is_admin(requesting_user):
-                raise ValueError('You do not have permisson to '
-                                 'invoke this action.')
+            raise ValueError('You do not have permisson to '
+                             'invoke this action.')
 
         params = self._process_parameters(params)
-        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+        params['minTime'] = datetime.datetime.fromtimestamp(
+            params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(
+            params['maxTime'] / 1000)
 
         db_ret = self.metrics_dbi.aggr_user_numObjs(
             params['user_ids'], params['minTime'], params['maxTime'])
@@ -583,12 +1033,14 @@ class MetricsMongoDBController:
 
     def get_user_ws_stats(self, requesting_user, params, token):
         if not self._is_admin(requesting_user):
-                raise ValueError('You do not have permisson to '
-                                 'invoke this action.')
+            raise ValueError('You do not have permisson to '
+                             'invoke this action.')
 
         params = self._process_parameters(params)
-        params['minTime'] = datetime.datetime.fromtimestamp(params['minTime'] / 1000)
-        params['maxTime'] = datetime.datetime.fromtimestamp(params['maxTime'] / 1000)
+        params['minTime'] = datetime.datetime.fromtimestamp(
+            params['minTime'] / 1000)
+        params['maxTime'] = datetime.datetime.fromtimestamp(
+            params['maxTime'] / 1000)
 
         db_ret = self.metrics_dbi.aggr_user_ws(
             params['user_ids'], params['minTime'], params['maxTime'])
@@ -627,8 +1079,8 @@ class MetricsMongoDBController:
         to get active user count per day.
         """
         if not self._is_admin(requesting_user):
-                raise ValueError('You do not have permisson to '
-                                 'invoke this action.')
+            raise ValueError('You do not have permisson to '
+                             'invoke this action.')
 
         kb_list = self._get_kbstaff_list()
 
@@ -652,8 +1104,8 @@ class MetricsMongoDBController:
         get_user_details--query the metrics/users db to retrieve user info.
         """
         if not self._is_admin(requesting_user):
-                raise ValueError('You do not have permisson to '
-                                 'invoke this action.')
+            raise ValueError('You do not have permisson to '
+                             'invoke this action.')
 
         params = self._process_parameters(params)
         mt_ret = self.metrics_dbi.get_user_info(
@@ -663,7 +1115,7 @@ class MetricsMongoDBController:
         if not mt_ret:
             print("No user records returned!")
         else:
-            mt_ret = self._convert_isodate_to_milis(
+            mt_ret = self._convert_isodate_to_millis(
                 mt_ret, ['signup_at', 'last_signin_at'])
         return {'metrics_result': mt_ret}
 
@@ -674,8 +1126,8 @@ class MetricsMongoDBController:
         monthly user signups and returning user counts.
         """
         if not self._is_admin(requesting_user):
-                raise ValueError('You do not have permisson to '
-                                 'invoke this action.')
+            raise ValueError('You do not have permisson to '
+                             'invoke this action.')
 
         params = self._process_parameters(params)
         if exclude_kbstaff:

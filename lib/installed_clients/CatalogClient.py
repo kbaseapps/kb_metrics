@@ -16,6 +16,9 @@ except ImportError:
     # no they aren't
     from baseclient import BaseClient as _BaseClient  # @Reimport
 
+DEFAULT_AUTH_SVC_URL = \
+    'https://ci.kbase.us/services/auth/api/legacy/KBase/Sessions/Login'
+
 
 class Catalog(object):
 
@@ -23,7 +26,7 @@ class Catalog(object):
             self, url=None, timeout=30 * 60, user_id=None,
             password=None, token=None, ignore_authrc=False,
             trust_all_ssl_certificates=False,
-            auth_svc='https://ci.kbase.us/services/auth/api/legacy/KBase/Sessions/Login'):
+            auth_svc=DEFAULT_AUTH_SVC_URL):
         if url is None:
             raise ValueError('A url is required')
         self._service_ver = None
@@ -56,13 +59,15 @@ class Catalog(object):
 
     def register_repo(self, params, context=None):
         """
-        allow/require developer to supply git branch/git commit tag? 
-        if this is a new module, creates the initial registration with the authenticated user as
-        the sole owner, then launches a build to update the dev version of the module.  You can check
-        the state of this build with the 'get_module_state' method passing in the git_url.  If the module
-        already exists, then you must be an owner to reregister.  That will immediately overwrite your
-        dev version of the module (old dev versions are not stored, but you can always reregister an old
-        version from the repo) and start a build.
+        allow/require developer to supply git branch/git commit tag? if this is
+        a new module, creates the initial registration with the authenticated
+        user as the sole owner, then launches a build to update the dev version
+        of the module.  You can check the state of this build with the
+        'get_module_state' method passing in the git_url.  If the module
+        already exists, then you must be an owner to reregister.  That will
+        immediately overwrite your dev version of the module (old dev versions
+        are not stored, but you can always reregister an old version from the
+        repo) and start a build.
         :param params: instance of type "RegisterRepoParams" -> structure:
            parameter "git_url" of String, parameter "git_commit_hash" of
            String
@@ -73,8 +78,9 @@ class Catalog(object):
 
     def push_dev_to_beta(self, params, context=None):
         """
-        immediately updates the beta tag to what is currently in dev, whatever is currently in beta
-        is discarded.  Will fail if a release request is active and has not been approved/denied
+        immediately updates the beta tag to what is currently in dev, whatever
+        is currently in beta is discarded.  Will fail if a release request is
+        active and has not been approved/denied
         :param params: instance of type "SelectOneModuleParams" (Describes
            how to find a single module/repository. module_name - name of
            module defined in kbase.yaml file; git_url - the url used to
@@ -86,7 +92,8 @@ class Catalog(object):
 
     def request_release(self, params, context=None):
         """
-        requests a push from beta to release version; must be approved be a kbase Admin
+        requests a push from beta to release version; must be approved be a
+        kbase Admin
         :param params: instance of type "SelectOneModuleParams" (Describes
            how to find a single module/repository. module_name - name of
            module defined in kbase.yaml file; git_url - the url used to
@@ -332,7 +339,8 @@ class Catalog(object):
            parameter "is_main" of type "boolean" (@range [0,1])
         """
         return self._client.call_method('Catalog.get_module_info',
-                                        [selection], self._service_ver, context)
+                                        [selection], self._service_ver,
+                                        context)
 
     def get_version_info(self, params, context=None):
         """
@@ -441,8 +449,9 @@ class Catalog(object):
            parameter "file_name" of String, parameter "content" of String,
            parameter "is_main" of type "boolean" (@range [0,1])
         """
-        return self._client.call_method('Catalog.list_released_module_versions',
-                                        [params], self._service_ver, context)
+        return self._client.call_method(
+            'Catalog.list_released_module_versions',
+            [params], self._service_ver, context)
 
     def get_module_version(self, selection, context=None):
         """
@@ -529,7 +538,8 @@ class Catalog(object):
            "boolean" (@range [0,1])
         """
         return self._client.call_method('Catalog.get_module_version',
-                                        [selection], self._service_ver, context)
+                                        [selection], self._service_ver,
+                                        context)
 
     def list_local_functions(self, params, context=None):
         """
@@ -601,7 +611,8 @@ class Catalog(object):
            String, parameter "docker_img_name" of String
         """
         return self._client.call_method('Catalog.module_version_lookup',
-                                        [selection], self._service_ver, context)
+                                        [selection], self._service_ver,
+                                        context)
 
     def list_service_modules(self, filter, context=None):
         """
@@ -652,11 +663,13 @@ class Catalog(object):
         :returns: instance of String
         """
         return self._client.call_method('Catalog.get_build_log',
-                                        [registration_id], self._service_ver, context)
+                                        [registration_id], self._service_ver,
+                                        context)
 
     def get_parsed_build_log(self, params, context=None):
         """
-        given the registration_id returned from the register method, you can check the build log with this method
+        given the registration_id returned from the register method, you can
+        check the build log with this method
         :param params: instance of type "GetBuildLogParams" (must specify
            skip & limit, or first_n, or last_n.  If none given, this gets
            last 5000 lines) -> structure: parameter "registration_id" of
@@ -703,7 +716,8 @@ class Catalog(object):
 
     def delete_module(self, params, context=None):
         """
-        admin method to delete a module, will only work if the module has not been released
+        admin method to delete a module, will only work if the module has not
+        been released
         :param params: instance of type "SelectOneModuleParams" (Describes
            how to find a single module/repository. module_name - name of
            module defined in kbase.yaml file; git_url - the url used to
@@ -715,17 +729,19 @@ class Catalog(object):
 
     def migrate_module_to_new_git_url(self, params, context=None):
         """
-        admin method to move the git url for a module, should only be used if the exact same code has migrated to
-        a new URL.  It should not be used as a way to change ownership, get updates from a new source, or get a new
-        module name for an existing git url because old versions are retained and git commits saved will no longer
-        be correct.
+        admin method to move the git url for a module, should only be used if
+        the exact same code has migrated to a new URL.  It should not be used
+        as a way to change ownership, get updates from a new source, or get a
+        new module name for an existing git url because old versions are
+        retained and git commits saved will no longer be correct.
         :param params: instance of type "UpdateGitUrlParams" (all fields are
            required to make sure you update the right one) -> structure:
            parameter "module_name" of String, parameter "current_git_url" of
            String, parameter "new_git_url" of String
         """
-        return self._client.call_method('Catalog.migrate_module_to_new_git_url',
-                                        [params], self._service_ver, context)
+        return self._client.call_method(
+            'Catalog.migrate_module_to_new_git_url',
+            [params], self._service_ver, context)
 
     def set_to_active(self, params, context=None):
         """
@@ -752,12 +768,14 @@ class Catalog(object):
 
     def is_approved_developer(self, usernames, context=None):
         """
-        temporary developer approval, should be moved to more mature user profile service
+        temporary developer approval, should be moved to more mature user
+        profile service
         :param usernames: instance of list of String
         :returns: instance of list of type "boolean" (@range [0,1])
         """
         return self._client.call_method('Catalog.is_approved_developer',
-                                        [usernames], self._service_ver, context)
+                                        [usernames], self._service_ver,
+                                        context)
 
     def list_approved_developers(self, context=None):
         """
@@ -782,8 +800,8 @@ class Catalog(object):
 
     def log_exec_stats(self, params, context=None):
         """
-        Request from Execution Engine for adding statistics about each method run. It could be done
-        using catalog admin credentials only.
+        Request from Execution Engine for adding statistics about each method
+        run. It could be done using catalog admin credentials only.
         :param params: instance of type "LogExecStatsParams" (user_id -
            GlobusOnline login of invoker, app_module_name - optional module
            name of registered repo (could be absent of null for old fashioned
@@ -918,7 +936,8 @@ class Catalog(object):
 
     def remove_volume_mount(self, config, context=None):
         """
-        must specify module_name, function_name, client_group and this method will delete any configured mounts
+        must specify module_name, function_name, client_group and this method
+        will delete any configured mounts
         :param config: instance of type "VolumeMountConfig" (for a module,
            function, and client group, set mount configurations) ->
            structure: parameter "module_name" of String, parameter

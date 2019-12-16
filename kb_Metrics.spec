@@ -26,6 +26,10 @@ module kb_Metrics {
         A Unix epoch (the time since 00:00:00 1/1/1970 UTC) in milliseconds.
     */
     typedef int epoch;
+
+    typedef string JobID;
+
+    typedef int bool;
  
     /*
         A time range defined by its lower and upper bound.
@@ -37,10 +41,13 @@ module kb_Metrics {
     typedef structure {
         list<user_id> user_ids;
         epoch_range epoch_range;
+        int offset;
+        int limit;
     } AppMetricsParams;
 
     typedef structure {
         UnspecifiedObject job_states;
+        int total_count;
     } AppMetricsResult;
 
     typedef structure {
@@ -50,6 +57,141 @@ module kb_Metrics {
   
     funcdef get_app_metrics(AppMetricsParams params)
         returns (AppMetricsResult return_records) authentication required;
+
+    /* Get Jobs */
+
+    /* This method was added in order to provide an improved job browsing experience, prior
+       to EE2 taking over that core functionality. As such, it added offset and limit,
+       especially, and was expected to evolve further. However, when the EE2 effort was 
+       initiated, it's purpose became obsolete. It still exists, and is utilized by the
+       pre-EE2 form of the job browser. */
+
+    typedef structure {
+        string app_id;
+        list<string> client_groups;
+        string user;
+        bool complete;
+        bool error;
+        string status;
+        int creation_time;
+        int exec_start_time;
+        int modification_time;
+        int finish_time;
+        JobID job_id;
+        string method;
+        string wsid;
+        int narrative_objNo;
+        string narrative_name;
+        string workspace_name;
+        bool narrative_is_deleted;
+    } JobState;
+
+    typedef structure {
+        list<user_id> user_ids;
+        epoch_range epoch_range;
+        int offset;
+        int limit;
+    } GetJobsParams;
+
+    typedef structure {
+        list<JobState> job_states;
+        int total_count;
+    } GetJobsResult;
+
+    funcdef get_jobs(GetJobsParams params)
+        returns (GetJobsResult result) authentication required;
+
+    /* Query jobs */
+
+     typedef structure {
+        JobID job_id;
+
+        string app_id;
+        string method; /* TODO: not sure why app and method */
+        string app_tag;
+
+        int workspace_id;
+        int object_id;
+        int object_version;
+
+        string user;
+
+        string status;
+        bool complete;
+        bool error;
+        int creation_time;
+        int exec_start_time;
+        int finish_time;
+        int modification_time;
+
+        list<string> client_groups;
+    } JobStateMinimal;
+
+    typedef structure {
+        string field;
+        string direction;
+    } SortSpec;
+
+    typedef structure {
+        string term;
+        string type;
+    } SearchSpec;
+
+    typedef structure {
+        list<string> job_id;
+        list<user_id> user_id;
+        list<string> status;
+        list<int> workspace;
+        list<string> app; 
+    } FilterSpec;
+
+    typedef structure {
+        list<FilterSpec> filter;
+        epoch_range epoch_range;
+        list<SortSpec> sort;
+        list<SearchSpec> search;
+        int offset;
+        int limit;
+    } QueryJobsParams;
+
+    typedef structure {
+        list<JobStateMinimal> job_states;
+        int total_count;
+    } QueryJobsResult;
+
+    funcdef query_jobs(QueryJobsParams params)
+        returns (QueryJobsResult result) authentication required;
+
+    typedef structure {
+        list<FilterSpec> filter;
+        epoch_range epoch_range;
+        list<SortSpec> sort;
+        list<SearchSpec> search;
+        int offset;
+        int limit;
+    } QueryJobsAdminParams;
+
+    typedef structure {
+        list<JobStateMinimal> job_states;
+        int total_count;
+    } QueryJobsAdminResult;
+
+    funcdef query_jobs_admin(QueryJobsAdminParams params)
+        returns (QueryJobsAdminResult result) authentication required;
+
+    /* Get an individual job by id */
+
+    typedef structure {
+        JobID job_id;
+        user_id user_id;
+    } GetJobParams;
+
+    typedef structure {
+        JobState job_state;
+    } GetJobResult;
+
+    funcdef get_job(GetJobParams params) 
+        returns (GetJobResult result) authentication required;
 
     funcdef map_ws_narrative_names(list<int> ws_ids)
         returns (list<MapWsNarrNamesResult> return_records) authentication optional;
@@ -104,4 +246,15 @@ module kb_Metrics {
 
     funcdef get_user_ws_stats(MetricsInputParams params)
         returns (MetricsOutput return_records) authentication required;
+
+    typedef structure {
+        string username;
+    } IsAdminParams;
+
+    typedef structure {
+        bool is_admin;
+    } IsAdminResult;
+
+    funcdef is_admin(IsAdminParams params)
+        returns (IsAdminResult result) authentication required;
 };

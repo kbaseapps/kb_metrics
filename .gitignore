@@ -1,3 +1,6 @@
 test_local
 sdk.cfg
 *.py.bak-*
+.java-version
+_attic
+env

@@ -342,6 +342,22 @@ class Application(object):
                              name='kb_Metrics.get_app_metrics',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_app_metrics'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_jobs,
+                             name='kb_Metrics.get_jobs',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_jobs'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.query_jobs,
+                             name='kb_Metrics.query_jobs',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.query_jobs'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.query_jobs_admin,
+                             name='kb_Metrics.query_jobs_admin',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.query_jobs_admin'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.get_job,
+                             name='kb_Metrics.get_job',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.get_job'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.map_ws_narrative_names,
                              name='kb_Metrics.map_ws_narrative_names',
                              types=[list])
@@ -398,6 +414,10 @@ class Application(object):
                              name='kb_Metrics.get_user_ws_stats',
                              types=[dict])
         self.method_authentication['kb_Metrics.get_user_ws_stats'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_Metrics.is_admin,
+                             name='kb_Metrics.is_admin',
+                             types=[dict])
+        self.method_authentication['kb_Metrics.is_admin'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_Metrics.status,
                              name='kb_Metrics.status',
                              types=[dict])

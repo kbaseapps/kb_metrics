@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 #BEGIN_HEADER
-# The header block is where all import statments should live
+# The header block is where all import statements should live
 from kb_Metrics.metricsdb_controller import MetricsMongoDBController
-import time
 #END_HEADER
+
 
 class kb_Metrics:
     '''
@@ -21,9 +21,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "1.3.0"
+    VERSION = "1.4.0"
     GIT_URL = "https://github.com/kbaseapps/kb_Metrics"
-    GIT_COMMIT_HASH = "f4b51ba9746254fb9e7cfa2fa93d8c63fabb1814"
+    GIT_COMMIT_HASH = "89c3f995e3e4c63a604a429cb16045bdf70877e8"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -50,27 +50,206 @@ This KBase SDK module implements methods for generating various KBase metrics.
            of size 2: parameter "e_lowerbound" of type "epoch" (A Unix epoch
            (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
            parameter "e_upperbound" of type "epoch" (A Unix epoch (the time
-           since 00:00:00 1/1/1970 UTC) in milliseconds.)
+           since 00:00:00 1/1/1970 UTC) in milliseconds.), parameter "offset"
+           of Long, parameter "limit" of Long
         :returns: instance of type "AppMetricsResult" -> structure: parameter
-           "job_states" of unspecified object
+           "job_states" of unspecified object, parameter "total_count" of Long
         """
         # ctx is the context object
         # return variables are: return_records
         #BEGIN get_app_metrics
-        start = time.time()
         controller = MetricsMongoDBController(self.config)
         return_records = controller.get_user_job_states(ctx['user_id'],
-                                                                 params,
-                                                                 ctx['token'])
-        elapsed = time.time() - start
+                                                        params,
+                                                        ctx['token'])
         #END get_app_metrics
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_app_metrics return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method get_app_metrics ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
+
+    def get_jobs(self, ctx, params):
+        """
+        :param params: instance of type "GetJobsParams" -> structure:
+           parameter "user_ids" of list of type "user_id" (A string for the
+           user id), parameter "epoch_range" of type "epoch_range" -> tuple
+           of size 2: parameter "e_lowerbound" of type "epoch" (A Unix epoch
+           (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "e_upperbound" of type "epoch" (A Unix epoch (the time
+           since 00:00:00 1/1/1970 UTC) in milliseconds.), parameter "offset"
+           of Long, parameter "limit" of Long
+        :returns: instance of type "GetJobsResult" -> structure: parameter
+           "job_states" of list of type "JobState" (This method was added in
+           order to provide an improved job browsing experience, prior to EE2
+           taking over that core functionality. As such, it added offset and
+           limit, especially, and was expected to evolve further. However,
+           when the EE2 effort was initiated, it's purpose became obsolete.
+           It still exists, and is utilized by the pre-EE2 form of the job
+           browser.) -> structure: parameter "app_id" of String, parameter
+           "client_groups" of list of String, parameter "user" of String,
+           parameter "complete" of type "bool", parameter "error" of type
+           "bool", parameter "status" of String, parameter "creation_time" of
+           Long, parameter "exec_start_time" of Long, parameter
+           "modification_time" of Long, parameter "finish_time" of Long,
+           parameter "job_id" of type "JobID", parameter "method" of String,
+           parameter "wsid" of String, parameter "narrative_objNo" of Long,
+           parameter "narrative_name" of String, parameter "workspace_name"
+           of String, parameter "narrative_is_deleted" of type "bool",
+           parameter "total_count" of Long
+        """
+        # ctx is the context object
+        # return variables are: result
+        #BEGIN get_jobs
+        controller = MetricsMongoDBController(self.config)
+        result = controller.get_user_job_states(ctx['user_id'],
+                                                params,
+                                                ctx['token'])
+        #END get_jobs
+
+        # At some point might do deeper type checking...
+        if not isinstance(result, dict):
+            raise ValueError('Method get_jobs ' +
+                             'return value result ' +
+                             'is not type dict as required.')
+        # return the results
+        return [result]
+
+    def query_jobs(self, ctx, params):
+        """
+        :param params: instance of type "QueryJobsParams" -> structure:
+           parameter "filter" of list of type "FilterSpec" -> structure:
+           parameter "job_id" of list of String, parameter "user_id" of list
+           of type "user_id" (A string for the user id), parameter "status"
+           of list of String, parameter "workspace" of list of Long,
+           parameter "app" of list of String, parameter "epoch_range" of type
+           "epoch_range" -> tuple of size 2: parameter "e_lowerbound" of type
+           "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970 UTC) in
+           milliseconds.), parameter "e_upperbound" of type "epoch" (A Unix
+           epoch (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "sort" of list of type "SortSpec" -> structure:
+           parameter "field" of String, parameter "direction" of String,
+           parameter "search" of list of type "SearchSpec" -> structure:
+           parameter "term" of String, parameter "type" of String, parameter
+           "offset" of Long, parameter "limit" of Long
+        :returns: instance of type "QueryJobsResult" -> structure: parameter
+           "job_states" of list of type "JobStateMinimal" (Query jobs) ->
+           structure: parameter "job_id" of type "JobID", parameter "app_id"
+           of String, parameter "method" of String, parameter "app_tag" of
+           String, parameter "workspace_id" of Long, parameter "object_id" of
+           Long, parameter "object_version" of Long, parameter "user" of
+           String, parameter "status" of String, parameter "complete" of type
+           "bool", parameter "error" of type "bool", parameter
+           "creation_time" of Long, parameter "exec_start_time" of Long,
+           parameter "finish_time" of Long, parameter "modification_time" of
+           Long, parameter "client_groups" of list of String, parameter
+           "total_count" of Long
+        """
+        # ctx is the context object
+        # return variables are: result
+        #BEGIN query_jobs
+        controller = MetricsMongoDBController(self.config)
+        result = controller.query_jobs_user(ctx['user_id'],
+                                            params,
+                                            ctx['token'])
+        #END query_jobs
+
+        # At some point might do deeper type checking...
+        if not isinstance(result, dict):
+            raise ValueError('Method query_jobs ' +
+                             'return value result ' +
+                             'is not type dict as required.')
+        # return the results
+        return [result]
+
+    def query_jobs_admin(self, ctx, params):
+        """
+        :param params: instance of type "QueryJobsAdminParams" -> structure:
+           parameter "filter" of list of type "FilterSpec" -> structure:
+           parameter "job_id" of list of String, parameter "user_id" of list
+           of type "user_id" (A string for the user id), parameter "status"
+           of list of String, parameter "workspace" of list of Long,
+           parameter "app" of list of String, parameter "epoch_range" of type
+           "epoch_range" -> tuple of size 2: parameter "e_lowerbound" of type
+           "epoch" (A Unix epoch (the time since 00:00:00 1/1/1970 UTC) in
+           milliseconds.), parameter "e_upperbound" of type "epoch" (A Unix
+           epoch (the time since 00:00:00 1/1/1970 UTC) in milliseconds.),
+           parameter "sort" of list of type "SortSpec" -> structure:
+           parameter "field" of String, parameter "direction" of String,
+           parameter "search" of list of type "SearchSpec" -> structure:
+           parameter "term" of String, parameter "type" of String, parameter
+           "offset" of Long, parameter "limit" of Long
+        :returns: instance of type "QueryJobsAdminResult" -> structure:
+           parameter "job_states" of list of type "JobStateMinimal" (Query
+           jobs) -> structure: parameter "job_id" of type "JobID", parameter
+           "app_id" of String, parameter "method" of String, parameter
+           "app_tag" of String, parameter "workspace_id" of Long, parameter
+           "object_id" of Long, parameter "object_version" of Long, parameter
+           "user" of String, parameter "status" of String, parameter
+           "complete" of type "bool", parameter "error" of type "bool",
+           parameter "creation_time" of Long, parameter "exec_start_time" of
+           Long, parameter "finish_time" of Long, parameter
+           "modification_time" of Long, parameter "client_groups" of list of
+           String, parameter "total_count" of Long
+        """
+        # ctx is the context object
+        # return variables are: result
+        #BEGIN query_jobs_admin
+        controller = MetricsMongoDBController(self.config)
+        result = controller.query_jobs_admin(
+            ctx['user_id'], params, ctx['token'])
+        #END query_jobs_admin
+
+        # At some point might do deeper type checking...
+        if not isinstance(result, dict):
+            raise ValueError('Method query_jobs_admin ' +
+                             'return value result ' +
+                             'is not type dict as required.')
+        # return the results
+        return [result]
+
+    def get_job(self, ctx, params):
+        """
+        :param params: instance of type "GetJobParams" (Get an individual job
+           by id) -> structure: parameter "job_id" of type "JobID", parameter
+           "user_id" of type "user_id" (A string for the user id)
+        :returns: instance of type "GetJobResult" -> structure: parameter
+           "job_state" of type "JobState" (This method was added in order to
+           provide an improved job browsing experience, prior to EE2 taking
+           over that core functionality. As such, it added offset and limit,
+           especially, and was expected to evolve further. However, when the
+           EE2 effort was initiated, it's purpose became obsolete. It still
+           exists, and is utilized by the pre-EE2 form of the job browser.)
+           -> structure: parameter "app_id" of String, parameter
+           "client_groups" of list of String, parameter "user" of String,
+           parameter "complete" of type "bool", parameter "error" of type
+           "bool", parameter "status" of String, parameter "creation_time" of
+           Long, parameter "exec_start_time" of Long, parameter
+           "modification_time" of Long, parameter "finish_time" of Long,
+           parameter "job_id" of type "JobID", parameter "method" of String,
+           parameter "wsid" of String, parameter "narrative_objNo" of Long,
+           parameter "narrative_name" of String, parameter "workspace_name"
+           of String, parameter "narrative_is_deleted" of type "bool"
+        """
+        # ctx is the context object
+        # return variables are: result
+        #BEGIN get_job
+        controller = MetricsMongoDBController(self.config)
+        result = controller.get_user_job_state(ctx['user_id'],
+                                               params,
+                                               ctx['token'])
+        #END get_job
+
+        # At some point might do deeper type checking...
+        if not isinstance(result, dict):
+            raise ValueError('Method get_job ' +
+                             'return value result ' +
+                             'is not type dict as required.')
+        # return the results
+        return [result]
 
     def map_ws_narrative_names(self, ctx, ws_ids):
         """
@@ -84,15 +263,16 @@ This KBase SDK module implements methods for generating various KBase metrics.
         # ctx is the context object
         # return variables are: return_records
         #BEGIN map_ws_narrative_names
-        return_records = self.mdb_controller.map_ws_narrative_names(ctx['user_id'],
+        return_records = self.mdb_controller.map_ws_narrative_names(ctx['user_id'],  # noqa 501
                                                                     ws_ids,
-                                                                    ctx['token'])
+                                                                    ctx['token'])   # noqa 501
         #END map_ws_narrative_names
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, list):
-            raise ValueError('Method map_ws_narrative_names return value ' +
-                             'return_records is not type list as required.')
+            raise ValueError('Method map_ws_narrative_names ' +
+                             'return value return_records ' +
+                             'is not type list as required.')
         # return the results
         return [return_records]
 
@@ -120,8 +300,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method update_metrics return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method update_metrics ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
 
@@ -148,8 +329,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_details return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method get_user_details ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
 
@@ -175,8 +357,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_nonkbuser_details return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method get_nonkbuser_details ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
 
@@ -202,8 +385,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_signup_returning_users return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method get_signup_returning_users ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
 
@@ -229,8 +413,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_signup_returning_nonkbusers return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method get_signup_returning_nonkbusers ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
 
@@ -256,8 +441,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_counts_per_day return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method get_user_counts_per_day ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
 
@@ -283,8 +469,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_total_logins return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method get_total_logins ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
 
@@ -310,8 +497,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_nonkb_total_logins return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method get_nonkb_total_logins ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
 
@@ -337,8 +525,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_logins return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method get_user_logins ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
 
@@ -364,8 +553,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_numObjs return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method get_user_numObjs ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
 
@@ -391,8 +581,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_narrative_stats return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method get_narrative_stats ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
 
@@ -418,8 +609,9 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_all_narrative_stats return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method get_all_narrative_stats ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
 
@@ -445,10 +637,42 @@ This KBase SDK module implements methods for generating various KBase metrics.
 
         # At some point might do deeper type checking...
         if not isinstance(return_records, dict):
-            raise ValueError('Method get_user_ws_stats return value ' +
-                             'return_records is not type dict as required.')
+            raise ValueError('Method get_user_ws_stats ' +
+                             'return value return_records ' +
+                             'is not type dict as required.')
         # return the results
         return [return_records]
+
+    def is_admin(self, ctx, params):
+        """
+        :param params: instance of type "IsAdminParams" -> structure:
+           parameter "username" of String
+        :returns: instance of type "IsAdminResult" -> structure: parameter
+           "is_admin" of type "bool"
+        """
+        # ctx is the context object
+        # return variables are: result
+        #BEGIN is_admin
+        current_user_is_admin = self.mdb_controller._is_admin(ctx['user_id'])
+        if 'username' in params:
+            if current_user_is_admin:
+                is_admin = self.mdb_controller._is_admin(params['username'])
+            else:
+                raise ValueError('Non-admin may not inquire into the admin ' +
+                                 'status of another user')
+        else:
+            is_admin = current_user_is_admin
+        result = {'is_admin': is_admin}
+
+        #END is_admin
+
+        # At some point might do deeper type checking...
+        if not isinstance(result, dict):
+            raise ValueError('Method is_admin ' +
+                             'return value result ' +
+                             'is not type dict as required.')
+        # return the results
+        return [result]
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",

@@ -6,7 +6,6 @@
 ############################################################
 
 
-
 import json as _json
 import requests as _requests
 import random as _random
@@ -117,6 +116,7 @@ class BaseClient(object):
     async_job_check_time_ms - the wait time between checking job state for
         asynchronous jobs run with the run_job method.
     '''
+
     def __init__(
             self, url=None, timeout=30 * 60, user_id=None,
             password=None, token=None, ignore_authrc=False,
