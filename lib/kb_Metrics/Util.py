@@ -19,7 +19,9 @@ def _unix_time_millis_from_datetime(dt):
 
     return int((dt.replace(tzinfo=None) - epoch).total_seconds() * 1000)
 
+
 epoch = datetime.datetime.utcfromtimestamp(0)
+
 
 def _unix_time_millis_from_datetime_trusted(dt):
     return int((dt.replace(tzinfo=None) - epoch).total_seconds() * 1000)

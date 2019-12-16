@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
-import copy
 import datetime
 import json  # noqa: F401
 import os  # noqa: F401
-import time
 import unittest
 from configparser import ConfigParser
 from os import environ
-from unittest.mock import patch
-import copy
-from operator import itemgetter
-import io
 
 from kb_Metrics.kb_MetricsImpl import kb_Metrics
 from kb_Metrics.kb_MetricsServer import MethodContext
 
 debug = False
+
+
 def print_debug(msg):
     if not debug:
         return
@@ -26,8 +22,6 @@ def print_debug(msg):
 class kb_Metrics_status_Test(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        token = environ.get('KB_AUTH_TOKEN', None)
-
         # Load configuration
         config_file = environ.get('KB_DEPLOYMENT_CONFIG', None)
         cls.cfg = {}
@@ -62,6 +56,6 @@ class kb_Metrics_status_Test(unittest.TestCase):
         result = self.validate_result(ret)
 
         self.assertIsInstance(result, dict)
-        for key in ['state', 'message', 'version', 'git_url', 'git_commit_hash']:
+        for key in ['state', 'message', 'version', 'git_url',
+                    'git_commit_hash']:
             self.assertIn(key, result)
-    

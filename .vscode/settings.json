@@ -1,0 +1,7 @@
+{
+    "python.pythonPath": "env/bin/python",
+    "rewrap.wrappingColumn": 79,
+    "editor.rulers": [
+        80
+    ]
+}

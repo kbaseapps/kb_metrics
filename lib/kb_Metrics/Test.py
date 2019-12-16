@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import copy
 import datetime
 import json  # noqa: F401
 import os  # noqa: F401
@@ -7,31 +6,25 @@ import time
 import unittest
 from configparser import ConfigParser
 from os import environ
-from unittest.mock import patch
-import copy
-from operator import itemgetter
-import io
 
-from bson.objectid import ObjectId
 from pymongo import MongoClient
-from pymongo.errors import WriteError, ConfigurationError
 
 from installed_clients.WorkspaceClient import Workspace as workspaceService
-from kb_Metrics.Util import _unix_time_millis_from_datetime
 from kb_Metrics.authclient import KBaseAuth as _KBaseAuth
 from kb_Metrics.kb_MetricsImpl import kb_Metrics
 from kb_Metrics.kb_MetricsServer import MethodContext
-from kb_Metrics.metrics_dbi import MongoMetricsDBI
 from kb_Metrics.metricsdb_controller import MetricsMongoDBController
 from kb_Metrics.NarrativeCache import NarrativeCache
 
 DEBUG = False
 
+
 def print_debug(msg):
     if not DEBUG:
         return
     t = str(datetime.datetime.now())
-    print ("{}:{}".format(t, msg))
+    print("{}:{}".format(t, msg))
+
 
 class Test(unittest.TestCase):
     # def __init__(self):
@@ -101,7 +94,7 @@ class Test(unittest.TestCase):
             return self.__class__.wsName
         suffix = int(time.time() * 1000)
         wsName = "test_kb_Metrics_" + str(suffix)
-        ret = self.getWsClient().create_workspace({'workspace': wsName})  # noqa
+        self.getWsClient().create_workspace({'workspace': wsName})
         self.__class__.wsName = wsName
         return wsName
 
