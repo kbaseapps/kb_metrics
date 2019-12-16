@@ -1,29 +1,7 @@
 # -*- coding: utf-8 -*-
-import copy
-import datetime
 import json  # noqa: F401
 import os  # noqa: F401
 import time
-import unittest
-from configparser import ConfigParser
-from os import environ
-from unittest.mock import patch
-import copy
-from operator import itemgetter
-import io
-
-from bson.objectid import ObjectId
-from pymongo import MongoClient
-from pymongo.errors import WriteError, ConfigurationError
-
-from installed_clients.WorkspaceClient import Workspace as workspaceService
-from kb_Metrics.Util import _unix_time_millis_from_datetime
-from kb_Metrics.authclient import KBaseAuth as _KBaseAuth
-from kb_Metrics.kb_MetricsImpl import kb_Metrics
-from kb_Metrics.kb_MetricsServer import MethodContext
-from kb_Metrics.metrics_dbi import MongoMetricsDBI
-from kb_Metrics.metricsdb_controller import MetricsMongoDBController
-from kb_Metrics.NarrativeCache import NarrativeCache
 from kb_Metrics.Test import Test
 
 # TODO: improve the test data -- the cases for this are for the test user,
@@ -32,8 +10,8 @@ from kb_Metrics.Test import Test
 
 TOTAL_COUNT = 11
 
-class kb_Metrics_query_jobs_Test(Test):
 
+class kb_Metrics_query_jobs_Test(Test):
 
     # def mock_MongoMetricsDBI(self, mongo_host, mongo_dbs,
     #                          mongo_user, mongo_psswd):
@@ -52,7 +30,7 @@ class kb_Metrics_query_jobs_Test(Test):
         self.assertEqual(len(ret), 1)
         self.assertIsInstance(ret[0], dict)
         result = ret[0]
-        self.assertIsInstance(result, dict) 
+        self.assertIsInstance(result, dict)
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], TOTAL_COUNT)
@@ -69,14 +47,14 @@ class kb_Metrics_query_jobs_Test(Test):
         self.assertEqual(len(ret), 1)
         self.assertIsInstance(ret[0], dict)
         result = ret[0]
-        self.assertIsInstance(result, dict) 
+        self.assertIsInstance(result, dict)
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], TOTAL_COUNT)
         self.assertEqual(result['total_count'], TOTAL_COUNT)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_max_time_range_paged")
+    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_max_time_range_paged") # noqa E501
     def test_run_MetricsImpl_query_jobs_max_time_range_paged(self):
         now = int(round(time.time() * 1000))
         ret = self.getImpl().query_jobs(self.getContext(), {
@@ -88,7 +66,7 @@ class kb_Metrics_query_jobs_Test(Test):
         self.assertEqual(len(ret), 1)
         self.assertIsInstance(ret[0], dict)
         result = ret[0]
-        self.assertIsInstance(result, dict) 
+        self.assertIsInstance(result, dict)
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], TOTAL_COUNT)
@@ -109,7 +87,7 @@ class kb_Metrics_query_jobs_Test(Test):
         self.assertEqual(len(ret), 1)
         self.assertIsInstance(ret[0], dict)
         result = ret[0]
-        self.assertIsInstance(result, dict) 
+        self.assertIsInstance(result, dict)
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], 0)
@@ -118,7 +96,6 @@ class kb_Metrics_query_jobs_Test(Test):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_one_job")
     def test_run_MetricsImpl_query_jobs_one_job(self):
-        now = int(round(time.time() * 1000))
         ret = self.getImpl().query_jobs(self.getContext(), {
             'filter': {
                 'job_id': ['59691279e4b08b65f9ff5d87']
@@ -128,16 +105,15 @@ class kb_Metrics_query_jobs_Test(Test):
         self.assertEqual(len(ret), 1)
         self.assertIsInstance(ret[0], dict)
         result = ret[0]
-        self.assertIsInstance(result, dict) 
+        self.assertIsInstance(result, dict)
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], 1)
         self.assertEqual(result['total_count'], TOTAL_COUNT)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_queue")
+    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_queue") # noqa E501
     def test_run_MetricsImpl_query_jobs_filter_by_status_queue(self):
-        now = int(round(time.time() * 1000))
         ret = self.getImpl().query_jobs(self.getContext(), {
             'filter': {
                 'status': ['queue']
@@ -146,16 +122,15 @@ class kb_Metrics_query_jobs_Test(Test):
         self.assertEqual(len(ret), 1)
         self.assertIsInstance(ret[0], dict)
         result = ret[0]
-        self.assertIsInstance(result, dict) 
+        self.assertIsInstance(result, dict)
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], 1)
         self.assertEqual(result['total_count'], TOTAL_COUNT)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_run")
+    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_run") # noqa E501
     def test_run_MetricsImpl_query_jobs_filter_by_status_run(self):
-        now = int(round(time.time() * 1000))
         ret = self.getImpl().query_jobs(self.getContext(), {
             'filter': {
                 'status': ['run']
@@ -164,16 +139,15 @@ class kb_Metrics_query_jobs_Test(Test):
         self.assertEqual(len(ret), 1)
         self.assertIsInstance(ret[0], dict)
         result = ret[0]
-        self.assertIsInstance(result, dict) 
+        self.assertIsInstance(result, dict)
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], 2)
         self.assertEqual(result['total_count'], TOTAL_COUNT)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_complete")
+    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_complete") # noqa E501
     def test_run_MetricsImpl_query_jobs_filter_by_status_complete(self):
-        now = int(round(time.time() * 1000))
         ret = self.getImpl().query_jobs(self.getContext(), {
             'filter': {
                 'status': ['complete']
@@ -183,16 +157,15 @@ class kb_Metrics_query_jobs_Test(Test):
         self.assertEqual(len(ret), 1)
         self.assertIsInstance(ret[0], dict)
         result = ret[0]
-        self.assertIsInstance(result, dict) 
+        self.assertIsInstance(result, dict)
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], 2)
         self.assertEqual(result['total_count'], TOTAL_COUNT)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_error")
+    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_error")  # noqa E501
     def test_run_MetricsImpl_query_jobs_filter_by_status_error(self):
-        now = int(round(time.time() * 1000))
         ret = self.getImpl().query_jobs(self.getContext(), {
             'filter': {
                 'status': ['error']
@@ -202,16 +175,15 @@ class kb_Metrics_query_jobs_Test(Test):
         self.assertEqual(len(ret), 1)
         self.assertIsInstance(ret[0], dict)
         result = ret[0]
-        self.assertIsInstance(result, dict) 
+        self.assertIsInstance(result, dict)
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], 5)
         self.assertEqual(result['total_count'], TOTAL_COUNT)
 
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_cancel")
+    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_cancel") # noqa E501
     def test_run_MetricsImpl_query_jobs_filter_by_status_cancel(self):
-        now = int(round(time.time() * 1000))
         ret = self.getImpl().query_jobs(self.getContext(), {
             'filter': {
                 'status': ['cancel']
@@ -221,17 +193,15 @@ class kb_Metrics_query_jobs_Test(Test):
         self.assertEqual(len(ret), 1)
         self.assertIsInstance(ret[0], dict)
         result = ret[0]
-        self.assertIsInstance(result, dict) 
+        self.assertIsInstance(result, dict)
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], 11)
         self.assertEqual(result['total_count'], 11)
 
-
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_cancel_or_error")
+    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_cancel_or_error") # noqa E501
     def test_run_MetricsImpl_query_jobs_filter_by_status_cancel_or_error(self):
-        now = int(round(time.time() * 1000))
         ret = self.getImpl().query_jobs(self.getContext(), {
             'filter': {
                 'status': ['cancel', 'error']
@@ -241,27 +211,25 @@ class kb_Metrics_query_jobs_Test(Test):
         self.assertEqual(len(ret), 1)
         self.assertIsInstance(ret[0], dict)
         result = ret[0]
-        self.assertIsInstance(result, dict) 
+        self.assertIsInstance(result, dict)
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], 5)
         self.assertEqual(result['total_count'], TOTAL_COUNT)
 
-
     # Uncomment to skip this test
-    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_queue_or_run")
+    # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_filter_by_status_queue_or_run") # noqa E501
+
     def test_run_MetricsImpl_query_jobs_filter_by_status_queue_or_run(self):
-        now = int(round(time.time() * 1000))
         ret = self.getImpl().query_jobs(self.getContext(), {
             'filter': {
                 'status': ['queue', 'run']
             }
         })
-        # print('filter by status complete', ret)
         self.assertEqual(len(ret), 1)
         self.assertIsInstance(ret[0], dict)
         result = ret[0]
-        self.assertIsInstance(result, dict) 
+        self.assertIsInstance(result, dict)
         self.assertIn('job_states', result)
         self.assertIn('found_count', result)
         self.assertEqual(result['found_count'], 3)
@@ -270,8 +238,6 @@ class kb_Metrics_query_jobs_Test(Test):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_sort2")
     def test_run_MetricsImpl_query_jobs_sort2(self):
-        from_time = 1546329600000 # 1/1/2019
-        to_time = 1572591600000 # 11/1/2019
         test_data = [
             # Can't test for updated -- it is not always populated!
             # ['updated', 'modification_time', None, 1516822657338],
@@ -312,7 +278,7 @@ class kb_Metrics_query_jobs_Test(Test):
             self.assertEqual(len(ret), 1)
             self.assertIsInstance(ret[0], dict)
             result = ret[0]
-            self.assertIsInstance(result, dict) 
+            self.assertIsInstance(result, dict)
             self.assertIn('job_states', result)
             jobs = result['job_states']
             # print("\n\nJOBS", jobs)
@@ -321,7 +287,7 @@ class kb_Metrics_query_jobs_Test(Test):
             self.assertIn('total_count', result)
             self.assertEqual(result['found_count'], TOTAL_COUNT)
             self.assertEqual(result['total_count'], TOTAL_COUNT)
-            
+
             for expected in case['expected']:
                 item = expected['item']
                 if type(item) is str:
@@ -334,7 +300,7 @@ class kb_Metrics_query_jobs_Test(Test):
     # Uncomment to skip this test
     # @unittest.skip("skipped test_run_MetricsImpl_query_jobs_search")
     def test_run_MetricsImpl_query_jobs_search(self):
-       
+
         data = [
             # this one catches eapearson username
             {
@@ -436,8 +402,8 @@ class kb_Metrics_query_jobs_Test(Test):
             self.assertEqual(len(ret), 1)
             self.assertIsInstance(ret[0], dict)
             result = ret[0]
-            self.assertIsInstance(result, dict) 
+            self.assertIsInstance(result, dict)
             self.assertIn('job_states', result)
             self.assertIn('found_count', result)
-            for k,v in datum['expected'].items():
+            for k, v in datum['expected'].items():
                 self.assertEqual(result[k], v)

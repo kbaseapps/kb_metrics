@@ -121,11 +121,12 @@ class BaseClient(object):
     async_job_check_time_ms - the wait time between checking job state for
         asynchronous jobs run with the run_job method.
     '''
+
     def __init__(
             self, url=None, timeout=30 * 60, user_id=None,
             password=None, token=None, ignore_authrc=False,
             trust_all_ssl_certificates=False,
-            auth_svc='https://kbase.us/services/auth/api/legacy/KBase/Sessions/Login',
+            auth_svc='https://kbase.us/services/auth/api/legacy/KBase/Sessions/Login',  # noqa E501
             lookup_url=False,
             async_job_check_time_ms=100,
             async_job_check_time_scale_percent=150,
@@ -262,8 +263,8 @@ class BaseClient(object):
                 if len(job_state['result']) == 1:
                     return job_state['result'][0]
                 return job_state['result']
-        raise RuntimeError("_check_job failed {} times and exceeded limit".format(
-            check_job_failures))
+        raise RuntimeError('_check_job failed {} times and exceeded ' +
+                           'limit'.format(check_job_failures))
 
     def call_method(self, service_method, args, service_ver=None,
                     context=None):

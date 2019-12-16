@@ -26,6 +26,16 @@ COPY ./ /kb/module
 RUN mkdir -p /kb/module/work
 RUN chmod -R a+rw /kb/module
 
+# TESTING use local kb_sdk
+# RUN mkdir /root/src2 \
+#     && cd /root/src2 \
+#     && git clone -b make-python-impl-pep8-compliant https://github.com/eapearson/kb_sdk.git \
+#     && cd kb_sdk \
+#     && make \
+#     && cp bin/kb-sdk /usr/local/bin \
+#     && mkdir -p /kb/deployment/lib /kb/deployment/lib
+# TESTING over
+
 WORKDIR /kb/module
 
 RUN make all

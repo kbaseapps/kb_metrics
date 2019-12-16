@@ -4,6 +4,7 @@ import time
 
 LOCK_TIMEOUT = 5
 
+
 def get_config_list(config, config_key):
     list_str = config.get(config_key)
     if not list_str:
@@ -11,6 +12,7 @@ def get_config_list(config, config_key):
         error_msg += ' of MetricsMongoDBController'
         raise ValueError(error_msg)
     return [x.strip() for x in list_str.split(',') if x.strip()]
+
 
 class NarrativeCache:
     narrative_map = None
@@ -20,7 +22,8 @@ class NarrativeCache:
     def __init__(self, config):
         self.narrative_map_cache = None
         self.metrics_dbi = MongoMetricsDBI(config.get('mongodb-host'),
-                                           get_config_list(config, 'mongodb-databases'),
+                                           get_config_list(
+                                               config, 'mongodb-databases'),
                                            config.get('mongodb-user', ''),
                                            config.get('mongodb-pwd', ''))
         self.lock = threading.Lock()
@@ -36,16 +39,19 @@ class NarrativeCache:
         # So we cache the narrative map in this controller instance.
         if cls.narrative_map is None:
             cls.narrative_map = dict()
-            ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
+            ws_narratives = self.metrics_dbi.list_ws_narratives(
+                include_del=True)
             if len(ws_narratives) == 0:
                 return cls.narrative_map
         else:
             if cls.narrative_map_max_time is None:
-                # This handles the case in which there were NO narratives initially,
-                # and thus the max time was not set.
-                ws_narratives = self.metrics_dbi.list_ws_narratives(include_del=True)
+                # This handles the case in which there were NO narratives
+                # initially, and thus the max time was not set.
+                ws_narratives = self.metrics_dbi.list_ws_narratives(
+                    include_del=True)
             else:
-                ws_narratives = self.metrics_dbi.list_more_ws_narratives(include_del=True, from_time=cls.narrative_map_max_time)
+                ws_narratives = self.metrics_dbi.list_more_ws_narratives(
+                    include_del=True, from_time=cls.narrative_map_max_time)
 
             if len(ws_narratives) == 0:
                 self.narrative_map_cache = cls.narrative_map
@@ -55,14 +61,15 @@ class NarrativeCache:
         for wsnarr in ws_narratives:
             ws_nm = wsnarr.get('name', '')  # workspace_name or ''
             narr_nm = None
-            last_saved_at = int(round(wsnarr['last_saved_at'].timestamp() * 1000))
+            last_saved_at = int(
+                round(wsnarr['last_saved_at'].timestamp() * 1000))
             max_time = max([max_time, last_saved_at])
             # narr_nm = ws_nm  # default narrative_name
             # TODO: this is suspect, because the narrative metadata field
-            # should ALWAYS be available. 
+            # should ALWAYS be available.
             # And we actually no longer need
             # the narrative version; so we can skip this eventually
-            # and certainly shouldn't use it since a default object 
+            # and certainly shouldn't use it since a default object
             # number doesn't make any sense.
             narr_ver = '1'  # default narrative_objNo
             n_keys = wsnarr['narr_keys']
@@ -79,7 +86,8 @@ class NarrativeCache:
             if narr_nm is None:
                 narr_nm = 'Untitled'
 
-            cls.narrative_map[wsnarr['workspace_id']] = (ws_nm, narr_nm, narr_ver, wsnarr['deleted'])
+            cls.narrative_map[wsnarr['workspace_id']] = (
+                ws_nm, narr_nm, narr_ver, wsnarr['deleted'])
 
         cls.narrative_map_max_time = max_time
         self.narrative_map_cache = cls.narrative_map
@@ -102,4 +110,7 @@ class NarrativeCache:
                 self.lock.release()
         else:
             elapsed = time.time() - start
-            raise Exception('LOCK  [' + str(self.id) + '] Timeout acquiring lock on Narrative Cache after ' + str(elapsed))
+            raise Exception(
+                'LOCK  [' + str(self.id) +
+                '] Timeout acquiring lock on Narrative Cache after ' +
+                str(elapsed))
