@@ -458,7 +458,7 @@ class MongoMetricsDBI:
         grp1 = {"_id": "$ws", "first_access": {"$min": "$moddate"}}
         proj2 = {"ws": "$_id", "_id": 0, "first_access": 1}
         match_fltr2 = {"first_access": {"$gte": minTime, "$lte": maxTime}}
-        proj3 = {"ws": "$_id", "_id": 0,
+        proj3 = {"ws": 1,
                  "first_access_year": {"$year": "$first_access"},
                  "first_access_month": {"$month": "$first_access"}}
         proj4 = {"ws": 1, "yyyy-mm":
