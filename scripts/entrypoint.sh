@@ -9,7 +9,7 @@ if [ -f ./work/token ] ; then
 fi
 
 if [ $# -eq 0 ] ; then
-  sh ./scripts/start_server.sh
+  sh ./scripts/start_lazy_uwsgi_server.sh
 elif [ "${1}" = "test" ] ; then
   echo "Run Tests"
   make test
