@@ -12,6 +12,10 @@ TOTAL_COUNT = 11
 
 
 class kb_Metrics_query_jobs_Test(Test):
+    def getContext(self):
+        ctx = self.__class__.ctx
+        ctx.update({'user_id': 'eapearson'})
+        return ctx
 
     # def mock_MongoMetricsDBI(self, mongo_host, mongo_dbs,
     #                          mongo_user, mongo_psswd):

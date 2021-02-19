@@ -1332,14 +1332,14 @@ class kb_Metrics_Main_Test(Test):
                                'eapearson', 'qzhang', 'tgu2', 'bsadkhin',
                                'bobcottingham', 'janakakbase', 'jplfaria',
                                'marcin', 'royk', 'sunita', 'aparkin',
-                               'cnelson', 'landml']
+                               'cnelson', 'landml','zimingy']
         self.assertCountEqual(self.db_controller.adminList,
                               expected_admin_list)
 
         expected_metrics_admin_list = ['scanon', 'psdehal', 'dolson', 'chenry',
                                        'wjriehl', 'sychan', 'qzhang', 'tgu2',
                                        'eapearson',
-                                       'jjeffryes', 'cnelson']
+                                       'jjeffryes', 'cnelson', 'zimingy']
         self.assertCountEqual(self.db_controller.metricsAdmins,
                               expected_metrics_admin_list)
 
