@@ -814,7 +814,7 @@ class MetricsMongoDBController:
 
         perf = dict()
         start = round(time.time() * 1000)
-
+        print('urser:',  restrict_to_user)
         # 1. get the client_groups data for lookups
         if self.client_groups is None:
             self.client_groups = self._get_client_groups_from_cat(token)
