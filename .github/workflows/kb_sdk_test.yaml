@@ -58,5 +58,6 @@ jobs:
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       run: |
+        cp ./scripts/run_tests_.sh ./test_local/run_test.sh
         sh $GITHUB_WORKSPACE/kb_sdk_actions/bin/kb-sdk test
         bash <(curl -s https://codecov.io/bash)
