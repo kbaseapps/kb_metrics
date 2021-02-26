@@ -37,10 +37,7 @@ class MetricsMongoDBController:
                 raise ValueError(error_msg)
 
         # instantiate the mongo client
-        # config['mongodb-host'] = '123'
-        # config['mongodb-user'] = '123'
-        # config['mongodb-pwd'] = '123'
-        self.metrics_dbi = MongoMetricsDBI(config.get('mongodb-host', ''),
+        self.metrics_dbi = MongoMetricsDBI(config.get('mongodb-host'),
                                            self.mongodb_dbList,
                                            config.get('mongodb-user', ''),
                                            config.get('mongodb-pwd', ''))
@@ -814,7 +811,6 @@ class MetricsMongoDBController:
 
         perf = dict()
         start = round(time.time() * 1000)
-        print('urser:',  restrict_to_user)
         # 1. get the client_groups data for lookups
         if self.client_groups is None:
             self.client_groups = self._get_client_groups_from_cat(token)
@@ -1082,7 +1078,6 @@ class MetricsMongoDBController:
         to get active user count per day.
         """
         if not self._is_admin(requesting_user):
-            print("requesting_user:", requesting_user)
             raise ValueError('You do not have permisson to '
                              'invoke this action.')
 
