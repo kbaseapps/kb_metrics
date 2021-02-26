@@ -3583,7 +3583,7 @@ class kb_Metrics_Main_Test(Test):
     # @unittest.skip("skipped test_run_MetricsImpl_is_admin")
     def test_run_MetricsImpl_is_admin(self):
         ret = self.getImpl().is_admin(self.getContext(), {
-            'username': self.test_cfg['test_username']
+            'username': self.getContext()['user_id']
         })
         self.assertEqual(ret[0]['is_admin'], True)
 
